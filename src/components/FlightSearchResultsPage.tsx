@@ -2478,6 +2478,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     { id: 'buses', label: 'Buses', icon: Bus },
                     { id: 'cabs', label: 'Cabs', icon: Car },
                     { id: 'holidays', label: 'Holidays', icon: Palmtree },
+                    { id: 'experiences', label: 'Tours & Experiences', icon: Compass },
                   ] as const
                 ).map((cat) => {
                   const Icon = cat.icon;
@@ -3103,6 +3104,43 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       <option value="Honeymoon">Romantic Honeymoon</option>
                       <option value="Luxury">5-Star Luxury</option>
                     </select>
+                  </div>
+                </div>
+              )}
+
+              {/* 7. TOURS & EXPERIENCES MODIFY CONTROLS */}
+              {modCategory === 'experiences' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                      Destination City / Country
+                    </label>
+                    <select
+                      value={modToCity.code}
+                      onChange={(e) => {
+                        const match = CITIES.find((c) => c.code === e.target.value);
+                        if (match) setModToCity(match);
+                      }}
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    >
+                      {CITIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.city}, {c.country}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                      Activity / Visit Date
+                    </label>
+                    <input
+                      type="date"
+                      value={modDepDate}
+                      onChange={(e) => setModDepDate(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    />
                   </div>
                 </div>
               )}

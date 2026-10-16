@@ -21,6 +21,7 @@ import { HeroSearchSection } from './components/HeroSearchSection';
 import { ShowcaseSections } from './components/ShowcaseSections';
 import { InteractiveModals } from './components/InteractiveModals';
 import { FlightSearchResultsPage } from './components/FlightSearchResultsPage';
+import { ExperiencesSearchResultsPage } from './components/ExperiencesSearchResultsPage';
 import { CheckoutPaymentPage } from './components/CheckoutPaymentPage';
 import { TripsDashboardPage } from './components/TripsDashboardPage';
 import { AccountSettingsPage } from './components/AccountSettingsPage';
@@ -33,6 +34,7 @@ import {
 import { Footer } from './components/Footer';
 import { LanguageRegionModal } from './components/LanguageRegionModal';
 import { ListPropertyModal } from './components/ListPropertyModal';
+import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 
 export default function App() {
   // Active Multi-Page View ('home' | 'search-results' | 'checkout' | 'trips' | 'account')
@@ -69,6 +71,8 @@ export default function App() {
   const [showLanguageRegionModal, setShowLanguageRegionModal] =
     useState<boolean>(false);
   const [showListPropertyModal, setShowListPropertyModal] =
+    useState<boolean>(false);
+  const [showInsuranceModal, setShowInsuranceModal] =
     useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
@@ -242,6 +246,7 @@ export default function App() {
         region={region}
         onOpenLanguageModal={() => setShowLanguageRegionModal(true)}
         onOpenListProperty={() => setShowListPropertyModal(true)}
+        onOpenInsurance={() => setShowInsuranceModal(true)}
         onOpenAuth={() => setShowAuthModal(true)}
         tripsCount={bookedTrips.length}
         userName={userName}
@@ -325,8 +330,25 @@ export default function App() {
           </>
         )}
 
-        {/* IMAGE 1: FLIGHT & HOTEL SEARCH RESULTS PAGE */}
-        {activePage === 'search-results' && (
+        {/* TOURS & EXPERIENCES / ACTIVITIES SEARCH RESULTS PAGE */}
+        {activePage === 'search-results' && activeCategory === 'experiences' && (
+          <ExperiencesSearchResultsPage
+            destinationCity={toCity}
+            selectedDate={departureDate}
+            currency={currency}
+            onChangeDestination={setToCity}
+            onChangeDate={setDepartureDate}
+            onModifySearch={() => navigateTo('home')}
+            onSelectExperienceForCheckout={(item) => {
+              setSelectedCheckoutOptionTitle(item.title);
+              navigateTo('checkout');
+            }}
+            onNotify={handleNotify}
+          />
+        )}
+
+        {/* FLIGHT, HOTEL, TRAIN, BUS, CAB & HOLIDAY SEARCH RESULTS PAGE */}
+        {activePage === 'search-results' && activeCategory !== 'experiences' && (
           <FlightSearchResultsPage
             activeCategory={activeCategory}
             fromCity={fromCity}
@@ -492,6 +514,14 @@ export default function App() {
             'success'
           );
         }}
+      />
+
+      {/* Travel Insurance Modal */}
+      <TravelInsuranceModal
+        isOpen={showInsuranceModal}
+        onClose={() => setShowInsuranceModal(false)}
+        currency={currency}
+        onNotify={handleNotify}
       />
 
       {/* Clean 4-Column Footer */}
