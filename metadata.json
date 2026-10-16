@@ -1,0 +1,8 @@
+{
+  "name": "Remix TripYeah — Flights, Hotels, Trains \u0026 Holiday Booking",
+  "description": "Discover amazing destinations and book flights, trains, hotels, buses, cabs, and curated holiday packages in one place with TripYeah.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

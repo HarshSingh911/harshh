@@ -1,0 +1,1746 @@
+import React, { useState } from 'react';
+import {
+  Plane,
+  TrainFront,
+  Building2,
+  Bus,
+  Car,
+  Palmtree,
+  ArrowLeftRight,
+  Calendar,
+  Search,
+  ChevronDown,
+  ShieldCheck,
+  Clock,
+  Briefcase,
+  Sparkles,
+  BadgePercent,
+  CheckCircle2,
+  MapPin,
+  Users,
+  Compass,
+} from 'lucide-react';
+import {
+  ASSETS,
+  BookingCategory,
+  CITIES,
+  CityOption,
+  TripType,
+} from '../data/travelData';
+import { SafeImage } from './SafeImage';
+
+interface HeroSearchSectionProps {
+  activeCategory: BookingCategory;
+  onSelectCategory: (cat: BookingCategory) => void;
+  fromCity: CityOption;
+  toCity: CityOption;
+  onChangeFromCity: (city: CityOption) => void;
+  onChangeToCity: (city: CityOption) => void;
+  onSwapCities: () => void;
+  tripType: TripType;
+  onChangeTripType: (t: TripType) => void;
+  departureDate: string;
+  returnDate: string;
+  onChangeDepartureDate: (d: string) => void;
+  onChangeReturnDate: (d: string) => void;
+  studentFare: boolean;
+  onToggleStudentFare: () => void;
+  travellers: number;
+  cabinClass: string;
+  onChangeTravellers: (count: number, cabin: string) => void;
+  onTriggerSearch: () => void;
+  onSelectTrustPillar: (pillarTitle: string, pillarDetail: string) => void;
+}
+
+const SERVICE_TABS: {
+  id: BookingCategory;
+  label: string;
+  ctaLabel: string;
+  icon: React.FC<{ className?: string }>;
+}[] = [
+  { id: 'flights', label: 'Flights', ctaLabel: 'Search Flights', icon: Plane },
+  { id: 'trains', label: 'Trains', ctaLabel: 'Search Trains', icon: TrainFront },
+  { id: 'hotels', label: 'Hotels', ctaLabel: 'Search Hotels', icon: Building2 },
+  { id: 'buses', label: 'Buses', ctaLabel: 'Search Buses', icon: Bus },
+  { id: 'cabs', label: 'Cabs', ctaLabel: 'Search Cabs', icon: Car },
+  { id: 'holidays', label: 'Holidays', ctaLabel: 'Search Holidays', icon: Palmtree },
+  { id: 'experiences', label: 'Tours & Experiences', ctaLabel: 'Explore Experiences', icon: Compass },
+];
+
+const FLIGHT_CLASSES = ['Economy', 'Premium Eco', 'Business', 'First Class'];
+const TRAIN_CLASSES = [
+  'All Classes',
+  '1A - First AC',
+  '2A - AC 2 Tier',
+  '3A - AC 3 Tier',
+  'CC - AC Chair Car',
+  'SL - Sleeper',
+];
+const TRAIN_QUOTAS = ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'];
+const BUS_TYPES = ['All Buses', 'AC Sleeper', 'AC Seater', 'Volvo Multi-Axle'];
+const CAB_TIMES = ['06:00 AM', '09:00 AM', '11:30 AM', '02:00 PM', '05:00 PM', '08:30 PM'];
+const CAB_PACKAGES = ['4 Hrs / 40 km', '8 Hrs / 80 km', '12 Hrs / 120 km'];
+
+const TRUST_PILLARS = [
+  {
+    icon: BadgePercent,
+    title: 'Best Prices',
+    subtitle: 'Always',
+    detail: 'Found a lower fare within 24 hours of booking? TripYeah refunds 2x the price difference directly to your wallet.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Secure Booking',
+    subtitle: '100% Safe',
+    detail: '256-bit PCI-DSS compliant checkout with instant e-ticket and PNR confirmation across all airlines and hotels.',
+  },
+  {
+    icon: Clock,
+    title: '24/7 Support',
+    subtitle: 'Here for you',
+    detail: 'Dedicated human travel specialists available round-the-clock via phone and priority concierge chat.',
+  },
+  {
+    icon: Briefcase,
+    title: 'Easy Cancellations',
+    subtitle: 'Hassle free',
+    detail: 'Automated instant refunds to your original payment method with transparent zero-hidden-fee policies.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Exclusive Deals',
+    subtitle: 'Only on TripYeah',
+    detail: 'Unpublished member fares, complimentary airport lounge passes, and up to 60% off partner resorts.',
+  },
+];
+
+export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
+  activeCategory,
+  onSelectCategory,
+  fromCity,
+  toCity,
+  onChangeFromCity,
+  onChangeToCity,
+  onSwapCities,
+  tripType,
+  onChangeTripType,
+  departureDate,
+  returnDate,
+  onChangeDepartureDate,
+  onChangeReturnDate,
+  studentFare,
+  onToggleStudentFare,
+  travellers,
+  cabinClass,
+  onChangeTravellers,
+  onTriggerSearch,
+  onSelectTrustPillar,
+}) => {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [swapRotated, setSwapRotated] = useState(false);
+
+  // Category-specific realistic online booking states
+  // 1. Trains state
+  const [trainMode, setTrainMode] = useState<'book' | 'pnr' | 'status'>('book');
+  const [trainClass, setTrainClass] = useState<string>('All Classes');
+  const [trainQuota, setTrainQuota] = useState<string>('General Quota');
+  const [pnrInput, setPnrInput] = useState<string>('2458916304');
+  const [pnrResult, setPnrResult] = useState<string | null>(null);
+  const [liveTrainNo, setLiveTrainNo] = useState<string>('22436 - Vande Bharat Exp');
+  const [liveTrainStatusMsg, setLiveTrainStatusMsg] = useState<string | null>(null);
+
+  // 2. Hotels state
+  const [hotelMode, setHotelMode] = useState<'overnight' | 'hourly' | 'villas'>('overnight');
+  const [hotelRooms, setHotelRooms] = useState<number>(1);
+  const [hotelGuests, setHotelGuests] = useState<number>(2);
+  const [hotelPriceFilter, setHotelPriceFilter] = useState<string>('₹0 - ₹15,000+');
+  const [hourlySlot, setHourlySlot] = useState<string>('3 Hours Stay');
+  const [freeBreakfast, setFreeBreakfast] = useState<boolean>(true);
+
+  // 3. Buses state
+  const [busFilter, setBusFilter] = useState<string>('All Buses');
+  const [singleLadySeat, setSingleLadySeat] = useState<boolean>(false);
+
+  // 4. Cabs state
+  const [cabMode, setCabMode] = useState<'one-way' | 'round-trip' | 'airport' | 'hourly'>('one-way');
+  const [cabCarType, setCabCarType] = useState<string>('SUV / Sedan');
+  const [cabPickupTime, setCabPickupTime] = useState<string>('10:00 AM');
+  const [cabHourlyPkg, setCabHourlyPkg] = useState<string>('8 Hrs / 80 km');
+
+  // 5. Holidays state
+  const [holidayTheme, setHolidayTheme] = useState<string>('All Packages');
+  const [holidayDuration, setHolidayDuration] = useState<string>('4N / 5D');
+  const [withFlights, setWithFlights] = useState<boolean>(true);
+
+  // 6. Tours & Experiences state
+  const [experienceTheme, setExperienceTheme] = useState<string>('All Experiences');
+
+  const handleSwap = () => {
+    setSwapRotated((prev) => !prev);
+    onSwapCities();
+  };
+
+  const formatDisplayDate = (dateStr: string, fallback = 'Select Date') => {
+    if (!dateStr) return fallback;
+    const parsed = new Date(dateStr + 'T00:00:00');
+    if (isNaN(parsed.getTime())) return fallback;
+    return parsed.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  // Reusable City/Station Picker Popover
+  const renderCityDropdown = (
+    which: 'from' | 'to',
+    selected: CityOption,
+    onSelect: (c: CityOption) => void,
+    isStation = false
+  ) => {
+    if (openDropdown !== which) return null;
+    return (
+      <div
+        className={`absolute ${
+          which === 'to' ? 'right-0' : 'left-0'
+        } mt-2 w-72 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30`}
+      >
+        {CITIES.map((city) => (
+          <button
+            key={city.code}
+            type="button"
+            onClick={() => {
+              onSelect(city);
+              setOpenDropdown(null);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+              selected.code === city.code
+                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                : 'hover:bg-slate-100 text-slate-700'
+            }`}
+          >
+            <div>
+              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                {city.city}, {city.country}
+              </div>
+              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                {isStation ? `${city.city} Junction (${city.stationCode})` : city.airportName}
+              </div>
+            </div>
+            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+              {isStation ? city.stationCode : city.code}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <section id="top" className="relative w-full">
+      {/* Hero Visual Container — Multi-Modal Travel Panorama */}
+      <div className="relative w-full h-[580px] sm:h-[640px] lg:h-[680px] overflow-hidden">
+        <SafeImage
+          src={ASSETS.heroMultimodal}
+          alt="Panoramic coastal travel scene featuring a passenger jet airplane in the sky, high-speed train on a coastal viaduct, tour buses on a palm highway, resort skyline, mountains, and cruise ship in the bay"
+          fallbackTitle="Explore the World with TripYeah"
+          className="w-full h-full object-cover object-center"
+        />
+
+        {/* Subtle top & center contrast scrim + smooth white bottom fade */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-slate-950/65 via-slate-950/20 to-transparent"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/90 to-transparent"
+          aria-hidden="true"
+        />
+
+        {/* Centered Hero Headline above the middle Search Bar */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 text-center">
+          <p className="text-xs sm:text-sm font-bold tracking-[0.2em] text-white uppercase drop-shadow-sm mb-2">
+            Explore the World with TripYeah
+          </p>
+          <h1 className="font-display text-3xl sm:text-5xl lg:text-[56px] font-bold text-white leading-[1.08] tracking-tight mb-2.5 drop-shadow-[0_4px_18px_rgba(15,23,42,0.45)] mx-auto max-w-3xl">
+            Where will you go{' '}
+            <span className="text-sky-300">next?</span>
+          </h1>
+          <p className="text-xs sm:text-sm lg:text-base text-white/95 font-medium max-w-xl mx-auto drop-shadow-[0_2px_10px_rgba(15,23,42,0.45)]">
+            Flights, Trains, Hotels, Buses, Cabs &amp; Holiday Packages — all in one
+            place.
+          </p>
+        </div>
+      </div>
+
+      {/* Floating Multi-Modal Search Engine Card — Positioned in the Middle over the Hero */}
+      <div className="relative z-20 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 -mt-64 sm:-mt-72 lg:-mt-80">
+        <div className="bg-white rounded-[26px] shadow-[0_20px_50px_rgba(15,23,42,0.12)] border border-slate-200/80 p-3.5 sm:p-5 lg:p-6">
+          {/* ROW 1: 7 Service Category Tabs in a single horizontal landscape line */}
+          <div
+            role="tablist"
+            aria-label="Booking categories"
+            className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
+          >
+            {SERVICE_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isSelected = activeCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={isSelected}
+                  type="button"
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    onSelectCategory(tab.id);
+                  }}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white shadow-md shadow-blue-600/25'
+                      : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/75 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ===================================================================
+              1. FLIGHTS INTERFACE (One Way = Only Departure, Round Trip = Departure + Return, Class in top-right where it originally was)
+          =================================================================== */}
+          {activeCategory === 'flights' && (
+            <>
+              {/* Row 2: One Way | Round Trip | Dummy Flights + Student Fare + Traveller & Class */}
+              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {(
+                    [
+                      { id: 'one-way', label: 'One Way' },
+                      { id: 'round-trip', label: 'Round Trip' },
+                      { id: 'dummy-flights', label: 'Dummy Flights' },
+                    ] as { id: TripType; label: string }[]
+                  ).map((t) => {
+                    const active = tripType === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => onChangeTripType(t.id)}
+                        className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                          active
+                            ? 'bg-[#2563EB] text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Right Controls: Student Fare + Traveller & Class Dropdown (Original Position) */}
+                <div className="flex items-center gap-2.5 sm:gap-4 relative shrink-0">
+                  <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={studentFare}
+                      onChange={onToggleStudentFare}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <span>Student Fare</span>
+                  </label>
+
+                  {/* Traveller & Flight Class Popover in original top-right position */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(
+                          openDropdown === 'travellers' ? null : 'travellers'
+                        )
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-[11px] sm:text-xs font-semibold text-slate-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <span>
+                        {travellers} {travellers === 1 ? 'Traveller' : 'Travellers'} · {cabinClass}
+                      </span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                    </button>
+
+                    {openDropdown === 'travellers' && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-30">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-semibold text-slate-700">
+                            Travellers
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onChangeTravellers(
+                                  Math.max(1, travellers - 1),
+                                  cabinClass
+                                )
+                              }
+                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                            >
+                              -
+                            </button>
+                            <span className="w-6 text-center text-sm font-bold font-mono-tabular">
+                              {travellers}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onChangeTravellers(
+                                  Math.min(9, travellers + 1),
+                                  cabinClass
+                                )
+                              }
+                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-3">
+                          <p className="text-xs font-semibold text-slate-700 mb-2">
+                            Flight Class
+                          </p>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {FLIGHT_CLASSES.map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => {
+                                  onChangeTravellers(travellers, c);
+                                  setOpenDropdown(null);
+                                }}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
+                                  cabinClass === c
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                }`}
+                              >
+                                {c}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Landscape Flight Search Row (Return only shown in Round Trip!) */}
+              <div className="flex items-stretch gap-2 w-full">
+                {/* From ⇄ To */}
+                <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === 'from' ? null : 'from')
+                      }
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
+                    >
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        From
+                      </span>
+                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {fromCity.city}
+                      </span>
+                      <span className="block text-[11px] font-mono-tabular text-slate-500 truncate">
+                        {fromCity.code}
+                      </span>
+                    </button>
+                    {renderCityDropdown('from', fromCity, onChangeFromCity)}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSwap}
+                    aria-label="Swap departure and arrival cities"
+                    className={`flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-md items-center justify-center text-slate-700 hover:text-indigo-600 hover:border-indigo-300 transition-transform duration-200 cursor-pointer ${
+                      swapRotated ? 'rotate-180' : ''
+                    }`}
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === 'to' ? null : 'to')
+                      }
+                      className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
+                    >
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        To
+                      </span>
+                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {toCity.city}
+                      </span>
+                      <span className="block text-[11px] font-mono-tabular text-slate-500 truncate">
+                        {toCity.code}
+                      </span>
+                    </button>
+                    {renderCityDropdown('to', toCity, onChangeToCity)}
+                  </div>
+                </div>
+
+                {/* Departure Date (Always shown) */}
+                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer">
+                  <div className="min-w-0">
+                    <span className="block text-[11px] text-slate-500 font-medium">
+                      Departure
+                    </span>
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                      {formatDisplayDate(departureDate)}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 truncate">
+                      {tripType === 'dummy-flights' ? 'Verifiable PNR' : 'One-Way / Outbound'}
+                    </span>
+                  </div>
+                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1.5" />
+                  <input
+                    type="date"
+                    value={departureDate}
+                    onChange={(e) => onChangeDepartureDate(e.target.value)}
+                    aria-label="Departure Date"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+
+                {/* Return Date — ONLY shown when Round Trip is selected */}
+                {tripType === 'round-trip' && (
+                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-indigo-50/50 hover:bg-indigo-50/90 border border-indigo-200 transition-colors cursor-pointer">
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-indigo-600 font-semibold">
+                        Return
+                      </span>
+                      <span className="block text-xs sm:text-sm font-semibold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(returnDate, 'Select Return')}
+                      </span>
+                      <span className="block text-[11px] text-indigo-500 truncate">
+                        Round-Trip Save 10%
+                      </span>
+                    </div>
+                    <Calendar className="w-4 h-4 text-indigo-600 shrink-0 ml-1.5" />
+                    <input
+                      type="date"
+                      value={returnDate}
+                      min={departureDate}
+                      onChange={(e) => onChangeReturnDate(e.target.value)}
+                      aria-label="Return Date"
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </label>
+                )}
+
+                {/* Search Button */}
+                <div className="shrink-0 flex items-stretch">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpenDropdown(null);
+                      onTriggerSearch();
+                    }}
+                    className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    <Search className="w-4 h-4 shrink-0" />
+                    <span>
+                      {tripType === 'dummy-flights'
+                        ? 'Search Dummy Flights'
+                        : 'Search Flights'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ===================================================================
+              2. TRAINS INTERFACE (IRCTC Style: Book Train Tickets | Check PNR Status | Live Train Status)
+          =================================================================== */}
+          {activeCategory === 'trains' && (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {[
+                    { id: 'book', label: 'Book Train Tickets' },
+                    { id: 'pnr', label: 'Check PNR Status' },
+                    { id: 'status', label: 'Live Train Status' },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setTrainMode(m.id as 'book' | 'pnr' | 'status');
+                        setPnrResult(null);
+                        setLiveTrainStatusMsg(null);
+                      }}
+                      className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        trainMode === m.id
+                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right: IRCTC Quota Selector */}
+                <div className="flex items-center gap-2 relative shrink-0">
+                  <span className="hidden sm:inline text-[11px] text-slate-500 font-medium">
+                    IRCTC Authorised Partner ·
+                  </span>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(
+                          openDropdown === 'train-quota' ? null : 'train-quota'
+                        )
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] sm:text-xs font-semibold text-slate-800 whitespace-nowrap cursor-pointer"
+                    >
+                      <span>{trainQuota}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                    </button>
+                    {openDropdown === 'train-quota' && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                        {TRAIN_QUOTAS.map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => {
+                              setTrainQuota(q);
+                              setOpenDropdown(null);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+                              trainQuota === q
+                                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {trainMode === 'book' && (
+                <div className="flex items-stretch gap-2 w-full">
+                  {/* From Station ⇄ To Station */}
+                  <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
+                    <div className="relative min-w-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === 'from' ? null : 'from')
+                        }
+                        className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
+                      >
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          From Station
+                        </span>
+                        <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                          {fromCity.city} Jn
+                        </span>
+                        <span className="block text-[11px] font-mono-tabular text-slate-500 truncate">
+                          {fromCity.stationCode} · IRCTC
+                        </span>
+                      </button>
+                      {renderCityDropdown('from', fromCity, onChangeFromCity, true)}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSwap}
+                      aria-label="Swap railway stations"
+                      className={`flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-md items-center justify-center text-slate-700 hover:text-indigo-600 transition-transform duration-200 cursor-pointer ${
+                        swapRotated ? 'rotate-180' : ''
+                      }`}
+                    >
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    <div className="relative min-w-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === 'to' ? null : 'to')
+                        }
+                        className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
+                      >
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          To Station
+                        </span>
+                        <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                          {toCity.city} Jn
+                        </span>
+                        <span className="block text-[11px] font-mono-tabular text-slate-500 truncate">
+                          {toCity.stationCode} · IRCTC
+                        </span>
+                      </button>
+                      {renderCityDropdown('to', toCity, onChangeToCity, true)}
+                    </div>
+                  </div>
+
+                  {/* Travel Date */}
+                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        Travel Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                        {formatDisplayDate(departureDate)}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        {trainQuota}
+                      </span>
+                    </div>
+                    <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                    <input
+                      type="date"
+                      value={departureDate}
+                      onChange={(e) => onChangeDepartureDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </label>
+
+                  {/* Train Coach Class */}
+                  <div className="flex-1 min-w-0 relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(
+                          openDropdown === 'train-class' ? null : 'train-class'
+                        )
+                      }
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
+                    >
+                      <div className="min-w-0">
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          Class
+                        </span>
+                        <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                          {trainClass}
+                        </span>
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          Coach Tier
+                        </span>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    </button>
+
+                    {openDropdown === 'train-class' && (
+                      <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                        {TRAIN_CLASSES.map((tc) => (
+                          <button
+                            key={tc}
+                            type="button"
+                            onClick={() => {
+                              setTrainClass(tc);
+                              onChangeTravellers(travellers, tc);
+                              setOpenDropdown(null);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+                              trainClass === tc
+                                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {tc}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Search Trains Button */}
+                  <button
+                    type="button"
+                    onClick={onTriggerSearch}
+                    className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    <Search className="w-4 h-4 shrink-0" />
+                    <span>Search Trains</span>
+                  </button>
+                </div>
+              )}
+
+              {trainMode === 'pnr' && (
+                <div className="space-y-3">
+                  <div className="flex items-stretch gap-2 w-full">
+                    <div className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                      <div className="w-full">
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          Enter 10-Digit IRCTC PNR Number
+                        </span>
+                        <input
+                          type="text"
+                          maxLength={10}
+                          value={pnrInput}
+                          onChange={(e) => setPnrInput(e.target.value.replace(/\D/g, ''))}
+                          placeholder="e.g. 2458916304"
+                          className="w-full bg-transparent text-sm sm:text-base font-mono-tabular font-bold text-slate-900 focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPnrResult(
+                          `PNR ${pnrInput || '2458916304'}: Train 22436 Vande Bharat Exp (${fromCity.stationCode} → ${toCity.stationCode}) · Coach C4, Berth 32 (Window) · Status: CNF (Confirmed)`
+                        )
+                      }
+                      className="px-6 py-3 rounded-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white font-semibold text-xs sm:text-sm shadow-md whitespace-nowrap cursor-pointer"
+                    >
+                      Check PNR Status
+                    </button>
+                  </div>
+                  {pnrResult && (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{pnrResult}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {trainMode === 'status' && (
+                <div className="space-y-3">
+                  <div className="flex items-stretch gap-2 w-full">
+                    <div className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200">
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        Train Number or Name
+                      </span>
+                      <input
+                        type="text"
+                        value={liveTrainNo}
+                        onChange={(e) => setLiveTrainNo(e.target.value)}
+                        className="w-full bg-transparent text-sm font-bold text-slate-900 focus:outline-none mt-0.5"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLiveTrainStatusMsg(
+                          `${liveTrainNo} is running ON TIME · Last crossed Kota Jn 14 mins ago · Expected arrival at ${toCity.city} (${toCity.stationCode}) on Platform 3.`
+                        )
+                      }
+                      className="px-6 py-3 rounded-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white font-semibold text-xs sm:text-sm shadow-md whitespace-nowrap cursor-pointer"
+                    >
+                      Check Live Status
+                    </button>
+                  </div>
+                  {liveTrainStatusMsg && (
+                    <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 font-medium flex items-center gap-2">
+                      <TrainFront className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>{liveTrainStatusMsg}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ===================================================================
+              3. HOTELS INTERFACE (Upto 4 Rooms | Hourly Stays | Villas + City/Property, Check-In, Check-Out, Rooms & Guests)
+          =================================================================== */}
+          {activeCategory === 'hotels' && (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {[
+                    { id: 'overnight', label: 'Upto 4 Rooms' },
+                    { id: 'hourly', label: 'Hourly Stays' },
+                    { id: 'villas', label: 'Luxury Villas & Resorts' },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() =>
+                        setHotelMode(m.id as 'overnight' | 'hourly' | 'villas')
+                      }
+                      className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        hotelMode === m.id
+                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={freeBreakfast}
+                      onChange={() => setFreeBreakfast((prev) => !prev)}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer"
+                    />
+                    <span>Free Breakfast Included</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-stretch gap-2 w-full">
+                {/* City, Property Name or Location */}
+                <div className="flex-[1.6] min-w-0 relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenDropdown(openDropdown === 'to' ? null : 'to')
+                    }
+                    className="w-full h-full text-left px-3.5 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
+                  >
+                    <span className="block text-[11px] text-slate-500 font-medium">
+                      City, Property Name or Location
+                    </span>
+                    <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                      {toCity.city}, {toCity.country}
+                    </span>
+                    <span className="block text-[11px] text-slate-500 truncate">
+                      {hotelMode === 'villas'
+                        ? 'Private Pool Villas & Beach Resorts'
+                        : '320+ Verified Properties'}
+                    </span>
+                  </button>
+                  {renderCityDropdown('to', toCity, onChangeToCity)}
+                </div>
+
+                {/* Check-In Date */}
+                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
+                  <div className="min-w-0">
+                    <span className="block text-[11px] text-slate-500 font-medium">
+                      Check-In
+                    </span>
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                      {formatDisplayDate(departureDate, 'Select Check-In')}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 truncate">
+                      From 14:00
+                    </span>
+                  </div>
+                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                  <input
+                    type="date"
+                    value={departureDate}
+                    onChange={(e) => onChangeDepartureDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+
+                {/* Check-Out Date OR Hourly Slot */}
+                {hotelMode === 'hourly' ? (
+                  <div className="flex-1 min-w-0 relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(
+                          openDropdown === 'hourly-slot' ? null : 'hourly-slot'
+                        )
+                      }
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="min-w-0">
+                        <span className="block text-[11px] text-indigo-600 font-semibold">
+                          Hourly Duration
+                        </span>
+                        <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                          {hourlySlot}
+                        </span>
+                        <span className="block text-[11px] text-indigo-500 truncate">
+                          Flexible Check-In
+                        </span>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    </button>
+                    {openDropdown === 'hourly-slot' && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                        {['3 Hours Stay', '6 Hours Stay', '9 Hours Stay'].map((slot) => (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => {
+                              setHourlySlot(slot);
+                              setOpenDropdown(null);
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-slate-100 cursor-pointer"
+                          >
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        Check-Out
+                      </span>
+                      <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                        {formatDisplayDate(returnDate, 'Select Check-Out')}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        Until 12:00
+                      </span>
+                    </div>
+                    <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                    <input
+                      type="date"
+                      value={returnDate}
+                      min={departureDate}
+                      onChange={(e) => onChangeReturnDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </label>
+                )}
+
+                {/* Rooms & Guests */}
+                <div className="flex-1 min-w-0 relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenDropdown(
+                        openDropdown === 'hotel-guests' ? null : 'hotel-guests'
+                      )
+                    }
+                    className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        Rooms & Guests
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {hotelRooms} {hotelRooms === 1 ? 'Room' : 'Rooms'}, {hotelGuests} Guests
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        {hotelPriceFilter}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  </button>
+
+                  {openDropdown === 'hotel-guests' && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-700">Rooms</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setHotelRooms(Math.max(1, hotelRooms - 1))}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                            {hotelRooms}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setHotelRooms(Math.min(4, hotelRooms + 1))}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-700">Adults</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.max(1, hotelGuests - 1);
+                              setHotelGuests(next);
+                              onChangeTravellers(next, `${hotelRooms} Room`);
+                            }}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                            {hotelGuests}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.min(10, hotelGuests + 1);
+                              setHotelGuests(next);
+                              onChangeTravellers(next, `${hotelRooms} Room`);
+                            }}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 pt-2">
+                        <p className="text-[11px] font-semibold text-slate-500 mb-1.5">
+                          Price Per Night
+                        </p>
+                        <div className="grid grid-cols-2 gap-1">
+                          {['₹0 - ₹5,000', '₹5,000 - ₹12,000', '₹12,000 - ₹25,000', '₹0 - ₹15,000+'].map(
+                            (p) => (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => {
+                                  setHotelPriceFilter(p);
+                                  setOpenDropdown(null);
+                                }}
+                                className={`px-2 py-1 rounded-lg text-[11px] font-medium truncate cursor-pointer ${
+                                  hotelPriceFilter === p
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-slate-100 text-slate-700'
+                                }`}
+                              >
+                                {p}
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Hotels Button */}
+                <button
+                  type="button"
+                  onClick={onTriggerSearch}
+                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Search className="w-4 h-4 shrink-0" />
+                  <span>Search Hotels</span>
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ===================================================================
+              4. BUSES INTERFACE (RedBus / MMT Style: Coach Filters + From City ⇄ To City + Travel Date + Seat Type)
+          =================================================================== */}
+          {activeCategory === 'buses' && (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {BUS_TYPES.map((bt) => (
+                    <button
+                      key={bt}
+                      type="button"
+                      onClick={() => {
+                        setBusFilter(bt);
+                        onChangeTravellers(travellers, bt);
+                      }}
+                      className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        busFilter === bt
+                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                      }`}
+                    >
+                      {bt}
+                    </button>
+                  ))}
+                </div>
+
+                <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={singleLadySeat}
+                    onChange={() => setSingleLadySeat((prev) => !prev)}
+                    className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer"
+                  />
+                  <span>Women / Single Lady Berth</span>
+                </label>
+              </div>
+
+              <div className="flex items-stretch gap-2 w-full">
+                {/* From Bus Stand ⇄ To Bus Stand */}
+                <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === 'from' ? null : 'from')
+                      }
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
+                    >
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        From City
+                      </span>
+                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {fromCity.city}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 truncate">
+                        ISBT / Main Boarding Point
+                      </span>
+                    </button>
+                    {renderCityDropdown('from', fromCity, onChangeFromCity)}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSwap}
+                    aria-label="Swap bus cities"
+                    className={`flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-md items-center justify-center text-slate-700 hover:text-indigo-600 transition-transform duration-200 cursor-pointer ${
+                      swapRotated ? 'rotate-180' : ''
+                    }`}
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === 'to' ? null : 'to')
+                      }
+                      className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
+                    >
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        To City
+                      </span>
+                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {toCity.city}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 truncate">
+                        Central Bus Terminal
+                      </span>
+                    </button>
+                    {renderCityDropdown('to', toCity, onChangeToCity)}
+                  </div>
+                </div>
+
+                {/* Travel Date (One-Way Only for Buses) */}
+                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
+                  <div className="min-w-0">
+                    <span className="block text-[11px] text-slate-500 font-medium">
+                      Travel Date
+                    </span>
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                      {formatDisplayDate(departureDate)}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 truncate">
+                      {busFilter}
+                    </span>
+                  </div>
+                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                  <input
+                    type="date"
+                    value={departureDate}
+                    onChange={(e) => onChangeDepartureDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+
+                {/* Search Buses Button */}
+                <button
+                  type="button"
+                  onClick={onTriggerSearch}
+                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Search className="w-4 h-4 shrink-0" />
+                  <span>Search Buses</span>
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ===================================================================
+              5. CABS INTERFACE (Outstation One-Way | Outstation Round-Trip | Airport Transfer | Hourly Rental)
+          =================================================================== */}
+          {activeCategory === 'cabs' && (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {[
+                    { id: 'one-way', label: 'Outstation One-Way' },
+                    { id: 'round-trip', label: 'Outstation Round-Trip' },
+                    { id: 'airport', label: 'Airport Transfer' },
+                    { id: 'hourly', label: 'Hourly Rental' },
+                  ].map((cm) => (
+                    <button
+                      key={cm.id}
+                      type="button"
+                      onClick={() =>
+                        setCabMode(
+                          cm.id as 'one-way' | 'round-trip' | 'airport' | 'hourly'
+                        )
+                      }
+                      className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        cabMode === cm.id
+                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                      }`}
+                    >
+                      {cm.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Vehicle Preference */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {['Hatchback', 'Sedan', 'SUV (Innova)'].map((car) => (
+                    <button
+                      key={car}
+                      type="button"
+                      onClick={() => {
+                        setCabCarType(car);
+                        onChangeTravellers(travellers, car);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer ${
+                        cabCarType === car
+                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      {car}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-stretch gap-2 w-full">
+                {/* Pickup & Drop (or Hourly City + Package) */}
+                {cabMode === 'hourly' ? (
+                  <>
+                    <div className="flex-[1.3] min-w-0 relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === 'from' ? null : 'from')
+                        }
+                        className="w-full h-full text-left px-3.5 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
+                      >
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          Pickup City
+                        </span>
+                        <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                          {fromCity.city}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 truncate">
+                          Chauffeur-Driven Rental
+                        </span>
+                      </button>
+                      {renderCityDropdown('from', fromCity, onChangeFromCity)}
+                    </div>
+
+                    <div className="flex-1 min-w-0 relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(
+                            openDropdown === 'cab-pkg' ? null : 'cab-pkg'
+                          )
+                        }
+                        className="w-full h-full text-left px-3.5 py-2.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex items-center justify-between cursor-pointer"
+                      >
+                        <div className="min-w-0">
+                          <span className="block text-[11px] text-indigo-600 font-semibold">
+                            Rental Package
+                          </span>
+                          <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                            {cabHourlyPkg}
+                          </span>
+                          <span className="block text-[11px] text-indigo-500 truncate">
+                            AC {cabCarType}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      </button>
+                      {openDropdown === 'cab-pkg' && (
+                        <div className="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                          {CAB_PACKAGES.map((pkg) => (
+                            <button
+                              key={pkg}
+                              type="button"
+                              onClick={() => {
+                                setCabHourlyPkg(pkg);
+                                setOpenDropdown(null);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-slate-100 cursor-pointer"
+                            >
+                              {pkg}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-[2] min-w-0 grid grid-cols-2 gap-2 relative">
+                    <div className="relative min-w-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === 'from' ? null : 'from')
+                        }
+                        className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
+                      >
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          {cabMode === 'airport' ? 'Airport Terminal' : 'From Pickup'}
+                        </span>
+                        <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                          {fromCity.city}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 truncate">
+                          {cabMode === 'airport'
+                            ? `${fromCity.code} Terminal`
+                            : 'Doorstep Pickup'}
+                        </span>
+                      </button>
+                      {renderCityDropdown('from', fromCity, onChangeFromCity)}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSwap}
+                      aria-label="Swap pickup and drop locations"
+                      className={`flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-md items-center justify-center text-slate-700 hover:text-indigo-600 transition-transform duration-200 cursor-pointer ${
+                        swapRotated ? 'rotate-180' : ''
+                      }`}
+                    >
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    <div className="relative min-w-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === 'to' ? null : 'to')
+                        }
+                        className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
+                      >
+                        <span className="block text-[11px] text-slate-500 font-medium">
+                          To Drop
+                        </span>
+                        <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                          {toCity.city}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 truncate">
+                          Hotel / City Address
+                        </span>
+                      </button>
+                      {renderCityDropdown('to', toCity, onChangeToCity)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pickup Date */}
+                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer">
+                  <div className="min-w-0">
+                    <span className="block text-[11px] text-slate-500 font-medium">
+                      Pickup Date
+                    </span>
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                      {formatDisplayDate(departureDate)}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 truncate">
+                      Zero Surge
+                    </span>
+                  </div>
+                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                  <input
+                    type="date"
+                    value={departureDate}
+                    onChange={(e) => onChangeDepartureDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+
+                {/* Return Date — ONLY shown when Outstation Round-Trip is selected */}
+                {cabMode === 'round-trip' && (
+                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 py-2.5 rounded-2xl bg-indigo-50/50 border border-indigo-200 cursor-pointer">
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-indigo-600 font-semibold">
+                        Return Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-semibold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(returnDate, 'Select Return')}
+                      </span>
+                      <span className="block text-[11px] text-indigo-500 truncate">
+                        Round-Trip Cab
+                      </span>
+                    </div>
+                    <Calendar className="w-4 h-4 text-indigo-600 shrink-0 ml-1" />
+                    <input
+                      type="date"
+                      value={returnDate}
+                      min={departureDate}
+                      onChange={(e) => onChangeReturnDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </label>
+                )}
+
+                {/* Pickup Time */}
+                <div className="flex-1 min-w-0 relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenDropdown(
+                        openDropdown === 'cab-time' ? null : 'cab-time'
+                      )
+                    }
+                    className="w-full h-full text-left px-3 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        Pickup Time
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {cabPickupTime}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        45m Free Wait
+                      </span>
+                    </div>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  </button>
+                  {openDropdown === 'cab-time' && (
+                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                      {CAB_TIMES.map((tm) => (
+                        <button
+                          key={tm}
+                          type="button"
+                          onClick={() => {
+                            setCabPickupTime(tm);
+                            setOpenDropdown(null);
+                          }}
+                          className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium hover:bg-slate-100 cursor-pointer"
+                        >
+                          {tm}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Cabs Button */}
+                <button
+                  type="button"
+                  onClick={onTriggerSearch}
+                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Search className="w-4 h-4 shrink-0" />
+                  <span>Search Cabs</span>
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ===================================================================
+              6. HOLIDAYS INTERFACE (All Packages | Honeymoon | Family | Adventure + With Flights Toggle)
+          =================================================================== */}
+          {activeCategory === 'holidays' && (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {['All Packages', 'Honeymoon', 'Family Vacation', 'Adventure'].map(
+                    (th) => (
+                      <button
+                        key={th}
+                        type="button"
+                        onClick={() => setHolidayTheme(th)}
+                        className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                          holidayTheme === th
+                            ? 'bg-[#2563EB] text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                        }`}
+                      >
+                        {th}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={withFlights}
+                    onChange={() => setWithFlights((prev) => !prev)}
+                    className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer"
+                  />
+                  <span>Include Return Flights</span>
+                </label>
+              </div>
+
+              <div className="flex items-stretch gap-2 w-full">
+                {/* Departure City ⇄ Holiday Destination */}
+                <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === 'from' ? null : 'from')
+                      }
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
+                    >
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        From City
+                      </span>
+                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {fromCity.city}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 truncate">
+                        {withFlights ? 'With Return Flights' : 'Land Package Only'}
+                      </span>
+                    </button>
+                    {renderCityDropdown('from', fromCity, onChangeFromCity)}
+                  </div>
+
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdown(openDropdown === 'to' ? null : 'to')
+                      }
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
+                    >
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        To Destination
+                      </span>
+                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {toCity.city}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 truncate">
+                        {holidayTheme}
+                      </span>
+                    </button>
+                    {renderCityDropdown('to', toCity, onChangeToCity)}
+                  </div>
+                </div>
+
+                {/* Departure Date */}
+                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer">
+                  <div className="min-w-0">
+                    <span className="block text-[11px] text-slate-500 font-medium">
+                      Departure Date
+                    </span>
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
+                      {formatDisplayDate(departureDate)}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 truncate">
+                      Flexible Dates
+                    </span>
+                  </div>
+                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                  <input
+                    type="date"
+                    value={departureDate}
+                    onChange={(e) => onChangeDepartureDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+
+                {/* Duration & Guests */}
+                <div className="flex-1 min-w-0 relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenDropdown(
+                        openDropdown === 'holiday-dur' ? null : 'holiday-dur'
+                      )
+                    }
+                    className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium">
+                        Duration
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {holidayDuration}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        5★ Stays + Transfers
+                      </span>
+                    </div>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  </button>
+                  {openDropdown === 'holiday-dur' && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                      {['3N / 4D', '4N / 5D', '6N / 7D', '8N / 9D'].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => {
+                            setHolidayDuration(d);
+                            setOpenDropdown(null);
+                          }}
+                          className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium hover:bg-slate-100 cursor-pointer"
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Holidays Button */}
+                <button
+                  type="button"
+                  onClick={onTriggerSearch}
+                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Search className="w-4 h-4 shrink-0" />
+                  <span>Search Holidays</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 5 Trust Pillars Strip (Single Landscape Row) */}
+        <div className="mt-5 bg-white/85 backdrop-blur-xs rounded-2xl border border-slate-200/70 px-3 py-3 sm:px-6 sm:py-3.5">
+          <div className="grid grid-cols-5 gap-2 sm:gap-4">
+            {TRUST_PILLARS.map((pillar) => {
+              const Icon = pillar.icon;
+              return (
+                <button
+                  key={pillar.title}
+                  type="button"
+                  onClick={() =>
+                    onSelectTrustPillar(pillar.title, pillar.detail)
+                  }
+                  className="flex items-center gap-2 sm:gap-3 text-left group p-1 rounded-xl hover:bg-slate-100/80 transition-colors cursor-pointer min-w-0"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-sm font-bold text-slate-900 truncate">
+                      {pillar.title}
+                    </div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 truncate">
+                      {pillar.subtitle}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
