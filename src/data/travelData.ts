@@ -65,6 +65,13 @@ export interface SearchListing {
   rating?: string;
 }
 
+export interface BookedTripPassenger {
+  name: string;
+  age?: number;
+  gender?: string;
+  seatOrBerth?: string;
+}
+
 export interface BookedTrip {
   bookingId: string;
   bookingReference?: string;
@@ -77,8 +84,37 @@ export interface BookedTrip {
   totalPaidInr: number;
   promoApplied?: string;
   studentFareApplied: boolean;
-  status: 'Confirmed';
+  status: 'Confirmed' | 'Cancelled' | 'Completed';
   bookedAt: string;
+  departureDate?: string;
+  returnDate?: string;
+  destinationCity?: string;
+  destinationImage?: string;
+  passengers?: BookedTripPassenger[];
+  pnr?: string;
+  carrierOrHotel?: string;
+  cancellationDate?: string;
+  cancellationReason?: string;
+  refundStatus?: 'Refund Initiated' | 'Refund Processed' | 'In Review' | 'Not Applicable';
+  refundAmountInr?: number;
+  refundId?: string;
+  paymentMode?: string;
+  gstNumber?: string;
+  hasInsurance?: boolean;
+  policyNumber?: string;
+  hotelCheckInTime?: string;
+  hotelCheckOutTime?: string;
+  hotelAddress?: string;
+  hotelRating?: string;
+  flightDepTime?: string;
+  flightArrTime?: string;
+  flightDuration?: string;
+  flightCode?: string;
+  trainNumber?: string;
+  trainCoach?: string;
+  busOperator?: string;
+  busSeat?: string;
+  isDemo?: boolean;
 }
 
 import heroMultimodal from '../assets/images/hero_multimodal_panorama_1790782919071.jpg';
@@ -90,6 +126,10 @@ import singapore from '../assets/images/dest_singapore_bay_1790774729082.jpg';
 import bangkok from '../assets/images/dest_bangkok_temple_1790774744899.jpg';
 import paris from '../assets/images/dest_paris_eiffel_1790774759266.jpg';
 import mountainTraveler from '../assets/images/banner_mountain_traveler_1790774776035.jpg';
+import goa from '../assets/images/dest_goa_beach_1792241006825.jpg';
+import maldives from '../assets/images/dest_maldives_resort_1792241008307.jpg';
+import manali from '../assets/images/dest_manali_snow_1792241007871.jpg';
+import udaipur from '../assets/images/dest_udaipur_palace_1792241008240.jpg';
 
 export const ASSETS = {
   heroMultimodal,
@@ -101,7 +141,286 @@ export const ASSETS = {
   bangkok,
   paris,
   mountainTraveler,
+  goa,
+  maldives,
+  manali,
+  udaipur,
 };
+
+export const SAMPLE_DEMO_TRIPS: BookedTrip[] = [
+  // 1. UPCOMING TRIPS
+  {
+    bookingId: 'TY-8841-GOA',
+    bookingReference: 'TY-GOA-9021',
+    category: 'holidays',
+    title: 'Goa Beachfront Escape & Flights',
+    routeSummary: 'New Delhi (DEL) → Goa (GOI)',
+    dateSummary: '16 Oct – 19 Oct 2026',
+    departureDate: '2026-10-16',
+    returnDate: '2026-10-19',
+    destinationCity: 'Goa, India',
+    destinationImage: goa,
+    travellers: 2,
+    cabinOrRoom: 'Premium Beachfront Suite + IndiGo 6E-2134',
+    totalPaidInr: 34845,
+    studentFareApplied: false,
+    status: 'Confirmed',
+    bookedAt: '2026-10-14',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '12B (Extra Legroom)' },
+      { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: '12C (Aisle)' },
+    ],
+    carrierOrHotel: 'The Grand Azure Beachfront Resort & IndiGo Airlines',
+    pnr: 'TY-6E-8841',
+    paymentMode: 'UPI / HDFC Net Banking',
+    hasInsurance: true,
+    policyNumber: 'TP-99214-DELGOI',
+    hotelCheckInTime: '02:00 PM',
+    hotelCheckOutTime: '11:00 AM',
+    hotelAddress: 'Calangute Beachfront Road, North Goa, 403516',
+    hotelRating: '5★ Luxury Resort',
+    flightDepTime: '06:15 AM (DEL)',
+    flightArrTime: '08:30 AM (GOI)',
+    flightDuration: '2h 15m (Non-stop)',
+    flightCode: 'IndiGo 6E-2134',
+    isDemo: true,
+  },
+  {
+    bookingId: 'TY-9042-BOM',
+    bookingReference: 'AI-BOM-7712',
+    category: 'flights',
+    title: 'Air India Non-Stop DEL → BOM (Business Class)',
+    routeSummary: 'New Delhi (DEL) → Mumbai (BOM)',
+    dateSummary: '24 Oct 2026 · Morning Departure',
+    departureDate: '2026-10-24',
+    returnDate: '2026-10-24',
+    destinationCity: 'Mumbai, India',
+    destinationImage: heroMultimodal,
+    travellers: 1,
+    cabinOrRoom: 'Seat 2D (Business Class Lie-Flat)',
+    totalPaidInr: 16800,
+    studentFareApplied: false,
+    status: 'Confirmed',
+    bookedAt: '2026-10-15',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '2D (Business Class)' },
+    ],
+    carrierOrHotel: 'Air India · Boeing 787-8 Dreamliner',
+    pnr: 'AI-789042',
+    paymentMode: 'Axis Bank Vistara Credit Card',
+    hasInsurance: true,
+    policyNumber: 'TP-44012-DELBOM',
+    flightDepTime: '08:00 AM (DEL T3)',
+    flightArrTime: '10:15 AM (BOM T2)',
+    flightDuration: '2h 15m (Non-stop)',
+    flightCode: 'Air India AI-804',
+    isDemo: true,
+  },
+  {
+    bookingId: 'TY-7301-MAN',
+    bookingReference: 'MAN-HTL-5521',
+    category: 'hotels',
+    title: 'The Himalayan Pines Luxury Spa Resort',
+    routeSummary: 'Log Huts Area, Old Manali, Himachal Pradesh',
+    dateSummary: '28 Oct – 31 Oct 2026 (3 Nights)',
+    departureDate: '2026-10-28',
+    returnDate: '2026-10-31',
+    destinationCity: 'Manali, Himachal Pradesh',
+    destinationImage: manali,
+    travellers: 2,
+    cabinOrRoom: 'Snow Valley Panorama Suite with Fireplace',
+    totalPaidInr: 22400,
+    studentFareApplied: false,
+    status: 'Confirmed',
+    bookedAt: '2026-10-12',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: 'Suite 302' },
+      { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: 'Suite 302' },
+    ],
+    carrierOrHotel: 'The Himalayan Pines Resort & Spa',
+    pnr: 'HTL-MAN-7301',
+    paymentMode: 'ICICI Net Banking',
+    hasInsurance: false,
+    hotelCheckInTime: '01:00 PM',
+    hotelCheckOutTime: '11:00 AM',
+    hotelAddress: 'Log Huts Area, Old Manali, Himachal Pradesh 175131',
+    hotelRating: '4.8★ Mountain Resort',
+    isDemo: true,
+  },
+
+  // 2. CANCELLED TRIPS
+  {
+    bookingId: 'TY-5420-BLR',
+    bookingReference: '6E-BLR-4011',
+    category: 'flights',
+    title: 'IndiGo 6E-502 (DEL → BLR)',
+    routeSummary: 'New Delhi (DEL) → Bengaluru (BLR)',
+    dateSummary: '12 Oct 2026 · Evening Flight',
+    departureDate: '2026-10-12',
+    returnDate: '2026-10-12',
+    destinationCity: 'Bengaluru, India',
+    destinationImage: heroAlpine,
+    travellers: 1,
+    cabinOrRoom: 'Seat 14C (Aisle)',
+    totalPaidInr: 6200,
+    studentFareApplied: false,
+    status: 'Cancelled',
+    bookedAt: '2026-10-02',
+    cancellationDate: '10 Oct 2026',
+    cancellationReason: 'Rescheduled personal meetings; cancelled under 24-hr Free Cancellation Policy',
+    refundStatus: 'Refund Processed',
+    refundAmountInr: 6200,
+    refundId: 'REF-6E-99410-UPI',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '14C (Standard)' },
+    ],
+    carrierOrHotel: 'IndiGo Airlines · A320neo',
+    pnr: '6E-REF5420',
+    paymentMode: 'Google Pay (UPI)',
+    flightDepTime: '07:20 PM',
+    flightArrTime: '10:05 PM',
+    flightDuration: '2h 45m',
+    flightCode: 'IndiGo 6E-502',
+    isDemo: true,
+  },
+  {
+    bookingId: 'TY-4318-UDA',
+    bookingReference: 'UDA-PAL-3329',
+    category: 'hotels',
+    title: 'Taj Lake Palace Heritage Grand Heritage Suite',
+    routeSummary: 'Pichola Lake, Udaipur, Rajasthan',
+    dateSummary: '05 Oct – 08 Oct 2026 (3 Nights)',
+    departureDate: '2026-10-05',
+    returnDate: '2026-10-08',
+    destinationCity: 'Udaipur, Rajasthan',
+    destinationImage: udaipur,
+    travellers: 2,
+    cabinOrRoom: 'Palace Lake View Suite with Royal Butler Service',
+    totalPaidInr: 45000,
+    studentFareApplied: false,
+    status: 'Cancelled',
+    bookedAt: '2026-09-20',
+    cancellationDate: '01 Oct 2026',
+    cancellationReason: 'Family emergency; 100% full refund approved by property manager',
+    refundStatus: 'Refund Processed',
+    refundAmountInr: 45000,
+    refundId: 'REF-TAJ-88210-HDFC',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: 'Suite 104' },
+      { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: 'Suite 104' },
+    ],
+    carrierOrHotel: 'Taj Lake Palace Udaipur',
+    pnr: 'TAJ-UDA-4318',
+    paymentMode: 'HDFC Infinia Credit Card',
+    hotelCheckInTime: '02:00 PM',
+    hotelCheckOutTime: '12:00 PM',
+    hotelAddress: 'Pichola, Udaipur, Rajasthan 313001',
+    hotelRating: '5★ Luxury Heritage Palace',
+    isDemo: true,
+  },
+
+  // 3. COMPLETED TRIPS
+  {
+    bookingId: 'TY-3201-DXB',
+    bookingReference: 'DXB-HOL-8832',
+    category: 'holidays',
+    title: 'Dubai Skyline, Burj Khalifa & Desert Safari 4N/5D',
+    routeSummary: 'New Delhi (DEL) ⇄ Dubai (DXB)',
+    dateSummary: '15 May – 19 May 2026 (4 Nights)',
+    departureDate: '2026-05-15',
+    returnDate: '2026-05-19',
+    destinationCity: 'Dubai, UAE',
+    destinationImage: dubai,
+    travellers: 2,
+    cabinOrRoom: 'Emirates EK-511 + Address Downtown 5★ Fountain View Room',
+    totalPaidInr: 68500,
+    studentFareApplied: false,
+    status: 'Completed',
+    bookedAt: '2026-04-18',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '18A (Window)' },
+      { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: '18B (Middle)' },
+    ],
+    carrierOrHotel: 'Emirates & Address Downtown Dubai',
+    pnr: 'EK-TY-3201',
+    paymentMode: 'Amex Platinum Card',
+    gstNumber: '07AAACT1234F1Z8',
+    hasInsurance: true,
+    policyNumber: 'TP-INTL-33901',
+    hotelCheckInTime: '03:00 PM',
+    hotelCheckOutTime: '11:00 AM',
+    flightDepTime: '10:30 AM (DEL T3)',
+    flightArrTime: '01:00 PM (DXB T3)',
+    flightDuration: '4h 00m (Non-stop)',
+    flightCode: 'Emirates EK-511',
+    isDemo: true,
+  },
+  {
+    bookingId: 'TY-2190-BAL',
+    bookingReference: 'DPS-BAL-1144',
+    category: 'holidays',
+    title: 'Bali Tropical Villas, Ubud Culture & Uluwatu Sunset',
+    routeSummary: 'New Delhi (DEL) ⇄ Denpasar, Bali (DPS)',
+    dateSummary: '18 Aug – 23 Aug 2026 (5 Nights)',
+    departureDate: '2026-08-18',
+    returnDate: '2026-08-23',
+    destinationCity: 'Bali, Indonesia',
+    destinationImage: bali,
+    travellers: 2,
+    cabinOrRoom: 'Private Pool Villa, Maya Ubud Resort',
+    totalPaidInr: 54200,
+    studentFareApplied: false,
+    status: 'Completed',
+    bookedAt: '2026-07-10',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: 'Villa 12' },
+      { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: 'Villa 12' },
+    ],
+    carrierOrHotel: 'Singapore Airlines & Maya Ubud Resort',
+    pnr: 'SQ-TY-2190',
+    paymentMode: 'Razorpay / UPI',
+    gstNumber: '07AAACT1234F1Z8',
+    hasInsurance: true,
+    policyNumber: 'TP-INTL-11029',
+    hotelCheckInTime: '02:00 PM',
+    hotelCheckOutTime: '11:00 AM',
+    flightDepTime: '09:10 AM',
+    flightArrTime: '06:40 PM',
+    flightDuration: '7h 30m (1 stop SIN)',
+    flightCode: 'Singapore Airlines SQ-401',
+    isDemo: true,
+  },
+  {
+    bookingId: 'TY-1082-SGP',
+    bookingReference: 'SIN-AIR-9923',
+    category: 'flights',
+    title: 'Singapore Airlines SQ-403 (DEL → SIN)',
+    routeSummary: 'New Delhi (DEL) → Singapore (SIN)',
+    dateSummary: '10 Dec – 15 Dec 2025 (5 Days)',
+    departureDate: '2025-12-10',
+    returnDate: '2025-12-15',
+    destinationCity: 'Singapore',
+    destinationImage: singapore,
+    travellers: 2,
+    cabinOrRoom: 'Economy Flex (Row 34)',
+    totalPaidInr: 48900,
+    studentFareApplied: false,
+    status: 'Completed',
+    bookedAt: '2025-11-05',
+    passengers: [
+      { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '34A, 34B' },
+      { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: '34B' },
+    ],
+    carrierOrHotel: 'Singapore Airlines · Airbus A350-900',
+    pnr: 'SQ-992310',
+    paymentMode: 'HDFC Net Banking',
+    flightDepTime: '09:55 AM (DEL T3)',
+    flightArrTime: '06:10 PM (SIN T3)',
+    flightDuration: '5h 45m',
+    flightCode: 'Singapore Airlines SQ-403',
+    isDemo: true,
+  },
+];
 
 export const CURRENCY_RATES: Record<CurrencyCode, { symbol: string; rate: number; label: string }> = {
   INR: { symbol: '₹', rate: 1, label: 'INR (₹)' },

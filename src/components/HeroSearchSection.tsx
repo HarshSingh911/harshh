@@ -23,6 +23,7 @@ import {
   Gift,
   Navigation,
   Globe,
+  Camera,
   X,
 } from 'lucide-react';
 import {
@@ -57,6 +58,7 @@ interface HeroSearchSectionProps {
   onSelectTrustPillar: (pillarTitle: string, pillarDetail: string) => void;
   onOpenTripAI?: () => void;
   onOpenExplorePage?: () => void;
+  onOpenInfluencersPage?: () => void;
 }
 
 const SERVICE_TABS: {
@@ -89,7 +91,7 @@ const CAB_TIMES = ['06:00 AM', '09:00 AM', '11:30 AM', '02:00 PM', '05:00 PM', '
 const CAB_PACKAGES = ['4 Hrs / 40 km', '8 Hrs / 80 km', '12 Hrs / 120 km'];
 
 export interface DiscoveryOption {
-  id: 'explore' | 'navigator' | 'business-travel' | 'gift-cards';
+  id: 'explore' | 'navigator' | 'business-travel' | 'gift-cards' | 'influencers';
   icon: React.FC<{ className?: string }>;
   title: string;
   subtitle: string;
@@ -130,6 +132,14 @@ const DISCOVERY_OPTIONS: DiscoveryOption[] = [
     badge: 'Special',
     detail: 'Digital TripYeah travel gift cards from ₹500 to ₹50,000 with instant email & WhatsApp delivery for birthdays, weddings & rewards.',
   },
+  {
+    id: 'influencers',
+    icon: Camera,
+    title: 'Influencers',
+    subtitle: 'Creator Club & Perks',
+    badge: 'Creators',
+    detail: 'TripYeah Creator Club for Instagram & YouTube creators: Sponsored luxury resort stays, flight credits, affiliate commissions & PR media kits.',
+  },
 ];
 
 export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
@@ -155,6 +165,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onSelectTrustPillar,
   onOpenTripAI,
   onOpenExplorePage,
+  onOpenInfluencersPage,
 }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [swapRotated, setSwapRotated] = useState(false);
@@ -1845,9 +1856,9 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           )}
         </div>
 
-        {/* 4 Feature Options Strip: Explore, Navigator, Business Travel, Gift Cards */}
+        {/* 5 Feature Options Strip: Explore, Navigator, Business Travel, Gift Cards, Influencers */}
         <div className="mt-5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-2 sm:p-3 shadow-md shadow-slate-900/5">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
             {DISCOVERY_OPTIONS.map((item) => {
               const Icon = item.icon;
               return (
@@ -1873,6 +1884,10 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       setShowBusinessModal(true);
                     } else if (item.id === 'gift-cards') {
                       setShowGiftCardsModal(true);
+                    } else if (item.id === 'influencers') {
+                      if (onOpenInfluencersPage) {
+                        onOpenInfluencersPage();
+                      }
                     }
                   }}
                   className="flex items-center gap-2.5 sm:gap-3.5 text-left group p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/90 transition-all cursor-pointer min-w-0"

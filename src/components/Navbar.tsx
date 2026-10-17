@@ -11,7 +11,8 @@ export type AppPageView =
   | 'account'
   | 'admin'
   | 'international-planner'
-  | 'explore';
+  | 'explore'
+  | 'influencers';
 
 interface NavbarProps {
   activePage: AppPageView;
@@ -70,8 +71,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Front page (home), international planner, and explore have scenic/dark backgrounds behind the navbar
-  const isDarkHeader = activePage === 'home' || activePage === 'international-planner' || activePage === 'explore';
+  // Front page (home), international planner, explore, and influencers have scenic/dark backgrounds behind the navbar
+  const isDarkHeader = activePage === 'home' || activePage === 'international-planner' || activePage === 'explore' || activePage === 'influencers';
 
   // Categories show in top navigation after searching (search-results page or checkout)
   const isSearchResultsPage = activePage === 'search-results';

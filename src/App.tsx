@@ -37,6 +37,7 @@ import { ListPropertyModal } from './components/ListPropertyModal';
 import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 import { HotelDetailsPage } from './components/HotelDetailsPage';
 import { ExplorePage } from './components/ExplorePage';
+import { InfluencersPage } from './components/InfluencersPage';
 
 export default function App() {
   // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account')
@@ -99,22 +100,58 @@ export default function App() {
     useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
-  // Booked Trips State
-  const [bookedTrips, setBookedTrips] = useState<BookedTrip[]>([
-    {
-      bookingId: 'TY-8841-GOA',
-      category: 'holidays',
-      title: 'Goa Beachfront Escape & Flights',
-      routeSummary: 'New Delhi (DEL) → Goa (GOI)',
-      dateSummary: '16 Oct – 19 Oct 2025',
-      travellers: 2,
-      cabinOrRoom: 'Premium Beachfront Suite + IndiGo 6E-2134',
-      totalPaidInr: 34845,
-      studentFareApplied: false,
-      status: 'Confirmed',
-      bookedAt: '2025-10-14',
-    },
-  ]);
+  // Booked Trips State with localStorage persistence
+  const [bookedTrips, setBookedTrips] = useState<BookedTrip[]>(() => {
+    try {
+      const stored = localStorage.getItem('tripyeah_booked_trips');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return [
+      {
+        bookingId: 'TY-8841-GOA',
+        bookingReference: 'TY-GOA-9021',
+        category: 'holidays',
+        title: 'Goa Beachfront Escape & Flights',
+        routeSummary: 'New Delhi (DEL) → Goa (GOI)',
+        dateSummary: '16 Oct – 19 Oct 2026',
+        departureDate: '2026-10-16',
+        returnDate: '2026-10-19',
+        destinationCity: 'Goa',
+        travellers: 2,
+        cabinOrRoom: 'Premium Beachfront Suite + IndiGo 6E-2134',
+        totalPaidInr: 34845,
+        studentFareApplied: false,
+        status: 'Confirmed',
+        bookedAt: '2026-10-14',
+        passengers: [
+          { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '12B (Extra Legroom)' },
+          { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: '12C (Aisle)' },
+        ],
+        carrierOrHotel: 'The Grand Azure Beachfront Resort & IndiGo Airlines',
+        pnr: 'TY-6E-8841',
+        paymentMode: 'UPI / HDFC Net Banking',
+        hasInsurance: true,
+        policyNumber: 'TP-99214-DELGOI',
+        hotelCheckInTime: '02:00 PM',
+        hotelCheckOutTime: '11:00 AM',
+        flightDepTime: '06:15 AM (DEL)',
+        flightArrTime: '08:30 AM (GOI)',
+        flightDuration: '2h 15m (Non-stop)',
+        flightCode: 'IndiGo 6E-2134',
+      },
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tripyeah_booked_trips', JSON.stringify(bookedTrips));
+    } catch {}
+  }, [bookedTrips]);
 
   // Contextual Toast Notification State
   const [bannerMessage, setBannerMessage] = useState<{
@@ -344,6 +381,7 @@ export default function App() {
               onTriggerSearch={handleTriggerSearch}
               onOpenTripAI={() => navigateTo('international-planner')}
               onOpenExplorePage={() => navigateTo('explore')}
+              onOpenInfluencersPage={() => navigateTo('influencers')}
               onSelectTrustPillar={(title, detail) =>
                 setBannerMessage({
                   title: `TripYeah Guarantee: ${title}`,
@@ -497,9 +535,21 @@ export default function App() {
           <TripsDashboardPage
             currency={currency}
             bookedTrips={bookedTrips}
+            onUpdateBookedTrips={setBookedTrips}
             onBookNewTrip={() => navigateTo('home')}
             onOpenCredentialModal={(modal) => setActiveCredentialModal(modal)}
             onNavigateToProfile={() => navigateTo('account')}
+            onNavigateToSearch={(category, destination) => {
+              if (category) setActiveCategory(category);
+              if (destination) {
+                const found = CITIES.find((c) =>
+                  destination.toLowerCase().includes(c.city.toLowerCase()) ||
+                  c.city.toLowerCase().includes(destination.toLowerCase())
+                );
+                if (found) setToCity(found);
+              }
+              navigateTo('search-results');
+            }}
             onNotify={handleNotify}
           />
         )}
@@ -561,6 +611,16 @@ export default function App() {
             onOpenAIPlanner={() => {
               navigateTo('international-planner');
             }}
+          />
+        )}
+
+        {/* INFLUENCERS & CREATOR CLUB PAGE */}
+        {activePage === 'influencers' && (
+          <InfluencersPage
+            currency={currency}
+            onBackToHome={() => navigateTo('home')}
+            onNotify={handleNotify}
+            onOpenExplore={() => navigateTo('explore')}
           />
         )}
       </main>

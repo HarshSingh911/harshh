@@ -200,6 +200,16 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
+                  onClick={() => onNavigatePage('influencers')}
+                  className="hover:text-rose-600 font-semibold text-rose-500 cursor-pointer flex items-center gap-1"
+                >
+                  <span>Influencers &amp; Creators</span>
+                  <span className="text-[9px] bg-rose-100 text-rose-700 px-1 py-0.2 rounded font-bold">New</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
                   onClick={() => onNavigatePage('checkout')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
