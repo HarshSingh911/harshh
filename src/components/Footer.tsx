@@ -1,7 +1,42 @@
 import React from 'react';
-import { Globe, Hash, MessageSquare } from 'lucide-react';
+import { Instagram, Facebook, Twitter, Linkedin } from 'lucide-react';
 import { BookingCategory } from '../data/travelData';
 import { AppPageView } from './Navbar';
+
+export const SOCIAL_PROFILES = [
+  {
+    name: 'Instagram',
+    handle: '@tripyeah',
+    url: 'https://www.instagram.com/tripyeah',
+    icon: Instagram,
+    hoverBg: 'hover:bg-gradient-to-tr hover:from-amber-500 hover:via-pink-500 hover:to-purple-600 hover:text-white hover:border-transparent',
+    textHover: 'hover:text-pink-600',
+  },
+  {
+    name: 'Facebook',
+    handle: 'facebook.com/tripyeah',
+    url: 'https://www.facebook.com/tripyeah',
+    icon: Facebook,
+    hoverBg: 'hover:bg-[#1877F2] hover:text-white hover:border-transparent',
+    textHover: 'hover:text-[#1877F2]',
+  },
+  {
+    name: 'Twitter',
+    handle: '@tripyeah',
+    url: 'https://twitter.com/tripyeah',
+    icon: Twitter,
+    hoverBg: 'hover:bg-[#1DA1F2] hover:text-white hover:border-transparent',
+    textHover: 'hover:text-[#1DA1F2]',
+  },
+  {
+    name: 'LinkedIn',
+    handle: 'linkedin.com/company/tripyeah',
+    url: 'https://www.linkedin.com/company/tripyeah',
+    icon: Linkedin,
+    hoverBg: 'hover:bg-[#0A66C2] hover:text-white hover:border-transparent',
+    textHover: 'hover:text-[#0A66C2]',
+  },
+];
 
 interface FooterProps {
   onSelectCategory: (cat: BookingCategory) => void;
@@ -43,31 +78,29 @@ export const Footer: React.FC<FooterProps> = ({
               Smart, high-velocity travel platform engineered for digital nomads,
               spontaneous wanderers, and global business travelers.
             </p>
-            <div className="flex items-center gap-2.5 pt-1">
-              <button
-                type="button"
-                onClick={() => onNavigatePage('home')}
-                aria-label="Global portal"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
-              >
-                <Globe className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigatePage('search-results')}
-                aria-label="Explore channels"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
-              >
-                <Hash className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigatePage('trips')}
-                aria-label="Concierge support"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-              </button>
+            {/* Social Media Links */}
+            <div className="pt-2">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Follow TripYeah
+              </span>
+              <div className="flex items-center gap-2.5">
+                {SOCIAL_PROFILES.map((social) => {
+                  const Icon = social.icon;
+                  return (
+                    <a
+                      key={social.name}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`${social.name} (${social.handle})`}
+                      aria-label={`TripYeah on ${social.name}`}
+                      className={`w-9 h-9 rounded-full bg-slate-100 hover:shadow-md border border-slate-200/80 text-slate-600 flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 ${social.hoverBg}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </a>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -224,6 +257,28 @@ export const Footer: React.FC<FooterProps> = ({
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© 2025 TripYeah Inc. All rights reserved.</p>
+
+          {/* Social Profiles Quick Bar */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-400 hidden md:inline">Connect:</span>
+            {SOCIAL_PROFILES.map((social) => {
+              const Icon = social.icon;
+              return (
+                <a
+                  key={`bottom-${social.name}`}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${social.name} (${social.handle})`}
+                  aria-label={social.name}
+                  className={`w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors ${social.textHover}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                </a>
+              );
+            })}
+          </div>
+
           <div className="flex items-center gap-5">
             <button
               type="button"

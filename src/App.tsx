@@ -36,6 +36,7 @@ import { LanguageRegionModal } from './components/LanguageRegionModal';
 import { ListPropertyModal } from './components/ListPropertyModal';
 import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 import { HotelDetailsPage } from './components/HotelDetailsPage';
+import { ExplorePage } from './components/ExplorePage';
 
 export default function App() {
   // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account')
@@ -57,7 +58,13 @@ export default function App() {
   const [currency, setCurrency] = useState<CurrencyCode>('INR');
   const [language, setLanguage] = useState<string>('English');
   const [region, setRegion] = useState<string>('India');
-  const [userName, setUserName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('tripyeah_logged_user');
+    } catch {
+      return null;
+    }
+  });
   const [activePromo, setActivePromo] = useState<PromoOffer | null>(null);
   const [checkoutItem, setCheckoutItem] = useState<CheckoutItem>({
     title: 'IndiGo 6E-2134 (DEL → GOI)',
@@ -336,6 +343,7 @@ export default function App() {
               }}
               onTriggerSearch={handleTriggerSearch}
               onOpenTripAI={() => navigateTo('international-planner')}
+              onOpenExplorePage={() => navigateTo('explore')}
               onSelectTrustPillar={(title, detail) =>
                 setBannerMessage({
                   title: `TripYeah Guarantee: ${title}`,
@@ -355,7 +363,7 @@ export default function App() {
                 setActiveCategory(cat);
                 navigateTo('search-results');
               }}
-              onStartExploring={() => navigateTo('search-results')}
+              onStartExploring={() => navigateTo('explore')}
             />
           </>
         )}
@@ -499,7 +507,21 @@ export default function App() {
         {/* IMAGE 7: ACCOUNT SETTINGS & PREFERENCES PORTAL */}
         {activePage === 'account' && (
           <AccountSettingsPage
-            onSaveProfile={(name) => setUserName(name)}
+            userName={userName}
+            onSaveProfile={(name) => {
+              setUserName(name);
+              try {
+                localStorage.setItem('tripyeah_logged_user', name);
+              } catch {}
+            }}
+            onLogout={() => {
+              setUserName(null);
+              try {
+                localStorage.removeItem('tripyeah_logged_user');
+              } catch {}
+              handleNotify('Signed Out', 'You have been signed out successfully.', 'info');
+              navigateTo('home');
+            }}
             onNotify={handleNotify}
           />
         )}
@@ -516,6 +538,29 @@ export default function App() {
             }}
             onBookFlightOrHotel={handlePlannerBook}
             onNotify={handleNotify}
+          />
+        )}
+
+        {/* EXPLORE DESTINATIONS: 12 THEME CARDS, 5 HORIZONTAL CAROUSELS, DETAIL MODAL */}
+        {activePage === 'explore' && (
+          <ExplorePage
+            onBackToHome={() => navigateTo('home')}
+            currency={currency}
+            onBookFlightToDestination={(cityName) => {
+              const matchedCity = CITIES.find(
+                (c) =>
+                  c.city.toLowerCase().includes(cityName.toLowerCase()) ||
+                  cityName.toLowerCase().includes(c.city.toLowerCase())
+              );
+              if (matchedCity) {
+                setToCity(matchedCity);
+              }
+              setActiveCategory('flights');
+              navigateTo('search-results');
+            }}
+            onOpenAIPlanner={() => {
+              navigateTo('international-planner');
+            }}
           />
         )}
       </main>
@@ -559,11 +604,19 @@ export default function App() {
         userName={userName}
         onLoginSuccess={(name) => {
           setUserName(name);
-          handleNotify('Welcome Back!', `Signed in as ${name}`, 'success');
+          try {
+            localStorage.setItem('tripyeah_logged_user', name);
+          } catch {}
+          handleNotify('Account Verified!', `Welcome, ${name}! Your TripYeah account is active.`, 'success');
+          navigateTo('account');
         }}
         onLogout={() => {
           setUserName(null);
+          try {
+            localStorage.removeItem('tripyeah_logged_user');
+          } catch {}
           handleNotify('Signed Out', 'You have been signed out successfully.', 'info');
+          navigateTo('home');
         }}
       />
 

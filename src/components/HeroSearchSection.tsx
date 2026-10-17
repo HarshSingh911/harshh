@@ -6,6 +6,7 @@ import {
   Bus,
   Car,
   Palmtree,
+  RollerCoaster,
   ArrowLeftRight,
   Calendar,
   Search,
@@ -19,6 +20,10 @@ import {
   MapPin,
   Users,
   Compass,
+  Gift,
+  Navigation,
+  Globe,
+  X,
 } from 'lucide-react';
 import {
   ASSETS,
@@ -51,6 +56,7 @@ interface HeroSearchSectionProps {
   onTriggerSearch: () => void;
   onSelectTrustPillar: (pillarTitle: string, pillarDetail: string) => void;
   onOpenTripAI?: () => void;
+  onOpenExplorePage?: () => void;
 }
 
 const SERVICE_TABS: {
@@ -65,7 +71,7 @@ const SERVICE_TABS: {
   { id: 'buses', label: 'Buses', ctaLabel: 'Search Buses', icon: Bus },
   { id: 'cabs', label: 'Cabs', ctaLabel: 'Search Cabs', icon: Car },
   { id: 'holidays', label: 'Holidays', ctaLabel: 'Search Holidays', icon: Palmtree },
-  { id: 'experiences', label: 'Tours & Experiences', ctaLabel: 'Explore Experiences', icon: Compass },
+  { id: 'experiences', label: 'Attractions', ctaLabel: 'Explore Attractions', icon: RollerCoaster },
 ];
 
 const FLIGHT_CLASSES = ['Economy', 'Premium Eco', 'Business', 'First Class'];
@@ -82,36 +88,47 @@ const BUS_TYPES = ['All Buses', 'AC Sleeper', 'AC Seater', 'Volvo Multi-Axle'];
 const CAB_TIMES = ['06:00 AM', '09:00 AM', '11:30 AM', '02:00 PM', '05:00 PM', '08:30 PM'];
 const CAB_PACKAGES = ['4 Hrs / 40 km', '8 Hrs / 80 km', '12 Hrs / 120 km'];
 
-const TRUST_PILLARS = [
+export interface DiscoveryOption {
+  id: 'explore' | 'navigator' | 'business-travel' | 'gift-cards';
+  icon: React.FC<{ className?: string }>;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  detail: string;
+}
+
+const DISCOVERY_OPTIONS: DiscoveryOption[] = [
   {
-    icon: BadgePercent,
-    title: 'Best Prices',
-    subtitle: 'Always',
-    detail: 'Found a lower fare within 24 hours of booking? TripYeah refunds 2x the price difference directly to your wallet.',
+    id: 'explore',
+    icon: Compass,
+    title: 'Explore',
+    subtitle: 'Curated Destinations',
+    badge: 'Popular',
+    detail: 'Discover handpicked international & domestic getaways, scenic hidden gems, and trending travel itineraries across the globe.',
   },
   {
-    icon: ShieldCheck,
-    title: 'Secure Booking',
-    subtitle: '100% Safe',
-    detail: '256-bit PCI-DSS compliant checkout with instant e-ticket and PNR confirmation across all airlines and hotels.',
+    id: 'navigator',
+    icon: Navigation,
+    title: 'Navigator',
+    subtitle: 'Smart Routes & Maps',
+    badge: 'AI Planner',
+    detail: 'Interactive multimodal route planning, live transit maps, station coordinates, and smart turn-by-turn travel guidance.',
   },
   {
-    icon: Clock,
-    title: '24/7 Support',
-    subtitle: 'Here for you',
-    detail: 'Dedicated human travel specialists available round-the-clock via phone and priority concierge chat.',
-  },
-  {
+    id: 'business-travel',
     icon: Briefcase,
-    title: 'Easy Cancellations',
-    subtitle: 'Hassle free',
-    detail: 'Automated instant refunds to your original payment method with transparent zero-hidden-fee policies.',
+    title: 'Business Travel',
+    subtitle: 'Corporate Fares & GST',
+    badge: 'Corporate',
+    detail: 'Automated GST tax invoices, corporate discounted airfares, zero cancellation fees, and dedicated company expense management.',
   },
   {
-    icon: Sparkles,
-    title: 'Exclusive Deals',
-    subtitle: 'Only on TripYeah',
-    detail: 'Unpublished member fares, complimentary airport lounge passes, and up to 60% off partner resorts.',
+    id: 'gift-cards',
+    icon: Gift,
+    title: 'Gift Cards',
+    subtitle: 'Instant Travel Vouchers',
+    badge: 'Special',
+    detail: 'Digital TripYeah travel gift cards from ₹500 to ₹50,000 with instant email & WhatsApp delivery for birthdays, weddings & rewards.',
   },
 ];
 
@@ -137,9 +154,25 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onTriggerSearch,
   onSelectTrustPillar,
   onOpenTripAI,
+  onOpenExplorePage,
 }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [swapRotated, setSwapRotated] = useState(false);
+
+  // Business Travel & Gift Cards interactive states
+  const [showBusinessModal, setShowBusinessModal] = useState<boolean>(false);
+  const [showGiftCardsModal, setShowGiftCardsModal] = useState<boolean>(false);
+  const [giftAmount, setGiftAmount] = useState<number>(2500);
+  const [giftRecipient, setGiftRecipient] = useState<string>('');
+  const [giftEmail, setGiftEmail] = useState<string>('');
+  const [giftMessage, setGiftMessage] = useState<string>(
+    'Wishing you wonderful journeys and unforgettable memories with TripYeah!'
+  );
+  const [giftSentSuccess, setGiftSentSuccess] = useState<boolean>(false);
+  const [bizCompany, setBizCompany] = useState<string>('');
+  const [bizGst, setBizGst] = useState<string>('');
+  const [bizEmail, setBizEmail] = useState<string>('');
+  const [bizSuccess, setBizSuccess] = useState<boolean>(false);
 
   // Category-specific realistic online booking states
   // 1. Trains state
@@ -1798,43 +1831,68 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   />
                 </label>
 
-                {/* 3. Search Tours & Experiences Button */}
+                {/* 3. Search Attractions Button */}
                 <button
                   type="button"
                   onClick={onTriggerSearch}
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-all"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search Experiences</span>
+                  <span>Search Attractions</span>
                 </button>
               </div>
             </>
           )}
         </div>
 
-        {/* 5 Trust Pillars Strip (Single Landscape Row) */}
-        <div className="mt-5 bg-white/85 backdrop-blur-xs rounded-2xl border border-slate-200/70 px-3 py-3 sm:px-6 sm:py-3.5">
-          <div className="grid grid-cols-5 gap-2 sm:gap-4">
-            {TRUST_PILLARS.map((pillar) => {
-              const Icon = pillar.icon;
+        {/* 4 Feature Options Strip: Explore, Navigator, Business Travel, Gift Cards */}
+        <div className="mt-5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-2 sm:p-3 shadow-md shadow-slate-900/5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {DISCOVERY_OPTIONS.map((item) => {
+              const Icon = item.icon;
               return (
                 <button
-                  key={pillar.title}
+                  key={item.id}
                   type="button"
-                  onClick={() =>
-                    onSelectTrustPillar(pillar.title, pillar.detail)
-                  }
-                  className="flex items-center gap-2 sm:gap-3 text-left group p-1 rounded-xl hover:bg-slate-100/80 transition-colors cursor-pointer min-w-0"
+                  onClick={() => {
+                    if (item.id === 'explore') {
+                      if (onOpenExplorePage) {
+                        onOpenExplorePage();
+                      } else {
+                        onSelectTrustPillar('Explore Destinations', item.detail);
+                        const destEl = document.querySelector('section:has(h2)') || document.getElementById('top');
+                        destEl?.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    } else if (item.id === 'navigator') {
+                      if (onOpenTripAI) {
+                        onOpenTripAI();
+                      } else {
+                        onSelectTrustPillar('Trip Navigator', item.detail);
+                      }
+                    } else if (item.id === 'business-travel') {
+                      setShowBusinessModal(true);
+                    } else if (item.id === 'gift-cards') {
+                      setShowGiftCardsModal(true);
+                    }
+                  }}
+                  className="flex items-center gap-2.5 sm:gap-3.5 text-left group p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/90 transition-all cursor-pointer min-w-0"
                 >
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-[#2563EB] group-hover:text-white flex items-center justify-center shrink-0 transition-all shadow-xs group-hover:scale-105">
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] sm:text-sm font-bold text-slate-900 truncate">
-                      {pillar.title}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                        {item.title}
+                      </span>
+                      {item.badge && (
+                        <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono shrink-0">
+                          {item.badge}
+                        </span>
+                      )}
                     </div>
                     <div className="text-[10px] sm:text-xs text-slate-500 truncate">
-                      {pillar.subtitle}
+                      {item.subtitle}
                     </div>
                   </div>
                 </button>
@@ -1843,6 +1901,281 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Interactive Modal: Business Travel */}
+      {showBusinessModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-bold text-slate-900">TripYeah Business Travel</h3>
+                  <p className="text-xs text-slate-500">Corporate Fares, GST Invoicing &amp; Managed Trips</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBusinessModal(false);
+                  setBizSuccess(false);
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {bizSuccess ? (
+              <div className="p-6 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h4 className="font-display text-lg font-bold text-slate-900">Corporate Account Registered!</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Our Corporate Accounts Desk has provisioned your company profile. Corporate discounted fares and automated GST invoices will now apply on all bookings for <strong>{bizCompany || 'your organization'}</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBusinessModal(false);
+                    setBizSuccess(false);
+                  }}
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer shadow-md"
+                >
+                  Done &amp; Continue
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setBizSuccess(true);
+                  onSelectTrustPillar('Corporate Account Linked', `GST profile for ${bizCompany || 'your company'} configured with corporate benefits.`);
+                }}
+                className="space-y-4"
+              >
+                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-xs text-slate-700 space-y-1">
+                  <div className="font-bold text-blue-900">🏢 Exclusive Corporate Benefits:</div>
+                  <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-slate-600">
+                    <li>Automated GST Tax Invoices for 100% Input Tax Credit claim</li>
+                    <li>Up to 15% corporate special fares on flights &amp; partner business stays</li>
+                    <li>Free flight date modifications and zero cancellation charges</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Company / Organization Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={bizCompany}
+                    onChange={(e) => setBizCompany(e.target.value)}
+                    placeholder="e.g. Acme Technologies Pvt Ltd"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Corporate GSTIN (Optional)</label>
+                    <input
+                      type="text"
+                      maxLength={15}
+                      value={bizGst}
+                      onChange={(e) => setBizGst(e.target.value.toUpperCase())}
+                      placeholder="07AAAAA0000A1Z5"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold uppercase font-mono-tabular focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Corporate Work Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={bizEmail}
+                      onChange={(e) => setBizEmail(e.target.value)}
+                      placeholder="travel@acme.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBusinessModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:brightness-110 text-white font-bold text-xs shadow-md shadow-blue-600/25 cursor-pointer"
+                  >
+                    Register Corporate Desk
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Modal: Gift Cards */}
+      {showGiftCardsModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 my-8 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Gift className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-bold text-slate-900">TripYeah Travel Gift Cards</h3>
+                  <p className="text-xs text-slate-500">Send instant digital vouchers for flights, hotels &amp; holidays</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGiftCardsModal(false);
+                  setGiftSentSuccess(false);
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {giftSentSuccess ? (
+              <div className="p-6 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h4 className="font-display text-lg font-bold text-slate-900">Gift Card Dispatched!</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  A ₹{giftAmount.toLocaleString('en-IN')} TripYeah Travel Voucher has been sent to <strong>{giftEmail || 'the recipient'}</strong> with code <strong>TY-GIFT-8820</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGiftCardsModal(false);
+                    setGiftSentSuccess(false);
+                  }}
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer shadow-md"
+                >
+                  Awesome!
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setGiftSentSuccess(true);
+                  onSelectTrustPillar('Gift Card Purchased', `₹${giftAmount.toLocaleString('en-IN')} travel voucher generated.`);
+                }}
+                className="space-y-4"
+              >
+                {/* Visual Card Preview */}
+                <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden border border-white/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-display text-sm font-bold tracking-widest text-sky-300">TRIPYEAH VOUCHER</span>
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="font-display text-2xl sm:text-3xl font-bold font-mono-tabular text-amber-300">
+                    ₹{giftAmount.toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] text-slate-300 mt-1">
+                    Redeemable on all Flights, IRCTC Trains, 5★ Stays &amp; Holidays
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                    <span>CODE: TY-GIFT-8820</span>
+                    <span>NO EXPIRY · 100% TRANSFERABLE</span>
+                  </div>
+                </div>
+
+                {/* Amount Selector */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Select Card Denomination</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[1000, 2500, 5000, 10000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setGiftAmount(amt)}
+                        className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          giftAmount === amt
+                            ? 'bg-[#2563EB] text-white border-blue-600 shadow-sm'
+                            : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        ₹{amt.toLocaleString('en-IN')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recipient Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Recipient Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={giftRecipient}
+                      onChange={(e) => setGiftRecipient(e.target.value)}
+                      placeholder="e.g. Priyanshu Singh"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Recipient Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={giftEmail}
+                      onChange={(e) => setGiftEmail(e.target.value)}
+                      placeholder="recipient@example.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Custom Greeting Message */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Greeting Message</label>
+                  <textarea
+                    rows={2}
+                    value={giftMessage}
+                    onChange={(e) => setGiftMessage(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowGiftCardsModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-white font-bold text-xs shadow-md shadow-amber-500/25 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Gift className="w-4 h-4" />
+                    <span>Purchase &amp; Send Gift Card</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 };

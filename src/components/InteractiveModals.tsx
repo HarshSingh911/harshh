@@ -19,6 +19,7 @@ import {
   TOP_DESTINATIONS,
 } from '../data/travelData';
 import { SafeImage } from './SafeImage';
+import { AuthModal } from './AuthModal';
 
 interface InteractiveModalsProps {
   currency: CurrencyCode;
@@ -473,102 +474,13 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       )}
 
       {/* 5. LOGIN / SIGN UP MODAL */}
-      {showAuthModal && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="auth-modal-title"
-        >
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-              <h3
-                id="auth-modal-title"
-                className="font-display text-xl font-bold text-slate-900"
-              >
-                {userName ? 'Your TripYeah Account' : 'Login or Create Account'}
-              </h3>
-              <button
-                type="button"
-                onClick={onCloseAuthModal}
-                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {userName ? (
-              <div className="space-y-4">
-                <p className="text-sm text-slate-600">
-                  Signed in as <strong className="text-slate-900">{userName}</strong>.
-                  You have access to TripYeah Member Deals and zero-fee date
-                  changes.
-                </p>
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onLogout();
-                      onCloseAuthModal();
-                    }}
-                    className="px-5 py-2.5 rounded-full border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleAuthSubmit} className="space-y-4" noValidate>
-                <div>
-                  <label
-                    htmlFor="auth-name"
-                    className="block text-xs font-semibold text-slate-700 mb-1"
-                  >
-                    Full Name
-                  </label>
-                  <input
-                    id="auth-name"
-                    type="text"
-                    value={authName}
-                    onChange={(e) => setAuthName(e.target.value)}
-                    placeholder="Aarav Sharma"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="auth-email"
-                    className="block text-xs font-semibold text-slate-700 mb-1"
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    id="auth-email"
-                    type="email"
-                    required
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600"
-                  />
-                </div>
-
-                {authError && (
-                  <p className="text-xs text-rose-600 font-medium">{authError}</p>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-full bg-[#1E2452] hover:bg-[#151a3d] text-white text-sm font-semibold shadow-md flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                >
-                  <span>Continue to TripYeah</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={onCloseAuthModal}
+        onLoginSuccess={(name, email, mobile) => {
+          onLoginSuccess(name, email);
+        }}
+      />
     </>
   );
 };

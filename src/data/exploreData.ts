@@ -1,0 +1,1772 @@
+export interface ExploreCategory {
+  id: string;
+  title: string;
+  shortDesc: string;
+  image: string;
+  tag: string;
+  popularPlaces: string[];
+  startingPriceInr: number;
+}
+
+export interface DetailedAttraction {
+  name: string;
+  type: string;
+  timing: string;
+  entryFee: string;
+  description: string;
+}
+
+export interface RecommendedHotel {
+  id: string;
+  name: string;
+  stars: number;
+  rating: number;
+  reviewCount: number;
+  area: string;
+  pricePerNightInr: number;
+  amenities: string[];
+  badge?: string;
+  image?: string;
+}
+
+export interface DayPlan {
+  dayNumber: number;
+  dayTitle: string;
+  morning: string;
+  afternoon: string;
+  evening: string;
+  highlightMeal: string;
+}
+
+export interface ExploreDestination {
+  id: string;
+  name: string;
+  country: string;
+  stateOrRegion: string;
+  categoryType: 'india' | 'international' | 'collection' | 'monthly' | 'story';
+  tagline: string;
+  heroImage: string;
+  galleryImages: string[];
+  overview: string;
+  bestTimeToVisit: {
+    months: string;
+    weather: string;
+    seasonTip: string;
+  };
+  estimatedBudget: {
+    totalEstimateInr: number;
+    flightOrTrainEstimateInr: number;
+    hotelEstimateInr: number;
+    foodEstimateInr: number;
+    activitiesEstimateInr: number;
+    currencySymbol: string;
+    notes: string;
+  };
+  topAttractions: DetailedAttraction[];
+  recommendedHotels: RecommendedHotel[];
+  dayByDayItinerary: DayPlan[];
+  quickStats: {
+    idealDuration: string;
+    airportOrStation: string;
+    localTransport: string;
+    language: string;
+  };
+  visualStorySnippet?: {
+    photographer: string;
+    locationNote: string;
+    caption: string;
+  };
+}
+
+// Visual assets from local directory
+import imgGoa from '../assets/images/dest_goa_beach_1792241006825.jpg';
+import imgManali from '../assets/images/dest_manali_snow_1792241007871.jpg';
+import imgMaldives from '../assets/images/dest_maldives_resort_1792241008307.jpg';
+import imgUdaipur from '../assets/images/dest_udaipur_palace_1792241008240.jpg';
+import imgBali from '../assets/images/dest_bali_temple_1790774699717.jpg';
+import imgDubai from '../assets/images/dest_dubai_skyline_1790774713819.jpg';
+import imgParis from '../assets/images/dest_paris_eiffel_1790774759266.jpg';
+import imgSingapore from '../assets/images/dest_singapore_bay_1790774729082.jpg';
+import imgBangkok from '../assets/images/dest_bangkok_temple_1790774744899.jpg';
+import imgAlpine from '../assets/images/hero_alpine_lakeside_1790774682097.jpg';
+import imgSantorini from '../assets/images/hero_santorini_couple_1790778151559.jpg';
+import imgMountainTraveler from '../assets/images/banner_mountain_traveler_1790774776035.jpg';
+import imgPanorama from '../assets/images/hero_multimodal_panorama_1790782919071.jpg';
+
+export const EXPLORE_ASSETS = {
+  goa: imgGoa,
+  manali: imgManali,
+  maldives: imgMaldives,
+  udaipur: imgUdaipur,
+  bali: imgBali,
+  dubai: imgDubai,
+  paris: imgParis,
+  singapore: imgSingapore,
+  bangkok: imgBangkok,
+  alpine: imgAlpine,
+  santorini: imgSantorini,
+  trekking: imgMountainTraveler,
+  panorama: imgPanorama,
+};
+
+// 12 Required Explore Theme Cards
+export const EXPLORE_THEME_CARDS: ExploreCategory[] = [
+  {
+    id: 'beach',
+    title: 'Beach Destinations',
+    shortDesc: 'Sun-drenched golden sands, coastal shacks, and warm ocean sunsets.',
+    image: imgGoa,
+    tag: 'Coastal Bliss',
+    popularPlaces: ['Goa', 'Maldives', 'Varkala', 'Bali'],
+    startingPriceInr: 9999,
+  },
+  {
+    id: 'hills-mountains',
+    title: 'Hills & Mountains',
+    shortDesc: 'Crisp alpine breezes, misty valleys, pine forests, and snowy peaks.',
+    image: imgManali,
+    tag: 'Alpine Escapes',
+    popularPlaces: ['Manali', 'Ooty', 'Zurich', 'Shimla'],
+    startingPriceInr: 8499,
+  },
+  {
+    id: 'heritage',
+    title: 'Heritage Destinations',
+    shortDesc: 'Timeless palaces, royal fortresses, UNESCO temples, and grand dynasties.',
+    image: imgUdaipur,
+    tag: 'Royal Legacies',
+    popularPlaces: ['Udaipur', 'Jaipur', 'Varanasi', 'Hampi'],
+    startingPriceInr: 7999,
+  },
+  {
+    id: 'honeymoon',
+    title: 'Honeymoon Hotspots',
+    shortDesc: 'Overwater luxury villas, intimate candlelit beaches, and breathtaking vistas.',
+    image: imgMaldives,
+    tag: 'Romantic Retreats',
+    popularPlaces: ['Maldives', 'Santorini', 'Bali', 'Paris'],
+    startingPriceInr: 34999,
+  },
+  {
+    id: 'weekend-getaways',
+    title: 'Weekend Getaways',
+    shortDesc: 'Quick rejuvenating road trips, countryside boutique stays, and escapes.',
+    image: imgPanorama,
+    tag: 'Quick Breaks',
+    popularPlaces: ['Rishikesh', 'Lonavala', 'Alibaug', 'Kasauli'],
+    startingPriceInr: 4999,
+  },
+  {
+    id: 'romantic-places',
+    title: 'Romantic Places',
+    shortDesc: 'Enchanted cobblestone alleyways, Seine river cruises, and fairytale lakes.',
+    image: imgParis,
+    tag: 'Love & Wonder',
+    popularPlaces: ['Paris', 'Venice', 'Udaipur', 'Zurich'],
+    startingPriceInr: 45999,
+  },
+  {
+    id: 'pilgrimage-spots',
+    title: 'Pilgrimage Spots',
+    shortDesc: 'Sacred river ghats, ancient spiritual sanctums, and timeless devotional chants.',
+    image: imgBali, // Water temple / spiritual
+    tag: 'Sacred Journeys',
+    popularPlaces: ['Varanasi', 'Tirupati', 'Rishikesh', 'Amritsar'],
+    startingPriceInr: 5999,
+  },
+  {
+    id: 'foodie-trails',
+    title: 'Foodie Trails',
+    shortDesc: 'Sizzling night hawkers, Michelin street stalls, spice markets, and gourmet feasts.',
+    image: imgSingapore,
+    tag: 'Culinary Odysseys',
+    popularPlaces: ['Singapore', 'Bangkok', 'Delhi', 'Amsterdam'],
+    startingPriceInr: 14999,
+  },
+  {
+    id: 'adventure-spots',
+    title: 'Adventure Spots',
+    shortDesc: 'Dune bashing, white-water rapids, desert safaris, and high-adrenaline thrill.',
+    image: imgDubai,
+    tag: 'High Adrenaline',
+    popularPlaces: ['Dubai', 'Rishikesh', 'Bir Billing', 'Goa'],
+    startingPriceInr: 12999,
+  },
+  {
+    id: 'trekking-hotspots',
+    title: 'Trekking Hotspots',
+    shortDesc: 'Rugged Himalayan trails, alpine lakes, high passes, and starlit base camps.',
+    image: imgMountainTraveler,
+    tag: 'Wilderness Trails',
+    popularPlaces: ['Hampta Pass', 'Kedarkantha', 'Valley of Flowers', 'Triund'],
+    startingPriceInr: 6999,
+  },
+  {
+    id: 'places-to-relax',
+    title: 'Places to Relax',
+    shortDesc: 'Ayurvedic seaside resorts, slow backwaters, serene tea estates, and silent shores.',
+    image: imgSantorini,
+    tag: 'Pure Serenity',
+    popularPlaces: ['Varkala', 'Munnar', 'Kumarakom', 'Seychelles'],
+    startingPriceInr: 11499,
+  },
+  {
+    id: 'international-destinations',
+    title: 'International Destinations',
+    shortDesc: 'Iconic world capitals, neon skylines, historic European canals, and tropical islands.',
+    image: imgAlpine,
+    tag: 'Global Wonders',
+    popularPlaces: ['Paris', 'Zurich', 'Amsterdam', 'Dubai'],
+    startingPriceInr: 28999,
+  },
+];
+
+// India Destinations Detailed
+export const INDIA_DESTINATIONS: ExploreDestination[] = [
+  {
+    id: 'goa',
+    name: 'Goa',
+    country: 'India',
+    stateOrRegion: 'West Coast',
+    categoryType: 'india',
+    tagline: 'Sun-drenched beaches, Portuguese heritage churches, and vibrant coastal nightlife.',
+    heroImage: imgGoa,
+    galleryImages: [imgGoa, imgSantorini, imgBali],
+    overview:
+      'India’s premier coastal paradise balances lively beach shacks and water sports in the north with secluded white-sand coves, heritage Latin quarters, and lush spice plantations in the south.',
+    bestTimeToVisit: {
+      months: 'November to February',
+      weather: '20°C - 30°C, sunny skies and pleasant coastal breeze',
+      seasonTip: 'December brings the vibrant Goa Carnival and New Year festivities, while November offers tranquil seas.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 22500,
+      flightOrTrainEstimateInr: 6500,
+      hotelEstimateInr: 9000,
+      foodEstimateInr: 4500,
+      activitiesEstimateInr: 2500,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-day budget per person including flights from Delhi/Mumbai and 4★ resort stay.',
+    },
+    topAttractions: [
+      {
+        name: 'Palolem & Agonda Beach',
+        type: 'Scenic Beach',
+        timing: 'Sunrise to Sunset',
+        entryFee: 'Free',
+        description: 'Crescent-shaped serene beach framed by swaying coconut palms and dolphin-spotting boats.',
+      },
+      {
+        name: 'Basilica of Bom Jesus & Old Goa',
+        type: 'UNESCO World Heritage',
+        timing: '09:00 AM - 06:30 PM',
+        entryFee: 'Free',
+        description: 'Baroque Catholic church housing the sacred relics of St. Francis Xavier, dating back to 1605.',
+      },
+      {
+        name: 'Dudhsagar Waterfalls',
+        type: 'Nature & Adventure',
+        timing: '08:00 AM - 04:30 PM',
+        entryFee: '₹500 jeep safari',
+        description: 'Four-tiered sea of milk cascade falling 310 meters amidst the lush Western Ghats.',
+      },
+      {
+        name: 'Fontainhas Latin Quarter',
+        type: 'Heritage Walk',
+        timing: 'Open 24/7 (best during morning/evening)',
+        entryFee: 'Free',
+        description: 'Vibrant Portuguese architecture with terracotta roof tiles, pastel yellow homes, and artisan cafes.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'taj-exotica',
+        name: 'Taj Exotica Resort & Spa',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 3420,
+        area: 'Benaulim, South Goa',
+        pricePerNightInr: 16500,
+        amenities: ['Private Beach', 'Infinity Pool', 'Spa', 'Fine Dining', 'Free Wifi'],
+        badge: 'Top Luxury',
+      },
+      {
+        id: 'alila-diwa',
+        name: 'Alila Diwa Goa - A Hyatt Hotel',
+        stars: 5,
+        rating: 4.7,
+        reviewCount: 2850,
+        area: 'Majorda, South Goa',
+        pricePerNightInr: 11200,
+        amenities: ['Paddy Field View', 'Infinity Pool', 'Children Club', 'Airport Shuttle'],
+      },
+      {
+        id: 'w-goa',
+        name: 'W Goa Resort',
+        stars: 5,
+        rating: 4.6,
+        reviewCount: 1980,
+        area: 'Vagator, North Goa',
+        pricePerNightInr: 18900,
+        amenities: ['Rock Pool', 'Direct Beach Access', 'Nightclub', 'Rooftop Lounge'],
+        badge: 'Celebrity Choice',
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Arrival & North Goa Beach Vibe',
+        morning: 'Arrive at Mopa/Dabolim Airport, private chauffeur transfer to resort.',
+        afternoon: 'Unwind by the pool or stroll down to Calangute/Candolim shoreline.',
+        evening: 'Sunset drinks at Thalassa or Curlies overlooking the Arabian Sea.',
+        highlightMeal: 'Goan Fish Curry & warm Poi bread at Fisherman’s Wharf.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Old Goa Heritage & Latin Quarter',
+        morning: 'Visit Basilica of Bom Jesus, Se Cathedral, and St. Augustine tower.',
+        afternoon: 'Walking photography tour through Fontainhas cobblestone alleys.',
+        evening: 'Mandovi river twilight sunset cruise with live Goan folk music.',
+        highlightMeal: 'Bebinca dessert and prawn balchão at Viva Panjim.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Dudhsagar Jeep Safari & Spice Plantation',
+        morning: 'Early morning 4x4 jungle safari to Dudhsagar waterfall natural pool.',
+        afternoon: 'Buffet lunch on banana leaves inside Sahakari Spice Farm with plantation walk.',
+        evening: 'Relaxing spa treatment at your resort.',
+        highlightMeal: 'Authentic Saraswat Goan vegetarian spread with Kokum kadi.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'South Goa Serenity & Departure',
+        morning: 'Kayaking or dolphin spotting at Palolem beach backwaters.',
+        afternoon: 'Souvenir shopping at Mapusa or Anjuna flea market.',
+        evening: 'Transfer to airport for return flight.',
+        highlightMeal: 'Wood-fired coastal pizza and fresh tender coconut water.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '4 to 5 Days',
+      airportOrStation: 'GOI (Dabolim) / GOX (Mopa) / Madgaon Rly',
+      localTransport: 'Self-drive Scooters, Cabs & Ferries',
+      language: 'Konkani, English & Hindi',
+    },
+  },
+  {
+    id: 'ooty',
+    name: 'Ooty',
+    country: 'India',
+    stateOrRegion: 'Tamil Nadu (Nilgiris)',
+    categoryType: 'india',
+    tagline: 'The Queen of Hill Stations, aromatic eucalyptus forests, and toy train heritage.',
+    heroImage: imgAlpine,
+    galleryImages: [imgAlpine, imgManali, imgMountainTraveler],
+    overview:
+      'Perched at 2,240 meters in the misty Nilgiri hills, Ooty charms visitors with colonial stone bungalows, sprawling emerald tea estates, blooming botanical gardens, and the famous Nilgiri Mountain Railway.',
+    bestTimeToVisit: {
+      months: 'October to June',
+      weather: '12°C - 20°C, refreshing cool mountain air',
+      seasonTip: 'April and May host the annual Summer Flower Festival; October offers crystal-clear hill views after monsoon.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 16500,
+      flightOrTrainEstimateInr: 4500,
+      hotelEstimateInr: 7000,
+      foodEstimateInr: 3200,
+      activitiesEstimateInr: 1800,
+      currencySymbol: '₹',
+      notes: 'Estimated 3-day budget per person via Coimbatore Airport / Mettupalayam toy train.',
+    },
+    topAttractions: [
+      {
+        name: 'Nilgiri Mountain Railway (Toy Train)',
+        type: 'UNESCO Heritage Railway',
+        timing: 'Scheduled departures from Mettupalayam / Coonoor',
+        entryFee: '₹200 - ₹500',
+        description: 'Historic blue steam engine chugging through 16 tunnels and 250 bridges across tea slopes.',
+      },
+      {
+        name: 'Ooty Botanical Gardens & Rose Garden',
+        type: 'Horticultural Landmark',
+        timing: '07:00 AM - 06:30 PM',
+        entryFee: '₹40',
+        description: 'Terraced grounds housing over a thousand exotic floral species and a 20-million-year-old fossil tree trunk.',
+      },
+      {
+        name: 'Doddabetta Peak',
+        type: 'Highest Mountain Viewpoint',
+        timing: '09:00 AM - 06:00 PM',
+        entryFee: '₹20',
+        description: 'Nilgiris highest vantage point at 2,637m offering sweeping panoramic views across three states.',
+      },
+      {
+        name: 'Pykara Lake & Waterfalls',
+        type: 'Lake & Boating',
+        timing: '09:30 AM - 05:30 PM',
+        entryFee: '₹175 speedboat',
+        description: 'Pristine forest lake with motorboat rides and pine forest walking trails.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'savoy-ooty',
+        name: 'Savoy, Ooty - IHCL SeleQtions',
+        stars: 5,
+        rating: 4.7,
+        reviewCount: 1640,
+        area: 'Sylks Road, Ooty',
+        pricePerNightInr: 14200,
+        amenities: ['English Fireplace', 'Heritage Gardens', 'Tea Tasting', 'Fine Dining'],
+        badge: 'Colonial Heritage',
+      },
+      {
+        id: 'sterling-ooty',
+        name: 'Sterling Ooty Elk Hill',
+        stars: 4,
+        rating: 4.4,
+        reviewCount: 2210,
+        area: 'Elk Hill',
+        pricePerNightInr: 6800,
+        amenities: ['Panoramic Valley View', 'Organic Farm', 'Campfire', 'Children Play Area'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Scenic Arrival & Colonial Charm',
+        morning: 'Coimbatore Airport pickup, scenic drive through Nilgiri hairpins.',
+        afternoon: 'Check in, visit Botanical Gardens and Government Rose Garden.',
+        evening: 'Boating at Ooty Lake during sunset and homemade fudge shopping.',
+        highlightMeal: 'Warm South Indian Thali and Nilgiri tea at Nahar’s Chandan.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Toy Train Ride & Tea Factory in Coonoor',
+        morning: 'Board the UNESCO Toy train to Coonoor, gazing at green canyons.',
+        afternoon: 'Visit Sim’s Park and Dodabetta Highfield Tea Factory with live tasting.',
+        evening: 'Bonfire night at the resort with colonial afternoon tea.',
+        highlightMeal: 'Homemade handmade dark chocolates and Earl Grey tea.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Pykara Lakes & Pine Forests',
+        morning: 'Trek through Shooting Point pine glades and Pykara waterfalls.',
+        afternoon: 'Speedboat cruise on Pykara backwaters.',
+        evening: 'Drive down to Coimbatore for your onward flight or train.',
+        highlightMeal: 'Chettinad pepper chicken and steaming appams.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '3 to 4 Days',
+      airportOrStation: 'CJB (Coimbatore Airport - 88 km) / UAM Rly',
+      localTransport: 'Private Hill Cabs & Local Autos',
+      language: 'Tamil, Badaga, English & Hindi',
+    },
+  },
+  {
+    id: 'manali',
+    name: 'Manali',
+    country: 'India',
+    stateOrRegion: 'Himachal Pradesh (Kullu)',
+    categoryType: 'india',
+    tagline: 'Snow-dusted Himalayan peaks, alpine cedar woods, and adrenaline-pumping valleys.',
+    heroImage: imgManali,
+    galleryImages: [imgManali, imgMountainTraveler, imgAlpine],
+    overview:
+      'Cradled in the Pir Panjal and Dhauladhar ranges of Himachal Pradesh, Manali is India’s favorite year-round mountain retreat, famed for skiing in Solang, riverside cafés in Old Manali, and high-altitude adventures through Atal Tunnel.',
+    bestTimeToVisit: {
+      months: 'October to February (Snow) | March to June (Greenery)',
+      weather: '-3°C to 15°C in winter; 10°C to 25°C in summer',
+      seasonTip: 'December to February offers heavy snow cover in Solang Valley and Sissu for snow lovers.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 19800,
+      flightOrTrainEstimateInr: 5800,
+      hotelEstimateInr: 8000,
+      foodEstimateInr: 3800,
+      activitiesEstimateInr: 2200,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-day budget per person via Chandigarh / Bhuntar Airport.',
+    },
+    topAttractions: [
+      {
+        name: 'Solang Valley & Rohtang Pass',
+        type: 'Snow & Adventure Hub',
+        timing: '09:00 AM - 05:00 PM',
+        entryFee: 'Permit ₹500 (Rohtang) | Solang free',
+        description: 'World-class paragliding, zorbing, snow-scooter rides, and majestic glacier views.',
+      },
+      {
+        name: 'Atal Tunnel & Sissu Valley',
+        type: 'High-Altitude Engineering',
+        timing: 'Open 24/7 (subject to snow clearance)',
+        entryFee: 'Free',
+        description: '9.02 km tunnel crossing from lush Kullu into dramatic Lahaul barren snow landscapes.',
+      },
+      {
+        name: 'Hadimba Devi Temple',
+        type: 'Historic Wooden Pagoda',
+        timing: '08:00 AM - 06:00 PM',
+        entryFee: 'Free',
+        description: '16th-century wooden temple nestled inside an ancient sanctuary of towering deodar trees.',
+      },
+      {
+        name: 'Old Manali Bohemian Cafes & Mall Road',
+        type: 'Culture & Dining',
+        timing: '10:00 AM - 11:00 PM',
+        entryFee: 'Free',
+        description: 'Laid-back mountain village vibe with live acoustic music, apple cider, and trout delicacies.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'the-himalayan',
+        name: 'The Himalayan Resort & Spa',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 1450,
+        area: 'Hadimba Temple Road, Manali',
+        pricePerNightInr: 13500,
+        amenities: ['Gothic Victorian Architecture', 'Heated Pool', 'Orchard View', 'Fireplace'],
+        badge: 'Premier Mountain Stay',
+      },
+      {
+        id: 'span-resort',
+        name: 'Span Resort & Spa',
+        stars: 5,
+        rating: 4.7,
+        reviewCount: 1920,
+        area: 'Baragran, Kullu-Manali Hwy',
+        pricePerNightInr: 15800,
+        amenities: ['Beas Riverfront', 'Helipad', 'Trout Fishing', 'Lawn Bonfires'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Arrival & Deodar Forest Serenity',
+        morning: 'Scenic road drive from Chandigarh or Bhuntar, check in to mountain resort.',
+        afternoon: 'Walk through cedar forests to Hadimba Temple and Vashisht Hot Springs.',
+        evening: 'Mall Road evening stroll, souvenir shopping for Kullu shawls.',
+        highlightMeal: 'Siddu with desi ghee and spiced walnut chutney.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Solang Adventure & Sissu Snow Valley',
+        morning: 'Drive through Atal Tunnel into Lahaul valley to witness frozen waterfalls.',
+        afternoon: 'Solang Valley paragliding and snow scooter riding.',
+        evening: 'Riverside campfire with hot ginger-honey tea.',
+        highlightMeal: 'Wood-fired thin crust pizza at Café 1947 in Old Manali.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Naggar Castle & Art Gallery',
+        morning: 'Visit the 15th-century wood-and-stone Naggar Castle and Nicholas Roerich Art Gallery.',
+        afternoon: 'Hike to Jana Waterfall and enjoy traditional Himachali food.',
+        evening: 'Acoustic jam session at Old Manali music cafés.',
+        highlightMeal: 'Traditional Himachali Dham banquet.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Souvenir Trails & Departure',
+        morning: 'Breakfast with apple orchard views, buy organic apple jam and honey.',
+        afternoon: 'Transfer to Bhuntar Airport or overnight Volvo to Delhi.',
+        evening: 'Journey home with alpine memories.',
+        highlightMeal: 'Trout grilled in lemon butter herbs.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '4 to 5 Days',
+      airportOrStation: 'KUU (Bhuntar - 50 km) / IXC (Chandigarh - 290 km)',
+      localTransport: 'Private 4x4 SUVs & Local Cabs',
+      language: 'Hindi, Pahari & English',
+    },
+  },
+  {
+    id: 'varkala',
+    name: 'Varkala',
+    country: 'India',
+    stateOrRegion: 'Kerala',
+    categoryType: 'india',
+    tagline: 'Dramatic red sandstone cliffs plunging into the azure Arabian Sea, surfing, and yoga.',
+    heroImage: imgSantorini,
+    galleryImages: [imgSantorini, imgGoa, imgBali],
+    overview:
+      'Unlike any other beach in India, Varkala features towering red laterite cliffs lined with boho cafes overlooking the Arabian Sea, sacred mineral springs at Papanasam Beach, and world-class beginner surf breaks.',
+    bestTimeToVisit: {
+      months: 'November to March',
+      weather: '22°C - 31°C, warm sunny days and gentle sea breeze',
+      seasonTip: 'December and January boast prime surf swells and calm, clear swimming waters.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 15500,
+      flightOrTrainEstimateInr: 5200,
+      hotelEstimateInr: 6000,
+      foodEstimateInr: 2800,
+      activitiesEstimateInr: 1500,
+      currencySymbol: '₹',
+      notes: 'Estimated 3-day budget per person via Trivandrum Airport / Varkala Sivagiri Rly.',
+    },
+    topAttractions: [
+      {
+        name: 'Varkala North Cliff Promenade',
+        type: 'Cliffside Walk & Dining',
+        timing: 'Open 24/7 (alive 04:00 PM - 11:00 PM)',
+        entryFee: 'Free',
+        description: 'Kilometer-long cliff path brimming with rooftop cafes, Tibetan handicraft stalls, and sunset views.',
+      },
+      {
+        name: 'Papanasam Beach (Sacred Mineral Springs)',
+        type: 'Beach & Pilgrimage',
+        timing: 'Sunrise to Sunset',
+        entryFee: 'Free',
+        description: 'Holy beach whose natural mineral waters are believed to wash away sins and heal fatigue.',
+      },
+      {
+        name: 'Janardhana Swamy Temple',
+        type: '2000-Year Ancient Temple',
+        timing: '05:30 AM - 12:00 PM, 05:00 PM - 08:00 PM',
+        entryFee: 'Free',
+        description: 'Venerated shrine dedicated to Lord Vishnu, known as the Dakshin Varanasi of South India.',
+      },
+      {
+        name: 'Kappil Beach & Backwater Lake',
+        type: 'Coast Meets Lagoon',
+        timing: '08:00 AM - 06:30 PM',
+        entryFee: 'Boat ride ₹300',
+        description: 'Unique thin strip of land where Kappil lake lagoon runs parallel to the open Arabian Sea.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'gateway-varkala',
+        name: 'The Gateway Hotel Varkala - IHCL',
+        stars: 5,
+        rating: 4.6,
+        reviewCount: 1870,
+        area: 'Janardhanapuram, Varkala',
+        pricePerNightInr: 9200,
+        amenities: ['Clifftop Ocean View', 'Ayurvedic Wellness Spa', 'Tennis Court', 'Pool'],
+        badge: 'Premier Cliff Resort',
+      },
+      {
+        id: 'cliffe-story',
+        name: 'Cliffe The Story Boutique Resort',
+        stars: 4,
+        rating: 4.5,
+        reviewCount: 940,
+        area: 'North Cliff, Varkala',
+        pricePerNightInr: 5400,
+        amenities: ['Cliff Edge Views', 'Yoga Shala', 'Organic Cafe', 'Surf Gear Rental'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Cliff Check-in & Sunset Stroll',
+        morning: 'Fly into Trivandrum Airport (TRV), 1-hour scenic cab to Varkala Cliff.',
+        afternoon: 'Check in to clifftop resort, unwind with fresh tender coconut water.',
+        evening: 'Stroll along North Cliff, watching the sun dip into the Arabian Sea.',
+        highlightMeal: 'Grilled butter-garlic tiger prawns at Café del Mar.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Morning Surfing & Traditional Ayurveda',
+        morning: 'Beginner surf lesson at Black Sand beach with certified instructors.',
+        afternoon: 'Authentic 90-minute Kerala Abhyangam herbal oil massage.',
+        evening: 'Visit 2000-year-old Janardhana Swamy Temple bell tower.',
+        highlightMeal: 'Kerala fish curry with red rice on a fresh banana leaf.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Kappil Backwaters & Farewell',
+        morning: 'Canoe or kayak ride through Kappil backwater lake mangrove channels.',
+        afternoon: 'Café-hopping on the cliff, picking up Kerala spices and linen.',
+        evening: 'Transfer to Trivandrum Airport for onward flight.',
+        highlightMeal: 'Iced cardamom coffee and freshly baked banana walnut cake.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '3 to 4 Days',
+      airportOrStation: 'TRV (Trivandrum Airport - 42 km) / VAK Rly',
+      localTransport: 'Cliff Walking, Autos & Scooters',
+      language: 'Malayalam, English & Hindi',
+    },
+  },
+  {
+    id: 'udaipur',
+    name: 'Udaipur',
+    country: 'India',
+    stateOrRegion: 'Rajasthan',
+    categoryType: 'india',
+    tagline: 'The Venice of the East, romantic white marble palaces, and glowing lake reflections.',
+    heroImage: imgUdaipur,
+    galleryImages: [imgUdaipur, imgPanorama, imgBali],
+    overview:
+      'Surrounded by the rugged Aravalli mountains, Udaipur is Rajasthan’s crown jewel of romance. Intricate Rajput palaces float above calm lake waters, vintage cars glide through royal gateways, and evening rooftop sitars serenade travelers.',
+    bestTimeToVisit: {
+      months: 'October to March',
+      weather: '14°C - 28°C, crisp pleasant desert breeze and clear blue skies',
+      seasonTip: 'November to February is peak wedding and palace festival season with glittering lake illuminations.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 21500,
+      flightOrTrainEstimateInr: 5900,
+      hotelEstimateInr: 9000,
+      foodEstimateInr: 4200,
+      activitiesEstimateInr: 2400,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-day budget per person via Maharana Pratap Airport (UDR).',
+    },
+    topAttractions: [
+      {
+        name: 'Udaipur City Palace Complex',
+        type: 'Royal Monument & Museum',
+        timing: '09:00 AM - 05:30 PM',
+        entryFee: '₹330',
+        description: 'Rajasthan’s largest palace complex featuring mirror work in Sheesh Mahal and Lake Pichola views.',
+      },
+      {
+        name: 'Lake Pichola Boat Cruise & Jagmandir',
+        type: 'Scenic Lake Boat Ride',
+        timing: '10:00 AM - 06:00 PM',
+        entryFee: '₹450 regular / ₹800 sunset',
+        description: 'Glide past the iconic Taj Lake Palace and disembark at the 17th-century island pleasure palace Jagmandir.',
+      },
+      {
+        name: 'Bagore Ki Haveli & Dharohar Dance Show',
+        type: 'Cultural Haveli & Folk Dance',
+        timing: '07:00 PM - 08:00 PM show',
+        entryFee: '₹100',
+        description: 'Authentic Rajasthani puppet, fire, and Chari pot balancing dance performance right at Gangaur Ghat.',
+      },
+      {
+        name: 'Sajjangarh Monsoon Palace',
+        type: 'Hilltop Sunset Vantage',
+        timing: '09:00 AM - 06:00 PM',
+        entryFee: '₹110',
+        description: 'Perched on Bansdara mountain peak overlooking Udaipur lakes and the surrounding Aravalli tiger corridor.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'taj-lake-palace',
+        name: 'Taj Lake Palace, Udaipur',
+        stars: 5,
+        rating: 4.9,
+        reviewCount: 3890,
+        area: 'Lake Pichola Island',
+        pricePerNightInr: 38500,
+        amenities: ['Private Boat Transfer', 'Butler Service', 'Heritage Spa Boat', 'Royal Dining'],
+        badge: 'Icon of Royalty',
+      },
+      {
+        id: 'trident-udaipur',
+        name: 'Trident, Udaipur',
+        stars: 5,
+        rating: 4.7,
+        reviewCount: 2940,
+        area: 'Haridas Ji Ki Magri',
+        pricePerNightInr: 12800,
+        amenities: ['43-Acre Grounds', 'Kids Club', 'Pool', 'Lake Views'],
+      },
+      {
+        id: 'jagmandir-island',
+        name: 'Jagmandir Island Palace',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 1720,
+        area: 'Lake Pichola',
+        pricePerNightInr: 22000,
+        amenities: ['Historic Marble Courtyards', 'Sunset Bar', 'Private Jetty'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Lake Pichola Arrival & Sunset Boat',
+        morning: 'Arrive at Maharana Pratap Airport (UDR), transfer to heritage lake hotel.',
+        afternoon: 'Check in and take in the shimmering waters from rooftop jharokhas.',
+        evening: 'Sunset private boat cruise on Lake Pichola past floating Taj Lake Palace.',
+        highlightMeal: 'Laal Maas and royal Baati with churma at Upré by 1559 AD.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'City Palace & Dharohar Folk Evening',
+        morning: 'Guided walking tour through City Palace courtyards and crystal gallery.',
+        afternoon: 'Explore Jagdish Temple and browse miniature paintings at Hathipole market.',
+        evening: 'Front-row seat at Bagore Ki Haveli Dharohar cultural folk performance.',
+        highlightMeal: 'Traditional Mewari Ker Sangri with bajra roti.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Monsoon Palace & Saheliyon Ki Bari',
+        morning: 'Wander through royal lotus fountains and marble elephants at Saheliyon Ki Bari.',
+        afternoon: 'Drive up winding roads to Sajjangarh Monsoon Palace for sunset vista.',
+        evening: 'Romantic dinner on a candlelit lake pier with live sitar.',
+        highlightMeal: 'Ghewar topped with malai and saffron rabdi.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Fateh Sagar & Royalty Farewell',
+        morning: 'Morning walk around Fateh Sagar Lake with a glass of cold kulhad coffee.',
+        afternoon: 'Last-minute Rajasthani mojaris and block-print bedsheet shopping.',
+        evening: 'Airport transfer for flight back home.',
+        highlightMeal: 'Kachori and sweet mawa jalebi at Shastri Circle.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '3 to 4 Days',
+      airportOrStation: 'UDR (Maharana Pratap Airport - 24 km) / UDZ Rly',
+      localTransport: 'Heritage Autos, Lake Boats & Private Cabs',
+      language: 'Mewari, Hindi & English',
+    },
+  },
+];
+
+// International Destinations Detailed
+export const INTERNATIONAL_DESTINATIONS: ExploreDestination[] = [
+  {
+    id: 'maldives',
+    name: 'Maldives',
+    country: 'Maldives',
+    stateOrRegion: 'Indian Ocean Atolls',
+    categoryType: 'international',
+    tagline: 'Luminescent turquoise atolls, private overwater bungalows, and vibrant manta ray reefs.',
+    heroImage: imgMaldives,
+    galleryImages: [imgMaldives, imgSantorini, imgGoa],
+    overview:
+      'The ultimate tropical paradise, the Maldives spans 1,192 coral islands grouped into 26 ring-shaped atolls. Known for iconic stilted villas above turquoise lagoons, private sandbank dinners, and underwater restaurants.',
+    bestTimeToVisit: {
+      months: 'November to April',
+      weather: '26°C - 31°C, calm sapphire waters and low rainfall',
+      seasonTip: 'December to March is the dry monsoon with optimum underwater visibility for diving and snorkeling.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 85000,
+      flightOrTrainEstimateInr: 22000,
+      hotelEstimateInr: 45000,
+      foodEstimateInr: 12000,
+      activitiesEstimateInr: 6000,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-night budget per person with round-trip flights from India and speedboat/seaplane.',
+    },
+    topAttractions: [
+      {
+        name: 'Overwater Bungalow Lagoon Stay',
+        type: 'Luxury Experience',
+        timing: 'Check-in 02:00 PM',
+        entryFee: 'Resort stay',
+        description: 'Wake up with direct ocean staircase access, glass floor panels, and private infinity plunge pool.',
+      },
+      {
+        name: 'Baa Atoll UNESCO Biosphere Snorkeling',
+        type: 'Marine Sanctuary',
+        timing: '08:30 AM - 01:00 PM',
+        entryFee: '$90 excursion',
+        description: 'Swim alongside gentle whale sharks and graceful manta rays over pristine coral gardens.',
+      },
+      {
+        name: 'Private Sandbank Sunset Picnic',
+        type: 'Romantic Adventure',
+        timing: '04:30 PM - 07:30 PM',
+        entryFee: '$180 per couple',
+        description: 'Castaway experience on an isolated powdered sand bar with chilled champagne and twilight canapes.',
+      },
+      {
+        name: 'Male Heritage & Fish Market Tour',
+        type: 'Island Culture',
+        timing: '09:00 AM - 05:00 PM',
+        entryFee: 'Free',
+        description: '17th-century coral stone Old Friday Mosque (Hukuru Miskiy) and bustling tuna market.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'sun-siyam-olhuveli',
+        name: 'Sun Siyam Olhuveli Maldives',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 4120,
+        area: 'South Malé Atoll',
+        pricePerNightInr: 32000,
+        amenities: ['Overwater Villas', '3 Swimming Pools', 'Dive Centre', 'Speedboat Transfer'],
+        badge: 'Bestseller Resort',
+      },
+      {
+        id: 'adaaran-prestige',
+        name: 'Adaaran Prestige Vadoo',
+        stars: 5,
+        rating: 4.9,
+        reviewCount: 2200,
+        area: 'South Malé Atoll',
+        pricePerNightInr: 41000,
+        amenities: ['Personal Butler', 'Glass Bottom Lounge', 'Plunge Pool', 'Free Snorkeling Gear'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Seaplane Arrival & Overwater Paradise',
+        morning: 'Touchdown at Velana Intl (MLE), board scenic speedboat or seaplane across turquoise lagoons.',
+        afternoon: 'Check in to overwater villa; step down private ladder for your first swim in crystal reef.',
+        evening: 'Sunset cocktail reception at the overwater lagoon bar.',
+        highlightMeal: 'Grilled yellowfin tuna steak and passionfruit sorbet.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'House Reef Snorkeling & Manta Rays',
+        morning: 'Guided house-reef snorkel safari spotting sea turtles, reef sharks, and clownfish.',
+        afternoon: 'Rejuvenating massage at the overwater glass-floor spa pavilion.',
+        evening: 'Dolphin-watching sunset dhoni cruise with mocktails.',
+        highlightMeal: 'Candlelit Maldivian seafood BBQ under starlit skies.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Sandbank Escape & Water Sports',
+        morning: 'Speedboat excursion to a private deserted sandbank in the middle of the Indian Ocean.',
+        afternoon: 'Jet skiing, paddleboarding, or kayak paddling across turquoise waters.',
+        evening: 'Open-air cinema night on the beach under the palms.',
+        highlightMeal: 'Wood-fired gourmet pizza and fresh tropical coconut water.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Sunrise Yoga & Departure',
+        morning: 'Sunrise yoga on the wooden jetty followed by floating breakfast in your private pool.',
+        afternoon: 'Last snorkel dip and gift shopping for coral jewelry.',
+        evening: 'Speedboat transfer to Velana Airport for flight home.',
+        highlightMeal: 'Tropical mango smoothie bowl with chia seeds and granola.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '4 to 6 Days',
+      airportOrStation: 'MLE (Velana International Airport, Malé)',
+      localTransport: 'Speedboat & Trans Maldivian Seaplane',
+      language: 'Dhivehi & Fluent English',
+    },
+  },
+  {
+    id: 'bali',
+    name: 'Bali',
+    country: 'Indonesia',
+    stateOrRegion: 'Lesser Sunda Islands',
+    categoryType: 'international',
+    tagline: 'Island of the Gods, cliffside Hindu shrines, emerald jungle swings, and world-class surf.',
+    heroImage: imgBali,
+    galleryImages: [imgBali, imgGoa, imgSantorini],
+    overview:
+      'Bali enchants every traveler with volcanic craters, ancient water temples draped in moss, cascading jungle waterfalls, artisan silver villages in Ubud, and sun-soaked beach clubs in Seminyak and Canggu.',
+    bestTimeToVisit: {
+      months: 'April to October',
+      weather: '24°C - 30°C, dry sunny season with lower humidity',
+      seasonTip: 'July and August offer the best waves for surfing and ideal clear weather for mountain hikes.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 48000,
+      flightOrTrainEstimateInr: 22000,
+      hotelEstimateInr: 16000,
+      foodEstimateInr: 6000,
+      activitiesEstimateInr: 4000,
+      currencySymbol: '₹',
+      notes: 'Estimated 5-day budget per person with Visa-on-Arrival.',
+    },
+    topAttractions: [
+      {
+        name: 'Uluwatu Temple & Kecak Fire Dance',
+        type: 'Cliffside Temple & Performance',
+        timing: '06:00 PM sunset dance',
+        entryFee: 'IDR 150,000 (₹800)',
+        description: 'Perched 70 meters high on a sheer limestone cliff overlooking the crashing Indian Ocean surf.',
+      },
+      {
+        name: 'Tegallalang Rice Terraces & Jungle Swing',
+        type: 'Nature & Photography',
+        timing: '08:00 AM - 06:00 PM',
+        entryFee: 'IDR 50,000 (₹270)',
+        description: 'Ancient Subak UNESCO irrigation stepped valley with famous high-altitude swings.',
+      },
+      {
+        name: 'Pura Ulun Danu Bratan',
+        type: 'Sacred Water Temple',
+        timing: '07:00 AM - 07:00 PM',
+        entryFee: 'IDR 75,000 (₹400)',
+        description: 'Iconic 17th-century floating temple on Lake Bratan surrounded by misty Bedugul mountains.',
+      },
+      {
+        name: 'Nusa Penida Kelingking T-Rex Cliff',
+        type: 'Island Day Excursion',
+        timing: '07:30 AM fast-boat',
+        entryFee: 'Fast-boat IDR 350,000',
+        description: 'Spectacular coastal ridge resembling a Tyrannosaurus Rex overlooking secluded white sands.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'maya-ubud',
+        name: 'Maya Ubud Resort & Spa',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 2980,
+        area: 'Petanu River Valley, Ubud',
+        pricePerNightInr: 14500,
+        amenities: ['Jungle Infinity Pool', 'River Valley Spa', 'Yoga Pavilion', 'Complimentary Tea'],
+        badge: 'Jungle Sanctuary',
+      },
+      {
+        id: 'alila-seminyak',
+        name: 'Alila Seminyak',
+        stars: 5,
+        rating: 4.7,
+        reviewCount: 3150,
+        area: 'Jalan Taman Ganesha, Seminyak',
+        pricePerNightInr: 18200,
+        amenities: ['Beachfront Infinity Pool', 'Beach Bar', 'Sunset Lounge', 'Gym'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Denpasar Arrival & Uluwatu Sunset',
+        morning: 'Land at Ngurah Rai Intl Airport (DPS), private car pickup.',
+        afternoon: 'Check in to Seminyak beachfront hotel, relax by the waves.',
+        evening: 'Visit cliffside Uluwatu Temple and witness the Kecak Fire Dance at sunset.',
+        highlightMeal: 'Jimbaran Bay beach seafood dinner with grilled snapper and sambal matah.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Ubud Rice Terraces & Sacred Monkeys',
+        morning: 'Drive up to Ubud, explore the Sacred Monkey Forest sanctuary.',
+        afternoon: 'Walk the carved green curves of Tegallalang Rice Terraces and try the giant jungle swing.',
+        evening: 'Ubud Royal Palace dance performance and traditional craft shopping.',
+        highlightMeal: 'Crispy duck (Bebek Betutu) and Nasi Goreng at Bebek Bengil.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Water Temples & Tegenungan Waterfall',
+        morning: 'Visit Ulun Danu Bratan lake shrine enveloped in mountain mist.',
+        afternoon: 'Cool off in the spray of Tegenungan Waterfall.',
+        evening: 'Balinese herbal spa and floral bath ritual in Ubud.',
+        highlightMeal: 'Gado-gado peanut salad and fresh dragonfruit juice.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Nusa Penida Coastal Safari',
+        morning: 'High-speed boat to Nusa Penida island; gaze at the jaw-dropping Kelingking T-Rex cliff.',
+        afternoon: 'Swim at Crystal Bay and snorkel with manta rays at Broken Beach.',
+        evening: 'Return to mainland Bali for beach club sunset mocktails.',
+        highlightMeal: 'Açai smoothie bowl with toasted granola and shaved coconut.',
+      },
+      {
+        dayNumber: 5,
+        dayTitle: 'Artisan Markets & Farewell',
+        morning: 'Art shopping at Sukawati Art Market for handmade rattan bags and batik fabrics.',
+        afternoon: 'Farewell stroll along Potato Head or Finns Beach Club.',
+        evening: 'Transfer to Denpasar Airport for flight back home.',
+        highlightMeal: 'Mie Goreng noodles with satay skewers.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '5 to 7 Days',
+      airportOrStation: 'DPS (Ngurah Rai International Airport, Denpasar)',
+      localTransport: 'Private Driver Cabs, Grab/Gojek & Scooters',
+      language: 'Balinese, Bahasa Indonesia & English',
+    },
+  },
+  {
+    id: 'dubai',
+    name: 'Dubai',
+    country: 'United Arab Emirates',
+    stateOrRegion: 'Arabian Gulf',
+    categoryType: 'international',
+    tagline: 'Futuristic architectural wonders, red desert dune safaris, and ultra-luxury shopping.',
+    heroImage: imgDubai,
+    galleryImages: [imgDubai, imgPanorama, imgSingapore],
+    overview:
+      'Rising spectacularly from the Arabian Desert, Dubai combines hyper-modern engineering—home to the world’s tallest tower and largest mall—with ancient gold souks, luxury yacht cruising, and exhilarating 4x4 dune safaris.',
+    bestTimeToVisit: {
+      months: 'November to March',
+      weather: '18°C - 28°C, sunny, dry and pleasant outdoor temperatures',
+      seasonTip: 'December to February is prime festival season with Dubai Shopping Festival and Global Village.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 42000,
+      flightOrTrainEstimateInr: 18000,
+      hotelEstimateInr: 14000,
+      foodEstimateInr: 6000,
+      activitiesEstimateInr: 4000,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-day budget per person with 48-hr Express E-Visa.',
+    },
+    topAttractions: [
+      {
+        name: 'Burj Khalifa (At The Top - 124th & 125th Floor)',
+        type: 'World’s Tallest Skyscraper',
+        timing: '08:30 AM - 11:00 PM',
+        entryFee: 'AED 179 (₹4,100)',
+        description: 'Ascend to 452 meters in 60 seconds with 360-degree views across Dubai and the Arabian Gulf.',
+      },
+      {
+        name: 'Desert Safari & 4x4 Red Dune Bashing',
+        type: 'Desert Adventure & Camp',
+        timing: '03:00 PM - 09:30 PM',
+        entryFee: 'AED 150 (₹3,400)',
+        description: 'Rollercoaster dune ride, sandboarding, camel rides, tanoura dance, and BBQ dinner under stars.',
+      },
+      {
+        name: 'Museum of the Future',
+        type: 'Futuristic Architectural Marvel',
+        timing: '10:00 AM - 07:30 PM',
+        entryFee: 'AED 149 (₹3,400)',
+        description: 'Torus-shaped steel landmark adorned with Arabic calligraphy exploring life in the year 2071.',
+      },
+      {
+        name: 'Dubai Marina Yacht Cruise & The Palm',
+        type: 'Luxury Waterfront',
+        timing: 'Departures hourly',
+        entryFee: 'AED 120 (₹2,700)',
+        description: 'Glide past the glittering Marina skyline, Ain Dubai Ferris wheel, and Atlantis The Palm.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'jw-marriott-dubai',
+        name: 'JW Marriott Marquis Hotel Dubai',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 4890,
+        area: 'Business Bay, Downtown Dubai',
+        pricePerNightInr: 15500,
+        amenities: ['World’s Tallest 5★ Hotel', 'Saray Spa', '12 Award-Winning Restaurants', 'Metro Access'],
+        badge: 'Premier Business & Leisure',
+      },
+      {
+        id: 'atlantis-the-palm',
+        name: 'Atlantis, The Palm',
+        stars: 5,
+        rating: 4.9,
+        reviewCount: 6500,
+        area: 'Crescent Road, Palm Jumeirah',
+        pricePerNightInr: 32000,
+        amenities: ['Aquaventure Waterpark Included', 'The Lost Chambers', 'Celebrity Chef Dining', 'Private Beach'],
+        badge: 'World Icon',
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Downtown Glory & Burj Khalifa',
+        morning: 'Arrive at Dubai International (DXB), seamless chauffeured hotel check-in.',
+        afternoon: 'Wander Dubai Mall, view Dubai Aquarium glass tunnel.',
+        evening: 'Watch the Dubai Dancing Fountains and ascend Burj Khalifa 124th floor at sunset.',
+        highlightMeal: 'Lebanese mezze and warm za’atar bread at Al Hallab.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Lahbab Red Dune Safari & Bedouin Camp',
+        morning: 'Explore the futuristic exhibits at Museum of the Future.',
+        afternoon: 'Pickup in a 4x4 Land Cruiser for thrilling dune bashing in Lahbab desert.',
+        evening: 'Camel ride, shisha, fire show, and open-air Arabian BBQ dinner under the stars.',
+        highlightMeal: 'Slow-cooked Arabian lamb shawarma and saffron baklava.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Palm Jumeirah & Marina Yacht Cruise',
+        morning: 'Ride the Palm Monorail to Atlantis The Palm and explore Aquaventure.',
+        afternoon: 'The View at The Palm observation deck for 360-degree palm island panoramas.',
+        evening: 'Luxury 2-hour evening sunset yacht cruise along Dubai Marina canal.',
+        highlightMeal: 'Mediterranean grilled sea bass at Marina Pier 7.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Old Dubai Gold Souks & Departure',
+        morning: 'Cross Dubai Creek on a traditional wooden Abra boat (AED 1) to Deira Gold & Spice Souk.',
+        afternoon: 'Last minute luxury shopping at Mall of the Emirates.',
+        evening: 'Transfer to DXB Airport for your flight back home.',
+        highlightMeal: 'Emirati camel milk ice cream and saffron karak chai.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '4 to 5 Days',
+      airportOrStation: 'DXB (Dubai International Airport) / DWC',
+      localTransport: 'Dubai Metro, RTA Cabs & Careem',
+      language: 'Arabic, English & Hindi widely spoken',
+    },
+  },
+  {
+    id: 'paris',
+    name: 'Paris',
+    country: 'France',
+    stateOrRegion: 'Île-de-France',
+    categoryType: 'international',
+    tagline: 'The City of Light, world-renowned art museums, Haussmann boulevards, and haute cuisine.',
+    heroImage: imgParis,
+    galleryImages: [imgParis, imgAlpine, imgSantorini],
+    overview:
+      'Paris is the epitome of cultural elegance. From the iron lace of the Eiffel Tower and the priceless canvases of the Louvre to the tree-lined Avenue des Champs-Élysées and bohemian Montmartre bistros, every corner is cinematic.',
+    bestTimeToVisit: {
+      months: 'April to October',
+      weather: '15°C - 25°C, delightful spring blossoms and golden autumn leaves',
+      seasonTip: 'May and September offer warm sunny walking weather with comfortable museum queues.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 92000,
+      flightOrTrainEstimateInr: 48000,
+      hotelEstimateInr: 26000,
+      foodEstimateInr: 11000,
+      activitiesEstimateInr: 7000,
+      currencySymbol: '₹',
+      notes: 'Estimated 5-day budget per person with Schengen Visa Assistance.',
+    },
+    topAttractions: [
+      {
+        name: 'Eiffel Tower (Summit & 2nd Floor)',
+        type: 'World Architectural Icon',
+        timing: '09:00 AM - 11:45 PM',
+        entryFee: '€29 (₹2,600)',
+        description: 'Ascend Gustave Eiffel’s 330-meter masterpiece with champagne bar views over the entire city.',
+      },
+      {
+        name: 'The Louvre Museum & Mona Lisa',
+        type: 'World’s Premier Art Gallery',
+        timing: '09:00 AM - 06:00 PM (Closed Tuesday)',
+        entryFee: '€22 (₹2,000)',
+        description: 'Former royal palace housing 35,000 masterpieces including Venus de Milo and the Mona Lisa.',
+      },
+      {
+        name: 'Seine River Bateaux Mouches Cruise',
+        type: 'Scenic River Cruise',
+        timing: 'Every 30 minutes',
+        entryFee: '€17 (₹1,500)',
+        description: 'Glass-canopy boat gliding past Notre-Dame Cathedral, Musée d’Orsay, and Pont Alexandre III.',
+      },
+      {
+        name: 'Montmartre & Sacré-Cœur Basilica',
+        type: 'Historic Bohemian Quarter',
+        timing: '06:00 AM - 10:30 PM',
+        entryFee: 'Free',
+        description: 'Charming hilltop village of artists, cobblestone cafes, and white travertine dome basilica.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'pullman-eiffel',
+        name: 'Pullman Paris Tour Eiffel',
+        stars: 4,
+        rating: 4.6,
+        reviewCount: 3820,
+        area: '15th Arrondissement, near Eiffel Tower',
+        pricePerNightInr: 24500,
+        amenities: ['Eiffel Tower Balcony Views', 'FRAME Brasserie', 'Fitness Lounge', 'Metro Nearby'],
+        badge: 'Unbeatable Tower View',
+      },
+      {
+        id: 'hotel-regina-louvre',
+        name: 'Hôtel Regina Louvre',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 1650,
+        area: '1st Arrondissement, Place des Pyramides',
+        pricePerNightInr: 38000,
+        amenities: ['Opposite Louvre Museum', 'Haussmann Luxury', 'English Bar', 'Fine Concierge'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Champ de Mars & Sparkling Tower',
+        morning: 'Arrive at Paris CDG Airport, direct RER B or taxi to hotel.',
+        afternoon: 'Stroll across Pont de Bir-Hakeim and photograph the Eiffel Tower from Trocadéro.',
+        evening: 'Ascend the Eiffel Tower and watch it sparkle with 20,000 golden bulbs at the top of the hour.',
+        highlightMeal: 'Croque Monsieur and café au lait at a Parisian sidewalk café.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Louvre Art & Tuileries Garden',
+        morning: 'Morning skip-the-line entrance to the Louvre Museum.',
+        afternoon: 'Walk through Tuileries Garden to Place de la Concorde and Champs-Élysées.',
+        evening: 'Seine River evening cruise as historic monuments illuminate along the water.',
+        highlightMeal: 'Steak frites with béarnaise sauce and chocolate soufflé.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Montmartre Artists & Latin Quarter',
+        morning: 'Funicular ride up Montmartre hill to visit Sacré-Cœur Basilica.',
+        afternoon: 'Wander Place du Tertre artist easels, browse vintage bookstores in the Latin Quarter.',
+        evening: 'Explore Saint-Germain-des-Prés cafes (Café de Flore / Les Deux Magots).',
+        highlightMeal: 'Warm butter croissants and assorted Pierre Hermé macarons.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Versailles Palace Royal Day Trip',
+        morning: 'Short train ride to the Palace of Versailles; tour the Hall of Mirrors.',
+        afternoon: 'Stroll the grand fountains and Marie Antoinette’s picturesque hamlet.',
+        evening: 'Return to Paris for an intimate jazz bar evening in Le Marais.',
+        highlightMeal: 'French onion soup with gruyère crust and crêpes Suzette.',
+      },
+      {
+        dayNumber: 5,
+        dayTitle: 'Boulevard Shopping & Departure',
+        morning: 'Window shopping at Galeries Lafayette Haussmann and admire the stained-glass dome.',
+        afternoon: 'Final walk along Pont Neuf; pick up French perfumes and artisanal chocolate.',
+        evening: 'Transfer to CDG Airport for your flight back home.',
+        highlightMeal: 'Fresh baguette with Camembert cheese and fruit.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '5 to 7 Days',
+      airportOrStation: 'CDG (Charles de Gaulle) / ORY (Orly) / Gare du Nord',
+      localTransport: 'Paris Métro, RER Trains & Walking',
+      language: 'French & English widely spoken in tourist hubs',
+    },
+  },
+  {
+    id: 'zurich',
+    name: 'Zurich',
+    country: 'Switzerland',
+    stateOrRegion: 'Swiss Alps Gateway',
+    categoryType: 'international',
+    tagline: 'Glistening lake promenades, snow-capped Alps horizon, medieval guilds, and Swiss chocolates.',
+    heroImage: imgAlpine,
+    galleryImages: [imgAlpine, imgManali, imgMountainTraveler],
+    overview:
+      'Switzerland’s vibrant lakeside metropolis blends alpine purity with cosmopolitan flair. Explore the medieval Altstadt, take scenic steamers across Lake Zurich, and easily day-trip to Mount Titlis and the Jungfrau region.',
+    bestTimeToVisit: {
+      months: 'June to September (Summer) | December to March (Skiing)',
+      weather: '18°C - 27°C in summer; -2°C to 5°C in winter',
+      seasonTip: 'Summer brings lakeside swimming and alpine hiking, while winter transforms surrounding peaks into ski wonderlands.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 105000,
+      flightOrTrainEstimateInr: 52000,
+      hotelEstimateInr: 32000,
+      foodEstimateInr: 14000,
+      activitiesEstimateInr: 7000,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-day budget per person with Swiss Travel Pass.',
+    },
+    topAttractions: [
+      {
+        name: 'Lake Zurich Steamer Promenade',
+        type: 'Scenic Alpine Waterway',
+        timing: 'Boats run continuously',
+        entryFee: 'CHF 9 (₹850) / Free with Swiss Pass',
+        description: 'Cruising along clear alpine waters with snow-capped Glarus Alps in the southern background.',
+      },
+      {
+        name: 'Altstadt (Old Town) & Grossmünster',
+        type: 'Medieval Architecture',
+        timing: '10:00 AM - 06:00 PM',
+        entryFee: 'Free (tower climb CHF 5)',
+        description: 'Twin-towered Romanesque cathedral founded by Charlemagne with cobblestone guild houses.',
+      },
+      {
+        name: 'Uetliberg Mountain Peak',
+        type: 'Panoramic Viewpoint',
+        timing: 'Train every 20 minutes',
+        entryFee: 'Free with Swiss Pass',
+        description: 'Zurich’s own mountain at 870m offering birds-eye views over the lake, city, and distant Alps.',
+      },
+      {
+        name: 'Lindt Home of Chocolate',
+        type: 'Interactive Museum & Tasting',
+        timing: '10:00 AM - 06:00 PM',
+        entryFee: 'CHF 15 (₹1,400)',
+        description: 'World’s largest 9-meter chocolate fountain with unlimited Swiss chocolate tasting rooms.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'storchen-zurich',
+        name: 'Storchen Zürich - Lifestyle Boutique Hotel',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 1420,
+        area: 'Weinplatz, Limmat Riverfront',
+        pricePerNightInr: 36000,
+        amenities: ['Direct Boat Dock', 'Limmat River Views', 'Cigar Bar', 'Historic Luxury'],
+        badge: 'Premier Waterfront',
+      },
+      {
+        id: 'dolder-grand',
+        name: 'The Dolder Grand',
+        stars: 5,
+        rating: 4.9,
+        reviewCount: 1890,
+        area: 'Kurhausstrasse, Zurichberg',
+        pricePerNightInr: 52000,
+        amenities: ['Castellated Palace', '4,000 sqm Spa', '2-Star Michelin Dining', 'Private Art Collection'],
+        badge: 'World Icon',
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Lake Zurich Arrival & Altstadt Walk',
+        morning: 'Arrive at Zurich Airport (ZRH), 10-minute train into Zurich Hauptbahnhof.',
+        afternoon: 'Stroll down Bahnhofstrasse, one of the world’s most prestigious shopping avenues.',
+        evening: 'Sunset walk along Lake Zurich promenade and dinner along the Limmat river.',
+        highlightMeal: 'Zürcher Geschnetzeltes with golden buttery Rösti potato.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Lindt Chocolate & Uetliberg Mountain',
+        morning: 'Visit Lindt Home of Chocolate in Kilchberg; marvel at the 9m chocolate fountain.',
+        afternoon: 'Train ride to top of Uetliberg for panoramic lunch with Swiss Alps views.',
+        evening: 'Climb Grossmünster tower and visit Fraumünster with Chagall stained-glass windows.',
+        highlightMeal: 'Swiss cheese fondue with crusty sourdough bread cubes.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Mount Titlis or Lucerne Day Excursion',
+        morning: 'Scenic 45-minute train to Lucerne and ascend Mount Titlis via revolving cable car.',
+        afternoon: 'Walk across Chapel Bridge and walk through glacier ice caves.',
+        evening: 'Return to Zurich for an evening glass of Swiss wine along Lindenhof terrace.',
+        highlightMeal: 'Swiss raclette melted over baby potatoes and gherkins.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Rhine Falls & Departure',
+        morning: 'Morning excursion to Rhine Falls, Europe’s most powerful waterfall.',
+        afternoon: 'Buy famous Sprüngli Luxemburgerli macarons and Swiss Army knives.',
+        evening: 'Transfer to Zurich Airport for departure.',
+        highlightMeal: 'Freshly baked Swiss Birchermüesli and hot chocolate.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '4 to 5 Days',
+      airportOrStation: 'ZRH (Zurich International Airport) / Zurich HB',
+      localTransport: 'SBB Trains, Trams & Lake Steamers',
+      language: 'Swiss German & Fluent English',
+    },
+  },
+  {
+    id: 'amsterdam',
+    name: 'Amsterdam',
+    country: 'Netherlands',
+    stateOrRegion: 'North Holland',
+    categoryType: 'international',
+    tagline: 'UNESCO canal rings, world-class Dutch masters, cycling culture, and vibrant houseboats.',
+    heroImage: imgSingapore, // Rich canal / water city photo
+    galleryImages: [imgSingapore, imgParis, imgPanorama],
+    overview:
+      'Amsterdam weaves golden age merchant architecture around a labyrinth of tree-lined canals. Renowned for the Van Gogh Museum, Rijksmuseum, vibrant flower markets, and an effortless outdoor cycling lifestyle.',
+    bestTimeToVisit: {
+      months: 'April to September',
+      weather: '16°C - 24°C, pleasant sunshine and blooming tulip season',
+      seasonTip: 'Mid-April to early May is prime Keukenhof tulip bloom season, while June to August offers vibrant canal festivals.',
+    },
+    estimatedBudget: {
+      totalEstimateInr: 88000,
+      flightOrTrainEstimateInr: 46000,
+      hotelEstimateInr: 24000,
+      foodEstimateInr: 11000,
+      activitiesEstimateInr: 7000,
+      currencySymbol: '₹',
+      notes: 'Estimated 4-day budget per person with I Amsterdam City Card.',
+    },
+    topAttractions: [
+      {
+        name: 'UNESCO Herengracht Canal Cruise',
+        type: 'Historic Waterways',
+        timing: '09:00 AM - 10:00 PM',
+        entryFee: '€18 (₹1,600)',
+        description: 'Cruising through the 17th-century Canal Ring, passing gabled houses and tilted bridges.',
+      },
+      {
+        name: 'Van Gogh Museum & Museumplein',
+        type: 'Art Sanctuary',
+        timing: '09:00 AM - 06:00 PM',
+        entryFee: '€22 (₹2,000)',
+        description: 'World’s largest collection of Vincent van Gogh paintings, including Sunflowers and Almond Blossom.',
+      },
+      {
+        name: 'Anne Frank House & Jordaan Quarter',
+        type: 'Historic Memorial',
+        timing: '09:00 AM - 10:00 PM',
+        entryFee: '€16 (₹1,450)',
+        description: 'Poignant wartime secret annex where Anne Frank wrote her diary, situated in the historic Jordaan.',
+      },
+      {
+        name: 'Keukenhof Gardens (Spring)',
+        type: 'World’s Largest Flower Park',
+        timing: 'Mid-March to Mid-May',
+        entryFee: '€20 (₹1,800)',
+        description: 'Over 7 million blooming tulips, daffodils, and hyacinths stretching across 32 hectares.',
+      },
+    ],
+    recommendedHotels: [
+      {
+        id: 'conservatorium-hotel',
+        name: 'Conservatorium Hotel Amsterdam',
+        stars: 5,
+        rating: 4.8,
+        reviewCount: 2150,
+        area: 'Museum Square, Amsterdam Oud-Zuid',
+        pricePerNightInr: 34000,
+        amenities: ['Heritage Bank Architecture', 'Akasha Holistic Spa', 'Taiko Restaurant', 'Museumplein Access'],
+        badge: 'Premier Luxury Landmark',
+      },
+      {
+        id: 'w-amsterdam',
+        name: 'W Amsterdam',
+        stars: 5,
+        rating: 4.6,
+        reviewCount: 2890,
+        area: 'Spuistraat, near Dam Square',
+        pricePerNightInr: 28000,
+        amenities: ['Rooftop Wet Deck Pool', 'Bank Vault Spa', 'Dam Square View', 'Steakhouse'],
+      },
+    ],
+    dayByDayItinerary: [
+      {
+        dayNumber: 1,
+        dayTitle: 'Dam Square & Evening Canal Cruise',
+        morning: 'Arrive at Schiphol Airport (AMS), 15-minute train to Amsterdam Centraal.',
+        afternoon: 'Check in to hotel, walk across Dam Square and Royal Palace.',
+        evening: 'Illuminated glass-top evening canal boat cruise through Herengracht and Prinsengracht.',
+        highlightMeal: 'Warm Dutch Stroopwafels drizzled with caramel and Dutch bitterballen.',
+      },
+      {
+        dayNumber: 2,
+        dayTitle: 'Van Gogh Masterpieces & Vondelpark',
+        morning: 'Morning visit to the Van Gogh Museum on Museumplein.',
+        afternoon: 'Rent a classic city bicycle and pedal through the green paths of Vondelpark.',
+        evening: 'Wander the narrow boutique alleys and art galleries of the Jordaan quarter.',
+        highlightMeal: 'Traditional Dutch pancake (Pannenkoek) with apples and syrup.',
+      },
+      {
+        dayNumber: 3,
+        dayTitle: 'Keukenhof Tulips or Zaanse Schans Windmills',
+        morning: 'Excursion to Zaanse Schans to tour working historic wooden windmills and clog workshops.',
+        afternoon: 'Artisanal cheese tasting tour with authentic Gouda and Edam wheels.',
+        evening: 'Canalside dinner at a candlelit brown café with Dutch craft beers.',
+        highlightMeal: 'Indonesian Rijsttafel banquet featuring 15 aromatic small dishes.',
+      },
+      {
+        dayNumber: 4,
+        dayTitle: 'Bloemenmarkt & Departure',
+        morning: 'Browse floating flower stalls at the Bloemenmarkt for tulip bulbs.',
+        afternoon: 'Last photography walk over the iconic Magere Brug (Skinny Bridge).',
+        evening: 'Direct train to Schiphol Airport for departure.',
+        highlightMeal: 'Fresh Dutch herring with diced onions and pickles.',
+      },
+    ],
+    quickStats: {
+      idealDuration: '4 to 5 Days',
+      airportOrStation: 'AMS (Amsterdam Airport Schiphol) / Centraal Station',
+      localTransport: 'City Bicycles, Trams & Canal Ferries',
+      language: 'Dutch & Fluent English universally spoken',
+    },
+  },
+];
+
+// Top Tourist Places Collections
+export const TOURIST_COLLECTIONS = [
+  {
+    id: 'golden-triangle',
+    title: 'Golden Triangle Heritage: Delhi, Agra & Jaipur',
+    subtitle: '3 Imperial Capitals · Taj Mahal Sunrise · Rajput Forts',
+    image: imgUdaipur,
+    duration: '6 Days / 5 Nights',
+    destinationsCount: '3 Cities · 12 Monuments',
+    priceInr: 24500,
+    tag: 'Classic Heritage',
+    overview: 'India’s most celebrated cultural circuit connecting Delhi’s Mughal monuments, Agra’s Taj Mahal, and Jaipur’s royal palaces.',
+  },
+  {
+    id: 'swiss-alps-panorama',
+    title: 'Swiss Alps & Glacier Express Panorama',
+    subtitle: 'Zermatt · Matterhorn · Interlaken · Cogwheel Trains',
+    image: imgAlpine,
+    duration: '7 Days / 6 Nights',
+    destinationsCount: '4 Alpine Towns · 3 Panoramic Trains',
+    priceInr: 145000,
+    tag: 'Scenic Mountain Railways',
+    overview: 'Glide through 91 tunnels and across 291 bridges aboard world-famous panoramic trains amidst towering snow glaciers.',
+  },
+  {
+    id: 'royal-rajasthan-forts',
+    title: 'Royal Rajasthan: Fortresses & Golden Dunes',
+    subtitle: 'Jodhpur Blue City · Jaisalmer Fort · Udaipur Lakes',
+    image: imgPanorama,
+    duration: '8 Days / 7 Nights',
+    destinationsCount: '4 Royal Cities · Desert Safari',
+    priceInr: 34990,
+    tag: 'Forts & Legends',
+    overview: 'Experience fairy-tale desert forts, Thar sand dune glamping under stars, and majestic Rajput hospitality.',
+  },
+  {
+    id: 'southeast-asia-islands',
+    title: 'Southeast Asia Tropical Island Hopping',
+    subtitle: 'Bali · Phuket · Phi Phi Cliffs · Langkawi',
+    image: imgBali,
+    duration: '9 Days / 8 Nights',
+    destinationsCount: '4 Tropical Islands · 8 Secret Coves',
+    priceInr: 58900,
+    tag: 'Island Expeditions',
+    overview: 'Speedboat across turquoise straits, limestone karst karsts, sacred sea shrines, and vibrant night bazaars.',
+  },
+  {
+    id: 'kerala-backwaters-munnar',
+    title: 'Kerala Backwaters & Clouded Tea Hills',
+    subtitle: 'Munnar Tea Slopes · Alleppey Houseboat · Kochi Fort',
+    image: imgSantorini,
+    duration: '6 Days / 5 Nights',
+    destinationsCount: '3 Hill & Coast Hubs',
+    priceInr: 21900,
+    tag: 'God’s Own Country',
+    overview: 'Slow life aboard traditional thatched kettuvallam houseboats gliding through palm-fringed lagoons and misty hills.',
+  },
+  {
+    id: 'nordic-aurora-fjords',
+    title: 'Nordic Lights & Arctic Fjords Explorer',
+    subtitle: 'Tromsø Aurora · Lofoten Peaks · Bergen Rail',
+    image: imgMountainTraveler,
+    duration: '7 Days / 6 Nights',
+    destinationsCount: '3 Arctic Hubs · Fjord Cruise',
+    priceInr: 168000,
+    tag: 'Aurora & Wilderness',
+    overview: 'Chase the ethereal dancing emerald Northern Lights, stay in traditional red rorbu fishermen cabins, and sail frozen fjords.',
+  },
+];
+
+// Monthly Travel Picks
+export const MONTHLY_TRAVEL_PICKS = [
+  {
+    id: 'pick-oct-nov',
+    monthLabel: 'October – November',
+    title: 'Varanasi Dev Deepawali: Ghat of a Million Diyas',
+    location: 'Varanasi, Uttar Pradesh',
+    image: imgUdaipur,
+    highlight: '84 historic river ghats illuminated with 1.2 million earthen lamps and floating Ganga Aarti.',
+    temperature: '18°C – 28°C',
+    recommendedDays: '3 Days',
+    approxBudgetInr: 12500,
+  },
+  {
+    id: 'pick-dec',
+    monthLabel: 'December',
+    title: 'Manali & Gulmarg Winter Wonderland',
+    location: 'Himachal & Kashmir Himalayas',
+    image: imgManali,
+    highlight: 'Fresh powdery snowfall, skiing down Solang slopes, and cozy wooden fireplace lodges.',
+    temperature: '-4°C – 10°C',
+    recommendedDays: '5 Days',
+    approxBudgetInr: 22000,
+  },
+  {
+    id: 'pick-jan',
+    monthLabel: 'January',
+    title: 'Rann of Kutch White Desert Festival',
+    location: 'Kutch, Gujarat',
+    image: imgPanorama,
+    highlight: 'Full moon glistening on endless white salt desert with folk musicians and tent city hospitality.',
+    temperature: '12°C – 26°C',
+    recommendedDays: '4 Days',
+    approxBudgetInr: 18500,
+  },
+  {
+    id: 'pick-feb',
+    monthLabel: 'February',
+    title: 'Goa Carnival & Coastal Music Trails',
+    location: 'North & South Goa Coast',
+    image: imgGoa,
+    highlight: 'King Momo grand street parades, lively brass bands, food festivals, and pleasant dry sea breeze.',
+    temperature: '21°C – 30°C',
+    recommendedDays: '4 Days',
+    approxBudgetInr: 17500,
+  },
+  {
+    id: 'pick-apr',
+    monthLabel: 'April',
+    title: 'Kashmir Tulip Garden & Dal Lake Shikaras',
+    location: 'Srinagar, Jammu & Kashmir',
+    image: imgAlpine,
+    highlight: 'Asia’s largest tulip terrace garden with 1.5 million colorful blooms under snow-capped Zabarwan hills.',
+    temperature: '10°C – 22°C',
+    recommendedDays: '5 Days',
+    approxBudgetInr: 24500,
+  },
+  {
+    id: 'pick-jul',
+    monthLabel: 'July – August',
+    title: 'Ladakh High Passes & Pangong Tso Expedition',
+    location: 'Leh & Nubra Valley, Ladakh',
+    image: imgMountainTraveler,
+    highlight: 'Crossing Khardung La at 17,982 ft, double-humped camel rides in Hunder dunes, and deep blue salt lakes.',
+    temperature: '14°C – 28°C',
+    recommendedDays: '7 Days',
+    approxBudgetInr: 32000,
+  },
+];
+
+// Visual Stories
+export const VISUAL_STORIES = [
+  {
+    id: 'story-udaipur',
+    title: 'Sunrise Reflections Over Lake Pichola',
+    author: 'Aarav Mehta',
+    authorRole: 'Heritage Photographer',
+    location: 'Udaipur, India',
+    image: imgUdaipur,
+    readTime: '3 min read',
+    snippet: 'As the morning mist lifts off Pichola, the white marble walls of the City Palace catch the first golden rays.',
+    stats: '14.2k views · 982 saves',
+  },
+  {
+    id: 'story-manali',
+    title: 'Whispering Pines of Solang in Deep Snow',
+    author: 'Tenzin Norbu',
+    authorRole: 'Mountain Mountaineer',
+    location: 'Manali, India',
+    image: imgManali,
+    readTime: '4 min read',
+    snippet: 'When the winter storm clears, the entire Pir Panjal range shines in blinding crystalline white serenity.',
+    stats: '22.8k views · 1.4k saves',
+  },
+  {
+    id: 'story-maldives',
+    title: 'Floating Under Starlit Coral Lagoons',
+    author: 'Elena Rostova',
+    authorRole: 'Marine Biologist',
+    location: 'Baa Atoll, Maldives',
+    image: imgMaldives,
+    readTime: '3 min read',
+    snippet: 'Gliding on a midnight kayak where bioluminescent plankton lights up the waves with magical turquoise sparks.',
+    stats: '31.5k views · 2.9k saves',
+  },
+  {
+    id: 'story-paris',
+    title: 'Autumn Evenings Along the River Seine',
+    author: 'Claire Laurent',
+    authorRole: 'Architect & Travel Writer',
+    location: 'Paris, France',
+    image: imgParis,
+    readTime: '5 min read',
+    snippet: 'The scent of roasted chestnuts on Pont Neuf, yellow chestnut leaves drifting onto barge decks, and café jazz.',
+    stats: '18.9k views · 1.1k saves',
+  },
+  {
+    id: 'story-goa',
+    title: 'Golden Hour at Secluded Agonda Coves',
+    author: 'Rohan Fernandes',
+    authorRole: 'Coastal Explorer',
+    location: 'South Goa, India',
+    image: imgGoa,
+    readTime: '3 min read',
+    snippet: 'Far away from crowded party strips, southern shores offer empty sands, gentle dolphins, and warm sea breezes.',
+    stats: '19.4k views · 1.2k saves',
+  },
+  {
+    id: 'story-zurich',
+    title: 'Journey to the Top of Europe',
+    author: 'Marco Bernasconi',
+    authorRole: 'Alpine Photographer',
+    location: 'Zurich & Swiss Alps',
+    image: imgAlpine,
+    readTime: '4 min read',
+    snippet: 'Stepping off the red cogwheel train into sub-zero glacier air surrounded by a sea of four-thousand-meter peaks.',
+    stats: '27.1k views · 2.3k saves',
+  },
+];

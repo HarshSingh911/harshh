@@ -482,8 +482,8 @@ export const PLATFORM_SERVICES: {
   },
   {
     id: 'experiences',
-    title: 'Tours & Experiences',
-    subtitle: 'Theme parks & activities',
+    title: 'Attractions',
+    subtitle: 'Theme parks, tickets & activities',
     image: ASSETS.paris,
     accentColor: 'from-purple-500 to-indigo-600',
   },

@@ -10,7 +10,8 @@ export type AppPageView =
   | 'trips'
   | 'account'
   | 'admin'
-  | 'international-planner';
+  | 'international-planner'
+  | 'explore';
 
 interface NavbarProps {
   activePage: AppPageView;
@@ -69,8 +70,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Front page (home) and international planner have scenic backgrounds behind the navbar
-  const isDarkHeader = activePage === 'home' || activePage === 'international-planner';
+  // Front page (home), international planner, and explore have scenic/dark backgrounds behind the navbar
+  const isDarkHeader = activePage === 'home' || activePage === 'international-planner' || activePage === 'explore';
 
   // Categories show in top navigation after searching (search-results page or checkout)
   const isSearchResultsPage = activePage === 'search-results';
@@ -84,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
-        {/* Zone 1: Brand Wordmark & Go Global */}
+        {/* Zone 1: Brand Wordmark, Go Global & Explore */}
         <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
           <a
             href="#top"

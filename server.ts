@@ -30,8 +30,8 @@ async function generateWithGemini(prompt: string, isJson: boolean = true) {
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
     return null;
   }
-  // Try flash-lite first (fast, reliable), followed by 3.8-flash and flash-latest
-  const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+  // Try flagship gemini-3.8-flash first, followed by gemini-flash-latest and gemini-3.1-flash-lite
+  const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
   for (const model of modelsToTry) {
     try {
       const generatePromise = ai.models.generateContent({
@@ -40,7 +40,7 @@ async function generateWithGemini(prompt: string, isJson: boolean = true) {
         config: isJson ? { responseMimeType: 'application/json', temperature: 0.7 } : { temperature: 0.7 },
       });
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 7000)
+        setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 30000)
       );
       const response = await Promise.race([generatePromise, timeoutPromise]);
       if (response && response.text) {

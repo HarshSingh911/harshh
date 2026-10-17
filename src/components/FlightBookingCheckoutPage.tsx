@@ -1620,6 +1620,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                 className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
               >
                 <span>View in My Trips</span>
+              </button>
             </div>
           </div>
         </div>
