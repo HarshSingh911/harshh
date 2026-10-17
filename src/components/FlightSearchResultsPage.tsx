@@ -57,6 +57,9 @@ import {
   formatPrice,
 } from '../data/travelData';
 import { SafeImage } from './SafeImage';
+import { BusSeatLayoutSelector } from './BusSeatLayoutSelector';
+import { FlightFareOptionsModal } from './FlightFareOptionsModal';
+import { TripDatePickerModal } from './TripDatePickerModal';
 
 interface FlightSearchResultsPageProps {
   activeCategory: BookingCategory;
@@ -84,7 +87,27 @@ interface FlightSearchResultsPageProps {
     duration: string;
     priceInr: number;
     category: BookingCategory;
+    airline?: string;
+    flightNo?: string;
+    cabinClass?: string;
+    trainName?: string;
+    trainNo?: string;
+    trainClass?: string;
+    hotelName?: string;
+    hotelLocation?: string;
+    roomType?: string;
+    busOperator?: string;
+    busType?: string;
+    cabType?: string;
+    holidayTheme?: string;
+    fromCity?: string;
+    toCity?: string;
+    seatNumbers?: string;
+    busBoardingPoint?: string;
+    busDroppingPoint?: string;
+    travellers?: number;
   }) => void;
+  onSelectHotelForDetails?: (hotel: any) => void;
   onNotify: (title: string, detail: string) => void;
 }
 
@@ -958,7 +981,7 @@ const HOTEL_RESULTS: HotelResult[] = [
 ];
 
 // --- D. BUS RESULTS (redBus & MMT Style) ---
-interface BusResult {
+export interface BusResult {
   id: string;
   operator: string;
   busType: string;
@@ -1651,6 +1674,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   onChangeCategory,
   onModifySearch,
   onSelectFlightOrStayForCheckout,
+  onSelectHotelForDetails,
   onNotify,
 }) => {
   // Current active results tab (Flights, Trains, Hotels, Buses, Cabs, Holidays)
@@ -1718,6 +1742,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [modCabTime, setModCabTime] = useState<string>('10:00 AM');
   const [modHolidayTheme, setModHolidayTheme] = useState<string>('All Packages');
   const [modHolidayDuration, setModHolidayDuration] = useState<string>('4N / 5D');
+  const [calendarTarget, setCalendarTarget] = useState<'dep' | 'ret' | null>(null);
 
   const handleOpenModify = () => {
     setModCategory(currentCategory);
@@ -1776,6 +1801,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [sortBy, setSortBy] = useState<'cheapest' | 'fastest' | 'rating' | 'departure'>('cheapest');
   const [codeCopied, setCodeCopied] = useState<boolean>(false);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+  const [flightForFareModal, setFlightForFareModal] = useState<any | null>(null);
 
   // --- FILTERS STATE PER CATEGORY ---
   // 1. Flights
@@ -1830,6 +1856,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [busSelectedDroppingPoints, setBusSelectedDroppingPoints] = useState<string[]>([]);
   const [busSelectedAmenities, setBusSelectedAmenities] = useState<string[]>([]);
   const [busMinRating, setBusMinRating] = useState<number>(0);
+  const [expandedBusId, setExpandedBusId] = useState<string | null>(null);
 
   // 5. Cabs
   const [cabMaxPrice, setCabMaxPrice] = useState<number>(13000);
@@ -2402,9 +2429,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 )}
               </div>
 
-              {/* Travel Date(s) */}
-              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-700 group-hover:text-blue-700 transition-colors">
-                <Calendar className="w-4 h-4 text-slate-400 group-hover:text-blue-500" />
+              {/* Travel Date(s) with Interactive Calendar Modal */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCalendarTarget('dep');
+                }}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-700 bg-slate-50 hover:bg-blue-50 px-2.5 py-1 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs hover:scale-102"
+                title="Click to view full fare calendar and select travel date"
+              >
+                <Calendar className="w-4 h-4 text-blue-600" />
                 {currentCategory === 'hotels' ? (
                   <span>
                     Check-in: {formatFriendlyDate(currentDepDate)}
@@ -2412,16 +2447,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </span>
                 ) : (
                   <>
-                    <span>{formatFriendlyDate(currentDepDate)}</span>
+                    <span className="font-bold text-slate-900">{formatFriendlyDate(currentDepDate)}</span>
                     {currentCategory === 'flights' && currentTripType === 'round-trip' && (
                       <>
                         <span className="text-slate-300">→</span>
-                        <span className="font-semibold text-purple-700">{formatFriendlyDate(currentRetDate)}</span>
+                        <span className="font-bold text-purple-700">{formatFriendlyDate(currentRetDate)}</span>
                       </>
                     )}
                   </>
                 )}
-              </div>
+                <span className="text-[10px] bg-blue-100 text-blue-700 font-mono font-bold px-1.5 py-0.2 rounded ml-0.5">
+                  Calendar
+                </span>
+              </button>
 
               {/* Travellers / Guests */}
               <div className="hidden sm:flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-700">
@@ -2465,42 +2503,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           =============================================================== */}
           {isModifyOpen && (
             <div className="mt-4 pt-4 border-t border-slate-200 bg-slate-50/80 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-5 rounded-b-2xl shadow-inner animate-in fade-in slide-in-from-top-2 duration-200">
-              {/* Category Selector Tabs in Modify Bar */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none border-b border-slate-200">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider pr-2">
-                  Category:
-                </span>
-                {(
-                  [
-                    { id: 'flights', label: 'Flights', icon: Plane },
-                    { id: 'trains', label: 'Trains', icon: TrainFront },
-                    { id: 'hotels', label: 'Hotels', icon: Building2 },
-                    { id: 'buses', label: 'Buses', icon: Bus },
-                    { id: 'cabs', label: 'Cabs', icon: Car },
-                    { id: 'holidays', label: 'Holidays', icon: Palmtree },
-                    { id: 'experiences', label: 'Tours & Experiences', icon: Compass },
-                  ] as const
-                ).map((cat) => {
-                  const Icon = cat.icon;
-                  const isActive = modCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setModCategory(cat.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* 1. FLIGHTS MODIFY CONTROLS */}
               {modCategory === 'flights' && (
                 <div className="space-y-4">
@@ -2627,12 +2629,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                         Departure Date
                       </label>
-                      <input
-                        type="date"
-                        value={modDepDate}
-                        onChange={(e) => setModDepDate(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setCalendarTarget('dep')}
+                        className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                          <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
+                        </div>
+                        <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded font-mono shrink-0">
+                          Calendar
+                        </span>
+                      </button>
                     </div>
 
                     {/* Return Date */}
@@ -2640,19 +2649,28 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                         Return Date {modTripType === 'one-way' && <span className="text-slate-400 font-normal">(Optional)</span>}
                       </label>
-                      <input
-                        type="date"
-                        value={modRetDate}
-                        onChange={(e) => {
-                          setModRetDate(e.target.value);
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCalendarTarget('ret');
                           if (modTripType === 'one-way') setModTripType('round-trip');
                         }}
-                        className={`w-full border rounded-xl p-2.5 text-xs font-bold shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer ${
+                        className={`w-full text-left border rounded-xl p-2.5 text-xs font-bold shadow-2xs hover:border-purple-500 cursor-pointer flex items-center justify-between ${
                           modTripType === 'round-trip'
                             ? 'bg-purple-50/60 border-purple-300 text-purple-950 font-semibold'
                             : 'bg-white border-slate-300 text-slate-500'
                         }`}
-                      />
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Calendar className="w-4 h-4 text-purple-600 shrink-0" />
+                          <span className="truncate">
+                            {modRetDate ? formatFriendlyDate(modRetDate) : 'Select Return Date'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-purple-600 font-bold bg-purple-100/70 px-2 py-0.5 rounded font-mono shrink-0">
+                          Calendar
+                        </span>
+                      </button>
                     </div>
 
                     {/* Travellers & Cabin Class */}
@@ -2744,12 +2762,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Journey Date
                     </label>
-                    <input
-                      type="date"
-                      value={modDepDate}
-                      onChange={(e) => setModDepDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setCalendarTarget('dep')}
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded font-mono shrink-0">
+                        Calendar
+                      </span>
+                    </button>
                   </div>
 
                   <div>
@@ -2815,24 +2840,38 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Check-in Date
                     </label>
-                    <input
-                      type="date"
-                      value={modDepDate}
-                      onChange={(e) => setModDepDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setCalendarTarget('dep')}
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
+                      </div>
+                      <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded font-mono shrink-0">
+                        Calendar
+                      </span>
+                    </button>
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Check-out Date
                     </label>
-                    <input
-                      type="date"
-                      value={modRetDate}
-                      onChange={(e) => setModRetDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setCalendarTarget('ret')}
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-purple-500 cursor-pointer flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-purple-600 shrink-0" />
+                        <span className="truncate">{modRetDate ? formatFriendlyDate(modRetDate) : 'Select Check-out'}</span>
+                      </div>
+                      <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded font-mono shrink-0">
+                        Calendar
+                      </span>
+                    </button>
                   </div>
 
                   <div>
@@ -2923,12 +2962,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Travel Date
                     </label>
-                    <input
-                      type="date"
-                      value={modDepDate}
-                      onChange={(e) => setModDepDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setCalendarTarget('dep')}
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
+                      </div>
+                      <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded font-mono shrink-0">
+                        Calendar
+                      </span>
+                    </button>
                   </div>
 
                   <div>
@@ -2996,12 +3042,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Pickup Date
                     </label>
-                    <input
-                      type="date"
-                      value={modDepDate}
-                      onChange={(e) => setModDepDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setCalendarTarget('dep')}
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-amber-500 cursor-pointer flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
+                      </div>
+                      <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded font-mono shrink-0">
+                        Calendar
+                      </span>
+                    </button>
                   </div>
 
                   <div>
@@ -3555,7 +3608,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                 {/* 7. Train Types */}
                 <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Train Category</span>
+                  <span className="font-bold text-slate-800 block mb-2">Train Type</span>
                   <div className="space-y-1.5">
                     {[
                       { id: 'Vande Bharat', badge: 'VB', label: 'Vande Bharat Express' },
@@ -4485,7 +4538,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
 
                 <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Vehicle Category</span>
+                  <span className="font-bold text-slate-800 block mb-2">Vehicle Type</span>
                   <div className="space-y-2">
                     {['Sedan', 'SUV', 'Prime Crysta', 'Tempo'].map((v) => {
                       const checked = cabSelectedCategories.includes(v);
@@ -4705,9 +4758,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 </div>
 
-                {/* 5. Hotel Category (4 Columns from MMT Photo 1) */}
+                {/* 5. Hotel Rating (4 Columns from MMT Photo 1) */}
                 <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Hotel Category</span>
+                  <span className="font-bold text-slate-800 block mb-2">Hotel Star Rating</span>
                   <div className="grid grid-cols-4 gap-1.5">
                     {[
                       {
@@ -5305,14 +5358,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           <button
                             type="button"
                             onClick={() =>
-                              onSelectFlightOrStayForCheckout({
-                                title: `${selectedOutboundFlight.airline} ${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.airline} ${selectedReturnFlight.flightNo} (Round Trip)`,
-                                code: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                              setFlightForFareModal({
+                                id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                                airline: selectedOutboundFlight.airline,
+                                flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
                                 depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
                                 arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
                                 duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                                priceInr: totalRoundTripFare,
-                                category: 'flights',
+                                priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                                badgeBg: selectedOutboundFlight.badgeBg,
+                                badgeCode: selectedOutboundFlight.badgeCode,
+                                aircraft: selectedOutboundFlight.aircraft,
+                                fromCode: currentFromCity.code,
+                                toCode: currentToCity.code,
                               })
                             }
                             className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all"
@@ -5398,14 +5456,21 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               <button
                                 type="button"
                                 onClick={() =>
-                                  onSelectFlightOrStayForCheckout({
-                                    title: `${fl.airline} ${fl.flightNo}`,
-                                    code: fl.id,
+                                  setFlightForFareModal({
+                                    id: fl.id,
+                                    airline: fl.airline,
+                                    flightNo: fl.flightNo,
                                     depTime: fl.depTime,
                                     arrTime: fl.arrTime,
+                                    depTerminal: fl.depTerminal,
+                                    arrTerminal: fl.arrTerminal,
                                     duration: fl.duration,
                                     priceInr: fl.priceInr,
-                                    category: 'flights',
+                                    badgeBg: fl.badgeBg,
+                                    badgeCode: fl.badgeCode,
+                                    aircraft: fl.aircraft,
+                                    fromCode: currentFromCity.code,
+                                    toCode: currentToCity.code,
                                   })
                                 }
                                 className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer"
@@ -5765,6 +5830,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                       duration: train.duration,
                                       priceInr: cls.priceInr,
                                       category: 'trains',
+                                      trainName: train.trainName,
+                                      trainNo: train.trainNo,
+                                      trainClass: `${cls.classCode} (${cls.className})`,
+                                      fromCity: `${train.depStation} (${train.depCode})`,
+                                      toCity: `${train.arrStation} (${train.arrCode})`,
+                                      seatNumbers: cls.quotaLabel || 'AVAILABLE-0042',
                                     })
                                   }
                                   className="mt-3 w-full py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
@@ -5916,7 +5987,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col md:flex-row group"
                       >
                         {/* Image with Badges */}
-                        <div className="w-full md:w-80 h-56 md:h-auto relative shrink-0 overflow-hidden bg-slate-100">
+                        <div
+                          onClick={() => onSelectHotelForDetails?.(hotel)}
+                          className="w-full md:w-80 h-56 md:h-auto relative shrink-0 overflow-hidden bg-slate-100 cursor-pointer"
+                        >
                           <SafeImage
                             src={hotel.image}
                             alt={hotel.name}
@@ -5957,7 +6031,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                     {hotel.stars}-Star {hotel.propertyType}
                                   </span>
                                 </div>
-                                <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors">
+                                <h3
+                                  onClick={() => onSelectHotelForDetails?.(hotel)}
+                                  className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors cursor-pointer"
+                                >
                                   {hotel.name}
                                 </h3>
                                 <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
@@ -6027,20 +6104,28 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                             <button
                               type="button"
-                              onClick={() =>
-                                onSelectFlightOrStayForCheckout({
-                                  title: hotel.name,
-                                  code: hotel.id,
-                                  depTime: 'Check-in: 02:00 PM',
-                                  arrTime: 'Check-out: 11:00 AM',
-                                  duration: '1 Night Stay',
-                                  priceInr: hotel.priceInr,
-                                  category: 'hotels',
-                                })
-                              }
-                              className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
+                              onClick={() => {
+                                if (onSelectHotelForDetails) {
+                                  onSelectHotelForDetails(hotel);
+                                } else {
+                                  onSelectFlightOrStayForCheckout({
+                                    title: hotel.name,
+                                    code: hotel.id,
+                                    depTime: 'Check-in: 02:00 PM',
+                                    arrTime: 'Check-out: 11:00 AM',
+                                    duration: '1 Night Stay',
+                                    priceInr: hotel.priceInr,
+                                    category: 'hotels',
+                                    hotelName: hotel.name,
+                                    hotelLocation: hotel.location,
+                                    roomType: 'Deluxe Suite (King Bed / City View)',
+                                  });
+                                }
+                              }}
+                              className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
                             >
-                              Book Room
+                              <span>Book Hotel &amp; View Rooms</span>
+                              <span>→</span>
                             </button>
                           </div>
                         </div>
@@ -6248,89 +6333,116 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     return (
                       <div
                         key={bus.id}
-                        className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs hover:shadow-md transition-shadow"
+                        className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-between"
                       >
                         {/* Bus Operator Header & Badges */}
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                          <div className="min-w-[240px]">
-                            <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-start justify-between gap-2.5 pb-3 border-b border-slate-100">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-bold text-slate-900 text-base">{bus.operator}</h4>
-                              <div className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-[11px] shadow-2xs">
+                              <div className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-[11px] shadow-2xs shrink-0">
                                 <span>{bus.rating}</span>
                                 <Star className="w-3 h-3 fill-current" />
                               </div>
                             </div>
                             <div className="text-xs text-slate-500 font-medium mt-0.5">{bus.busType}</div>
-
-                            {/* Badges strip */}
-                            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                              {bus.isPrimo && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-200">
-                                  <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                                  Primo Certified
-                                </span>
-                              )}
-                              {bus.hasLiveTracking && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                  Live Tracking
-                                </span>
-                              )}
-                              {bus.isSingleLadyBerth && (
-                                <span className="text-[10px] font-bold bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full border border-pink-200">
-                                  Single Lady Berths
-                                </span>
-                              )}
-                              {bus.badges.map((b) => (
-                                <span
-                                  key={b}
-                                  className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
-                                >
-                                  {b}
-                                </span>
-                              ))}
-                            </div>
                           </div>
 
-                          {/* Boarding, Duration, Dropping Times */}
-                          <div className="flex items-center gap-6 sm:gap-10 justify-center flex-1">
-                            <div className="text-left">
-                              <div className="font-mono text-xl sm:text-2xl font-black text-slate-900">
-                                {bus.depTime}
-                              </div>
-                              <div className="text-xs font-semibold text-slate-700 max-w-[140px] truncate">
-                                {bus.depPoint}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-medium">Boarding Point</div>
-                            </div>
-
-                            <div className="flex flex-col items-center">
-                              <span className="text-[11px] text-slate-500 font-semibold">{bus.duration}</span>
-                              <div className="w-24 sm:w-36 h-[2px] bg-slate-300 relative my-1">
-                                <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 absolute right-0 top-1/2 -translate-y-1/2 shadow-xs" />
-                              </div>
-                              <span
-                                className={`text-[10px] font-bold ${
-                                  bus.seatsLeft <= 4 ? 'text-rose-600' : 'text-amber-600'
-                                }`}
-                              >
-                                {bus.seatsLeft} berths left
+                          {/* Badges strip */}
+                          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                            {bus.isPrimo && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-200">
+                                <ShieldCheck className="w-3 h-3 text-indigo-600" />
+                                Primo Certified
                               </span>
-                            </div>
+                            )}
+                            {bus.hasLiveTracking && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Live Tracking
+                              </span>
+                            )}
+                            {bus.isSingleLadyBerth && (
+                              <span className="text-[10px] font-bold bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full border border-pink-200">
+                                Single Lady Berths
+                              </span>
+                            )}
+                            {bus.badges.slice(0, 2).map((b) => (
+                              <span
+                                key={b}
+                                className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
+                              >
+                                {b}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
 
-                            <div className="text-right">
-                              <div className="font-mono text-xl sm:text-2xl font-black text-slate-900">
-                                {bus.arrTime}
-                              </div>
-                              <div className="text-xs font-semibold text-slate-700 max-w-[140px] truncate">
-                                {bus.arrPoint}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-medium">Dropping Point</div>
+                        {/* Boarding, Duration, Dropping Times */}
+                        <div className="py-4 flex items-center justify-between gap-3 sm:gap-6">
+                          {/* Boarding */}
+                          <div className="text-left min-w-0">
+                            <div className="font-mono text-xl sm:text-2xl font-black text-slate-900 leading-none">
+                              {bus.depTime}
                             </div>
+                            <div className="text-xs font-semibold text-slate-700 truncate max-w-[130px] sm:max-w-[180px] mt-1">
+                              {bus.depPoint}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">Boarding Point</div>
                           </div>
 
-                          {/* Price and CTA */}
-                          <div className="flex items-center justify-between lg:justify-end gap-5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                          {/* Duration & Berths */}
+                          <div className="flex flex-col items-center shrink-0 px-2">
+                            <span className="text-[11px] text-slate-500 font-semibold">{bus.duration}</span>
+                            <div className="w-16 sm:w-28 md:w-36 h-[2px] bg-slate-300 relative my-1">
+                              <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 absolute right-0 top-1/2 -translate-y-1/2 shadow-xs" />
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold ${
+                                bus.seatsLeft <= 4 ? 'text-rose-600' : 'text-amber-600'
+                              }`}
+                            >
+                              {bus.seatsLeft} berths left
+                            </span>
+                          </div>
+
+                          {/* Dropping */}
+                          <div className="text-right min-w-0">
+                            <div className="font-mono text-xl sm:text-2xl font-black text-slate-900 leading-none">
+                              {bus.arrTime}
+                            </div>
+                            <div className="text-xs font-semibold text-slate-700 truncate max-w-[130px] sm:max-w-[180px] mt-1">
+                              {bus.arrPoint}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">Dropping Point</div>
+                          </div>
+                        </div>
+
+                        {/* Bottom Bar: Amenities on Left, Price and Select Seat Button on Right */}
+                        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          {/* Amenities */}
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500 min-w-0 flex-1">
+                            <span className="font-bold text-slate-700 text-[10px] uppercase tracking-wider shrink-0 mr-1">
+                              Amenities:
+                            </span>
+                            {bus.amenities.slice(0, 3).map((amenity) => (
+                              <span
+                                key={amenity}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 border border-slate-200/80 text-[10px] shrink-0"
+                              >
+                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                {amenity}
+                              </span>
+                            ))}
+                            {bus.amenities.length > 3 && (
+                              <span className="text-[10px] text-slate-400 shrink-0">
+                                +{bus.amenities.length - 3} more
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Price and Select Seat CTA */}
+                          <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                             <div className="text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <span className="text-xs text-slate-400 line-through font-mono">
@@ -6342,7 +6454,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </span>
                                 )}
                               </div>
-                              <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+                              <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono leading-none mt-0.5">
                                 {formatPrice(bus.priceInr, currency)}
                               </div>
                               <div className="text-[10px] text-slate-400">All taxes included</div>
@@ -6350,39 +6462,51 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                             <button
                               type="button"
-                              onClick={() =>
-                                onSelectFlightOrStayForCheckout({
-                                  title: `${bus.operator} (${bus.busType})`,
-                                  code: bus.id,
-                                  depTime: `${bus.depTime} (${bus.depPoint})`,
-                                  arrTime: `${bus.arrTime} (${bus.arrPoint})`,
-                                  duration: bus.duration,
-                                  priceInr: bus.priceInr,
-                                  category: 'buses',
-                                })
-                              }
-                              className="px-6 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+                              onClick={() => setExpandedBusId(expandedBusId === bus.id ? null : bus.id)}
+                              className={`px-6 py-2.5 rounded-full font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all active:scale-95 shrink-0 whitespace-nowrap ${
+                                expandedBusId === bus.id
+                                  ? 'bg-slate-900 text-white shadow-slate-900/20'
+                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                              }`}
                             >
-                              Select Seat
+                              {expandedBusId === bus.id ? 'Hide Seats' : 'Select Seat'}
                             </button>
                           </div>
                         </div>
 
-                        {/* Amenities Footer Strip */}
-                        <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                          <span className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">
-                            Amenities:
-                          </span>
-                          {bus.amenities.map((amenity) => (
-                            <span
-                              key={amenity}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 border border-slate-200/80 text-[10px]"
-                            >
-                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                              {amenity}
-                            </span>
-                          ))}
-                        </div>
+                        {/* Inline Double-Floor Seat Layout & Pick/Drop Point Selector */}
+                        {expandedBusId === bus.id && (
+                          <BusSeatLayoutSelector
+                            bus={bus}
+                            currency={currency}
+                            onProceedToBooking={({
+                              bus: selectedBus,
+                              selectedSeatNumbers,
+                              totalPriceInr,
+                              boardingPoint,
+                              droppingPoint,
+                            }) => {
+                              onSelectFlightOrStayForCheckout({
+                                title: `${selectedBus.operator} (${selectedBus.busType})`,
+                                code: selectedBus.id,
+                                depTime: `${selectedBus.depTime} (${boardingPoint.split(' (')[0]})`,
+                                arrTime: `${selectedBus.arrTime} (${droppingPoint.split(' (')[0]})`,
+                                duration: selectedBus.duration,
+                                priceInr: Math.round(totalPriceInr / selectedSeatNumbers.length),
+                                category: 'buses',
+                                busOperator: selectedBus.operator,
+                                busType: selectedBus.busType,
+                                seatNumbers: selectedSeatNumbers.join(', '),
+                                busBoardingPoint: boardingPoint,
+                                busDroppingPoint: droppingPoint,
+                                travellers: selectedSeatNumbers.length,
+                                fromCity: boardingPoint.split(' (')[0],
+                                toCity: droppingPoint.split(' (')[0],
+                              });
+                            }}
+                            onClose={() => setExpandedBusId(null)}
+                          />
+                        )}
                       </div>
                     );
                   })
@@ -6490,6 +6614,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 duration: 'All-inclusive Cab',
                                 priceInr: cab.priceInr,
                                 category: 'cabs',
+                                cabType: cab.cabType,
                               })
                             }
                             className="px-6 py-2.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/20 cursor-pointer"
@@ -6877,6 +7002,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                       duration: pkg.durationNights,
                                       priceInr: pkg.startingPricePerPersonInr,
                                       category: 'holidays',
+                                      holidayTheme: pkg.theme,
                                     })
                                   }
                                   className="px-6 py-2.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/20 cursor-pointer transition-all active:scale-95"
@@ -6923,6 +7049,57 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           </main>
         </div>
       </div>
+
+      {/* Flight Fare Options (Saver, Flexi Plus, Corporate, SpiceMax) Modal */}
+      {flightForFareModal && (
+        <FlightFareOptionsModal
+          flight={flightForFareModal}
+          currency={currency}
+          onSelectFareAndProceed={(fareTier, finalPriceInr) => {
+            onSelectFlightOrStayForCheckout({
+              title: `${flightForFareModal.airline} ${flightForFareModal.flightNo} (${fareTier.name})`,
+              code: flightForFareModal.id,
+              depTime: flightForFareModal.depTime,
+              arrTime: flightForFareModal.arrTime,
+              duration: flightForFareModal.duration,
+              priceInr: finalPriceInr,
+              category: 'flights',
+              airline: flightForFareModal.airline,
+              flightNo: flightForFareModal.flightNo,
+              cabinClass: currentCabinClass || 'Economy',
+              roomType: fareTier.name,
+              fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
+              toCity: `${currentToCity.city} (${currentToCity.code})`,
+              travellers: currentTravellers,
+            });
+            setFlightForFareModal(null);
+          }}
+          onClose={() => setFlightForFareModal(null)}
+        />
+      )}
+
+      {/* Interactive TripYeah Live Fare & Availability Calendar Modal */}
+      {calendarTarget && (
+        <TripDatePickerModal
+          selectedDateStr={calendarTarget === 'dep' ? (modDepDate || currentDepDate) : (modRetDate || currentRetDate)}
+          title={calendarTarget === 'dep' ? 'Select Departure / Journey Date' : 'Select Return / Check-out Date'}
+          subtitle="Choose travel date with live lowest fares & seat availability"
+          minDateStr="2026-10-15"
+          onSelectDate={(_formatted, iso) => {
+            if (calendarTarget === 'dep') {
+              setModDepDate(iso);
+              setCurrentDepDate(iso);
+              onChangeDepartureDate?.(iso);
+            } else {
+              setModRetDate(iso);
+              setCurrentRetDate(iso);
+              onChangeReturnDate?.(iso);
+            }
+            setCalendarTarget(null);
+          }}
+          onClose={() => setCalendarTarget(null)}
+        />
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelDat
 export type AppPageView =
   | 'home'
   | 'search-results'
+  | 'hotel-details'
   | 'checkout'
   | 'trips'
   | 'account'
@@ -26,16 +27,6 @@ interface NavbarProps {
   tripsCount: number;
   userName: string | null;
 }
-
-const NAV_ITEMS: { id: BookingCategory; label: string }[] = [
-  { id: 'flights', label: 'Flights' },
-  { id: 'hotels', label: 'Hotels' },
-  { id: 'trains', label: 'Trains' },
-  { id: 'buses', label: 'Buses' },
-  { id: 'cabs', label: 'Cabs' },
-  { id: 'holidays', label: 'Holidays' },
-  { id: 'experiences', label: 'Tours & Experiences' },
-];
 
 // Region flag helper
 const REGION_FLAGS: Record<string, string> = {
@@ -93,8 +84,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
-        {/* Zone 1: Brand Wordmark */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 1: Brand Wordmark & Go Global */}
+        <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
           <a
             href="#top"
             onClick={(e) => {
@@ -118,142 +109,98 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
             <span className={isDarkHeader ? 'drop-shadow-sm' : ''}>TripYeah</span>
           </a>
+
+          {/* Go Global Option (No box, no shadow) */}
+          <button
+            type="button"
+            onClick={() => onNavigatePage('international-planner')}
+            title="Go Global — International Itineraries & Visa Guide"
+            className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+              activePage === 'international-planner'
+                ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
+                : isDarkHeader
+                ? 'text-white/85 hover:text-white'
+                : 'text-slate-700 hover:text-blue-600'
+            }`}
+          >
+            <Globe className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
+            <span>Go Global</span>
+          </button>
         </div>
 
-        {/* Zone 2: Navigation Categories */}
-        {isSearchResultsPage ? (
-          /* ONLY SHOWN AFTER SEARCH: Flights, Hotels, Trains, etc. Category Buttons */
-          <nav
-            aria-label="Travel search categories"
-            className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 text-xs sm:text-sm font-medium text-slate-600 overflow-x-auto no-scrollbar py-1"
+        {/* Zone 2: Navigation (Clean links without category tabs) */}
+        <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
+          <button
+            type="button"
+            onClick={onOpenListProperty}
+            className={`hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+              isDarkHeader
+                ? 'text-white/85 hover:text-white'
+                : 'text-slate-700 hover:text-blue-600'
+            }`}
           >
-            {NAV_ITEMS.map((item) => {
-              const isActive = activeCategory === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onSelectCategory(item.id)}
-                  className={`px-3 py-1.5 rounded-xl whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
-                    isActive
-                      ? 'bg-[#2563EB] text-white font-semibold shadow-xs'
-                      : 'hover:text-slate-900 hover:bg-slate-100 text-slate-700'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        ) : (
-          /* ON FRONT PAGE (HOME): List Your Property & Travel Insurance */
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            <button
-              type="button"
-              onClick={onOpenListProperty}
-              className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl whitespace-nowrap shrink-0 cursor-pointer ${
-                isDarkHeader
-                  ? 'text-white/90 hover:text-white hover:bg-white/10'
-                  : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100'
-              }`}
-            >
-              <Building2 className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
-              <span>List Your Property</span>
-            </button>
+            <Building2 className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
+            <span>List Your Property</span>
+          </button>
 
-            {/* Travel Insurance Option right after List Your Property */}
-            <button
-              type="button"
-              onClick={onOpenInsurance}
-              className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl whitespace-nowrap shrink-0 cursor-pointer ${
-                isDarkHeader
-                  ? 'text-white/90 hover:text-white hover:bg-white/10'
-                  : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-100'
-              }`}
-            >
-              <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
-              <span>Travel Insurance</span>
-            </button>
-          </div>
-        )}
+          {/* Travel Insurance Option */}
+          <button
+            type="button"
+            onClick={onOpenInsurance}
+            className={`hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+              isDarkHeader
+                ? 'text-white/85 hover:text-white'
+                : 'text-slate-700 hover:text-emerald-600'
+            }`}
+          >
+            <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
+            <span>Travel Insurance</span>
+          </button>
+        </div>
 
         {/* Zone 3: Right Side Actions */}
-        {isSearchResultsPage ? (
-          /* ON SEARCH RESULTS: Strictly ONLY the front page's Login or Create Account option (No Trip AI, No clutter) */
-          <div className="flex items-center gap-2 shrink-0">
-            {userName ? (
-              <button
-                type="button"
-                onClick={() => onNavigatePage('account')}
-                title={`Logged in as ${userName} - Account Settings`}
-                className="relative group px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 bg-gradient-to-r from-[#111827] to-slate-800 text-white border border-slate-700 shadow-slate-900/20"
-              >
-                <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
-                  <User className="w-3 h-3" />
-                </span>
-                <span>{userName}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenAuth}
-                title="Login or Create a TripYeah Account"
-                className="relative group overflow-hidden px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-tight shadow-md hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 bg-gradient-to-r from-[#2563EB] via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white border border-blue-400/40 shadow-blue-600/30 hover:shadow-blue-600/40"
-              >
-                <span className="w-5 h-5 rounded-full flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform bg-white/20 text-white">
-                  <User className="w-3 h-3" />
-                </span>
-                <span className="font-bold">
-                  Login or Create Account
-                </span>
-                <Sparkles className="w-3.5 h-3.5 transition-transform group-hover:rotate-12 text-amber-300" />
-              </button>
+        <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 shrink-0">
+          {/* 1. My Trips (No background, no border, no hover box) */}
+          <button
+            type="button"
+            onClick={() => onNavigatePage('trips')}
+            title="View My Booked Trips"
+            className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+              activePage === 'trips'
+                ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
+                : isDarkHeader
+                ? 'text-white/85 hover:text-white'
+                : 'text-slate-700 hover:text-blue-600'
+            }`}
+          >
+            <Luggage className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-slate-500'}`} />
+            <span className="hidden sm:inline">My Trips</span>
+            {tripsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                {tripsCount}
+              </span>
             )}
-          </div>
-        ) : (
-          /* ON FRONT PAGE (HOME): Global Actions: My Trips -> Flag Currency & Language -> Login/Account */
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            {/* 1. My Trips */}
-            <button
-              type="button"
-              onClick={() => onNavigatePage('trips')}
-              title="View My Booked Trips"
-              className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl whitespace-nowrap shrink-0 cursor-pointer ${
-                activePage === 'trips'
-                  ? 'bg-blue-600 text-white font-bold'
-                  : isDarkHeader
-                  ? 'text-white/90 hover:text-white hover:bg-white/10'
-                  : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100'
-              }`}
-            >
-              <Luggage className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-slate-500'}`} />
-              <span className="hidden sm:inline">My Trips</span>
-              {tripsCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-blue-500 text-white text-[11px] font-bold leading-none">
-                  {tripsCount}
-                </span>
-              )}
-            </button>
+          </button>
 
-            {/* 2. Flag, Currency Code & Language Selector (placed right before Login) */}
-            <button
-              type="button"
-              onClick={onOpenLanguageModal}
-              title="Change Region, Currency & Language"
-              className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl whitespace-nowrap shrink-0 cursor-pointer border ${
-                isDarkHeader
-                  ? 'text-white/95 border-white/20 bg-white/10 hover:bg-white/15 backdrop-blur-xs'
-                  : 'text-slate-700 border-slate-200 bg-slate-50 hover:bg-slate-100 hover:text-blue-600'
-              }`}
-            >
-              <span className="text-sm sm:text-base leading-none">{regionFlag}</span>
-              <span className={`font-mono-tabular font-bold ${isDarkHeader ? 'text-white' : 'text-slate-900'}`}>{currency}</span>
-              <span className={isDarkHeader ? 'text-white/60' : 'text-slate-400'}>&</span>
-              <span className={`font-medium ${isDarkHeader ? 'text-white/90' : 'text-slate-700'}`}>{language}</span>
-              <ChevronDown className={`w-3.5 h-3.5 ${isDarkHeader ? 'text-white/70' : 'text-slate-400'}`} />
-            </button>
+          {/* 2. Flag, Currency Code & Language Selector */}
+          <button
+            type="button"
+            onClick={onOpenLanguageModal}
+            title="Change Region, Currency & Language"
+            className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+              isDarkHeader
+                ? 'text-white/85 hover:text-white'
+                : 'text-slate-700 hover:text-blue-600'
+            }`}
+          >
+            <span className="text-sm sm:text-base leading-none">{regionFlag}</span>
+            <span className={`font-mono-tabular font-bold ${isDarkHeader ? 'text-white' : 'text-slate-900'}`}>{currency}</span>
+            <span className={isDarkHeader ? 'text-white/60' : 'text-slate-400'}>&</span>
+            <span className={`font-medium ${isDarkHeader ? 'text-white/90' : 'text-slate-700'}`}>{language}</span>
+            <ChevronDown className={`w-3.5 h-3.5 ${isDarkHeader ? 'text-white/70' : 'text-slate-400'}`} />
+          </button>
 
-            {/* Front Page Login or Create Account Button */}
+          {/* Login or Create Account Button */}
             {userName ? (
               <button
                 type="button"
@@ -297,8 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
     </header>
   );
 };

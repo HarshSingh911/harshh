@@ -50,6 +50,7 @@ interface HeroSearchSectionProps {
   onChangeTravellers: (count: number, cabin: string) => void;
   onTriggerSearch: () => void;
   onSelectTrustPillar: (pillarTitle: string, pillarDetail: string) => void;
+  onOpenTripAI?: () => void;
 }
 
 const SERVICE_TABS: {
@@ -135,6 +136,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onChangeTravellers,
   onTriggerSearch,
   onSelectTrustPillar,
+  onOpenTripAI,
 }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [swapRotated, setSwapRotated] = useState(false);

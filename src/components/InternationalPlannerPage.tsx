@@ -98,6 +98,7 @@ export interface DayItinerary {
 export interface FullItinerary {
   id: string;
   destination: string;
+  country?: string;
   destinationSummary: string;
   bestTimeToVisit: string;
   currency: string;
@@ -280,6 +281,166 @@ const INITIAL_CHECKLIST: ChecklistItem[] = [
   { id: 'chk-11', category: 'airport', label: 'Submit Electronic Arrival Card (SGAC / e-CD)', description: 'Complete mandatory destination digital customs/arrival cards 48h before flight.', completed: false, priority: 'High' },
 ];
 
+const INITIAL_PARIS_ITINERARY: FullItinerary = {
+  id: 'plan-default-paris',
+  destination: 'Paris',
+  country: 'France',
+  currency: 'EUR',
+  destinationSummary: 'The City of Light captivates travellers with world-renowned art, romantic Seine riverbanks, iconic Belle Époque boulevards, and Michelin-star gastronomy.',
+  bestTimeToVisit: 'April – October & December (Holiday Lights)',
+  estimatedTotalTripBudgetInr: 165000,
+  origin: 'New Delhi',
+  startDate: '2026-10-20',
+  endDate: '2026-10-24',
+  budget: 'mid-range',
+  travellersCount: 2,
+  travellerType: 'Couple',
+  interests: ['Sightseeing & Iconic Landmarks', 'Food & Culinary Trails', 'Art & Museums'],
+  days: [
+    {
+      dayNumber: 1,
+      title: 'Iconic Iron Lady & Seine Sunset Cruise',
+      morning: {
+        time: '09:00 AM – 12:30 PM',
+        activity: 'Eiffel Tower Summit & Champ de Mars',
+        details: 'Ascend to the top deck of the Eiffel Tower for panoramic views over Paris, followed by photos at Champ de Mars.',
+        costEstimateInr: 5800,
+        transport: 'Metro Line 6 to Bir-Hakeim',
+      },
+      afternoon: {
+        time: '02:00 PM – 05:30 PM',
+        activity: 'Trocadéro Gardens & Arc de Triomphe',
+        details: 'Stroll across Pont d’Iéna to Trocadéro terrace, then take Avenue Kléber to the iconic Arc de Triomphe.',
+        costEstimateInr: 3200,
+        transport: 'Walk or Metro Line 1 to Charles de Gaulle – Étoile',
+      },
+      evening: {
+        time: '06:30 PM – 09:30 PM',
+        activity: 'Bateaux Parisiens Glass-Canopy River Cruise',
+        details: 'Glide down the River Seine as the Eiffel Tower illuminates every hour with glittering golden strobes.',
+        costEstimateInr: 4500,
+        transport: 'Boarding at Port de la Bourdonnais',
+      },
+      diningTip: 'Classic French duck confit or steak frites at Café de Flore or Le Relais de Venise.',
+      proTip: 'Book Eiffel Tower summit elevator passes 60 days ahead to skip the 2-hour queue.',
+      estimatedDayTotalInr: 13500,
+    },
+    {
+      dayNumber: 2,
+      title: 'Masterpieces of the Louvre & Tuileries Garden',
+      morning: {
+        time: '09:00 AM – 01:00 PM',
+        activity: 'Louvre Museum Timed Entry',
+        details: 'Marvel at Mona Lisa, Venus de Milo, Winged Victory of Samothrace, and Napoleon III Apartments.',
+        costEstimateInr: 4200,
+        transport: 'Metro Line 1 to Palais Royal – Musée du Louvre',
+      },
+      afternoon: {
+        time: '02:30 PM – 05:30 PM',
+        activity: 'Jardin des Tuileries & Place de la Concorde',
+        details: 'Relax by grand circular fountain basins with hot chocolate and pastries from Angelina.',
+        costEstimateInr: 2100,
+        transport: 'Leisurely walk through royal gardens',
+      },
+      evening: {
+        time: '06:30 PM – 09:30 PM',
+        activity: 'Le Marais Historic District & Dinner',
+        details: 'Explore trendy boutiques, Place des Vosges brick arches, and artisanal crêperies.',
+        costEstimateInr: 3900,
+        transport: 'Metro Line 1 to Saint-Paul',
+      },
+      diningTip: 'Try savoury galettes and sweet caramel crêpes at Breizh Café in Le Marais.',
+      proTip: 'Enter Louvre via the Carrousel du Louvre underground mall entrance for much shorter lines.',
+      estimatedDayTotalInr: 10200,
+    },
+    {
+      dayNumber: 3,
+      title: 'Bohemian Montmartre & Sacré-Cœur Sunset',
+      morning: {
+        time: '09:30 AM – 12:30 PM',
+        activity: 'Montmartre Hilltop & Place du Tertre',
+        details: 'Wander cobblestone alleyways where Picasso and Van Gogh painted; see portrait artists at Place du Tertre.',
+        costEstimateInr: 1500,
+        transport: 'Metro Line 2 to Anvers + Montmartre Funicular',
+      },
+      afternoon: {
+        time: '02:00 PM – 05:00 PM',
+        activity: 'Sacré-Cœur Basilica & Panoramic Steps',
+        details: 'Visit the Romano-Byzantine white basilica and sit on the steps overlooking the Parisian skyline.',
+        costEstimateInr: 1200,
+        transport: 'Walk uphill along Rue Foyatier',
+      },
+      evening: {
+        time: '06:30 PM – 09:30 PM',
+        activity: 'Moulin Rouge Exterior & Pigalle Dining',
+        details: 'Photograph the iconic red windmill and enjoy French bistro onion soup and crème brûlée.',
+        costEstimateInr: 4800,
+        transport: 'Metro Line 2 to Blanche',
+      },
+      diningTip: 'Traditional French onion soup and escargots at La Boîte aux Lettres.',
+      proTip: 'Watch out for wristband scammers near Sacré-Cœur funicular stairs; keep hands in pockets.',
+      estimatedDayTotalInr: 7500,
+    },
+    {
+      dayNumber: 4,
+      title: 'Île de la Cité, Notre-Dame & Latin Quarter',
+      morning: {
+        time: '09:00 AM – 12:30 PM',
+        activity: 'Notre-Dame Cathedral & Sainte-Chapelle',
+        details: 'View Notre-Dame’s restored Gothic spires and the breathtaking 13th-century stained glass at Sainte-Chapelle.',
+        costEstimateInr: 3200,
+        transport: 'Metro Line 4 to Cité',
+      },
+      afternoon: {
+        time: '01:30 PM – 05:00 PM',
+        activity: 'Shakespeare and Company & Latin Quarter',
+        details: 'Browse historic English bookshop and wander through student-favorite medieval Latin Quarter streets.',
+        costEstimateInr: 2000,
+        transport: 'Walk across Pont Saint-Michel',
+      },
+      evening: {
+        time: '06:00 PM – 09:00 PM',
+        activity: 'Sunset at Pont Neuf & Farewell Parisian Dinner',
+        details: 'Cross Paris’s oldest standing bridge and toast with French sparkling wine along the Seine quays.',
+        costEstimateInr: 5200,
+        transport: 'Walk along Quai de la Mégisserie',
+      },
+      diningTip: 'French fondue or bouillabaisse at Le Relais Saint Germain.',
+      proTip: 'Pick up an Navigo Easy transit card loaded with 10 metro t+ tickets for seamless transit.',
+      estimatedDayTotalInr: 10400,
+    },
+  ],
+};
+
+const INITIAL_VISA_DATA: VisaDetails = {
+  destination: 'France (Schengen Visa)',
+  visaType: 'Short-Stay Tourist Schengen Visa (Type C)',
+  entryRule: 'Mandatory prior sticker visa required for Indian passport holders',
+  validity: 'Up to 90 days stay within 180-day period',
+  processingTime: '15 calendar days (VFS Global)',
+  estimatedFee: '€90 (~₹8,200) + VFS service fee ₹2,100',
+  portalName: 'France-Visas Official Portal (Government of France)',
+  portalUrl: 'https://france-visas.gouv.fr/',
+  requiredDocuments: [
+    'Original Passport valid for at least 3 months beyond departure with 2 blank pages',
+    'Completed & signed France-Visas application form + appointment receipt',
+    'Two recent biometric photos (35x45mm white background, 80% face coverage)',
+    'Confirmed round-trip flight booking / flight reservation itinerary',
+    'Proof of hotel accommodation / accommodation voucher for all days in Schengen area',
+    'Travel medical insurance with minimum €30,000 coverage including repatriation',
+    'Personal bank statements for last 3 to 6 months with official bank stamp & seal',
+    'Income Tax Returns (ITR-V) acknowledgement for last 2 assessment years',
+    'Cover letter detailing day-by-day travel itinerary and purpose of trip',
+  ],
+  steps: [
+    'Create an online account on the France-Visas official government portal.',
+    'Fill the digital visa form and download the validated application PDF.',
+    'Book an appointment at the nearest VFS Global center in your city.',
+    'Attend your appointment to submit documents and provide biometric fingerprints.',
+    'Track passport dispatch and receive your stamped Schengen visa.',
+  ],
+};
+
 export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   currency,
   onNavigateToCategory,
@@ -308,19 +469,21 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [customNotes, setCustomNotes] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
-  // Active Generated Itinerary
-  const [currentItinerary, setCurrentItinerary] = useState<FullItinerary | null>(null);
+  // Active Generated Itinerary (Pre-seeded with default Paris so it's never null)
+  const [currentItinerary, setCurrentItinerary] = useState<FullItinerary | null>(INITIAL_PARIS_ITINERARY);
 
-  // Visa Assistant State
+  // Visa Assistant State (Pre-seeded with verified France/Schengen visa data)
   const [passportCountry, setPassportCountry] = useState<string>('India');
-  const [visaData, setVisaData] = useState<VisaDetails | null>(null);
+  const [visaData, setVisaData] = useState<VisaDetails | null>(INITIAL_VISA_DATA);
   const [isVisaLoading, setIsVisaLoading] = useState<boolean>(false);
 
-  // Travel Checklist State
+  // Travel Checklist State (guaranteed non-empty array)
   const [checklist, setChecklist] = useState<ChecklistItem[]>(() => {
     try {
       const stored = localStorage.getItem('tripyeah_travel_checklist');
-      return stored ? JSON.parse(stored) : INITIAL_CHECKLIST;
+      if (!stored) return INITIAL_CHECKLIST;
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_CHECKLIST;
     } catch {
       return INITIAL_CHECKLIST;
     }
@@ -328,11 +491,13 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [newChecklistText, setNewChecklistText] = useState<string>('');
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistItem['category']>('packing');
 
-  // Saved Itineraries State (Local Storage persistent)
+  // Saved Itineraries State (Local Storage persistent, guaranteed array)
   const [savedItineraries, setSavedItineraries] = useState<FullItinerary[]>(() => {
     try {
       const stored = localStorage.getItem('tripyeah_saved_itineraries');
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
@@ -454,6 +619,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
         const fullPlan: FullItinerary = {
           id: `plan-${Date.now()}`,
           ...json.data,
+          days: Array.isArray(json.data.days) ? json.data.days : [],
           origin,
           startDate,
           endDate,
@@ -536,7 +702,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
           message: userText,
           destination,
           currentPlanSummary: currentItinerary
-            ? `${currentItinerary.destination} (${currentItinerary.days.length} days, ${currentItinerary.budget})`
+            ? `${currentItinerary.destination} (${(currentItinerary.days || []).length} days, ${currentItinerary.budget})`
             : destination,
           conversationHistory: assistantMessages.slice(-4),
         }),
@@ -626,7 +792,8 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   // Copy shareable summary
   const handleShareSummary = () => {
     if (!currentItinerary) return;
-    const summary = `✈️ TripYeah International Plan: ${currentItinerary.destination}\n📅 ${currentItinerary.startDate} – ${currentItinerary.endDate} (${currentItinerary.days.length} Days)\n👥 ${currentItinerary.travellersCount} Travellers (${currentItinerary.travellerType})\n💰 Estimated Budget: ${formatPrice(currentItinerary.estimatedTotalTripBudgetInr, currency)}\n\nHighlights:\n${currentItinerary.days.map((d) => `• Day ${d.dayNumber}: ${d.title} (Morning: ${d.morning.activity}, Afternoon: ${d.afternoon.activity})`).join('\n')}\n\nPlanned with TripYeah International Planner`;
+    const daysArr = Array.isArray(currentItinerary.days) ? currentItinerary.days : [];
+    const summary = `✈️ TripYeah International Plan: ${currentItinerary.destination}\n📅 ${currentItinerary.startDate} – ${currentItinerary.endDate} (${daysArr.length} Days)\n👥 ${currentItinerary.travellersCount} Travellers (${currentItinerary.travellerType})\n💰 Estimated Budget: ${formatPrice(currentItinerary.estimatedTotalTripBudgetInr, currency)}\n\nHighlights:\n${daysArr.map((d) => `• Day ${d.dayNumber}: ${d.title} (Morning: ${d.morning?.activity || ''}, Afternoon: ${d.afternoon?.activity || ''})`).join('\n')}\n\nPlanned with TripYeah International Planner`;
 
     navigator.clipboard.writeText(summary);
     onNotify('Itinerary Copied to Clipboard!', 'Shareable itinerary summary ready to paste into WhatsApp, Email, or Notes.', 'success');
@@ -678,8 +845,9 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
 
   // Checklist completion percentage
   const checklistStats = useMemo(() => {
-    const total = checklist.length;
-    const done = checklist.filter((i) => i.completed).length;
+    const list = Array.isArray(checklist) ? checklist : INITIAL_CHECKLIST;
+    const total = list.length;
+    const done = list.filter((i) => i && i.completed).length;
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
     return { total, done, percent };
   }, [checklist]);
@@ -941,7 +1109,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
               { id: 'map', label: '4. Places & Interactive Route', icon: Navigation },
               { id: 'checklist', label: `5. Travel Checklist (${checklistStats.percent}%)`, icon: CheckSquare },
               { id: 'assistant', label: '6. AI Travel Assistant', icon: MessageSquare },
-              { id: 'saved', label: `7. Saved Plans (${savedItineraries.length})`, icon: Bookmark },
+              { id: 'saved', label: `7. Saved Plans (${(savedItineraries || []).length})`, icon: Bookmark },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -981,7 +1149,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                     <span>Curated International Itinerary · {currentItinerary.budget.toUpperCase()}</span>
                   </div>
                   <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    {currentItinerary.days.length} Days in {currentItinerary.destination}
+                    {(currentItinerary.days || []).length} Days in {currentItinerary.destination}
                   </h2>
                   <p className="text-slate-600 text-sm mt-1.5 leading-relaxed">
                     {currentItinerary.destinationSummary}
@@ -1034,7 +1202,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
             )}
 
             {/* Day-by-Day Cards List */}
-            {currentItinerary ? (
+            {currentItinerary && Array.isArray(currentItinerary.days) && currentItinerary.days.length > 0 ? (
               <div className="space-y-5">
                 {currentItinerary.days.map((day) => (
                   <div
@@ -1269,7 +1437,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                         <span>Mandatory Document Checklist</span>
                       </h3>
                       <ul className="space-y-2.5">
-                        {visaData.requiredDocuments.map((doc, idx) => (
+                        {(visaData.requiredDocuments || []).map((doc, idx) => (
                           <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                             <span>{doc}</span>
@@ -1286,7 +1454,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                           <span>How to Apply</span>
                         </h3>
                         <div className="space-y-3">
-                          {visaData.steps.map((step, idx) => (
+                          {(visaData.steps || []).map((step, idx) => (
                             <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
                               <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
                                 {idx + 1}
@@ -1562,7 +1730,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                 </div>
 
                 {/* Day Filter Pills */}
-                {currentItinerary && (
+                {currentItinerary && Array.isArray(currentItinerary.days) && currentItinerary.days.length > 0 && (
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                     {currentItinerary.days.map((d) => (
                       <button
@@ -1653,7 +1821,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
 
                 {/* Right Waypoint Details (4 cols) */}
                 <div className="lg:col-span-4 space-y-4">
-                  {currentItinerary && (
+                  {currentItinerary && Array.isArray(currentItinerary.days) && currentItinerary.days.length > 0 && (
                     <>
                       {/* Morning Stop */}
                       <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
@@ -1665,10 +1833,10 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                           <span className="text-slate-500 font-mono text-[11px]">09:30 AM</span>
                         </div>
                         <h4 className="font-bold text-slate-900 text-sm">
-                          {currentItinerary.days[selectedMapDay - 1]?.morning.activity || `${destination} Landmark`}
+                          {currentItinerary.days[selectedMapDay - 1]?.morning?.activity || `${destination} Landmark`}
                         </h4>
                         <p className="text-xs text-slate-600">
-                          {currentItinerary.days[selectedMapDay - 1]?.morning.details}
+                          {currentItinerary.days[selectedMapDay - 1]?.morning?.details}
                         </p>
                         <div className="text-[11px] text-blue-600 font-semibold pt-1">
                           Transit: ~12 mins via Metro Line 1
@@ -1685,10 +1853,10 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                           <span className="text-slate-500 font-mono text-[11px]">02:00 PM</span>
                         </div>
                         <h4 className="font-bold text-slate-900 text-sm">
-                          {currentItinerary.days[selectedMapDay - 1]?.afternoon.activity || `${destination} District`}
+                          {currentItinerary.days[selectedMapDay - 1]?.afternoon?.activity || `${destination} District`}
                         </h4>
                         <p className="text-xs text-slate-600">
-                          {currentItinerary.days[selectedMapDay - 1]?.afternoon.details}
+                          {currentItinerary.days[selectedMapDay - 1]?.afternoon?.details}
                         </p>
                         <div className="text-[11px] text-amber-700 font-semibold pt-1">
                           Transit: ~8 mins scenic walk
@@ -1705,10 +1873,10 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                           <span className="text-slate-500 font-mono text-[11px]">06:30 PM</span>
                         </div>
                         <h4 className="font-bold text-slate-900 text-sm">
-                          {currentItinerary.days[selectedMapDay - 1]?.evening.activity || `${destination} Promenade`}
+                          {currentItinerary.days[selectedMapDay - 1]?.evening?.activity || `${destination} Promenade`}
                         </h4>
                         <p className="text-xs text-slate-600">
-                          {currentItinerary.days[selectedMapDay - 1]?.evening.details}
+                          {currentItinerary.days[selectedMapDay - 1]?.evening?.details}
                         </p>
                         <div className="text-[11px] text-indigo-600 font-semibold pt-1">
                           Transit: ~15 mins river boat / cab
@@ -1980,7 +2148,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                     <span>Saved International Itineraries</span>
                   </div>
                   <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    My Saved Trips ({savedItineraries.length})
+                    My Saved Trips ({(savedItineraries || []).length})
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
                     Revisit, reload, and manage your custom travel plans and estimated budgets.
@@ -2000,7 +2168,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                 </button>
               </div>
 
-              {savedItineraries.length === 0 ? (
+              {(savedItineraries || []).length === 0 ? (
                 <div className="text-center py-16">
                   <Bookmark className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                   <h3 className="text-base font-bold text-slate-800">No Saved Plans Yet</h3>
@@ -2034,7 +2202,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                           {plan.destination}
                         </h4>
                         <p className="text-xs text-slate-600 mt-1">
-                          📅 {plan.startDate} – {plan.endDate} ({plan.days.length} Days)
+                          📅 {plan.startDate} – {plan.endDate} ({(plan.days || []).length} Days)
                         </p>
                         <p className="text-xs text-slate-500 mt-0.5">
                           👥 {plan.travellersCount} Travellers · {plan.travellerType}
@@ -2054,7 +2222,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                           onClick={() => {
                             setCurrentItinerary(plan);
                             setDestination(plan.destination);
-                            setDaysCount(plan.days.length);
+                            setDaysCount((plan.days || []).length || 4);
                             setActiveTab('itinerary');
                             onNotify('Itinerary Loaded', `Switched active plan to ${plan.destination}.`, 'success');
                           }}

@@ -67,6 +67,7 @@ export interface SearchListing {
 
 export interface BookedTrip {
   bookingId: string;
+  bookingReference?: string;
   category: BookingCategory;
   title: string;
   routeSummary: string;

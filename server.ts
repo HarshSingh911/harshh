@@ -34,11 +34,15 @@ async function generateWithGemini(prompt: string, isJson: boolean = true) {
   const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
   for (const model of modelsToTry) {
     try {
-      const response = await ai.models.generateContent({
+      const generatePromise = ai.models.generateContent({
         model,
         contents: prompt,
         config: isJson ? { responseMimeType: 'application/json', temperature: 0.7 } : { temperature: 0.7 },
       });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 7000)
+      );
+      const response = await Promise.race([generatePromise, timeoutPromise]);
       if (response && response.text) {
         let cleanText = response.text.trim();
         if (cleanText.startsWith('```json')) {
@@ -641,6 +645,7 @@ function buildGenericDestinationFallback(params: {
     destinationSummary: `${dClean} is a premier international destination celebrated for its rich culture, breathtaking landmarks, world-class cuisine, and unforgettable hospitality.`,
     bestTimeToVisit: 'Spring & Autumn (Pleasant temperatures & ideal sightseeing conditions)',
     estimatedTotalTripBudgetInr: days.reduce((sum, d) => sum + d.estimatedDayTotalInr, 0) + (flightCost * travellersCount) + (hotelRate * Math.max(1, safeDays - 1)),
+    days: days,
     visa: {
       destination: dClean,
       visaType: `Tourist Visa / Entry Authorization for ${dClean}`,
@@ -722,7 +727,13 @@ app.post('/api/itinerary/generate', async (req: Request, res: Response) => {
 
     // Check pre-compiled instant directory first if exact match
     const matchedDirectoryKey = Object.keys(DESTINATION_DIRECTORY).find((k) =>
-      destLower.includes(k) || (k === 'dubai' && destLower.includes('uae')) || (k === 'bali' && destLower.includes('indonesia')) || (k === 'japan' && (destLower.includes('tokyo') || destLower.includes('kyoto') || destLower.includes('osaka')))
+      destLower.includes(k) ||
+      (k === 'france' && (destLower.includes('paris') || destLower.includes('nice') || destLower.includes('lyon'))) ||
+      (k === 'switzerland' && (destLower.includes('zurich') || destLower.includes('lucerne') || destLower.includes('interlaken') || destLower.includes('swiss'))) ||
+      (k === 'thailand' && (destLower.includes('bangkok') || destLower.includes('phuket') || destLower.includes('pattaya') || destLower.includes('chiang mai'))) ||
+      (k === 'dubai' && (destLower.includes('uae') || destLower.includes('abu dhabi'))) ||
+      (k === 'bali' && (destLower.includes('indonesia') || destLower.includes('ubud') || destLower.includes('seminyak'))) ||
+      (k === 'japan' && (destLower.includes('tokyo') || destLower.includes('kyoto') || destLower.includes('osaka')))
     );
 
     // Call Real Gemini AI Agent for dynamic custom generation across ALL countries

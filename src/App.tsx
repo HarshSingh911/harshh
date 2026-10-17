@@ -22,7 +22,7 @@ import { ShowcaseSections } from './components/ShowcaseSections';
 import { InteractiveModals } from './components/InteractiveModals';
 import { FlightSearchResultsPage } from './components/FlightSearchResultsPage';
 import { ExperiencesSearchResultsPage } from './components/ExperiencesSearchResultsPage';
-import { CheckoutPaymentPage } from './components/CheckoutPaymentPage';
+import { CheckoutItem, CheckoutPaymentPage } from './components/CheckoutPaymentPage';
 import { TripsDashboardPage } from './components/TripsDashboardPage';
 import { AccountSettingsPage } from './components/AccountSettingsPage';
 import { AdminPanel } from './components/AdminPanel';
@@ -35,10 +35,12 @@ import { Footer } from './components/Footer';
 import { LanguageRegionModal } from './components/LanguageRegionModal';
 import { ListPropertyModal } from './components/ListPropertyModal';
 import { TravelInsuranceModal } from './components/TravelInsuranceModal';
+import { HotelDetailsPage } from './components/HotelDetailsPage';
 
 export default function App() {
-  // Active Multi-Page View ('home' | 'search-results' | 'checkout' | 'trips' | 'account')
+  // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account')
   const [activePage, setActivePage] = useState<AppPageView>('home');
+  const [selectedHotelForDetails, setSelectedHotelForDetails] = useState<any>(null);
 
   // Primary Search State (initialized to New Delhi -> Goa)
   const [activeCategory, setActiveCategory] = useState<BookingCategory>('flights');
@@ -57,8 +59,22 @@ export default function App() {
   const [region, setRegion] = useState<string>('India');
   const [userName, setUserName] = useState<string | null>(null);
   const [activePromo, setActivePromo] = useState<PromoOffer | null>(null);
-  const [selectedCheckoutOptionTitle, setSelectedCheckoutOptionTitle] =
-    useState<string>('IndiGo 6E-2134');
+  const [checkoutItem, setCheckoutItem] = useState<CheckoutItem>({
+    title: 'IndiGo 6E-2134 (DEL → GOI)',
+    code: '6E-2134',
+    category: 'flights',
+    priceInr: 5850,
+    depTime: '06:15',
+    arrTime: '08:30',
+    duration: '2h 15m',
+    fromCity: 'New Delhi (DEL)',
+    toCity: 'Goa (GOI)',
+    travelDate: '18 Oct 2026',
+    travellers: 1,
+    cabinClass: 'Economy',
+    airline: 'IndiGo',
+    flightNo: '6E-2134',
+  });
 
   // Modals State (Images 4, 5, 6 + Destination/Offer Modals on Home)
   const [activeCredentialModal, setActiveCredentialModal] =
@@ -166,7 +182,20 @@ export default function App() {
 
   const handleBookDestinationPackage = (dest: DestinationPlace) => {
     setSelectedDestination(null);
-    setSelectedCheckoutOptionTitle(`4N/5D ${dest.name} Luxury Getaway`);
+    setCheckoutItem({
+      title: `4N/5D ${dest.name} Luxury Holiday Package`,
+      code: `PKG-${dest.id.toUpperCase()}`,
+      category: 'holidays',
+      priceInr: (dest.startingFareInr || 18500) * 2,
+      depTime: '10:00 AM Departure',
+      arrTime: '02:00 PM Check-in',
+      duration: '4 Nights / 5 Days',
+      fromCity: 'New Delhi (DEL)',
+      toCity: `${dest.name} (${dest.cityCode})`,
+      travelDate: departureDate,
+      travellers: 2,
+      holidayTheme: `${dest.name} Getaway`,
+    });
     navigateTo('checkout');
   };
 
@@ -306,6 +335,7 @@ export default function App() {
                 setCabinClass(cabin);
               }}
               onTriggerSearch={handleTriggerSearch}
+              onOpenTripAI={() => navigateTo('international-planner')}
               onSelectTrustPillar={(title, detail) =>
                 setBannerMessage({
                   title: `TripYeah Guarantee: ${title}`,
@@ -340,7 +370,13 @@ export default function App() {
             onChangeDate={setDepartureDate}
             onModifySearch={() => navigateTo('home')}
             onSelectExperienceForCheckout={(item) => {
-              setSelectedCheckoutOptionTitle(item.title);
+              setCheckoutItem({
+                ...item,
+                fromCity: fromCity.city,
+                toCity: toCity.city,
+                travelDate: departureDate,
+                travellers: 1,
+              });
               navigateTo('checkout');
             }}
             onNotify={handleNotify}
@@ -371,7 +407,54 @@ export default function App() {
             onChangeCategory={setActiveCategory}
             onModifySearch={() => navigateTo('home')}
             onSelectFlightOrStayForCheckout={(item) => {
-              setSelectedCheckoutOptionTitle(item.title);
+              setCheckoutItem({
+                ...item,
+                fromCity: item.fromCity || `${fromCity.city} (${fromCity.code})`,
+                toCity: item.toCity || `${toCity.city} (${toCity.code})`,
+                travelDate: departureDate,
+                returnDate: returnDate,
+                travellers: item.travellers || travellers,
+                cabinClass: cabinClass,
+              });
+              navigateTo('checkout');
+            }}
+            onSelectHotelForDetails={(hotel) => {
+              setSelectedHotelForDetails(hotel);
+              navigateTo('hotel-details');
+            }}
+            onNotify={handleNotify}
+          />
+        )}
+
+        {/* HOTEL DETAILS & ROOM SELECTION PAGE */}
+        {activePage === 'hotel-details' && (
+          <HotelDetailsPage
+            hotel={selectedHotelForDetails}
+            currency={currency}
+            checkInDate={departureDate}
+            checkOutDate={returnDate}
+            travellers={travellers}
+            cabinClass={cabinClass}
+            onBack={() => navigateTo('search-results')}
+            onSelectRoomForCheckout={(selectedRoom, hotelItem, mealPlan) => {
+              setCheckoutItem({
+                title: `${hotelItem.name} (${selectedRoom.name})`,
+                code: `${hotelItem.id}-${selectedRoom.id}`,
+                depTime: 'Check-in: 02:00 PM',
+                arrTime: 'Check-out: 11:00 AM',
+                duration: '1 Night Stay',
+                priceInr: selectedRoom.priceInr,
+                category: 'hotels',
+                hotelName: hotelItem.name,
+                hotelLocation: hotelItem.location,
+                roomType: `${selectedRoom.name} (${selectedRoom.bedType} · ${mealPlan})`,
+                fromCity: `${fromCity.city} (${fromCity.code})`,
+                toCity: `${toCity.city} (${toCity.code})`,
+                travelDate: departureDate,
+                returnDate: returnDate,
+                travellers: travellers,
+                cabinClass: cabinClass,
+              });
               navigateTo('checkout');
             }}
             onNotify={handleNotify}
@@ -382,20 +465,21 @@ export default function App() {
         {activePage === 'checkout' && (
           <CheckoutPaymentPage
             currency={currency}
-            selectedOptionTitle={selectedCheckoutOptionTitle}
+            item={checkoutItem}
             onBackToResults={() => navigateTo('search-results')}
-            onConfirmPayment={(totalPaidInr, leadName) => {
+            onConfirmPayment={(newBooking, leadName) => {
               setUserName(leadName);
+              setBookedTrips((prev) => [newBooking, ...prev]);
               setBannerMessage({
-                title: 'Booking Confirmed! (Ref: TY-8841-GOA)',
+                title: `Booking Confirmed! (Ref: ${newBooking.bookingReference || newBooking.bookingId || 'IRCTC-CONFIRMED'})`,
                 detail: `Payment of ${formatPrice(
-                  totalPaidInr,
+                  newBooking.totalPaidInr,
                   currency
-                )} verified. Digital boarding passes & hotel voucher are ready.`,
+                )} verified for ${newBooking.title}. Your e-ticket & voucher are ready.`,
                 type: 'success',
               });
-              navigateTo('trips');
             }}
+            onGoToTrips={() => navigateTo('trips')}
             onNotify={handleNotify}
           />
         )}
