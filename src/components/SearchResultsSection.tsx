@@ -19,6 +19,7 @@ interface SearchResultsSectionProps {
   departureDate: string;
   returnDate: string;
   tripType: TripType;
+  dummyTripType?: 'one-way' | 'round-trip';
   travellers: number;
   cabinClass: string;
   studentFare: boolean;
@@ -38,6 +39,7 @@ export const SearchResultsSection: React.FC<SearchResultsSectionProps> = ({
   departureDate,
   returnDate,
   tripType,
+  dummyTripType = 'one-way',
   travellers,
   cabinClass,
   studentFare,
@@ -56,17 +58,20 @@ export const SearchResultsSection: React.FC<SearchResultsSectionProps> = ({
     return a.departureTime.localeCompare(b.departureTime);
   });
 
+  const isRound = tripType === 'round-trip' || (tripType === 'dummy-flights' && dummyTripType === 'round-trip');
+
   const calculateFinalFare = (baseInr: number) => {
     if (tripType === 'dummy-flights' && category === 'flights') {
       // Verifiable PNR dummy flight ticket pricing for visa / onward travel proof
-      let dummyBase = Math.round(baseInr * 0.22) * travellers;
+      const isRoundDummy = dummyTripType === 'round-trip';
+      let dummyBase = Math.round(baseInr * (isRoundDummy ? 0.35 : 0.22)) * travellers;
       if (cabinClass === 'Business' || cabinClass === 'First Class') {
         dummyBase = Math.round(dummyBase * 1.35);
       }
       if (studentFare) {
         dummyBase = Math.round(dummyBase * 0.88);
       }
-      return Math.max(799, dummyBase);
+      return Math.max(isRoundDummy ? 890 : 490, dummyBase);
     }
 
     const tripMultiplier = tripType === 'round-trip' ? 1.85 : 1;
@@ -105,7 +110,7 @@ export const SearchResultsSection: React.FC<SearchResultsSectionProps> = ({
           <div>
             <p className="text-xs font-semibold text-indigo-600 mb-1">
               {tripType === 'dummy-flights' && category === 'flights'
-                ? 'Dummy Flights · Verifiable Airline PNR for Visa & Onward Travel'
+                ? `Dummy Flights · ${dummyTripType === 'round-trip' ? 'Round Trip (Outbound + Inbound PNR)' : 'One Way'} · Verifiable Airline PNR for Visa & Onward Travel`
                 : 'Live Availability · Instant Confirmation'}
             </p>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2 flex-wrap">
@@ -113,9 +118,15 @@ export const SearchResultsSection: React.FC<SearchResultsSectionProps> = ({
               <ArrowRight className="w-5 h-5 text-indigo-600 shrink-0" />
               <span>{toCity.city}</span>
               <span className="text-sm font-normal text-slate-500 ml-1">
-                · {tripType === 'dummy-flights' ? 'Dummy Flight' : tripType === 'round-trip' ? 'Round Trip' : 'One Way'} · {travellers} {travellers === 1 ? 'Traveller' : 'Travellers'} · {cabinClass}
+                · {tripType === 'dummy-flights'
+                    ? dummyTripType === 'round-trip'
+                      ? 'Dummy Flight (Round Trip)'
+                      : 'Dummy Flight (One Way)'
+                    : tripType === 'round-trip'
+                    ? 'Round Trip'
+                    : 'One Way'} · {travellers} {travellers === 1 ? 'Traveller' : 'Travellers'} · {cabinClass}
                 {departureDate ? ` · Departs ${departureDate}` : ''}
-                {tripType === 'round-trip' && returnDate ? ` · Returns ${returnDate}` : ''}
+                {isRound && returnDate ? ` · Returns ${returnDate}` : ''}
               </span>
             </h2>
           </div>

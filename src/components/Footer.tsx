@@ -2,6 +2,7 @@ import React from 'react';
 import { Instagram, Facebook, Twitter, Linkedin } from 'lucide-react';
 import { BookingCategory } from '../data/travelData';
 import { AppPageView } from './Navbar';
+import { TripYeahLogo } from './TripYeahLogo';
 
 export const SOCIAL_PROFILES = [
   {
@@ -60,19 +61,12 @@ export const Footer: React.FC<FooterProps> = ({
                 onNavigatePage('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="font-display text-xl font-bold text-slate-900 flex items-center gap-2"
+              className="flex items-center gap-2 mb-1"
             >
-              <span className="w-7 h-7 rounded-lg bg-[#2563EB] text-white flex items-center justify-center">
-                <svg
-                  className="w-3.5 h-3.5"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M21.426 2.574a1.25 1.25 0 0 0-1.32-.24L2.856 9.584a1.25 1.25 0 0 0 .06 2.333l7.02 2.34 2.34 7.02a1.25 1.25 0 0 0 2.333.06l7.05-17.25a1.25 1.25 0 0 0-.233-1.513Z" />
-                </svg>
-              </span>
-              <span>TripYeah</span>
+              <TripYeahLogo
+                isDarkHeader={false}
+                className="h-8 w-auto"
+              />
             </a>
             <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
               Smart, high-velocity travel platform engineered for digital nomads,

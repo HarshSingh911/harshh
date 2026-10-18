@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Luggage, Sparkles, Globe, User, ChevronDown, ShieldCheck } from 'lucide-react';
 import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelData';
+import { TripYeahLogo } from './TripYeahLogo';
 
 export type AppPageView =
   | 'home'
@@ -95,21 +96,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               onNavigatePage('home');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`font-display text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer group transition-colors ${
-              isDarkHeader ? 'text-white' : 'text-slate-900'
-            }`}
+            className="flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer group transition-transform active:scale-95 py-1"
+            title="TripYeah — Home"
+            aria-label="TripYeah Home"
           >
-            <span className="w-8 h-8 rounded-xl bg-[#2563EB] group-hover:bg-blue-600 text-white flex items-center justify-center shadow-md transition-colors">
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M21.426 2.574a1.25 1.25 0 0 0-1.32-.24L2.856 9.584a1.25 1.25 0 0 0 .06 2.333l7.02 2.34 2.34 7.02a1.25 1.25 0 0 0 2.333.06l7.05-17.25a1.25 1.25 0 0 0-.233-1.513Z" />
-              </svg>
-            </span>
-            <span className={isDarkHeader ? 'drop-shadow-sm' : ''}>TripYeah</span>
+            <TripYeahLogo
+              isDarkHeader={isDarkHeader}
+              className="h-8 sm:h-9 md:h-10 w-auto"
+            />
           </a>
 
           {/* Go Global Option (No box, no shadow) */}
@@ -177,11 +171,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Luggage className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-slate-500'}`} />
             <span className="hidden sm:inline">My Trips</span>
-            {tripsCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
-                {tripsCount}
-              </span>
-            )}
           </button>
 
           {/* 2. Flag, Currency Code & Language Selector */}

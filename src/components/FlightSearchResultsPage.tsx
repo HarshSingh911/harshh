@@ -66,12 +66,14 @@ interface FlightSearchResultsPageProps {
   fromCity: CityOption;
   toCity: CityOption;
   tripType?: TripType;
+  dummyTripType?: 'one-way' | 'round-trip';
   departureDate: string;
   returnDate?: string;
   travellers: number;
   cabinClass: string;
   currency: CurrencyCode;
   onChangeTripType?: (t: TripType) => void;
+  onChangeDummyTripType?: (t: 'one-way' | 'round-trip') => void;
   onChangeFromCity?: (c: CityOption) => void;
   onChangeToCity?: (c: CityOption) => void;
   onChangeDepartureDate?: (d: string) => void;
@@ -1660,12 +1662,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   fromCity,
   toCity,
   tripType = 'one-way',
+  dummyTripType = 'one-way',
   departureDate,
   returnDate = '2026-10-19',
   travellers = 1,
   cabinClass = 'Economy',
   currency,
   onChangeTripType,
+  onChangeDummyTripType,
   onChangeFromCity,
   onChangeToCity,
   onChangeDepartureDate,
@@ -1680,6 +1684,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   // Current active results tab (Flights, Trains, Hotels, Buses, Cabs, Holidays)
   const [currentCategory, setCurrentCategory] = useState<BookingCategory>(initialActiveCategory);
   const [currentTripType, setCurrentTripType] = useState<TripType>(tripType || 'one-way');
+  const [currentDummyTripType, setCurrentDummyTripType] = useState<'one-way' | 'round-trip'>(dummyTripType || 'one-way');
   const [currentFromCity, setCurrentFromCity] = useState<CityOption>(fromCity);
   const [currentToCity, setCurrentToCity] = useState<CityOption>(toCity);
   const [currentDepDate, setCurrentDepDate] = useState<string>(departureDate || '2026-10-15');
@@ -1695,6 +1700,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   useEffect(() => {
     if (tripType) setCurrentTripType(tripType);
   }, [tripType]);
+
+  useEffect(() => {
+    if (dummyTripType) {
+      setCurrentDummyTripType(dummyTripType);
+    }
+  }, [dummyTripType]);
 
   useEffect(() => {
     if (fromCity) setCurrentFromCity(fromCity);
@@ -1720,10 +1731,16 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     if (cabinClass) setCurrentCabinClass(cabinClass);
   }, [cabinClass]);
 
+  // Combined Round-Trip check (Standard Round Trip OR Dummy Flights with Round Trip)
+  const isFlightRoundTrip =
+    currentTripType === 'round-trip' ||
+    (currentTripType === 'dummy-flights' && currentDummyTripType === 'round-trip');
+
   // --- INLINE MODIFY SEARCH BAR STATE (For All 6 Categories) ---
   const [isModifyOpen, setIsModifyOpen] = useState<boolean>(false);
   const [modCategory, setModCategory] = useState<BookingCategory>(currentCategory);
   const [modTripType, setModTripType] = useState<TripType>(currentTripType);
+  const [modDummyTripType, setModDummyTripType] = useState<'one-way' | 'round-trip'>(currentDummyTripType);
   const [modFromCity, setModFromCity] = useState<CityOption>(currentFromCity);
   const [modToCity, setModToCity] = useState<CityOption>(currentToCity);
   const [modDepDate, setModDepDate] = useState<string>(currentDepDate);
@@ -1747,6 +1764,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const handleOpenModify = () => {
     setModCategory(currentCategory);
     setModTripType(currentTripType);
+    setModDummyTripType(currentDummyTripType);
     setModFromCity(currentFromCity);
     setModToCity(currentToCity);
     setModDepDate(currentDepDate);
@@ -1765,6 +1783,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const handleApplyModifySearch = () => {
     setCurrentCategory(modCategory);
     setCurrentTripType(modTripType);
+    setCurrentDummyTripType(modDummyTripType);
     setCurrentFromCity(modFromCity);
     setCurrentToCity(modToCity);
     setCurrentDepDate(modDepDate);
@@ -1774,6 +1793,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
     onChangeCategory?.(modCategory);
     onChangeTripType?.(modTripType);
+    onChangeDummyTripType?.(modDummyTripType);
     onChangeFromCity?.(modFromCity);
     onChangeToCity?.(modToCity);
     onChangeDepartureDate?.(modDepDate);
@@ -1784,11 +1804,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setOpenCityPicker(null);
 
     const catLabel = modCategory.charAt(0).toUpperCase() + modCategory.slice(1);
+    const flightTypeLabel =
+      modTripType === 'dummy-flights'
+        ? modDummyTripType === 'round-trip'
+          ? 'Dummy Flight (Round Trip)'
+          : 'Dummy Flight (One Way)'
+        : modTripType === 'round-trip'
+        ? 'Round Trip'
+        : 'One Way';
     onNotify(
       `Search Updated for ${catLabel}`,
       modCategory === 'hotels'
         ? `${modToCity.city}, ${modToCity.country} · Check-in: ${modDepDate}`
-        : `${modFromCity.city} → ${modToCity.city} (${modTripType === 'round-trip' ? 'Round Trip' : 'One Way'}), ${modDepDate}`
+        : `${modFromCity.city} → ${modToCity.city} (${flightTypeLabel}), ${modDepDate}`
     );
   };
 
@@ -2000,8 +2028,11 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   }, [selectedReturnId]);
 
   const totalRoundTripFare = useMemo(() => {
+    if (currentTripType === 'dummy-flights') {
+      return 890 * currentTravellers;
+    }
     return (selectedOutboundFlight.priceInr + selectedReturnFlight.priceInr) * currentTravellers;
-  }, [selectedOutboundFlight, selectedReturnFlight, currentTravellers]);
+  }, [currentTripType, selectedOutboundFlight, selectedReturnFlight, currentTravellers]);
 
   const formatFriendlyDate = (dateStr: string) => {
     if (!dateStr) return 'Select Date';
@@ -2410,7 +2441,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </span>
 
                     <span className="text-slate-400 font-mono">
-                      {currentCategory === 'flights' && currentTripType === 'round-trip' ? '⇄' : '→'}
+                      {currentCategory === 'flights' && isFlightRoundTrip ? '⇄' : '→'}
                     </span>
 
                     <span>{currentToCity.city}</span>
@@ -2420,9 +2451,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                     {currentCategory === 'flights' && (
                       <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                        currentTripType === 'round-trip' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-700'
+                        currentTripType === 'dummy-flights'
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300/70'
+                          : isFlightRoundTrip
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-slate-200 text-slate-700'
                       }`}>
-                        {currentTripType === 'round-trip' ? 'Round Trip' : 'One Way'}
+                        {currentTripType === 'dummy-flights'
+                          ? currentDummyTripType === 'round-trip'
+                            ? 'Dummy Ticket (Round Trip)'
+                            : 'Dummy Ticket (One Way)'
+                          : currentTripType === 'round-trip'
+                          ? 'Round Trip'
+                          : 'One Way'}
                       </span>
                     )}
                   </>
@@ -2448,7 +2489,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 ) : (
                   <>
                     <span className="font-bold text-slate-900">{formatFriendlyDate(currentDepDate)}</span>
-                    {currentCategory === 'flights' && currentTripType === 'round-trip' && (
+                    {currentCategory === 'flights' && isFlightRoundTrip && (
                       <>
                         <span className="text-slate-300">→</span>
                         <span className="font-bold text-purple-700">{formatFriendlyDate(currentRetDate)}</span>
@@ -2507,7 +2548,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               {modCategory === 'flights' && (
                 <div className="space-y-4">
                   {/* Trip Type Pills */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <label className="text-xs font-bold text-slate-600">Trip Type:</label>
                     <div className="inline-flex rounded-xl p-1 bg-white border border-slate-200 shadow-2xs">
                       <button
@@ -2532,7 +2573,48 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       >
                         Round Trip
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setModTripType('dummy-flights')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                          modTripType === 'dummy-flights'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Dummy Flights
+                      </button>
                     </div>
+
+                    {modTripType === 'dummy-flights' && (
+                      <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-300/80 rounded-xl p-1 shadow-2xs">
+                        <span className="text-amber-800 font-bold text-[10px] uppercase tracking-wider pl-1.5 hidden sm:inline">
+                          Format:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setModDummyTripType('one-way')}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            modDummyTripType === 'one-way'
+                              ? 'bg-amber-600 text-white shadow-xs'
+                              : 'text-amber-800 hover:bg-amber-100/70'
+                          }`}
+                        >
+                          One Way
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setModDummyTripType('round-trip')}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            modDummyTripType === 'round-trip'
+                              ? 'bg-amber-600 text-white shadow-xs'
+                              : 'text-amber-800 hover:bg-amber-100/70'
+                          }`}
+                        >
+                          Round Trip
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Grid Inputs */}
@@ -2647,27 +2729,43 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     {/* Return Date */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                        Return Date {modTripType === 'one-way' && <span className="text-slate-400 font-normal">(Optional)</span>}
+                        Return Date{' '}
+                        {modTripType === 'one-way' || (modTripType === 'dummy-flights' && modDummyTripType === 'one-way') ? (
+                          <span className="text-slate-400 font-normal">(Optional)</span>
+                        ) : modTripType === 'dummy-flights' ? (
+                          <span className="text-amber-700 font-bold">(Dummy Visa Return)</span>
+                        ) : null}
                       </label>
                       <button
                         type="button"
                         onClick={() => {
                           setCalendarTarget('ret');
                           if (modTripType === 'one-way') setModTripType('round-trip');
+                          if (modTripType === 'dummy-flights' && modDummyTripType === 'one-way') {
+                            setModDummyTripType('round-trip');
+                          }
                         }}
                         className={`w-full text-left border rounded-xl p-2.5 text-xs font-bold shadow-2xs hover:border-purple-500 cursor-pointer flex items-center justify-between ${
-                          modTripType === 'round-trip'
-                            ? 'bg-purple-50/60 border-purple-300 text-purple-950 font-semibold'
+                          modTripType === 'round-trip' || (modTripType === 'dummy-flights' && modDummyTripType === 'round-trip')
+                            ? modTripType === 'dummy-flights'
+                              ? 'bg-amber-50/70 border-amber-300 text-amber-950 font-semibold'
+                              : 'bg-purple-50/60 border-purple-300 text-purple-950 font-semibold'
                             : 'bg-white border-slate-300 text-slate-500'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <Calendar className="w-4 h-4 text-purple-600 shrink-0" />
+                          <Calendar className={`w-4 h-4 shrink-0 ${
+                            modTripType === 'dummy-flights' ? 'text-amber-600' : 'text-purple-600'
+                          }`} />
                           <span className="truncate">
                             {modRetDate ? formatFriendlyDate(modRetDate) : 'Select Return Date'}
                           </span>
                         </div>
-                        <span className="text-[10px] text-purple-600 font-bold bg-purple-100/70 px-2 py-0.5 rounded font-mono shrink-0">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded font-mono shrink-0 ${
+                          modTripType === 'dummy-flights'
+                            ? 'text-amber-700 bg-amber-100/80'
+                            : 'text-purple-600 bg-purple-100/70'
+                        }`}>
                           Calendar
                         </span>
                       </button>
@@ -5013,28 +5111,50 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
 
                 {/* --- A. ROUND-TRIP FLIGHT SELECTION LAYOUT (MakeMyTrip Style) --- */}
-                {currentTripType === 'round-trip' ? (
+                {isFlightRoundTrip ? (
                   <div className="space-y-4 pb-28">
                     {/* Round-Trip Indicator Header */}
-                    <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+                    <div className={`rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md ${
+                      currentTripType === 'dummy-flights'
+                        ? 'bg-gradient-to-r from-amber-950 via-slate-900 to-amber-900 border border-amber-400/40'
+                        : 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900'
+                    }`}>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
-                          <ArrowLeftRight className="w-5 h-5 text-blue-300" />
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          currentTripType === 'dummy-flights'
+                            ? 'bg-amber-500/20 border border-amber-400/40'
+                            : 'bg-blue-500/20 border border-blue-400/30'
+                        }`}>
+                          <ArrowLeftRight className={`w-5 h-5 ${
+                            currentTripType === 'dummy-flights' ? 'text-amber-300' : 'text-blue-300'
+                          }`} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-sm sm:text-base">Round Trip Flight Selection</h3>
-                            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                              COMBO DEAL APPLIED
+                            <h3 className="font-bold text-sm sm:text-base">
+                              {currentTripType === 'dummy-flights'
+                                ? 'Round-Trip Dummy Flight Selection (Live Verifiable PNR)'
+                                : 'Round Trip Flight Selection'}
+                            </h3>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              currentTripType === 'dummy-flights'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                            }`}>
+                              {currentTripType === 'dummy-flights' ? 'VISA EMBASSY VERIFIED' : 'COMBO DEAL APPLIED'}
                             </span>
                           </div>
                           <p className="text-xs text-blue-200">
-                            Select one Outbound departure flight and one Inbound return flight below.
+                            {currentTripType === 'dummy-flights'
+                              ? 'Select Outbound & Return flights for your official verifiable airline PNR itinerary.'
+                              : 'Select one Outbound departure flight and one Inbound return flight below.'}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[11px] text-blue-300 font-medium">Combined Combo Fare</div>
+                        <div className="text-[11px] text-blue-300 font-medium">
+                          {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Combined Combo Fare'}
+                        </div>
                         <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">
                           {formatPrice(totalRoundTripFare, currency)}
                         </div>
@@ -5375,7 +5495,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             }
                             className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all"
                           >
-                            <span>Book Round Trip</span>
+                            <span>
+                              {currentTripType === 'dummy-flights' ? 'Book Dummy Round Trip (Live PNR)' : 'Book Round Trip'}
+                            </span>
                             <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>

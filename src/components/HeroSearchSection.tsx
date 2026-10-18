@@ -21,7 +21,6 @@ import {
   Users,
   Compass,
   Gift,
-  Navigation,
   Globe,
   Camera,
   X,
@@ -45,6 +44,8 @@ interface HeroSearchSectionProps {
   onSwapCities: () => void;
   tripType: TripType;
   onChangeTripType: (t: TripType) => void;
+  dummyTripType?: 'one-way' | 'round-trip';
+  onChangeDummyTripType?: (t: 'one-way' | 'round-trip') => void;
   departureDate: string;
   returnDate: string;
   onChangeDepartureDate: (d: string) => void;
@@ -91,7 +92,7 @@ const CAB_TIMES = ['06:00 AM', '09:00 AM', '11:30 AM', '02:00 PM', '05:00 PM', '
 const CAB_PACKAGES = ['4 Hrs / 40 km', '8 Hrs / 80 km', '12 Hrs / 120 km'];
 
 export interface DiscoveryOption {
-  id: 'explore' | 'navigator' | 'business-travel' | 'gift-cards' | 'influencers';
+  id: 'explore' | 'business-travel' | 'gift-cards' | 'influencers';
   icon: React.FC<{ className?: string }>;
   title: string;
   subtitle: string;
@@ -107,14 +108,6 @@ const DISCOVERY_OPTIONS: DiscoveryOption[] = [
     subtitle: 'Curated Destinations',
     badge: 'Popular',
     detail: 'Discover handpicked international & domestic getaways, scenic hidden gems, and trending travel itineraries across the globe.',
-  },
-  {
-    id: 'navigator',
-    icon: Navigation,
-    title: 'Navigator',
-    subtitle: 'Smart Routes & Maps',
-    badge: 'AI Planner',
-    detail: 'Interactive multimodal route planning, live transit maps, station coordinates, and smart turn-by-turn travel guidance.',
   },
   {
     id: 'business-travel',
@@ -152,6 +145,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onSwapCities,
   tripType,
   onChangeTripType,
+  dummyTripType = 'one-way',
+  onChangeDummyTripType,
   departureDate,
   returnDate,
   onChangeDepartureDate,
@@ -167,6 +162,19 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onOpenExplorePage,
   onOpenInfluencersPage,
 }) => {
+  const [internalDummyTripType, setInternalDummyTripType] = useState<'one-way' | 'round-trip'>('one-way');
+  const activeDummyTripType = dummyTripType || internalDummyTripType;
+  const isRoundTripActive =
+    tripType === 'round-trip' ||
+    (tripType === 'dummy-flights' && activeDummyTripType === 'round-trip');
+
+  const handleSelectDummyTripType = (type: 'one-way' | 'round-trip') => {
+    setInternalDummyTripType(type);
+    if (onChangeDummyTripType) {
+      onChangeDummyTripType(type);
+    }
+  };
+
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [swapRotated, setSwapRotated] = useState(false);
 
@@ -361,7 +369,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             <>
               {/* Row 2: One Way | Round Trip | Dummy Flights + Student Fare + Traveller & Class */}
               <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
                   {(
                     [
                       { id: 'one-way', label: 'One Way' },
@@ -385,6 +393,39 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       </button>
                     );
                   })}
+
+                  {/* Dummy Flights Sub-selector: One Way vs Round Trip */}
+                  {tripType === 'dummy-flights' && (
+                    <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-300/80 rounded-full p-0.5 shadow-2xs ml-0.5 sm:ml-1 animate-fadeIn">
+                      <span className="text-amber-800 font-bold text-[10px] uppercase tracking-wider pl-1.5 hidden sm:inline">
+                        Dummy Format:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectDummyTripType('one-way')}
+                        title="One-Way Verifiable PNR for Proof of Travel"
+                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          activeDummyTripType === 'one-way'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'text-amber-800 hover:bg-amber-100/80'
+                        }`}
+                      >
+                        One Way
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectDummyTripType('round-trip')}
+                        title="Round-Trip Verifiable PNR with Return Ticket for Visa"
+                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          activeDummyTripType === 'round-trip'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'text-amber-800 hover:bg-amber-100/80'
+                        }`}
+                      >
+                        Round Trip
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Controls: Student Fare + Traveller & Class Dropdown (Original Position) */}
@@ -545,13 +586,17 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer">
                   <div className="min-w-0">
                     <span className="block text-[11px] text-slate-500 font-medium">
-                      Departure
+                      {tripType === 'dummy-flights' ? 'Departure (Dummy PNR)' : 'Departure'}
                     </span>
                     <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
                       {formatDisplayDate(departureDate)}
                     </span>
                     <span className="block text-[11px] text-slate-400 truncate">
-                      {tripType === 'dummy-flights' ? 'Verifiable PNR' : 'One-Way / Outbound'}
+                      {tripType === 'dummy-flights'
+                        ? isRoundTripActive
+                          ? 'Outbound Verifiable PNR'
+                          : 'One-Way Verifiable PNR'
+                        : 'One-Way / Outbound'}
                     </span>
                   </div>
                   <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1.5" />
@@ -564,21 +609,31 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   />
                 </label>
 
-                {/* Return Date — ONLY shown when Round Trip is selected */}
-                {tripType === 'round-trip' && (
-                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-indigo-50/50 hover:bg-indigo-50/90 border border-indigo-200 transition-colors cursor-pointer">
+                {/* Return Date — shown when Round Trip is selected OR Dummy Flights with Round Trip is selected */}
+                {isRoundTripActive && (
+                  <label className={`flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl border transition-colors cursor-pointer ${
+                    tripType === 'dummy-flights'
+                      ? 'bg-amber-50/60 hover:bg-amber-50/90 border-amber-200'
+                      : 'bg-indigo-50/50 hover:bg-indigo-50/90 border-indigo-200'
+                  }`}>
                     <div className="min-w-0">
-                      <span className="block text-[11px] text-indigo-600 font-semibold">
-                        Return
+                      <span className={`block text-[11px] font-semibold ${
+                        tripType === 'dummy-flights' ? 'text-amber-700' : 'text-indigo-600'
+                      }`}>
+                        {tripType === 'dummy-flights' ? 'Return (Dummy PNR)' : 'Return'}
                       </span>
                       <span className="block text-xs sm:text-sm font-semibold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(returnDate, 'Select Return')}
                       </span>
-                      <span className="block text-[11px] text-indigo-500 truncate">
-                        Round-Trip Save 10%
+                      <span className={`block text-[11px] truncate ${
+                        tripType === 'dummy-flights' ? 'text-amber-600 font-medium' : 'text-indigo-500'
+                      }`}>
+                        {tripType === 'dummy-flights' ? 'Verifiable Visa Proof' : 'Round-Trip Save 10%'}
                       </span>
                     </div>
-                    <Calendar className="w-4 h-4 text-indigo-600 shrink-0 ml-1.5" />
+                    <Calendar className={`w-4 h-4 shrink-0 ml-1.5 ${
+                      tripType === 'dummy-flights' ? 'text-amber-600' : 'text-indigo-600'
+                    }`} />
                     <input
                       type="date"
                       value={returnDate}
@@ -601,14 +656,30 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Search className="w-4 h-4 shrink-0" />
-                    <span>
-                      {tripType === 'dummy-flights'
-                        ? 'Search Dummy Flights'
-                        : 'Search Flights'}
-                    </span>
+                    <span>Search</span>
                   </button>
                 </div>
               </div>
+
+              {/* Informative Dummy Flight Helper Banner */}
+              {tripType === 'dummy-flights' && (
+                <div className="mt-2.5 flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+                    <span className="font-semibold">
+                      {isRoundTripActive ? 'Round-Trip Dummy Flight' : 'One-Way Dummy Flight'} Mode:
+                    </span>
+                    <span className="text-amber-700 hidden md:inline">
+                      Verifiable live PNR flight reservations accepted by VFS & embassies for Schengen, UK, US, Canada, Dubai and onward travel proof.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-bold text-amber-800 font-mono-tabular">
+                      {isRoundTripActive ? '₹890 (Both Sectors Live PNR)' : '₹490 (One-Way Live PNR)'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -822,7 +893,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Search className="w-4 h-4 shrink-0" />
-                    <span>Search Trains</span>
+                    <span>Search</span>
                   </button>
                 </div>
               )}
@@ -1177,7 +1248,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search Hotels</span>
+                  <span>Search</span>
                 </button>
               </div>
             </>
@@ -1306,7 +1377,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search Buses</span>
+                  <span>Search</span>
                 </button>
               </div>
             </>
@@ -1589,7 +1660,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search Cabs</span>
+                  <span>Search</span>
                 </button>
               </div>
             </>
@@ -1749,7 +1820,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search Holidays</span>
+                  <span>Search</span>
                 </button>
               </div>
             </>
@@ -1842,23 +1913,23 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   />
                 </label>
 
-                {/* 3. Search Attractions Button */}
+                {/* 3. Search Button */}
                 <button
                   type="button"
                   onClick={onTriggerSearch}
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-all"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search Attractions</span>
+                  <span>Search</span>
                 </button>
               </div>
             </>
           )}
         </div>
 
-        {/* 5 Feature Options Strip: Explore, Navigator, Business Travel, Gift Cards, Influencers */}
+        {/* 4 Feature Options Strip: Explore, Business Travel, Gift Cards, Influencers */}
         <div className="mt-5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-2 sm:p-3 shadow-md shadow-slate-900/5">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {DISCOVERY_OPTIONS.map((item) => {
               const Icon = item.icon;
               return (
@@ -1873,12 +1944,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         onSelectTrustPillar('Explore Destinations', item.detail);
                         const destEl = document.querySelector('section:has(h2)') || document.getElementById('top');
                         destEl?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    } else if (item.id === 'navigator') {
-                      if (onOpenTripAI) {
-                        onOpenTripAI();
-                      } else {
-                        onSelectTrustPillar('Trip Navigator', item.detail);
                       }
                     } else if (item.id === 'business-travel') {
                       setShowBusinessModal(true);

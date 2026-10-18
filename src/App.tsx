@@ -49,6 +49,7 @@ export default function App() {
   const [fromCity, setFromCity] = useState<CityOption>(CITIES[0]); // New Delhi (DEL)
   const [toCity, setToCity] = useState<CityOption>(CITIES[1]); // Goa (GOI)
   const [tripType, setTripType] = useState<TripType>('one-way');
+  const [dummyTripType, setDummyTripType] = useState<'one-way' | 'round-trip'>('one-way');
   const [departureDate, setDepartureDate] = useState<string>('2026-10-15');
   const [returnDate, setReturnDate] = useState<string>('2026-10-19');
   const [studentFare, setStudentFare] = useState<boolean>(false);
@@ -353,7 +354,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers') ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -366,6 +367,8 @@ export default function App() {
               onSwapCities={handleSwapCities}
               tripType={tripType}
               onChangeTripType={setTripType}
+              dummyTripType={dummyTripType}
+              onChangeDummyTripType={setDummyTripType}
               departureDate={departureDate}
               returnDate={returnDate}
               onChangeDepartureDate={setDepartureDate}
@@ -436,12 +439,14 @@ export default function App() {
             fromCity={fromCity}
             toCity={toCity}
             tripType={tripType}
+            dummyTripType={dummyTripType}
             departureDate={departureDate}
             returnDate={returnDate}
             travellers={travellers}
             cabinClass={cabinClass}
             currency={currency}
             onChangeTripType={setTripType}
+            onChangeDummyTripType={setDummyTripType}
             onChangeFromCity={setFromCity}
             onChangeToCity={setToCity}
             onChangeDepartureDate={setDepartureDate}
@@ -618,9 +623,44 @@ export default function App() {
         {activePage === 'influencers' && (
           <InfluencersPage
             currency={currency}
+            userName={userName}
             onBackToHome={() => navigateTo('home')}
             onNotify={handleNotify}
             onOpenExplore={() => navigateTo('explore')}
+            onPlanTrip={(dest) => {
+              const destLower = dest.toLowerCase();
+              if (
+                destLower.includes('japan') ||
+                destLower.includes('switzerland') ||
+                destLower.includes('dubai') ||
+                destLower.includes('bali') ||
+                destLower.includes('paris') ||
+                destLower.includes('thailand')
+              ) {
+                navigateTo('international-planner');
+                handleNotify(
+                  `Opening International Planner: ${dest}`,
+                  `AI itinerary, verified visa rules & budgets loaded for ${dest}.`,
+                  'success'
+                );
+              } else {
+                const matchedCity = CITIES.find(
+                  (c) =>
+                    c.city.toLowerCase().includes(destLower) ||
+                    destLower.includes(c.city.toLowerCase())
+                );
+                if (matchedCity) {
+                  setToCity(matchedCity);
+                }
+                setActiveCategory('flights');
+                navigateTo('search-results');
+                handleNotify(
+                  `Flights to ${dest}`,
+                  `Showing fastest flights and best fares for your ${dest} trip.`,
+                  'success'
+                );
+              }
+            }}
           />
         )}
       </main>
