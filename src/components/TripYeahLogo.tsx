@@ -1,157 +1,329 @@
 import React from 'react';
 
-interface TripYeahLogoProps {
+export interface TripYeahLogoProps {
   className?: string;
   isDarkHeader?: boolean;
   showSubtitle?: boolean;
+  airplaneColorMode?: 'y-color' | 'navy';
 }
 
 /**
  * TripYeah Official Brand Logo
- * Pixel-accurate vector implementation matching the official brand identity:
- * - "Trip" in deep navy blue (#0A255A) or crisp white on dark headers
- * - Stylized "Y" in electric sky blue (#00A3FF) featuring:
- *    • Left wing swooshing up into an ascending navy/white airplane (✈)
- *    • Right wing curving up into an electric sky blue location map pin (📍)
+ * 100% vector reproduction precisely matching user uploaded image (WhatsApp Image 2026-10-18 at 5.35.01 PM):
+ * - "Trip" in deep navy blue (#002661) or crisp white on dark headers
+ * - Generous, clean spacing between "p" and "Y" so they never collide
+ * - Stylized "Y" matching the exact uploaded icon:
+ *    • Left arm: smooth jet contrail swooshing up-left into the ascending aeroplane in Y's color (#00A3FF)
+ *    • Right arm: dynamic upward curve connecting seamlessly into the large circular location pin (📍)
+ *    • Solid vertical rectangular stem at the base
  * - "ehh" in electric sky blue (#00A3FF)
  */
 export const TripYeahLogo: React.FC<TripYeahLogoProps> = ({
   className = 'h-8 sm:h-9 w-auto',
   isDarkHeader = false,
   showSubtitle = false,
+  airplaneColorMode = 'y-color',
 }) => {
-  // Navy color for "Trip" and Airplane on light background; crisp white on dark/hero background
-  const navyColor = isDarkHeader ? '#FFFFFF' : '#0B2253';
-  // Sky blue color for the stylized "Y", contrail, location pin, and "ehh"
+  // Deep Navy for "Trip" on light background; crisp white on dark/hero background
+  const navyColor = isDarkHeader ? '#FFFFFF' : '#002661';
+  // Sky blue color for stylized "Y", swooshes, aeroplane, location pin, and "ehh"
   const skyBlueColor = isDarkHeader ? '#38BDF8' : '#00A3FF';
+  // Cutout center hole for the location pin
   const pinHoleColor = isDarkHeader ? '#0F172A' : '#FFFFFF';
+  // Aeroplane color: default matches Y color (#00A3FF / #38BDF8), or navy if requested
+  const planeColor = airplaneColorMode === 'navy' && !isDarkHeader ? '#002661' : skyBlueColor;
 
   return (
     <div className="inline-flex flex-col items-start select-none">
       <svg
-        viewBox="0 0 340 92"
+        viewBox="0 0 472 165"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={`${className} transition-colors duration-200 overflow-visible`}
-        aria-label="TripYeah Logo"
+        aria-label="TripYehh Logo"
       >
         <defs>
           {/* Subtle drop shadow for dark header readability */}
           {isDarkHeader && (
             <filter id="logoGlow" x="-15%" y="-15%" width="130%" height="130%">
-              <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.45" />
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
             </filter>
           )}
         </defs>
 
         <g filter={isDarkHeader ? 'url(#logoGlow)' : undefined}>
           {/* =========================================================
-              PART 1: "Trip" in Deep Navy Blue (or Crisp White)
-              Extra-bold, rounded modern sans geometry
+              PART 1: "Trip" in Deep Navy Blue (#002661) or Crisp White
              ========================================================= */}
+
           {/* Letter 'T' */}
           <path
-            d="M12 28 H54 C55.5 28 56.5 29 56.5 30.5 V37 C56.5 38.5 55.5 39.5 54 39.5 H41 V69.5 C41 71 40 72 38.5 72 H29.5 C28 72 27 71 27 69.5 V39.5 H12 C10.5 39.5 9.5 38.5 9.5 37 V30.5 C9.5 29 10.5 28 12 28 Z"
+            d="M 18 43
+               H 74
+               C 75.5 43 76.5 44 76.5 45.5
+               V 56
+               C 76.5 57.5 75.5 58.5 74 58.5
+               H 54
+               V 118
+               C 54 119.5 53 120.5 51.5 120.5
+               H 40.5
+               C 39 120.5 38 119.5 38 118
+               V 58.5
+               H 18
+               C 16.5 58.5 15.5 57.5 15.5 56
+               V 45.5
+               C 15.5 44 16.5 43 18 43
+               Z"
             fill={navyColor}
           />
 
           {/* Letter 'r' */}
           <path
-            d="M62 40 C62 38.5 63 37.5 64.5 37.5 H72 C73.5 37.5 74.5 38.5 74.5 40 V44 C77.5 40 81.5 38 87 38 C88.5 38 90.5 38.3 92 38.8 C93 39.2 93.5 40.2 93.5 41.5 V47.5 C93.5 49 92 50 90.5 49.5 C88.5 49 86.5 48.8 84.5 48.8 C79.5 48.8 75 52 75 58 V69.5 C75 71 74 72 72.5 72 H64.5 C63 72 62 71 62 69.5 V40 Z"
+            d="M 85 70
+               C 85 68.5 86 67.5 87.5 67.5
+               H 98.5
+               C 100 67.5 101 68.5 101 70
+               V 76.5
+               C 105 70.5 110.5 67.5 118 67.5
+               C 120.5 67.5 123 68 124.5 68.8
+               C 126 69.5 126.5 71 126.5 72.8
+               V 81.5
+               C 126.5 83.5 124.5 84.8 122.5 84
+               C 120 83 117.5 82.5 115 82.5
+               C 107.5 82.5 101 87.5 101 96.5
+               V 118
+               C 101 119.5 100 120.5 98.5 120.5
+               H 87.5
+               C 86 120.5 85 119.5 85 118
+               V 70
+               Z"
             fill={navyColor}
           />
 
-          {/* Letter 'i' (Stem + Solid Circle Dot) */}
-          <circle cx="103" cy="30" r="6" fill={navyColor} />
+          {/* Letter 'i' (Dot + Rectangular Stem) */}
+          <circle cx="140" cy="53" r="8.5" fill={navyColor} />
           <path
-            d="M97.5 40 C97.5 38.5 98.5 37.5 100 37.5 H106 C107.5 37.5 108.5 38.5 108.5 40 V69.5 C108.5 71 107.5 72 106 72 H100 C98.5 72 97.5 71 97.5 69.5 V40 Z"
+            d="M 132.5 70
+               C 132.5 68.5 133.5 67.5 135 67.5
+               H 145
+               C 146.5 67.5 147.5 68.5 147.5 70
+               V 118
+               C 147.5 119.5 146.5 120.5 145 120.5
+               H 135
+               C 133.5 120.5 132.5 119.5 132.5 118
+               V 70
+               Z"
             fill={navyColor}
           />
 
           {/* Letter 'p' */}
           <path
-            d="M117 40 C117 38.5 118 37.5 119.5 37.5 H126.5 C128 37.5 129 38.5 129 40 V43.5 C132.5 39.8 137.5 37.5 143.5 37.5 C154 37.5 162 45.2 162 55.5 C162 65.8 154 73.5 143.5 73.5 C138 73.5 133 71.5 129.5 68 V84 C129.5 85.5 128.5 86.5 127 86.5 H119.5 C118 86.5 117 85.5 117 84 V40 Z M129 55.5 C129 61.5 133.5 65.5 139.5 65.5 C145.5 65.5 150 61.5 150 55.5 C150 49.5 145.5 45.5 139.5 45.5 C133.5 45.5 129 49.5 129 55.5 Z"
+            d="M 158 70
+               C 158 68.5 159 67.5 160.5 67.5
+               H 170.5
+               C 172 67.5 173 68.5 173 70
+               V 74.5
+               C 177.5 69.5 184 66.5 192.5 66.5
+               C 207 66.5 218 78 218 94
+               C 218 110 207 121.5 192.5 121.5
+               C 185 121.5 178.5 118.5 173 113.5
+               V 143
+               C 173 144.5 172 145.5 170.5 145.5
+               H 160.5
+               C 159 145.5 158 144.5 158 143
+               V 70
+               Z
+               M 173 94
+               C 173 103 179.5 109 188 109
+               C 196.5 109 203 103 203 94
+               C 203 85 196.5 79 188 79
+               C 179.5 79 173 85 173 94
+               Z"
             fill={navyColor}
           />
 
           {/* =========================================================
-              PART 2: Stylized "Y" with Contrail, Airplane & Map Pin
+              PART 2: Stylized "Y" Exactly Matching User's Image
+              (WhatsApp Image 2026-10-18 at 5.35.01 PM)
+              - Left Arm: Curved Jet Contrail + Aeroplane
+              - Right Arm: Curved Branch + Large Tilted Map Pin
+              - Lower Base: Centered Solid Vertical Stem
              ========================================================= */}
 
-          {/* Left Wing Swoosh (Ascending Contrail to Airplane) */}
+          {/* Lower Vertical Stem of the Y */}
           <path
-            d="M172 68 C169 52 162 38 151 26 C148 22.8 144.5 19.5 141 16.5 C143.5 19 146.5 22.5 149 26.5 C157 37 163 51 165 67 Z"
-            fill={skyBlueColor}
-          />
-          <path
-            d="M176 68 C173 53 167 40 157 28 C153.5 23.8 149.5 19.8 145 16 C149 21 154.5 28.5 159 37 C166 49.5 170.5 60 172 68 Z"
+            d="M 246 86
+               C 246 84.5 247 83.5 248.5 83.5
+               H 263.5
+               C 265 83.5 266 84.5 266 86
+               V 118
+               C 266 119.5 265 120.5 263.5 120.5
+               H 248.5
+               C 247 120.5 246 119.5 246 118
+               V 86
+               Z"
             fill={skyBlueColor}
           />
 
-          {/* Airplane ✈ at apex of left swoosh */}
-          <g transform="translate(133, 4) rotate(-38)">
-            {/* Fuselage */}
+          {/* Left Arm: Continuous Jet Contrail Swoosh leading to Aeroplane */}
+          <path
+            d="M 246 86
+               C 242 66 230 46 212 32
+               C 206 27 199 22.5 192 18.5
+               C 196 23 201.5 29 206 35.5
+               C 217.5 51.5 227 70 231.5 90
+               Z"
+            fill={skyBlueColor}
+          />
+          <path
+            d="M 252 86
+               C 248 68 238 50 222 35
+               C 216 29 209 24 200 18
+               C 206 25 214 36 221 48
+               C 231 66 239 80 241 88
+               Z"
+            fill={skyBlueColor}
+          />
+
+          {/* Aeroplane ✈ (Exact shape from user image, in skyBlueColor matching Y) */}
+          <g transform="translate(189, 21) rotate(-42)">
+            {/* Fuselage with rounded nose, swept delta wings with rounded tips, and tail */}
             <path
-              d="M12 0 C13.8 0 15 1.5 15 3.5 L14.2 19 L16.8 24 C16.8 24.8 16 25.5 15.2 25 L10.8 23.5 L10 25.5 C9.8 26 9.2 26.5 8.6 26.5 C8 26.5 7.4 26 7.2 25.5 L6.4 23.5 L2 25 C1.2 25.5 0.4 24.8 0.4 24 L3 19 L2.2 3.5 C2.2 1.5 3.4 0 5.2 0 Z"
-              fill={navyColor}
-            />
-            {/* Main Wings */}
-            <path
-              d="M8.6 7 L23 15.5 C24 16.2 23.8 17.5 22.6 17.5 L8.6 13.5 L-5.4 17.5 C-6.6 17.5 -6.8 16.2 -5.8 15.5 L8.6 7 Z"
-              fill={navyColor}
-            />
-            {/* Tail Horizontal Stabilizer */}
-            <path
-              d="M8.6 20.5 L15.5 24 C16.2 24.5 16 25.5 15.2 25.5 L8.6 24.2 L2 25.5 C1.2 25.5 1 24.5 1.7 24 L8.6 20.5 Z"
-              fill={navyColor}
+              d="M 0 -22
+                 C 2.4 -22 4 -18.5 4 -12
+                 L 4 -1.5
+                 L 22.5 9.5
+                 C 24 10.5 23.5 12.2 21.8 12.2
+                 L 4 9.5
+                 L 4 17
+                 L 10.5 21.5
+                 C 11.5 22.2 11.2 23.5 10.2 23.5
+                 L 0 22
+                 L -10.2 23.5
+                 C -11.2 23.5 -11.5 22.2 -10.5 21.5
+                 L -4 17
+                 L -4 9.5
+                 L -21.8 12.2
+                 C -23.5 12.2 -24 10.5 -22.5 9.5
+                 L -4 -1.5
+                 L -4 -12
+                 C -4 -18.5 -2.4 -22 0 -22
+                 Z"
+              fill={planeColor}
             />
           </g>
 
-          {/* Right Wing Swoosh (Leading up to Location Pin) */}
+          {/* Right Arm: Swooshes up-right directly merging into the Location Pin */}
           <path
-            d="M174 68 C176 56 182 45 191 35 C196 29 201 23 204.5 18 C202 23 197 30 192 38 C186 48 181.5 58 180 68 Z"
+            d="M 256 86
+               C 260 67 271 49 285 34
+               C 291 27 298 20.5 304 14
+               C 299.5 22 292 32 285.5 43
+               C 275.5 59.5 269 76 266 91
+               Z"
             fill={skyBlueColor}
           />
           <path
-            d="M178 68 C181 56 188 45 197 36 C201.5 30.5 206 25 208.5 20 C205.5 25.5 200.5 33 195 41 C188 51.5 183.5 60 182 68 Z"
+            d="M 262 86
+               C 266 69 278 52 291 38
+               C 297 31 304 24 309 17
+               C 305 25 297.5 36.5 290 48.5
+               C 280.5 65.5 274.5 80 272 88
+               Z"
             fill={skyBlueColor}
           />
 
-          {/* Lower Stem of the Y */}
-          <path
-            d="M170.5 64 C170.5 63 171.5 62 172.5 62 H181.5 C182.5 62 183.5 63 183.5 64 V75.5 C183.5 76.5 182.5 77.5 181.5 77.5 H172.5 C171.5 77.5 170.5 76.5 170.5 75.5 V64 Z"
-            fill={skyBlueColor}
-          />
-
-          {/* Location Map Pin 📍 at apex of right wing */}
-          <g transform="translate(201, 2)">
-            {/* Teardrop Pin */}
+          {/* Location Map Pin 📍 (Exact teardrop angle and circular cutout matching user image) */}
+          <g transform="translate(296, 4)">
+            {/* Teardrop Pin Body */}
             <path
-              d="M11 0 C4.9 0 0 4.9 0 11 C0 17.8 9.5 26.8 10.4 27.6 C10.8 28 11.2 28 11.6 27.6 C12.5 26.8 22 17.8 22 11 C22 4.9 17.1 0 11 0 Z"
+              d="M 16 0
+                 C 7.2 0 0 7.2 0 16
+                 C 0 25.8 13.8 38.8 15.2 40
+                 C 15.6 40.4 16.4 40.4 16.8 40
+                 C 18.2 38.8 32 25.8 32 16
+                 C 32 7.2 24.8 0 16 0
+                 Z"
               fill={skyBlueColor}
             />
-            {/* Inner White Cutout Hole */}
-            <circle cx="11" cy="10" r="4.3" fill={pinHoleColor} />
+            {/* Center Circular Hole */}
+            <circle cx="16" cy="15" r="6.2" fill={pinHoleColor} />
           </g>
 
           {/* =========================================================
-              PART 3: "ehh" in Electric Sky Blue
+              PART 3: "ehh" in Electric Sky Blue (#00A3FF)
              ========================================================= */}
-          {/* Letter 'e' (Tucked snugly in the Y fork) */}
+
+          {/* Letter 'e' (Tucked comfortably beside Y stem under right swoosh) */}
           <path
-            d="M196 55 C196 46 202 38 211 38 C220 38 226 44.5 226 55 C226 56 225.5 56.5 224.5 56.5 H206.5 C207 62 210.5 65.5 215.5 65.5 C219 65.5 222 64 224 61.5 C224.8 60.5 226 60.5 227 61.2 L229.5 63.5 C230.5 64.5 230.2 65.8 229 67 C225.5 71 221 73.5 215 73.5 C203.5 73.5 196 66 196 55 Z M215.5 45.5 C210.5 45.5 207 48.5 206.5 51.5 H224.5 C224.5 48.5 221 45.5 215.5 45.5 Z"
+            d="M 285 94
+               C 285 80 294 67.5 308 67.5
+               C 322 67.5 331 78 331 94
+               C 331 95.5 330.5 96.5 329 96.5
+               H 300
+               C 300.5 104.5 306 109.5 314 109.5
+               C 319.5 109.5 324 107.5 327 103.5
+               C 328 102 329.5 102 331 103
+               L 334.5 106.5
+               C 336 108 335.5 109.8 334 111.5
+               C 329 117.5 322.5 121.5 313 121.5
+               C 296 121.5 285 110.5 285 94
+               Z
+               M 314 79.5
+               C 306.5 79.5 301.5 84 300.5 88.5
+               H 329
+               C 329 84 324 79.5 314 79.5
+               Z"
             fill={skyBlueColor}
           />
 
           {/* Letter 'h' (First h) */}
           <path
-            d="M234 26 C234 24.5 235 23.5 236.5 23.5 H243.5 C245 23.5 246 24.5 246 26 V44 C249 40 253.5 38 259.5 38 C269 38 274 44 274 54 V69.5 C274 71 273 72 271.5 72 H264.5 C263 72 262 71 262 69.5 V55 C262 49.5 259 47 254 47 C249 47 245 50.5 245 57 V69.5 C245 71 244 72 242.5 72 H235.5 C234 72 234 71 234 69.5 V26 Z"
+            d="M 346 43
+               C 346 41.5 347 40.5 348.5 40.5
+               H 359.5
+               C 361 40.5 362 41.5 362 43
+               V 76.5
+               C 366.5 70.5 373 67.5 382 67.5
+               C 396 67.5 403 76.5 403 92
+               V 118
+               C 403 119.5 402 120.5 400.5 120.5
+               H 389.5
+               C 388 120.5 387 119.5 387 118
+               V 94
+               C 387 85 382.5 81 375 81
+               C 367.5 81 362 86.5 362 96
+               V 118
+               C 362 119.5 361 120.5 359.5 120.5
+               H 348.5
+               C 347 120.5 346 119.5 346 118
+               V 43
+               Z"
             fill={skyBlueColor}
           />
 
           {/* Letter 'h' (Second h) */}
           <path
-            d="M280 26 C280 24.5 281 23.5 282.5 23.5 H289.5 C291 23.5 292 24.5 292 26 V44 C295 40 299.5 38 305.5 38 C315 38 320 44 320 54 V69.5 C320 71 319 72 317.5 72 H310.5 C309 72 308 71 308 69.5 V55 C308 49.5 305 47 300 47 C295 47 291 50.5 291 57 V69.5 C291 71 290 72 288.5 72 H281.5 C280 72 280 71 280 69.5 V26 Z"
+            d="M 414 43
+               C 414 41.5 415 40.5 416.5 40.5
+               H 427.5
+               C 429 40.5 430 41.5 430 43
+               V 76.5
+               C 434.5 70.5 441 67.5 450 67.5
+               C 464 67.5 471 76.5 471 92
+               V 118
+               C 471 119.5 470 120.5 468.5 120.5
+               H 457.5
+               C 456 120.5 455 119.5 455 118
+               V 94
+               C 455 85 450.5 81 443 81
+               C 435.5 81 430 86.5 430 96
+               V 118
+               C 430 119.5 429 120.5 427.5 120.5
+               H 416.5
+               C 415 120.5 414 119.5 414 118
+               V 43
+               Z"
             fill={skyBlueColor}
           />
         </g>
@@ -167,5 +339,143 @@ export const TripYeahLogo: React.FC<TripYeahLogoProps> = ({
         </span>
       )}
     </div>
+  );
+};
+
+/**
+ * Standalone TripYeah App Icon
+ * Exact 1:1 reproduction of the user's uploaded icon (WhatsApp Image 2026-10-18 at 5.35.01 PM):
+ * - Rounded squircle with vibrant blue gradient (#00A3FF to #0066FF)
+ * - Solid crisp white "Y" with ascending aeroplane contrail & location pin
+ */
+export const TripYeahAppIcon: React.FC<{ className?: string; size?: number }> = ({
+  className = 'w-12 h-12',
+  size = 48,
+}) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 200 200"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`${className} shrink-0 select-none drop-shadow-sm`}
+      aria-label="TripYeah App Icon"
+    >
+      <defs>
+        {/* Sky Blue to Ocean Blue Gradient matching the uploaded app icon */}
+        <linearGradient id="tripIconGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#00A6FF" />
+          <stop offset="50%" stopColor="#0088FF" />
+          <stop offset="100%" stopColor="#0060FA" />
+        </linearGradient>
+        {/* Subtle ground shadow under the base of the stem */}
+        <linearGradient id="stemShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#004BBB" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#0060FA" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* Rounded Squircle Background */}
+      <rect width="200" height="200" rx="46" fill="url(#tripIconGradient)" />
+
+      {/* Subtle Base Stem Drop Shadow */}
+      <path d="M 85 168 H 107 V 190 H 85 Z" fill="url(#stemShadow)" />
+
+      {/* =========================================================
+          The Iconic White "Y"
+         ========================================================= */}
+      <g fill="#FFFFFF">
+        {/* Base Vertical Stem */}
+        <path
+          d="M 84 116
+             H 107
+             V 166
+             C 107 167.5 106 168.5 104.5 168.5
+             H 86.5
+             C 85 168.5 84 167.5 84 166
+             V 116
+             Z"
+        />
+
+        {/* Left Arm: Curved Jet Contrail Swoosh leading to Plane */}
+        <path
+          d="M 84 116
+             C 78 88 64 64 42 46
+             C 34 39.5 25 34 16 29
+             C 21.5 35 29 42.5 35 51
+             C 50.5 73 63 97 68.5 124
+             Z"
+        />
+        <path
+          d="M 91 116
+             C 86 91 73 69 53 49
+             C 45 42 36 36 26 29
+             C 34 38 45 53 54 69
+             C 67 93 78 111 80 121
+             Z"
+        />
+
+        {/* Aeroplane ✈ at apex of left swoosh */}
+        <g transform="translate(56, 56) rotate(-42)">
+          <path
+            d="M 0 -26
+               C 2.8 -26 4.8 -22 4.8 -14
+               L 4.8 -2
+               L 26 11
+               C 28 12.2 27.5 14.5 25.5 14.5
+               L 4.8 11.2
+               L 4.8 20
+               L 12.5 25.5
+               C 13.8 26.2 13.5 27.8 12.2 27.8
+               L 0 26
+               L -12.2 27.8
+               C -13.5 27.8 -13.8 26.2 -12.5 25.5
+               L -4.8 20
+               L -4.8 11.2
+               L -25.5 14.5
+               C -27.5 14.5 -28 12.2 -26 11
+               L -4.8 -2
+               L -4.8 -14
+               C -4.8 -22 -2.8 -26 0 -26
+               Z"
+          />
+        </g>
+
+        {/* Right Arm: Curved Swoosh leading into Location Pin */}
+        <path
+          d="M 96 116
+             C 102 91 116 67 134 47
+             C 142 38 151 29 159 20
+             C 153.5 30 144 43 135.5 57
+             C 122.5 79 114 101 110 122
+             Z"
+        />
+        <path
+          d="M 103 116
+             C 109 94 125 71 142 52
+             C 150 43 159 34 165 24
+             C 160 35 150 50 140 66
+             C 128 89 120 108 117 119
+             Z"
+        />
+
+        {/* Location Pin 📍 */}
+        <g transform="translate(124, 38)">
+          {/* Teardrop Pin Body */}
+          <path
+            d="M 23 0
+               C 10.3 0 0 10.3 0 23
+               C 0 37 19.8 55.6 21.8 57.3
+               C 22.4 57.9 23.6 57.9 24.2 57.3
+               C 26.2 55.6 46 37 46 23
+               C 46 10.3 35.7 0 23 0
+               Z"
+          />
+          {/* Center Cutout showing blue background */}
+          <circle cx="23" cy="22" r="8.8" fill="#0088FF" />
+        </g>
+      </g>
+    </svg>
   );
 };

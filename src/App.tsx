@@ -38,6 +38,7 @@ import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 import { HotelDetailsPage } from './components/HotelDetailsPage';
 import { ExplorePage } from './components/ExplorePage';
 import { InfluencersPage } from './components/InfluencersPage';
+import { SmileAIAssistant, SmileSuggestedSearch } from './components/SmileAIAssistant';
 
 export default function App() {
   // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account')
@@ -99,7 +100,8 @@ export default function App() {
     useState<boolean>(false);
   const [showInsuranceModal, setShowInsuranceModal] =
     useState<boolean>(false);
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  // Open Login / Register modal automatically on website open as requested
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(true);
 
   // Booked Trips State with localStorage persistence
   const [bookedTrips, setBookedTrips] = useState<BookedTrip[]>(() => {
@@ -267,6 +269,64 @@ export default function App() {
     navigateTo('search-results');
   };
 
+  const handleSmileHandoffSearch = (searchData: SmileSuggestedSearch) => {
+    // 1. If category is international-planner, navigate directly to planner
+    if (searchData.category === 'international-planner') {
+      navigateTo('international-planner');
+      handleNotify(
+        'SMILE Planner Handoff',
+        `Loaded itinerary planner for ${searchData.toCity || 'International Destination'}.`,
+        'success'
+      );
+      return;
+    }
+
+    // 2. Set activeCategory
+    setActiveCategory(searchData.category as BookingCategory);
+
+    // 3. Match fromCity & toCity from CITIES
+    const foundFrom = CITIES.find(
+      (c) =>
+        c.code.toLowerCase() === (searchData.fromCode || '').toLowerCase() ||
+        c.city.toLowerCase() === (searchData.fromCity || '').toLowerCase()
+    );
+    const foundTo = CITIES.find(
+      (c) =>
+        c.code.toLowerCase() === (searchData.toCode || '').toLowerCase() ||
+        c.city.toLowerCase() === (searchData.toCity || '').toLowerCase()
+    );
+
+    if (foundFrom) {
+      setFromCity(foundFrom);
+    }
+    if (foundTo) {
+      setToCity(foundTo);
+    } else if (searchData.toCity) {
+      setToCity({
+        city: searchData.toCity,
+        code: searchData.toCode || searchData.toCity.slice(0, 3).toUpperCase(),
+        stationCode: searchData.toCode || searchData.toCity.slice(0, 3).toUpperCase(),
+        country: 'International',
+        airportName: `${searchData.toCity} International Airport`,
+        popularTag: 'SMILE Pick',
+      });
+    }
+
+    if (searchData.departureDate) {
+      setDepartureDate(searchData.departureDate);
+    }
+    if (searchData.travellers) {
+      setTravellers(searchData.travellers);
+    }
+
+    navigateTo('search-results');
+    handleNotify(
+      'SMILE Search Active',
+      `Prefilled live search for ${searchData.category.toUpperCase()} to ${searchData.toCity} (${searchData.toCode || ''}).`,
+      'success'
+    );
+  };
+
   if (activePage === 'admin') {
     return (
       <div className="min-h-screen bg-[#0F172A] text-slate-100">
@@ -354,7 +414,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'trips' || activePage === 'account') ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -765,6 +825,18 @@ export default function App() {
       <Footer
         onSelectCategory={handleSelectCategoryFromNav}
         onNavigatePage={navigateTo}
+      />
+
+      {/* SMILE — TripYehh's Personal AI Travel Assistant */}
+      <SmileAIAssistant
+        activeCategory={activeCategory}
+        fromCity={fromCity}
+        toCity={toCity}
+        departureDate={departureDate}
+        travellers={travellers}
+        currency={currency}
+        onHandoffSearch={handleSmileHandoffSearch}
+        onNotify={handleNotify}
       />
     </div>
   );

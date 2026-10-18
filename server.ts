@@ -1045,6 +1045,383 @@ Respond ONLY with a JSON object:
   }
 });
 
+// ============================================================================
+// 4. SMILE — TRIPYEHH'S PERSONAL AI TRAVEL ASSISTANT ENDPOINT
+// ============================================================================
+interface SmileAssistantRequest {
+  message: string;
+  conversationHistory?: Array<{ sender: 'user' | 'assistant'; text: string }>;
+  context?: {
+    activeCategory?: string;
+    fromCity?: string;
+    toCity?: string;
+    departureDate?: string;
+    travellers?: number;
+    currency?: string;
+  };
+}
+
+function parseTripIntent(message: string) {
+  const m = message.toLowerCase();
+  
+  // Category detection
+  let category = 'flights';
+  let isItinerary = false;
+  let isVisa = false;
+  let isHotel = false;
+  let isTrain = false;
+  let isBus = false;
+  let isCab = false;
+  let isHoliday = false;
+  let isExperience = false;
+
+  if (m.includes('hotel') || m.includes('resort') || m.includes('villa') || m.includes('stay') || m.includes('homestay') || m.includes('room')) {
+    category = 'hotels';
+    isHotel = true;
+  } else if (m.includes('train') || m.includes('vande bharat') || m.includes('rajdhani') || m.includes('shatabdi') || m.includes('irctc')) {
+    category = 'trains';
+    isTrain = true;
+  } else if (m.includes('bus') || m.includes('volvo') || m.includes('sleeper')) {
+    category = 'buses';
+    isBus = true;
+  } else if (m.includes('cab') || m.includes('taxi') || m.includes('rental') || m.includes('chauffeur') || m.includes('car')) {
+    category = 'cabs';
+    isCab = true;
+  } else if (m.includes('itinerary') || m.includes('plan') || m.includes('day trip') || m.includes('days trip') || m.includes('day tour') || m.includes('5-day') || m.includes('3-day') || m.includes('4-day') || m.includes('7-day')) {
+    category = 'holidays';
+    isItinerary = true;
+  } else if (m.includes('package') || m.includes('holiday') || m.includes('honeymoon') || m.includes('vacation')) {
+    category = 'holidays';
+    isHoliday = true;
+  } else if (m.includes('visa') || m.includes('passport') || m.includes('entry requirement') || m.includes('evisa') || m.includes('embassy')) {
+    isVisa = true;
+  } else if (m.includes('activity') || m.includes('tour') || m.includes('attraction') || m.includes('sightseeing') || m.includes('safari') || m.includes('scuba') || m.includes('tickets')) {
+    category = 'experiences';
+    isExperience = true;
+  }
+
+  // City detection
+  let fromCode = 'DEL';
+  let fromCity = 'New Delhi';
+  let toCode = 'BOM';
+  let toCity = 'Mumbai';
+
+  if (m.includes('tokyo') || m.includes('japan')) {
+    toCode = 'HND';
+    toCity = 'Tokyo';
+  } else if (m.includes('dubai') || m.includes('uae')) {
+    toCode = 'DXB';
+    toCity = 'Dubai';
+  } else if (m.includes('bali') || m.includes('indonesia')) {
+    toCode = 'DPS';
+    toCity = 'Bali';
+  } else if (m.includes('mumbai') || m.includes('bombay')) {
+    toCode = 'BOM';
+    toCity = 'Mumbai';
+  } else if (m.includes('goa')) {
+    toCode = 'GOI';
+    toCity = 'Goa';
+  } else if (m.includes('singapore')) {
+    toCode = 'SIN';
+    toCity = 'Singapore';
+  } else if (m.includes('bangkok') || m.includes('thailand') || m.includes('phuket')) {
+    toCode = 'BKK';
+    toCity = 'Bangkok';
+  } else if (m.includes('paris') || m.includes('france')) {
+    toCode = 'CDG';
+    toCity = 'Paris';
+  } else if (m.includes('zurich') || m.includes('switzerland') || m.includes('swiss')) {
+    toCode = 'ZRH';
+    toCity = 'Zurich';
+  } else if (m.includes('london') || m.includes('uk')) {
+    toCode = 'LHR';
+    toCity = 'London';
+  } else if (m.includes('bangalore') || m.includes('bengaluru')) {
+    toCode = 'BLR';
+    toCity = 'Bengaluru';
+  }
+
+  // Check explicit origin
+  if (m.includes('from mumbai') || m.includes('ex-mumbai')) {
+    fromCode = 'BOM';
+    fromCity = 'Mumbai';
+  } else if (m.includes('from bangalore') || m.includes('from bengaluru')) {
+    fromCode = 'BLR';
+    fromCity = 'Bengaluru';
+  } else if (m.includes('from delhi') || m.includes('from new delhi')) {
+    fromCode = 'DEL';
+    fromCity = 'New Delhi';
+  }
+
+  // Prevent from === to
+  if (fromCode === toCode) {
+    if (toCode === 'DEL') {
+      toCode = 'BOM';
+      toCity = 'Mumbai';
+    } else {
+      fromCode = 'DEL';
+      fromCity = 'New Delhi';
+    }
+  }
+
+  return {
+    category,
+    isItinerary,
+    isVisa,
+    isHotel,
+    isTrain,
+    isBus,
+    isCab,
+    isHoliday,
+    isExperience,
+    fromCode,
+    fromCity,
+    toCode,
+    toCity,
+  };
+}
+
+function buildSmileOfflineFallback(message: string, intent: ReturnType<typeof parseTripIntent>) {
+  const m = message.toLowerCase();
+
+  // 1. Flights e.g. Delhi to Tokyo or general flights
+  if (m.includes('flight') || (intent.category === 'flights' && (m.includes('tokyo') || m.includes('dubai') || m.includes('bali') || m.includes('mumbai') || m.includes('goa')))) {
+    return {
+      reply: `### ✈️ Flights: ${intent.fromCity} (${intent.fromCode}) ➔ ${intent.toCity} (${intent.toCode})\n\nGreat choice! Here is what you need to know about flying to **${intent.toCity}**:\n\n- **Flight Duration:** Direct flights take approximately ${intent.toCode === 'HND' ? '8h 15m' : intent.toCode === 'DXB' ? '3h 45m' : intent.toCode === 'DPS' ? '9h 30m (1 stop via SIN/KUL)' : '2h 10m'}.\n- **Popular Carriers:** ${intent.toCode === 'HND' ? 'Air India, ANA (All Nippon Airways), Japan Airlines, Singapore Airlines' : intent.toCode === 'DXB' ? 'Emirates, IndiGo, Air India, SpiceJet' : intent.toCode === 'DPS' ? 'Singapore Airlines, Malaysia Airlines, VietJet, Batik Air' : 'IndiGo, Air India, Akasa Air, Vistara'}.\n- **Best Booking Window:** 4 to 8 weeks in advance for optimal promotional fares.\n\n*Note: SMILE can prepare your search criteria right now. Live seat availability and confirmed fares are retrieved instantly when you search on TripYehh.*`,
+      followUpQuestions: [
+        `What are your planned travel dates?`,
+        `How many passengers are traveling?`,
+        `Do you prefer Economy or Business Class?`,
+      ],
+      suggestedSearch: {
+        category: 'flights',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: intent.toCity,
+        toCode: intent.toCode,
+        departureDate: '2026-10-20',
+        travellers: 1,
+        actionLabel: `Search Flights to ${intent.toCity} on TripYehh`,
+      },
+    };
+  }
+
+  // 2. Hotels in Dubai / elsewhere
+  if (intent.isHotel || m.includes('hotel') || m.includes('stay') || m.includes('villa')) {
+    const cityName = intent.toCity || 'Dubai';
+    return {
+      reply: `### 🏨 Stays & Hotels in ${cityName}\n\nHere are curated neighborhood picks and accommodation tips for **${cityName}**:\n\n- **Prime Neighborhoods:**\n  - **Downtown & Business Bay:** Best for Burj Khalifa views, luxury shopping, and central access.\n  - **The Palm Jumeirah & Marina:** Perfect for beachfront resorts, infinity pools, and sunset dining.\n  - **Old Dubai / Deira:** Heritage souks, traditional abra boats, and budget-friendly hotels.\n- **Amenities Included on TripYehh:** Look for listings with *Complimentary Breakfast*, *Free Cancellation*, and *Airport Transfer Included*.\n\n*Note: Hotel prices fluctuate based on season. SMILE can prefill your stay dates to view verified live rooms and member discounts.*`,
+      followUpQuestions: [
+        `What check-in and check-out dates do you have in mind?`,
+        `Would you prefer a 5★ Luxury Resort, Boutique Hotel, or Budget Stay?`,
+        `How many guests / rooms do you need?`,
+      ],
+      suggestedSearch: {
+        category: 'hotels',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: cityName,
+        toCode: intent.toCode,
+        departureDate: '2026-10-20',
+        travellers: 2,
+        actionLabel: `Find Hotels in ${cityName} on TripYehh`,
+      },
+    };
+  }
+
+  // 3. Bali 5-day trip or Itinerary
+  if (intent.isItinerary || m.includes('bali') || m.includes('itinerary') || m.includes('5-day')) {
+    const dest = intent.toCity === 'Mumbai' && !m.includes('mumbai') ? 'Bali' : intent.toCity;
+    return {
+      reply: `### 🌴 5-Day Signature Itinerary: ${dest}\n\nHere is an expertly balanced day-by-day itinerary tailored for you:\n\n- **Day 1: Arrival & Coastal Sunset**\n  - Touchdown at Ngurah Rai Airport (DPS), private transfer to beachfront Seminyak/Canggu.\n  - Sunset seafood dinner at Jimbaran Bay or beach club lounge.\n- **Day 2: Cultural Heart of Ubud & Rice Terraces**\n  - Tegallalang Emerald Rice Terraces & Jungle Swing.\n  - Sacred Monkey Forest Sanctuary and Ubud Royal Palace.\n- **Day 3: Volcano Sunrise & Waterfall Adventure**\n  - Early morning Mount Batur 4WD Jeep sunrise tour or Kintamani view café.\n  - Tibumana or Tegenungan jungle waterfall dip.\n- **Day 4: Nusa Penida Island Hopping**\n  - Speedboat to Nusa Penida: Kelingking T-Rex cliff, Angel's Billabong, and Broken Beach.\n  - Snorkeling with manta rays in Crystal Bay.\n- **Day 5: Uluwatu Cliff Temple & Farewell**\n  - Uluwatu Temple perched 70m above the Indian Ocean with traditional Kecak fire dance.\n  - Souvenir shopping in Kuta before airport transfer.\n\n*Tip: You can customize this entire plan with our interactive International Planner on TripYehh!*`,
+      followUpQuestions: [
+        `Are you traveling as a couple, with family, or solo?`,
+        `What style of accommodation do you prefer (Private Pool Villa or Beachfront Resort)?`,
+        `Would you like to customize activities and private cabs?`,
+      ],
+      suggestedSearch: {
+        category: 'holidays',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: dest,
+        toCode: dest === 'Bali' ? 'DPS' : intent.toCode,
+        departureDate: '2026-10-25',
+        travellers: 2,
+        actionLabel: `Open 5-Day ${dest} Plan in TripYehh`,
+      },
+    };
+  }
+
+  // 4. Trains e.g. Delhi to Mumbai
+  if (intent.isTrain || m.includes('train')) {
+    return {
+      reply: `### 🚆 Trains: ${intent.fromCity} (${intent.fromCode}) ➔ ${intent.toCity} (${intent.toCode})\n\nHere are top train options between **${intent.fromCity}** and **${intent.toCity}**:\n\n- **Top Trains:**\n  - **Vande Bharat Express (Fastest):** Premium executive class, ergonomic reclining chairs, and gourmet onboard meals.\n  - **Rajdhani Express (Premium Overnight):** 1AC / 2AC / 3AC coaches with full linen and onboard catering.\n  - **Duronto & Tejas Express:** High-speed point-to-point transit with minimal halts.\n- **Tatkal & General Quota:** General reservations open 120 days in advance; Tatkal opens at 10:00 AM (AC) and 11:00 AM (Sleeper) one day prior.\n\n*Note: TripYehh pre-fills your train route with live seat probability and coach options.*`,
+      followUpQuestions: [
+        `What date would you like to travel?`,
+        `Do you prefer Executive Chair Car, 2AC, or 3AC?`,
+        `Would you like to book connecting cabs at the destination station?`,
+      ],
+      suggestedSearch: {
+        category: 'trains',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode === 'DEL' ? 'NDLS' : intent.fromCode,
+        toCity: intent.toCity,
+        toCode: intent.toCode === 'BOM' ? 'CSMT' : intent.toCode,
+        departureDate: '2026-10-22',
+        travellers: 1,
+        actionLabel: `Check Trains on TripYehh`,
+      },
+    };
+  }
+
+  // 5. Visa information
+  if (intent.isVisa || m.includes('visa')) {
+    const dest = intent.toCity || 'Japan';
+    return {
+      reply: `### 🛂 Visa & Entry Essentials for ${dest}\n\nHere are essential visa facts for travellers with Indian passports:\n\n- **Visa Category:** ${dest === 'Dubai' ? '30-Day / 60-Day Tourist eVisa (Processed in 48-72h)' : dest === 'Bali' ? '30-Day Visa on Arrival (VoA) / e-VoA payable online or at airport' : dest === 'Japan' ? 'Short-Stay eVisa via official MOFA portal (5-7 business days)' : 'Check destination specific tourist visa rules'}.\n- **Mandatory Requirements:**\n  - Passport with at least 6 months validity from departure.\n  - Confirmed return flight tickets and verified hotel reservation.\n  - Sufficient funds / recent bank statements.\n- **TripYehh Tip:** Check our dedicated International Visa Checker for step-by-step document checklists!`,
+      followUpQuestions: [
+        `What is your passport nationality (default: India)?`,
+        `How long do you plan to stay in ${dest}?`,
+        `Do you already hold a valid US, UK, or Schengen visa (which offers visa-on-arrival in some regions)?`,
+      ],
+      suggestedSearch: {
+        category: 'international-planner',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: dest,
+        toCode: intent.toCode,
+        departureDate: '2026-10-20',
+        travellers: 1,
+        actionLabel: `Check ${dest} Visa & Plan on TripYehh`,
+      },
+    };
+  }
+
+  // 6. Generic travel assistance fallback
+  return {
+    reply: `### 👋 I'm SMILE, Your TripYehh Travel Assistant!\n\nI can help you explore destinations, compare flight routes, find top-rated hotels, check train schedules, calculate budgets, and build custom day-by-day itineraries.\n\n**Popular ways I can help:**\n- ✈️ **Flights:** Quick routes, baggage allowances, best travel seasons.\n- 🏨 **Stays:** Beachfront villas, central city hotels, homestays.\n- 🚆 **Transit:** Trains, luxury Volvo buses, and intercity airport cabs.\n- 🗺️ **Itineraries:** Day-by-day plans for Bali, Dubai, Tokyo, Switzerland, and India.\n- 🛂 **Visas:** Entry requirements and document checklists.\n\n*Where would you like to travel next?*`,
+    followUpQuestions: [
+      `Flights from Delhi to Tokyo`,
+      `Find hotels in Dubai`,
+      `Plan a 5-day trip to Bali`,
+      `Find trains from Delhi to Mumbai`,
+      `Create my international travel itinerary`,
+    ],
+    suggestedSearch: {
+      category: intent.category || 'flights',
+      fromCity: intent.fromCity,
+      fromCode: intent.fromCode,
+      toCity: intent.toCity,
+      toCode: intent.toCode,
+      departureDate: '2026-10-20',
+      travellers: 1,
+      actionLabel: `Explore ${intent.toCity} on TripYehh`,
+    },
+  };
+}
+
+app.post('/api/smile/chat', async (req: Request, res: Response) => {
+  try {
+    const { message, conversationHistory = [], context = {} } = req.body as SmileAssistantRequest;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const intent = parseTripIntent(message);
+
+    // If Gemini key is available, attempt real AI generation
+    if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
+      const historyContext = conversationHistory
+        .slice(-6)
+        .map((m) => `${m.sender === 'user' ? 'Traveller' : 'SMILE'}: ${m.text}`)
+        .join('\n');
+
+      const systemPrompt = `You are SMILE, TripYehh's warm, enthusiastic, and highly knowledgeable Personal AI Travel Assistant.
+TripYehh is a premium all-in-one travel booking platform offering:
+- Flights (domestic & international, multi-airline)
+- Hotels, Luxury Resorts, and Private Villas / Homestays
+- Trains (IRCTC routes, Vande Bharat, Rajdhani, Tejas)
+- Buses (luxury Volvo, sleeper)
+- Cabs (airport transfers, intercity, hourly rentals)
+- Tour Experiences, Sightseeing & Activities
+- Custom International Itineraries & Visa Checklists
+
+RULES & GUIDANCE:
+1. Tone: Friendly, concise, professional, warm, structured (use markdown with bullet points and clear headers).
+2. Follow-ups: If essential booking details are missing (e.g. dates, number of travellers, cabin or hotel preference, origin city), ask 2-3 focused follow-up questions.
+3. Honesty & Integrity: NEVER claim a booking has been confirmed or a ticket has been purchased without checkout. Clearly state that live availability and pricing can be verified and locked in through TripYehh search.
+4. Search Integration: Identify the category ('flights' | 'hotels' | 'trains' | 'buses' | 'cabs' | 'holidays' | 'experiences' | 'international-planner'), the origin city (e.g. New Delhi / DEL), and the destination city (e.g. Tokyo / HND, Dubai / DXB, Bali / DPS, Mumbai / BOM).
+5. Output Format: You MUST reply with a JSON object matching this schema ONLY:
+{
+  "reply": "string (markdown formatted response with emojis, headers, tips)",
+  "followUpQuestions": ["string", "string"],
+  "suggestedSearch": {
+    "category": "flights" | "hotels" | "trains" | "buses" | "cabs" | "holidays" | "experiences" | "international-planner",
+    "fromCity": "New Delhi",
+    "fromCode": "DEL",
+    "toCity": "Tokyo",
+    "toCode": "HND",
+    "departureDate": "YYYY-MM-DD",
+    "travellers": 1 or 2,
+    "actionLabel": "Search Flights on TripYehh"
+  }
+}`;
+
+      const userPrompt = `Traveller Context:
+- Current TripYehh Page/Category: ${context.activeCategory || 'flights'}
+- Origin/Destination Context: ${context.fromCity || 'New Delhi'} to ${context.toCity || 'Goa'}
+- Selected Departure: ${context.departureDate || 'Upcoming'}
+- Active Currency: ${context.currency || 'INR'}
+
+Recent Chat Session:
+${historyContext || 'No previous messages in this session.'}
+
+New Traveller Message:
+"${message}"
+
+Provide an intelligent, structured JSON response as SMILE:`;
+
+      const aiResponse = await generateWithGemini(`${systemPrompt}\n\n${userPrompt}`, true);
+
+      if (aiResponse && aiResponse.reply) {
+        return res.json({
+          success: true,
+          isLiveAI: true,
+          reply: aiResponse.reply,
+          followUpQuestions: Array.isArray(aiResponse.followUpQuestions) ? aiResponse.followUpQuestions.slice(0, 4) : [],
+          suggestedSearch: aiResponse.suggestedSearch || null,
+        });
+      }
+    }
+
+    // If Gemini key is not configured or rate-limited/failed, provide intelligent TripYehh fallback
+    const offlineResult = buildSmileOfflineFallback(message, intent);
+
+    return res.json({
+      success: true,
+      isLiveAI: false,
+      notice: apiKey && apiKey !== 'MY_GEMINI_API_KEY'
+        ? 'Answered using SMILE Travel Knowledge Engine.'
+        : 'SMILE Concierge Demo Mode. (Add GEMINI_API_KEY in server environment to enable live Gemini AI generation).',
+      reply: offlineResult.reply,
+      followUpQuestions: offlineResult.followUpQuestions,
+      suggestedSearch: offlineResult.suggestedSearch,
+    });
+  } catch (error: any) {
+    console.error('Error in SMILE assistant chat:', error);
+    const intent = parseTripIntent(req.body?.message || '');
+    const fallback = buildSmileOfflineFallback(req.body?.message || '', intent);
+    return res.json({
+      success: true,
+      isLiveAI: false,
+      reply: fallback.reply,
+      followUpQuestions: fallback.followUpQuestions,
+      suggestedSearch: fallback.suggestedSearch,
+    });
+  }
+});
+
 // START EXPRESS & MOUNT VITE MIDDLEWARES
 async function start() {
   if (process.env.NODE_ENV === 'production') {

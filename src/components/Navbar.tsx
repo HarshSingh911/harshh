@@ -72,8 +72,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Front page (home), international planner, explore, and influencers have scenic/dark backgrounds behind the navbar
-  const isDarkHeader = activePage === 'home' || activePage === 'international-planner' || activePage === 'explore' || activePage === 'influencers';
+  // Front page (home), international planner, explore, influencers, trips, and account profile have scenic backgrounds behind the navbar
+  const isDarkHeader = activePage === 'home' || activePage === 'international-planner' || activePage === 'explore' || activePage === 'influencers' || activePage === 'trips' || activePage === 'account';
 
   // Categories show in top navigation after searching (search-results page or checkout)
   const isSearchResultsPage = activePage === 'search-results';

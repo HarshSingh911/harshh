@@ -444,7 +444,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       {/* =========================================================================
           1. TOP HERO SECTION WITH SUBTLE DESTINATION SLIDESHOW (Smooth Fade + Dark Overlay)
       ========================================================================= */}
-      <section className="relative overflow-hidden bg-slate-950 text-white min-h-[340px] sm:min-h-[380px] flex flex-col justify-between">
+      <section className="relative overflow-hidden bg-slate-950 text-white min-h-[380px] sm:min-h-[440px] flex flex-col justify-between">
         {/* =========================================================================
             DYNAMIC MOOD-BASED BACKGROUND LAYERS
             1. Upcoming: excited traveler embarking on trip in sunlit terminal
@@ -453,93 +453,71 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
             4. TripPoints: golden yellow glowing rewards, gold coins and VIP card
         ========================================================================= */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          {/* Upcoming Mood Image (Sunlit airport terminal, bright, crisp & radiant) */}
+          {/* Upcoming Mood Image: Crystal clear, vibrant & deep colors (no white washout) */}
           <div
             className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-              heroTheme === 'upcoming' ? 'opacity-100 scale-105' : 'opacity-0 scale-100 pointer-events-none'
+              heroTheme === 'upcoming' ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
             }`}
           >
             <img
               src={bgUpcoming}
               alt="Going on a Trip"
-              className="w-full h-full object-cover object-center brightness-125 contrast-105 saturate-115"
+              className="w-full h-full object-cover object-center contrast-105 saturate-115"
               referrerPolicy="no-referrer"
             />
           </div>
 
-          {/* Cancelled Mood Image (Clear and luminous rainy airport scene) */}
+          {/* Cancelled Mood Image: Crisp, clear & moody rainy airport scene */}
           <div
             className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-              heroTheme === 'cancelled' ? 'opacity-100 scale-105' : 'opacity-0 scale-100 pointer-events-none'
+              heroTheme === 'cancelled' ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
             }`}
           >
             <img
               src={bgCancelled}
               alt="Cancelled Trip Sad Mood"
-              className="w-full h-full object-cover object-center brightness-120 contrast-105 saturate-110"
+              className="w-full h-full object-cover object-center contrast-105 saturate-110"
               referrerPolicy="no-referrer"
             />
           </div>
 
-          {/* Completed Mood Image (Bright tropical turquoise ocean & sunny cliff celebration) */}
+          {/* Completed Mood Image: Deep turquoise ocean & sunny tropical cliffs */}
           <div
             className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-              heroTheme === 'completed' ? 'opacity-100 scale-105' : 'opacity-0 scale-100 pointer-events-none'
+              heroTheme === 'completed' ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
             }`}
           >
             <img
               src={bgCompleted}
               alt="Completed Happy Memories"
-              className="w-full h-full object-cover object-center brightness-125 contrast-105 saturate-120"
+              className="w-full h-full object-cover object-center contrast-105 saturate-120"
               referrerPolicy="no-referrer"
             />
           </div>
 
-          {/* TripPoints Mood Image (Bright golden yellow glowing VIP coins & passport) */}
+          {/* TripPoints Mood Image: Rich golden yellow VIP rewards & cards */}
           <div
             className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-              heroTheme === 'trippoints' ? 'opacity-100 scale-105' : 'opacity-0 scale-100 pointer-events-none'
+              heroTheme === 'trippoints' ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
             }`}
           >
             <img
               src={bgTripPoints}
               alt="TripPoints Golden Rewards"
-              className="w-full h-full object-cover object-center brightness-125 contrast-110 saturate-125"
+              className="w-full h-full object-cover object-center contrast-110 saturate-125"
               referrerPolicy="no-referrer"
             />
           </div>
 
-          {/* Very light gradient overlay: Keep photo bright & luminous while ensuring text is readable */}
-          <div
-            className={`absolute inset-0 transition-colors duration-700 ${
-              heroTheme === 'upcoming'
-                ? 'bg-gradient-to-r from-slate-950/40 via-slate-900/20 to-transparent'
-                : heroTheme === 'cancelled'
-                ? 'bg-gradient-to-r from-slate-950/45 via-slate-900/25 to-transparent'
-                : heroTheme === 'completed'
-                ? 'bg-gradient-to-r from-slate-950/35 via-slate-900/15 to-transparent'
-                : 'bg-gradient-to-r from-slate-950/40 via-amber-950/20 to-transparent'
-            }`}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/5 to-transparent" />
+          {/* Top subtle dark vignette for navbar/logo readability */}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-950/70 to-transparent pointer-events-none" />
 
-          {/* Vibrant Ambient Glow */}
-          <div
-            className={`absolute -top-20 -right-20 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
-              heroTheme === 'upcoming'
-                ? 'bg-cyan-400/25'
-                : heroTheme === 'cancelled'
-                ? 'bg-rose-400/20'
-                : heroTheme === 'completed'
-                ? 'bg-emerald-400/25'
-                : 'bg-amber-300/40'
-            }`}
-          />
-          <div className="absolute top-1/2 left-10 w-72 h-72 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+          {/* Soft Bottom Feather / Dissolve to Page Background: Smoothly fades into the light background without any harsh straight cut line */}
+          <div className="absolute inset-x-0 bottom-0 h-36 sm:h-48 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/70 to-transparent pointer-events-none" />
         </div>
 
         {/* Slideshow Foreground Content */}
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-7 sm:pt-9 pb-10 space-y-6">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-10 space-y-6">
           {/* Top Breadcrumb & User Tag */}
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
             <nav className="flex items-center gap-1.5 text-slate-300 font-medium">

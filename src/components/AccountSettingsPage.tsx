@@ -166,7 +166,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
       // fallback
     }
     return {
-      fullName: userName || 'Rahul Sharma',
+      fullName: userName || 'Aryan Kapoor',
       gender: 'Male',
       dob: '1992-08-14',
       nationality: 'Indian',
@@ -175,7 +175,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
       city: 'Gurugram',
       state: 'Haryana',
       mobile: '+91 98765 43210',
-      email: 'rahul.sharma@example.com',
+      email: userName ? `${userName.toLowerCase().replace(/\s+/g, '.')}@example.com` : 'aryan.kapoor@gmail.com',
       passportNumber: 'Z4829105',
       passportExpiry: '2032-10-15',
       passportIssuingCountry: 'Republic of India',
@@ -434,9 +434,9 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
   return (
     <div className="bg-[#F8FAFC] min-h-screen pb-16">
       {/* ===================================================================
-          1. TOP COMPACT WALLPAPER BANNER (Not too tall, ~180px)
+          1. TOP WALLPAPER BANNER (Extends all the way up behind header)
       =================================================================== */}
-      <div className="relative w-full h-44 sm:h-52 lg:h-56 bg-slate-900 overflow-hidden">
+      <div className="relative w-full h-64 sm:h-72 lg:h-80 bg-slate-950 overflow-hidden">
         {/* Banner Image */}
         <img
           src={profile.bannerUrl}
@@ -444,18 +444,21 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/assets/images/hero_alpine_lakeside_1790774682097.jpg';
           }}
-          className="w-full h-full object-cover object-center brightness-90 contrast-105"
+          className="w-full h-full object-cover object-center brightness-95 contrast-105"
         />
 
-        {/* Gradient Scrim for subtle atmosphere and text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+        {/* Top Vignette Scrim for Navbar / Brand Logo Clarity */}
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-950/75 via-slate-950/25 to-transparent pointer-events-none" />
 
-        {/* Change Wallpaper Button */}
-        <div className="absolute top-4 right-4 sm:right-6 lg:right-8 z-10">
+        {/* Soft Bottom Feather / Dissolve to Page Background */}
+        <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/60 to-transparent pointer-events-none" />
+
+        {/* Change Wallpaper Button — positioned below the 64px header */}
+        <div className="absolute top-20 sm:top-20 right-4 sm:right-6 lg:right-8 z-10">
           <button
             type="button"
             onClick={() => setShowWallpaperPicker(!showWallpaperPicker)}
-            className="px-3.5 py-2 rounded-xl bg-slate-900/70 hover:bg-slate-900/90 text-white backdrop-blur-md border border-white/20 text-xs font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer hover:scale-102"
+            className="px-3.5 py-2 rounded-xl bg-slate-900/75 hover:bg-slate-900/95 text-white backdrop-blur-md border border-white/25 text-xs font-bold flex items-center gap-1.5 shadow-xl transition-all cursor-pointer hover:scale-102"
           >
             <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
             <span>Change Wallpaper</span>
@@ -531,7 +534,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
       {/* ===================================================================
           2. USER DETAILS HEADER WITH PROFILE PICTURE (Overlapping Banner)
       =================================================================== */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-14 sm:-mt-16 relative z-10 mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-24 relative z-10 mb-8">
         <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-md shadow-slate-200/60">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             {/* Avatar & Basic Info */}
