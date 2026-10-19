@@ -252,80 +252,23 @@ export const TripYeahLogo: React.FC<TripYeahLogoProps> = ({
 
           {/* =========================================================
               PART 3: "ehh" in Electric Sky Blue (#00A3FF)
+              Clean, professional typography matching Plus Jakarta Sans Bold
+              aligned to exact baseline (y=118.5) and cap-height (y=43)
              ========================================================= */}
-
-          {/* Letter 'e' (Tucked comfortably beside Y stem under right swoosh) */}
-          <path
-            d="M 285 94
-               C 285 80 294 67.5 308 67.5
-               C 322 67.5 331 78 331 94
-               C 331 95.5 330.5 96.5 329 96.5
-               H 300
-               C 300.5 104.5 306 109.5 314 109.5
-               C 319.5 109.5 324 107.5 327 103.5
-               C 328 102 329.5 102 331 103
-               L 334.5 106.5
-               C 336 108 335.5 109.8 334 111.5
-               C 329 117.5 322.5 121.5 313 121.5
-               C 296 121.5 285 110.5 285 94
-               Z
-               M 314 79.5
-               C 306.5 79.5 301.5 84 300.5 88.5
-               H 329
-               C 329 84 324 79.5 314 79.5
-               Z"
+          <text
+            x="280"
+            y="118.5"
             fill={skyBlueColor}
-          />
-
-          {/* Letter 'h' (First h) */}
-          <path
-            d="M 346 43
-               C 346 41.5 347 40.5 348.5 40.5
-               H 359.5
-               C 361 40.5 362 41.5 362 43
-               V 76.5
-               C 366.5 70.5 373 67.5 382 67.5
-               C 396 67.5 403 76.5 403 92
-               V 118
-               C 403 119.5 402 120.5 400.5 120.5
-               H 389.5
-               C 388 120.5 387 119.5 387 118
-               V 94
-               C 387 85 382.5 81 375 81
-               C 367.5 81 362 86.5 362 96
-               V 118
-               C 362 119.5 361 120.5 359.5 120.5
-               H 348.5
-               C 347 120.5 346 119.5 346 118
-               V 43
-               Z"
-            fill={skyBlueColor}
-          />
-
-          {/* Letter 'h' (Second h) */}
-          <path
-            d="M 414 43
-               C 414 41.5 415 40.5 416.5 40.5
-               H 427.5
-               C 429 40.5 430 41.5 430 43
-               V 76.5
-               C 434.5 70.5 441 67.5 450 67.5
-               C 464 67.5 471 76.5 471 92
-               V 118
-               C 471 119.5 470 120.5 468.5 120.5
-               H 457.5
-               C 456 120.5 455 119.5 455 118
-               V 94
-               C 455 85 450.5 81 443 81
-               C 435.5 81 430 86.5 430 96
-               V 118
-               C 430 119.5 429 120.5 427.5 120.5
-               H 416.5
-               C 415 120.5 414 119.5 414 118
-               V 43
-               Z"
-            fill={skyBlueColor}
-          />
+            className="select-none font-bold"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: '76px',
+              fontWeight: 700,
+              letterSpacing: '-1px',
+            }}
+          >
+            ehh
+          </text>
         </g>
       </svg>
 

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ArrowLeft,
-  Sparkles,
   Compass,
   ShieldCheck,
   Zap,
@@ -53,48 +52,30 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
               <span className="font-semibold text-slate-900">About Trip Yehh</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Fast-Growing Travel Tech
-            </span>
-          </div>
         </div>
       </div>
 
       {/* 1. HERO SECTION WITH RICH CINEMATIC TRAVEL BACKGROUND IMAGE */}
       <section className="relative overflow-hidden text-white py-24 lg:py-32">
-        {/* Cinematic Travel Background Image */}
+        {/* Cinematic Travel Background Image - Clear, vivid, and free of bluish veil */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=85"
+            src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=90"
             alt="Trip Yehh Global Travel"
-            className="w-full h-full object-cover object-center scale-105 transform animate-pulse-slow filter brightness-90"
+            className="w-full h-full object-cover object-center brightness-100 contrast-[1.05]"
           />
-          {/* Deep Sapphire & Midnight Gradient Overlays for High Legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/80 to-slate-950/95" />
-          <div className="absolute inset-0 bg-radial-[circle_at_top] from-blue-600/30 via-transparent to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-[radial-gradient(#60a5fa_1px,transparent_1px)] [background-size:28px_28px] opacity-20 pointer-events-none" />
+          {/* Clean Neutral Scrim: Gives high contrast for text while keeping background image completely clear and visible */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/60" />
         </div>
 
-        {/* Ambient Glow Lights */}
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-500/25 rounded-full blur-3xl pointer-events-none z-0" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-indigo-500/25 rounded-full blur-3xl pointer-events-none z-0" />
-
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          {/* Tagline Badge */}
-          <div className="inline-flex items-center gap-2 bg-blue-500/20 backdrop-blur-md border border-blue-400/40 rounded-full px-4 py-1.5 text-xs font-semibold text-blue-200 tracking-wide uppercase shadow-lg shadow-blue-900/30">
-            <Sparkles className="w-3.5 h-3.5 text-blue-300" />
-            <span>Next-Gen Asset-Light Travel Marketplace</span>
-          </div>
-
           {/* Catchy, High-Energy Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight lg:leading-none drop-shadow-md">
-            Say <span className="bg-gradient-to-r from-blue-300 via-sky-200 to-indigo-300 bg-clip-text text-transparent">Trip Yehh</span> to Effortless Journeys.
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight lg:leading-none drop-shadow-xl">
+            Say <span className="text-amber-400 underline decoration-amber-400/40 decoration-wavy">Trip Yehh</span> to Effortless Journeys.
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg sm:text-xl text-slate-200 max-w-3xl mx-auto leading-relaxed font-normal drop-shadow-sm">
+          <p className="text-lg sm:text-xl text-white/95 max-w-3xl mx-auto leading-relaxed font-normal drop-shadow-md">
             Where cutting-edge travel technology meets zero booking friction. We synchronize flights, premium stays, ground transit, and curated experiences into a single, high-velocity digital ecosystem built for the modern traveler.
           </p>
 
@@ -103,33 +84,17 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
             <button
               type="button"
               onClick={() => onNavigatePage('search-results')}
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm shadow-xl shadow-black/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
             >
               <span>Explore Marketplace</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 text-slate-900" />
             </button>
             <a
               href="#founder-vision"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15 text-sm font-medium backdrop-blur-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-black/40 hover:bg-black/60 text-white border border-white/30 text-sm font-medium backdrop-blur-md transition-colors cursor-pointer"
             >
               <span>Meet the Founder</span>
             </a>
-          </div>
-
-          {/* Quick Credibility Micro-Pills */}
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Real-Time Inventory APIs</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Zero Dark Patterns or Hidden Markups</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Encrypted 256-Bit Financial Rail</span>
-            </div>
           </div>
         </div>
       </section>
@@ -342,12 +307,9 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
 
       {/* 4. LEADERSHIP & FOUNDER'S VISION */}
       <section id="founder-vision" className="py-20 lg:py-28 bg-gradient-to-b from-slate-50 via-slate-100/70 to-slate-50 border-b border-slate-200/80 scroll-mt-20 relative overflow-hidden">
-        {/* Subtle Ambient Section Highlights */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-bold text-blue-600 uppercase tracking-widest block mb-2">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest block mb-2">
               Leadership &amp; Direction
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -358,20 +320,17 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
             </p>
           </div>
 
-          {/* Split-Screen Executive Profile Card with Premium Cityscape Background & Ambient Glow */}
-          <div className="relative text-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-blue-500/20 overflow-hidden group">
-            {/* Background Image: Modern Architectural Twilight City Skyline */}
+          {/* Split-Screen Executive Profile Card with Clear Architecture Background */}
+          <div className="relative text-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-slate-700/60 overflow-hidden group">
+            {/* Background Image: Modern Architectural Twilight City Skyline - Crystal Clear */}
             <div className="absolute inset-0 z-0">
               <img
-                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80"
+                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=85"
                 alt="Trip Yehh Leadership Architecture"
-                className="w-full h-full object-cover object-center scale-105 filter brightness-50"
+                className="w-full h-full object-cover object-center brightness-95 contrast-[1.05]"
               />
-              {/* Rich Midnight Slate & Sapphire Gradients Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-blue-950/92 backdrop-blur-[1px]" />
-              <div className="absolute inset-0 bg-radial-[circle_at_bottom_left] from-blue-600/25 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+              {/* Clean Neutral Contrast Vignette - No Bluish Tint */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/75" />
             </div>
 
             {/* Background Aesthetic Watermark */}
@@ -383,15 +342,14 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
               {/* Left Column: Founder Persona & Identity Badge */}
               <div className="lg:col-span-4 text-center lg:text-left flex flex-col items-center lg:items-start space-y-4">
                 <div className="relative">
-                  <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-tr from-blue-500 via-sky-400 to-indigo-500 p-1 shadow-2xl shadow-blue-500/25">
+                  <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-tr from-amber-400 via-orange-400 to-amber-200 p-1 shadow-2xl shadow-black/40">
                     <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center overflow-hidden border border-white/10">
-                      {/* Stylized Founder Avatar Representation with Ambient Glow */}
-                      <div className="w-full h-full bg-gradient-to-b from-blue-900/80 via-slate-900 to-slate-950 flex flex-col items-center justify-center text-center p-3 relative">
-                        <div className="absolute inset-0 bg-radial-[circle_at_center] from-blue-500/20 to-transparent pointer-events-none" />
-                        <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-sky-200 to-white drop-shadow-sm">
+                      {/* Stylized Founder Avatar Representation */}
+                      <div className="w-full h-full bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 flex flex-col items-center justify-center text-center p-3 relative">
+                        <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-white to-amber-200 drop-shadow-sm">
                           HKS
                         </span>
-                        <span className="text-[10px] text-sky-300 font-semibold mt-1 tracking-wide uppercase">
+                        <span className="text-[10px] text-amber-300 font-semibold mt-1 tracking-wide uppercase">
                           Founder &amp; CEO
                         </span>
                       </div>
@@ -407,7 +365,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
                   <h3 className="text-2xl font-bold text-white tracking-tight drop-shadow-sm">
                     Harsh Kumar Singh
                   </h3>
-                  <p className="text-sm font-semibold text-sky-400 mt-0.5">
+                  <p className="text-sm font-semibold text-amber-400 mt-0.5">
                     Founder &amp; Chief Executive Officer
                   </p>
                   <p className="text-xs text-slate-300 mt-1">
@@ -416,10 +374,10 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-2">
-                  <span className="text-xs font-medium text-slate-200 bg-white/10 px-3 py-1 rounded-lg border border-white/15 backdrop-blur-xs">
+                  <span className="text-xs font-medium text-slate-200 bg-black/40 px-3 py-1 rounded-lg border border-white/15 backdrop-blur-xs">
                     🇮🇳 Tech Entrepreneur
                   </span>
-                  <span className="text-xs font-medium text-slate-200 bg-white/10 px-3 py-1 rounded-lg border border-white/15 backdrop-blur-xs">
+                  <span className="text-xs font-medium text-slate-200 bg-black/40 px-3 py-1 rounded-lg border border-white/15 backdrop-blur-xs">
                     Marketplace Architecture
                   </span>
                 </div>
@@ -427,14 +385,14 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
 
               {/* Right Column: Bio & Direct Inspiring Quote */}
               <div className="lg:col-span-8 space-y-6">
-                {/* Quote Box with Glassmorphism */}
-                <div className="relative p-6 sm:p-7 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md shadow-inner">
-                  <Quote className="w-8 h-8 text-sky-400/70 mb-3" />
-                  <blockquote className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed italic">
+                {/* Quote Box with Neutral Glassmorphism */}
+                <div className="relative p-6 sm:p-7 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md shadow-inner">
+                  <Quote className="w-8 h-8 text-amber-400/80 mb-3" />
+                  <blockquote className="text-base sm:text-lg font-medium text-white leading-relaxed italic">
                     &ldquo;Travel shouldn&apos;t feel like an administrative chore—it should ignite excitement the instant you decide to go. At Trip Yehh, we are dismantling legacy booking friction and building an intelligent ecosystem where planes, trains, hotels, and cabs communicate in real time for you.&rdquo;
                   </blockquote>
                   <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-xs text-slate-300">
-                    <span className="font-semibold text-sky-300">— Harsh Kumar Singh</span>
+                    <span className="font-semibold text-amber-300">— Harsh Kumar Singh</span>
                     <span className="text-slate-400 font-medium">Founder&apos;s Commitment</span>
                   </div>
                 </div>
@@ -553,20 +511,31 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
         </div>
       </section>
 
-      {/* FINAL CONVERSION CALL TO ACTION */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white text-center">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+      {/* FINAL CONVERSION CALL TO ACTION WITH VIVID DESTINATION BACKGROUND */}
+      <section className="relative py-20 overflow-hidden text-white text-center">
+        {/* Scenic Background Image - Clear and Visible */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85"
+            alt="Trip Yehh World Destinations"
+            className="w-full h-full object-cover object-center brightness-100"
+          />
+          {/* Neutral scrim without blue tint */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/70" />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight drop-shadow-md">
             Ready to Experience the Trip Yehh Difference?
           </h2>
-          <p className="text-blue-100 text-base max-w-2xl mx-auto">
+          <p className="text-white/90 text-base max-w-2xl mx-auto drop-shadow-sm">
             Book your next flight, hotel, or complete holiday package in minutes without the clutter.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <button
               type="button"
               onClick={() => onNavigatePage('home')}
-              className="px-8 py-3.5 rounded-xl bg-white text-blue-700 font-bold text-sm shadow-xl hover:bg-blue-50 transition-transform transform hover:-translate-y-0.5 cursor-pointer"
+              className="px-8 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm shadow-xl hover:shadow-black/30 transition-transform transform hover:-translate-y-0.5 cursor-pointer"
             >
               Start Searching Trips
             </button>
@@ -574,7 +543,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
               <button
                 type="button"
                 onClick={onOpenSupport}
-                className="px-7 py-3.5 rounded-xl bg-blue-700/80 hover:bg-blue-700 text-white font-medium text-sm border border-blue-400/40 transition-colors cursor-pointer"
+                className="px-7 py-3.5 rounded-xl bg-black/40 hover:bg-black/60 text-white font-medium text-sm border border-white/30 backdrop-blur-md transition-colors cursor-pointer"
               >
                 Contact Support Desk
               </button>

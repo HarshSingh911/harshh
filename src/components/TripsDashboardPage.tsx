@@ -510,10 +510,10 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
           </div>
 
           {/* Top subtle dark vignette for navbar/logo readability */}
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-950/70 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950/60 to-transparent pointer-events-none" />
 
-          {/* Soft Bottom Feather / Dissolve to Page Background: Smoothly fades into the light background without any harsh straight cut line */}
-          <div className="absolute inset-x-0 bottom-0 h-36 sm:h-48 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/70 to-transparent pointer-events-none" />
+          {/* Subtle minimal bottom feather — reduced so the background images remain crisp and clear without heavy white fog */}
+          <div className="absolute inset-x-0 bottom-0 h-12 sm:h-16 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/30 to-transparent pointer-events-none" />
         </div>
 
         {/* Slideshow Foreground Content */}

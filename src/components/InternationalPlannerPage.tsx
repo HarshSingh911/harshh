@@ -887,98 +887,28 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
             </div>
           ))}
 
-          {/* Top & atmospheric contrast scrim */}
+          {/* Top contrast scrim for navbar and header readability */}
           <div
-            className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-slate-950/15 to-transparent pointer-events-none"
+            className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-transparent pointer-events-none"
             aria-hidden="true"
           />
 
-          {/* Soft shadow depth layer before the white fade */}
+          {/* Subtle minimal bottom fade — reduced so the slideshow photos remain vivid and clear without heavy white fog */}
           <div
-            className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent pointer-events-none"
-            aria-hidden="true"
-          />
-
-          {/* Smooth white bottom fade into page body — dissolves like soft fog/shadow into #F8FAFC with NO drawn line, just like front page */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-44 sm:h-64 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/90 via-35% to-transparent pointer-events-none"
+            className="absolute inset-x-0 bottom-0 h-16 sm:h-24 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/30 to-transparent pointer-events-none"
             aria-hidden="true"
           />
         </div>
 
         {/* Hero Content Container */}
         <div className="max-w-7xl mx-auto w-full relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/40 border border-white/30 text-white text-xs font-semibold mb-3 backdrop-blur-md shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-sky-200" />
-                <span>AI-Powered Global Itinerary & Visa Concierge</span>
-              </div>
-              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
-                International{' '}
-                <span className="bg-gradient-to-r from-sky-200 via-blue-100 to-white bg-clip-text text-transparent">
-                  Trip Planner
-                </span>
-              </h1>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                onClick={handleSavePlan}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/70 hover:bg-slate-900/90 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-lg hover:border-white/50"
-              >
-                <Bookmark className="w-4 h-4 text-sky-300" />
-                <span>Save Current Plan</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleShareSummary}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/70 hover:bg-slate-900/90 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-lg hover:border-white/50"
-              >
-                <Share2 className="w-4 h-4 text-sky-300" />
-                <span>Share / Copy</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-blue-600 text-white text-xs sm:text-sm font-semibold shadow-xl transition-all cursor-pointer"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print / PDF</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Destination Pill selector — Seamless without any dividing line */}
-          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            <span className="text-xs font-semibold text-white/90 shrink-0 uppercase tracking-wider drop-shadow-xs">
-              Popular:
-            </span>
-            {POPULAR_DESTINATIONS.map((p) => {
-              const isSelected = destination.toLowerCase() === p.name.toLowerCase();
-              return (
-                <button
-                  key={p.name}
-                  type="button"
-                  onClick={() => {
-                    setDestination(p.name);
-                    fetchVisaDetails(p.name, passportCountry);
-                  }}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-blue-600 text-white shadow-lg ring-2 ring-white/50'
-                      : 'bg-black/35 hover:bg-black/55 text-white border border-white/25 backdrop-blur-md'
-                  }`}
-                >
-                  <span>{p.name}</span>
-                  <span className="text-[10px] opacity-80 font-mono">({p.code})</span>
-                </button>
-              );
-            })}
+          <div className="max-w-3xl">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
+              International{' '}
+              <span className="bg-gradient-to-r from-sky-200 via-blue-100 to-white bg-clip-text text-transparent">
+                Trip Planner
+              </span>
+            </h1>
           </div>
         </div>
       </section>
