@@ -1532,7 +1532,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
           3. POST-PAYMENT CELEBRATION MODAL
       ===================================================================== */}
       {confirmedBookingData && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-5 text-center my-8 animate-in fade-in zoom-in-95 duration-200">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-10 h-10 animate-bounce" />

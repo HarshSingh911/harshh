@@ -1464,7 +1464,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
           MODAL 1: CHANGE BOARDING STATION SELECTOR
       =============================================================== */}
       {showBoardingModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -1531,7 +1531,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
           MODAL 2: FORGOT IRCTC ID / CREATE ACCOUNT HELP
       =============================================================== */}
       {showIrctcHelpModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
@@ -1587,7 +1587,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
           MODAL 3: BOOKING CONFIRMATION & PNR DETAILS
       =============================================================== */}
       {confirmedBooking && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 space-y-5">
             <div className="text-center space-y-2">
               <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">

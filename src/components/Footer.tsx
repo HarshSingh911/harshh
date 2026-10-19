@@ -222,7 +222,7 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigatePage('trips')}
+                  onClick={() => onNavigatePage('support')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   Support Center
@@ -231,7 +231,7 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigatePage('account')}
+                  onClick={() => onNavigatePage('privacy-policy')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   Privacy Policy
@@ -286,7 +286,7 @@ export const Footer: React.FC<FooterProps> = ({
           <div className="flex items-center gap-5">
             <button
               type="button"
-              onClick={() => onNavigatePage('account')}
+              onClick={() => onNavigatePage('privacy-policy')}
               className="hover:text-slate-700 cursor-pointer"
             >
               Privacy

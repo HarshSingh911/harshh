@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Luggage, Sparkles, Globe, User, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Building2, Luggage, Sparkles, Globe, User, ChevronDown, ShieldCheck, HelpCircle } from 'lucide-react';
 import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelData';
 import { TripYeahLogo } from './TripYeahLogo';
 
@@ -13,7 +13,9 @@ export type AppPageView =
   | 'admin'
   | 'international-planner'
   | 'explore'
-  | 'influencers';
+  | 'influencers'
+  | 'privacy-policy'
+  | 'support';
 
 interface NavbarProps {
   activePage: AppPageView;
@@ -72,8 +74,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Front page (home), international planner, explore, influencers, trips, and account profile have scenic backgrounds behind the navbar
-  const isDarkHeader = activePage === 'home' || activePage === 'international-planner' || activePage === 'explore' || activePage === 'influencers' || activePage === 'trips' || activePage === 'account';
+  // Front page (home), international planner, explore, influencers, trips, account, and support have scenic backgrounds behind the navbar
+  const isDarkHeader =
+    activePage === 'home' ||
+    activePage === 'international-planner' ||
+    activePage === 'explore' ||
+    activePage === 'influencers' ||
+    activePage === 'trips' ||
+    activePage === 'account' ||
+    activePage === 'support';
 
   // Categories show in top navigation after searching (search-results page or checkout)
   const isSearchResultsPage = activePage === 'search-results';
@@ -151,6 +160,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
             <span>Travel Insurance</span>
+          </button>
+
+          {/* Customer Support Option */}
+          <button
+            type="button"
+            onClick={() => onNavigatePage('support')}
+            title="Customer Support & 24x7 Assistance"
+            className={`hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+              activePage === 'support'
+                ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
+                : isDarkHeader
+                ? 'text-white/85 hover:text-white'
+                : 'text-slate-700 hover:text-blue-600'
+            }`}
+          >
+            <HelpCircle className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
+            <span>Support</span>
           </button>
         </div>
 

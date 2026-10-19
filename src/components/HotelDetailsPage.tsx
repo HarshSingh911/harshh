@@ -1517,7 +1517,7 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
 
       {/* 6. PHOTO GALLERY LIGHTBOX MODAL */}
       {isPhotoModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 sm:p-6 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 sm:p-6 animate-fadeIn">
           {/* Modal Header */}
           <div className="flex items-center justify-between text-white pb-3 border-b border-white/10">
             <div>

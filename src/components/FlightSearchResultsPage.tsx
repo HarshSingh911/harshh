@@ -2415,7 +2415,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               title="Click to modify search details"
             >
               {/* Category & Route Chip */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-blue-50 font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-800 transition-colors border border-transparent group-hover:border-blue-200">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-blue-50 text-slate-900 group-hover:text-blue-800 font-bold text-xs sm:text-sm transition-colors border border-transparent group-hover:border-blue-200">
                 {currentCategory === 'flights' && <Plane className="w-4 h-4 text-blue-600" />}
                 {currentCategory === 'trains' && <TrainFront className="w-4 h-4 text-emerald-600" />}
                 {currentCategory === 'hotels' && <Building2 className="w-4 h-4 text-amber-600" />}
@@ -2435,8 +2435,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </>
                 ) : (
                   <>
-                    <span>{currentFromCity.city}</span>
-                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                    <span className="text-slate-900 font-semibold">{currentFromCity.city}</span>
+                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
                       {currentCategory === 'trains' ? currentFromCity.stationCode : currentFromCity.code}
                     </span>
 
@@ -2444,8 +2444,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       {currentCategory === 'flights' && isFlightRoundTrip ? '⇄' : '→'}
                     </span>
 
-                    <span>{currentToCity.city}</span>
-                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                    <span className="text-slate-900 font-semibold">{currentToCity.city}</span>
+                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
                       {currentCategory === 'trains' ? currentToCity.stationCode : currentToCity.code}
                     </span>
 
@@ -2488,7 +2488,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </span>
                 ) : (
                   <>
-                    <span className="font-bold text-slate-900">{formatFriendlyDate(currentDepDate)}</span>
+                    <span className="font-bold text-slate-900">
+                      {formatFriendlyDate(currentDepDate)}
+                    </span>
                     {currentCategory === 'flights' && isFlightRoundTrip && (
                       <>
                         <span className="text-slate-300">→</span>
@@ -2497,7 +2499,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </>
                 )}
-                <span className="text-[10px] bg-blue-100 text-blue-700 font-mono font-bold px-1.5 py-0.2 rounded ml-0.5">
+                <span className="text-[10px] font-mono font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded ml-0.5">
                   Calendar
                 </span>
               </button>
@@ -2518,7 +2520,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               <button
                 type="button"
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="lg:hidden px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 flex items-center gap-1.5 cursor-pointer"
+                className="lg:hidden px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center gap-1.5 cursor-pointer"
               >
                 <Filter className="w-3.5 h-3.5 text-blue-600" />
                 <span>Filters</span>
@@ -5097,7 +5099,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       <BadgePercent className="w-5 h-5 text-amber-300" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm sm:text-base">TripYeah Student &amp; Defense Special</h3>
+                      <h3 className="font-bold text-sm sm:text-base">TripYeah Special Flight Deals</h3>
                       <p className="text-xs text-blue-100">Use code TRIPYEAH40 for up to 40% instant off on domestic flights</p>
                     </div>
                   </div>
@@ -5614,32 +5616,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'trains' && (
               <div className="space-y-4">
-                {/* Official IRCTC Partner Header Banner */}
-                <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                      <TrainFront className="w-5 h-5 text-emerald-300" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-sm sm:text-base">IRCTC Authorized Partner Booking</h3>
-                        <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                          LIVE SEAT AVAILABILITY
-                        </span>
-                      </div>
-                      <p className="text-xs text-emerald-100">
-                        Zero payment gateway charges on UPI · Free cancellation with 100% refund on RAC/WL
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-emerald-200">Current Booking Quota</div>
-                    <div className="text-xs font-extrabold text-amber-300 bg-emerald-900/60 px-2.5 py-1 rounded-lg border border-emerald-700/50">
-                      {trainSelectedQuota}
-                    </div>
-                  </div>
-                </div>
-
                 {/* Active Train Filters & Result Count Strip */}
                 <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">

@@ -2613,7 +2613,7 @@ export const InfluencersPage: React.FC<InfluencersPageProps> = ({
       {/* MODAL 1: CREATE & UPLOAD TRAVEL CONTENT MODAL */}
       {/* ========================================================================= */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 my-8 animate-in fade-in zoom-in-95">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
@@ -2809,7 +2809,7 @@ export const InfluencersPage: React.FC<InfluencersPageProps> = ({
       {/* MODAL 2: COMMENTS DRAWER / MODAL */}
       {/* ========================================================================= */}
       {activeCommentsPost && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
@@ -2890,7 +2890,7 @@ export const InfluencersPage: React.FC<InfluencersPageProps> = ({
       {/* MODAL 3: TRIPPER CREATOR PROFILE INSPECT MODAL */}
       {/* ========================================================================= */}
       {selectedTripper && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 text-slate-900 overflow-hidden my-6 animate-in fade-in zoom-in-95">
             {/* Cover Banner */}
             <div className="relative h-36 w-full bg-slate-900">
@@ -3006,7 +3006,7 @@ export const InfluencersPage: React.FC<InfluencersPageProps> = ({
       {/* MODAL 4: EXPLORE DESTINATION PREVIEW MODAL */}
       {/* ========================================================================= */}
       {previewDestination && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95">
             <div className="relative h-44 rounded-2xl overflow-hidden mb-4">
               <SafeImage src={previewDestination.image} alt={previewDestination.name} className="w-full h-full object-cover" />
@@ -3070,7 +3070,7 @@ export const InfluencersPage: React.FC<InfluencersPageProps> = ({
       {/* MODAL 5: BRAND & RESORT COLLABORATION INQUIRY MODAL */}
       {/* ========================================================================= */}
       {collabTargetTripper && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">

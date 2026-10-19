@@ -1445,7 +1445,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
           MODAL: INTERACTIVE 3-3 AIRCRAFT SEAT MAP
       =============================================================== */}
       {showSeatMapModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -1556,7 +1556,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
           MODAL: CONFIRMATION SUCCESS WITH PNR & TICKETS
       =============================================================== */}
       {confirmedBooking && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 space-y-5">
             <div className="text-center space-y-2">
               <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto shadow-md">

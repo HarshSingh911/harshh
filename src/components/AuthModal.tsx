@@ -20,8 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Percent,
-  Gift,
-  Compass,
 } from 'lucide-react';
 import { TripYeahLogo } from './TripYeahLogo';
 
@@ -37,6 +35,7 @@ export interface AuthModalProps {
   onClose: () => void;
   onLoginSuccess: (name: string, email: string, mobile?: string) => void;
   initialMobile?: string;
+  onOpenPrivacyPolicy?: () => void;
 }
 
 export type AuthMethod = 'phone' | 'email';
@@ -107,8 +106,8 @@ const SLIDESHOW_OFFERS = [
 ];
 
 // Google Logo SVG
-const GoogleIcon = () => (
-  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+const GoogleIcon = ({ className = 'w-5 h-5 shrink-0' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24">
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -133,6 +132,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onLoginSuccess,
   initialMobile = '',
+  onOpenPrivacyPolicy,
 }) => {
   // Navigation & Method Tabs ('phone' | 'email')
   const [authMethod, setAuthMethod] = useState<AuthMethod>('phone');
@@ -400,7 +400,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
@@ -411,11 +411,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             LEFT COLUMN (5-cols on md+): SCENERIES SLIDESHOW WITH TRAVEL OFFERS
            ===================================================================== */}
         <div
-          className="md:col-span-5 relative overflow-hidden bg-slate-950 text-white flex flex-col justify-between p-4 sm:p-5 lg:p-6 min-h-[220px] md:min-h-full"
+          className="md:col-span-5 relative overflow-hidden bg-slate-900 flex flex-col justify-between p-4 sm:p-5 min-h-[220px] md:min-h-full"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Animated Background Scenery Images with Crossfade */}
+          {/* Animated Background Scenery Images with Crossfade (Clean, no text overlay) */}
           <div className="absolute inset-0 z-0">
             {SLIDESHOW_OFFERS.map((slide, idx) => (
               <div
@@ -427,37 +427,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <img
                   src={slide.image}
                   alt={slide.destination}
-                  className="w-full h-full object-cover object-center contrast-105 saturate-110"
+                  className="w-full h-full object-cover object-center"
                   referrerPolicy="no-referrer"
                 />
               </div>
             ))}
-
-            {/* Dark Cinematic Gradient Vignette so Text & Offers are 100% Readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/60 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-slate-950/30 pointer-events-none" />
           </div>
 
-          {/* Top Brand Tag & Slideshow Progress */}
-          <div className="relative z-10 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-white shadow-inner border border-white/25">
-                TY
-              </span>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-cyan-300 drop-shadow-sm">
-                TripYeah Member Club
-              </span>
-            </div>
-
-            {/* Slide Indicators */}
-            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20">
+          {/* Top: Discreet slide indicators (No text on photo) */}
+          <div className="relative z-10 flex items-center justify-end">
+            <div className="flex items-center gap-1.5 bg-black/35 backdrop-blur-md px-2 py-1 rounded-full border border-white/20">
               {SLIDESHOW_OFFERS.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setCurrentSlide(idx)}
                   className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx === currentSlide ? 'w-5 bg-cyan-400' : 'w-1.5 bg-white/50 hover:bg-white'
+                    idx === currentSlide ? 'w-4 bg-white' : 'w-1.5 bg-white/50 hover:bg-white'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -465,89 +451,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </div>
 
-          {/* Middle: Active Slide Destination & Discount Voucher Overlay */}
-          <div className="relative z-10 my-auto py-3 sm:py-4 space-y-2.5">
-            {/* Offer Badge & Destination Pill */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className={`text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full backdrop-blur-md shadow-xs ${activeSlideData.badgeColor}`}>
-                {activeSlideData.badge}
-              </span>
-              <span className="text-[10px] font-semibold text-slate-200 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1 border border-white/15">
-                <Compass className="w-3 h-3 text-cyan-400" />
-                <span>{activeSlideData.destination}</span>
-              </span>
-            </div>
-
-            {/* Dynamic Offer Title */}
-            <h3 className="font-display text-lg sm:text-xl font-extrabold text-white leading-snug drop-shadow-md">
-              {activeSlideData.offerTitle}
-            </h3>
-
-            {/* Offer Description */}
-            <p className="text-xs text-slate-200/90 leading-relaxed max-w-sm drop-shadow-sm font-medium line-clamp-2">
-              {activeSlideData.offerDescription}
-            </p>
-
-            {/* Interactive Coupon Box */}
-            <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-2 shadow-md">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 font-bold shadow-xs">
-                  <Percent className="w-3.5 h-3.5" />
+          {/* Bottom: Coupon card moved down (thoda neeche) with crisp white background */}
+          <div className="relative z-10 mt-auto pt-6">
+            <div className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-2xl border border-slate-200/80 flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
+                  <Percent className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] uppercase font-bold text-slate-300 block tracking-wider leading-none">
-                    Use Promo Code
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider leading-none">
+                    Coupon Code
                   </span>
-                  <span className="font-mono text-xs font-extrabold text-cyan-300 tracking-wider">
+                  <span className="font-mono text-xs sm:text-sm font-extrabold text-blue-600 tracking-wider">
                     {activeSlideData.promoCode}
                   </span>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleCopyCode(activeSlideData.promoCode)}
-                className="px-2.5 py-1 rounded-lg bg-white text-slate-900 text-[11px] font-bold hover:bg-cyan-50 transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-xs active:scale-95"
-              >
-                {copiedCode === activeSlideData.promoCode ? (
-                  <>
-                    <Check className="w-3 h-3 text-emerald-600" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3 h-3" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(activeSlideData.promoCode)}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                >
+                  {copiedCode === activeSlideData.promoCode ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-white" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
 
-          {/* Bottom Slideshow Controls & Trust Benefit */}
-          <div className="relative z-10 pt-3 border-t border-white/15 flex items-center justify-between gap-2 text-[11px]">
-            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-300 font-medium">
-              <Gift className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-              <span>₹1,000 Welcome Voucher</span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setCurrentSlide((prev) => (prev - 1 + SLIDESHOW_OFFERS.length) % SLIDESHOW_OFFERS.length)}
-                className="w-6 h-6 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer"
-                aria-label="Previous Offer Slide"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentSlide((prev) => (prev + 1) % SLIDESHOW_OFFERS.length)}
-                className="w-6 h-6 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer"
-                aria-label="Next Offer Slide"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentSlide((prev) => (prev + 1) % SLIDESHOW_OFFERS.length)}
+                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                  title="Next coupon"
+                  aria-label="Next coupon"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -573,7 +522,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <TripYeahLogo className="h-6 sm:h-7 w-auto" />
             </div>
 
-            <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-3">
               {step === 'otp-verify'
                 ? 'Verify Mobile Number'
                 : step === 'create-account'
@@ -584,11 +533,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   : 'Welcome Back! Sign In'
                 : 'Login or Create Account'}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5 mb-3.5">
-              {step === 'otp-verify'
-                ? `Enter 4-digit code sent to ${countryCode} ${phoneNumber}`
-                : 'Access lowest member fares, free date changes & instant refunds.'}
-            </p>
+            {step === 'otp-verify' && (
+              <p className="text-xs text-slate-500 mt-0.5 mb-3.5">
+                Enter 4-digit code sent to {countryCode} {phoneNumber}
+              </p>
+            )}
 
             {/* Method Tabs: Phone Number vs Email ID (Only visible on initial step) */}
             {(step === 'phone-input' || step === 'email-login') && (
@@ -675,10 +624,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                    <span>Instant 4-digit OTP will be dispatched via SMS &amp; WhatsApp</span>
-                  </p>
                 </div>
 
                 <button
@@ -987,7 +932,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     className="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                   <label htmlFor="agree-terms-check" className="text-[11px] text-slate-500 leading-tight">
-                    I agree to TripYeah's Terms of Service and Privacy Policy. Send booking confirmations &amp; flight check-in alerts.
+                    I agree to TripYeah's Terms of Service and{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onClose();
+                        onOpenPrivacyPolicy?.();
+                      }}
+                      className="text-blue-600 hover:underline font-semibold cursor-pointer"
+                    >
+                      Privacy Policy
+                    </button>
+                    . Send booking confirmations &amp; flight check-in alerts.
                   </label>
                 </div>
 
@@ -1025,33 +983,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() => handleGoogleLogin('Aryan Kapoor', 'aryan.kapoor@gmail.com')}
                   disabled={loading}
-                  className="w-full py-2.5 px-3 rounded-xl border border-slate-300 hover:border-slate-400 hover:bg-slate-50 font-bold text-slate-700 text-xs flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-98"
+                  title="Continue with Google"
+                  aria-label="Continue with Google"
+                  className="w-full py-2.5 px-3 rounded-xl border border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-98"
                 >
-                  <GoogleIcon />
-                  <span>Continue with Google</span>
+                  <GoogleIcon className="w-5 h-5" />
                 </button>
-
-                {/* One-Click Demo Explorer Sign In */}
-                <div className="flex items-center justify-center gap-2 pt-0.5">
-                  <span className="text-[10px] text-slate-400">Quick Test:</span>
-                  <button
-                    type="button"
-                    onClick={() => handleGoogleLogin('Rahul Sharma', 'rahul.sharma@example.com')}
-                    className="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full cursor-pointer transition-colors"
-                  >
-                    ⚡ Demo Account (Rahul)
-                  </button>
-                </div>
               </div>
             )}
           </div>
 
           {/* Bottom Trust & Compliance Footer */}
-          <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <span className="flex items-center gap-1 text-slate-500">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>256-bit SSL Encrypted</span>
-            </span>
+          <div className="pt-4 mt-4 border-t border-slate-100 text-center text-[11px] text-slate-400">
             <span>By proceeding you agree to TripYeah T&amp;C</span>
           </div>
 

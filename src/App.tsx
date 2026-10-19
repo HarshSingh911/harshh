@@ -38,6 +38,8 @@ import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 import { HotelDetailsPage } from './components/HotelDetailsPage';
 import { ExplorePage } from './components/ExplorePage';
 import { InfluencersPage } from './components/InfluencersPage';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { SupportCenterPage } from './components/SupportCenterPage';
 import { SmileAIAssistant, SmileSuggestedSearch } from './components/SmileAIAssistant';
 
 export default function App() {
@@ -638,6 +640,7 @@ export default function App() {
               navigateTo('home');
             }}
             onNotify={handleNotify}
+            onNavigateToPrivacyPolicy={() => navigateTo('privacy-policy')}
           />
         )}
 
@@ -723,6 +726,29 @@ export default function App() {
             }}
           />
         )}
+
+        {/* TRIPYEAH PRIVACY POLICY FULL DOCUMENT */}
+        {activePage === 'privacy-policy' && (
+          <PrivacyPolicyPage
+            onBackToHome={() => navigateTo('home')}
+            onOpenSupport={() => navigateTo('support')}
+          />
+        )}
+
+        {/* CUSTOMER SUPPORT CENTER PAGE */}
+        {activePage === 'support' && (
+          <SupportCenterPage
+            onBackToHome={() => navigateTo('home')}
+            onNavigatePage={navigateTo}
+            bookedTrips={bookedTrips}
+            userName={userName}
+            currency={currency}
+            onOpenInsurance={() => setShowInsuranceModal(true)}
+            onOpenOffers={() => setShowOffersModal(true)}
+            onOpenAuth={() => setShowAuthModal(true)}
+            onNotify={handleNotify}
+          />
+        )}
       </main>
 
       {/* IMAGES 4, 5, 6: BOARDING PASS, HOTEL VOUCHER, & CANCEL/REFUND MODALS */}
@@ -777,6 +803,10 @@ export default function App() {
           } catch {}
           handleNotify('Signed Out', 'You have been signed out successfully.', 'info');
           navigateTo('home');
+        }}
+        onOpenPrivacyPolicy={() => {
+          setShowAuthModal(false);
+          navigateTo('privacy-policy');
         }}
       />
 

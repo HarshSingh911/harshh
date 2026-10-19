@@ -121,7 +121,7 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
   const finalPriceInr = flight.priceInr + selectedTier.priceDelta;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-900/75 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
         {/* Header Strip with Flight Info */}
         <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20">

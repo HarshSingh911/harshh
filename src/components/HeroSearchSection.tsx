@@ -50,8 +50,8 @@ interface HeroSearchSectionProps {
   returnDate: string;
   onChangeDepartureDate: (d: string) => void;
   onChangeReturnDate: (d: string) => void;
-  studentFare: boolean;
-  onToggleStudentFare: () => void;
+  studentFare?: boolean;
+  onToggleStudentFare?: () => void;
   travellers: number;
   cabinClass: string;
   onChangeTravellers: (count: number, cabin: string) => void;
@@ -367,7 +367,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           =================================================================== */}
           {activeCategory === 'flights' && (
             <>
-              {/* Row 2: One Way | Round Trip | Dummy Flights + Student Fare + Traveller & Class */}
+              {/* Row 2: One Way | Round Trip | Dummy Flights + Traveller & Class */}
               <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
                   {(
@@ -397,9 +397,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {/* Dummy Flights Sub-selector: One Way vs Round Trip */}
                   {tripType === 'dummy-flights' && (
                     <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-300/80 rounded-full p-0.5 shadow-2xs ml-0.5 sm:ml-1 animate-fadeIn">
-                      <span className="text-amber-800 font-bold text-[10px] uppercase tracking-wider pl-1.5 hidden sm:inline">
-                        Dummy Format:
-                      </span>
                       <button
                         type="button"
                         onClick={() => handleSelectDummyTripType('one-way')}
@@ -428,18 +425,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   )}
                 </div>
 
-                {/* Right Controls: Student Fare + Traveller & Class Dropdown (Original Position) */}
+                {/* Right Controls: Traveller & Class Dropdown (Original Position) */}
                 <div className="flex items-center gap-2.5 sm:gap-4 relative shrink-0">
-                  <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={studentFare}
-                      onChange={onToggleStudentFare}
-                      className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    />
-                    <span>Student Fare</span>
-                  </label>
-
                   {/* Traveller & Flight Class Popover in original top-right position */}
                   <div className="relative">
                     <button
@@ -586,17 +573,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer">
                   <div className="min-w-0">
                     <span className="block text-[11px] text-slate-500 font-medium">
-                      {tripType === 'dummy-flights' ? 'Departure (Dummy PNR)' : 'Departure'}
+                      Departure
                     </span>
                     <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
                       {formatDisplayDate(departureDate)}
                     </span>
                     <span className="block text-[11px] text-slate-400 truncate">
-                      {tripType === 'dummy-flights'
-                        ? isRoundTripActive
-                          ? 'Outbound Verifiable PNR'
-                          : 'One-Way Verifiable PNR'
-                        : 'One-Way / Outbound'}
+                      One-Way / Outbound
                     </span>
                   </div>
                   <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1.5" />
@@ -620,7 +603,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <span className={`block text-[11px] font-semibold ${
                         tripType === 'dummy-flights' ? 'text-amber-700' : 'text-indigo-600'
                       }`}>
-                        {tripType === 'dummy-flights' ? 'Return (Dummy PNR)' : 'Return'}
+                        Return
                       </span>
                       <span className="block text-xs sm:text-sm font-semibold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(returnDate, 'Select Return')}
@@ -628,7 +611,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <span className={`block text-[11px] truncate ${
                         tripType === 'dummy-flights' ? 'text-amber-600 font-medium' : 'text-indigo-500'
                       }`}>
-                        {tripType === 'dummy-flights' ? 'Verifiable Visa Proof' : 'Round-Trip Save 10%'}
+                        Round-Trip Save 10%
                       </span>
                     </div>
                     <Calendar className={`w-4 h-4 shrink-0 ml-1.5 ${
@@ -661,25 +644,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 </div>
               </div>
 
-              {/* Informative Dummy Flight Helper Banner */}
-              {tripType === 'dummy-flights' && (
-                <div className="mt-2.5 flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-[11px]">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
-                    <span className="font-semibold">
-                      {isRoundTripActive ? 'Round-Trip Dummy Flight' : 'One-Way Dummy Flight'} Mode:
-                    </span>
-                    <span className="text-amber-700 hidden md:inline">
-                      Verifiable live PNR flight reservations accepted by VFS & embassies for Schengen, UK, US, Canada, Dubai and onward travel proof.
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-bold text-amber-800 font-mono-tabular">
-                      {isRoundTripActive ? '₹890 (Both Sectors Live PNR)' : '₹490 (One-Way Live PNR)'}
-                    </span>
-                  </div>
-                </div>
-              )}
             </>
           )}
 
@@ -1984,7 +1948,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
       {/* Interactive Modal: Business Travel */}
       {showBusinessModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -2106,7 +2070,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
       {/* Interactive Modal: Gift Cards */}
       {showGiftCardsModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 my-8 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">

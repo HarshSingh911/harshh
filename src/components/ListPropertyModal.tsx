@@ -76,7 +76,7 @@ export const ListPropertyModal: React.FC<ListPropertyModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
+      className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
     >

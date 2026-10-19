@@ -834,7 +834,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
 
       {/* MODAL 1: DESTINATION DETAIL PAGE (PHOTOS, OVERVIEW, BEST TIME, BUDGET, ATTRACTIONS, HOTELS, ITINERARY) */}
       {selectedDestination && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
           <div className="bg-[#0B1120] text-slate-100 rounded-3xl max-w-4xl w-full my-auto border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 flex flex-col max-h-[92vh]">
             
             {/* Modal Header Bar */}
@@ -1275,7 +1275,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
 
       {/* MODAL 2: VISUAL STORY DETAIL */}
       {activeStory && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 flex items-center justify-center p-4">
           <div className="bg-[#0B1120] text-slate-100 rounded-3xl max-w-lg w-full border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
             <div className="relative h-64 overflow-hidden">
               <SafeImage

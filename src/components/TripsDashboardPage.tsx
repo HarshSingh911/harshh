@@ -1302,7 +1302,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       ========================================================================= */}
       {selectedTripForManage && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
           onClick={() => setSelectedTripForManage(null)}
         >
           <div
@@ -1550,7 +1550,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       ========================================================================= */}
       {showCancelModal && selectedTripForManage && (
         <div
-          className="fixed inset-0 z-60 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 bg-black/75 flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setShowCancelModal(false)}
         >
           <div
@@ -1626,7 +1626,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       ========================================================================= */}
       {showRescheduleModal && selectedTripForManage && (
         <div
-          className="fixed inset-0 z-60 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 bg-black/75 flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setShowRescheduleModal(false)}
         >
           <div
@@ -1690,7 +1690,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       ========================================================================= */}
       {showReviewModal && reviewTrip && (
         <div
-          className="fixed inset-0 z-60 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 bg-black/75 flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setShowReviewModal(false)}
         >
           <div
@@ -1793,7 +1793,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       ========================================================================= */}
       {showPointsModal && (
         <div
-          className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setShowPointsModal(false)}
         >
           <div

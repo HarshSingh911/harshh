@@ -133,7 +133,7 @@ export const TripDatePickerModal: React.FC<TripDatePickerModalProps> = ({
   const pickedFare = getIndicativeFare(pickedDate.getDate(), pickedDate.getMonth());
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-3 sm:p-4 overflow-y-auto custom-scrollbar">
       <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col my-auto">
         {/* Header - TripYeah Brand Design */}
         <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white p-5 sm:p-6 flex items-center justify-between border-b border-slate-800">

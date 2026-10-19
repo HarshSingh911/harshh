@@ -177,8 +177,6 @@ export const SearchResultsSection: React.FC<SearchResultsSectionProps> = ({
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
                 Applied savings:
-                {studentFare ? ' Student Fare (12% off + extra 10kg baggage)' : ''}
-                {studentFare && activePromo ? ' · ' : ''}
                 {activePromo
                   ? ` Promo Code ${activePromo.code} (${activePromo.discountPercent}% off up to ₹${activePromo.maxDiscountInr.toLocaleString('en-IN')})`
                   : ''}

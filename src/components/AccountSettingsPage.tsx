@@ -37,6 +37,7 @@ import {
   Award,
   Globe,
   Share2,
+  ExternalLink,
 } from 'lucide-react';
 
 export interface CoTraveller {
@@ -98,6 +99,7 @@ interface AccountSettingsPageProps {
   onSaveProfile: (name: string) => void;
   onLogout?: () => void;
   onNotify: (title: string, detail: string, type?: 'success' | 'info') => void;
+  onNavigateToPrivacyPolicy?: () => void;
 }
 
 // Preset Wallpaper choices (Compact, elegant travel banners)
@@ -145,6 +147,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
   onSaveProfile,
   onLogout,
   onNotify,
+  onNavigateToPrivacyPolicy,
 }) => {
   // 5 Active Sidebar Options requested:
   // 'my-profile' | 'co-travellers' | 'logged-in-devices' | 'reset-password' | 'logout'
@@ -728,6 +731,21 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
                 </div>
                 <Lock className="w-3.5 h-3.5 text-slate-400" />
               </button>
+
+              {/* 5. Privacy Policy */}
+              {onNavigateToPrivacyPolicy && (
+                <button
+                  type="button"
+                  onClick={onNavigateToPrivacyPolicy}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Privacy Policy</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              )}
 
               {/* Divider */}
               <div className="pt-2 border-t border-slate-100" />
@@ -1695,7 +1713,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
           MODAL: AVATAR PICKER (Choose or custom URL)
       =================================================================== */}
       {showAvatarPicker && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
               <h3 className="font-display text-lg font-bold text-slate-900">
@@ -1770,7 +1788,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
           MODAL: ADD / EDIT CO-TRAVELLER
       =================================================================== */}
       {showCoTravellerModal && editingCoTraveller && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 my-8">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
               <h3 className="font-display text-xl font-bold text-slate-900">
@@ -1947,7 +1965,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
           MODAL: ADD FREQUENT FLYER LOYALTY CARD
       =================================================================== */}
       {showAddFlyerModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
               <h3 className="font-display text-lg font-bold text-slate-900">

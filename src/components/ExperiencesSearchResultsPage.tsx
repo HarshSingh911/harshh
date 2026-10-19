@@ -894,7 +894,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
           MODAL 1: INTERACTIVE TICKET BOOKING & TIER SELECTION MODAL
       ===================================================================== */}
       {bookingExperience && selectedTier && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-8">
             <button
               type="button"
@@ -1117,7 +1117,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
           MODAL 2: FULL EXPERIENCE DETAILS & HIGHLIGHTS MODAL
       ===================================================================== */}
       {detailExperience && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-8">
             <button
               type="button"
@@ -1226,7 +1226,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
           MODAL 3: INSTANT DIGITAL E-TICKET VOUCHER PREVIEW
       ===================================================================== */}
       {voucherModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-8">
             <button
               type="button"

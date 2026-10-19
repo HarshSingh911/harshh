@@ -46,6 +46,7 @@ interface InteractiveModalsProps {
   userName: string | null;
   onLoginSuccess: (name: string, email: string) => void;
   onLogout: () => void;
+  onOpenPrivacyPolicy?: () => void;
 }
 
 export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
@@ -69,6 +70,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
   userName,
   onLoginSuccess,
   onLogout,
+  onOpenPrivacyPolicy,
 }) => {
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
@@ -92,7 +94,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       {/* 1. DESTINATION EXPLORER MODAL */}
       {selectedDestination && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="dest-modal-title"
@@ -217,7 +219,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       {/* 2. ALL DESTINATIONS CATALOG MODAL */}
       {showAllDestinationsModal && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="all-dest-title"
@@ -296,7 +298,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       {/* 3. OFFERS & PROMO CODES MODAL */}
       {showOffersModal && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="offers-modal-title"
@@ -379,7 +381,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       {/* 4. MY TRIPS MODAL / DRAWER */}
       {showTripsModal && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="trips-modal-title"
@@ -448,7 +450,6 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
                         {trip.travellers === 1 ? 'Traveller' : 'Travellers'} ·{' '}
                         {trip.cabinOrRoom}
                         {trip.promoApplied ? ` · Promo ${trip.promoApplied}` : ''}
-                        {trip.studentFareApplied ? ' · Student Fare' : ''}
                       </p>
                     </div>
 
@@ -480,6 +481,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
         onLoginSuccess={(name, email, mobile) => {
           onLoginSuccess(name, email);
         }}
+        onOpenPrivacyPolicy={onOpenPrivacyPolicy}
       />
     </>
   );

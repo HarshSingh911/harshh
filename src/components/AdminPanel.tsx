@@ -776,7 +776,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             {/* Selected Booking Details Modal */}
             {selectedTripDetails && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
                 <div className="w-full max-w-lg bg-[#1E293B] border border-slate-700 rounded-3xl p-6 shadow-2xl text-white">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                     <div>
@@ -1020,7 +1020,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             {/* Create Coupon Modal */}
             {isAddCouponOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
                 <div className="w-full max-w-md bg-[#1E293B] border border-slate-700 rounded-3xl p-6 shadow-2xl text-white">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                     <h3 className="font-bold text-base text-white">Create Platform Promo Code</h3>

@@ -1297,15 +1297,85 @@ function buildSmileOfflineFallback(message: string, intent: ReturnType<typeof pa
     };
   }
 
-  // 6. Generic travel assistance fallback
+  // 6. Travel Budget Estimation
+  if (m.includes('budget') || m.includes('estimate') || m.includes('cost')) {
+    const dest = intent.toCity || 'Dubai';
+    return {
+      reply: `### 💰 Travel Budget Estimate: 5-Day Trip to ${dest}\n\nHere is a realistic budget breakdown per person for a comfortable mid-range to premium trip to **${dest}**:\n\n- **Return Flights:** ₹22,000 – ₹38,000 (booking 4-6 weeks early)\n- **4★ / 5★ Accommodation (4 Nights):** ₹18,000 – ₹32,000 (twin-sharing)\n- **Daily Food & Dining:** ₹10,000 – ₹16,000 (cafés, local cuisine, fine dining)\n- **Local Sightseeing & Passes:** ₹8,000 – ₹15,000 (entry tickets, tours)\n- **Local Transport / Cabs:** ₹4,000 – ₹7,000\n- **Visa & Travel Insurance:** ₹3,500 – ₹6,500\n\n**Estimated Total per Person:** ~₹65,500 – ₹1,14,500\n\n*Tip: You can lock in bundle discounts on TripYehh by combining flights and hotels together!*`,
+      followUpQuestions: [
+        `Find flights to ${dest}`,
+        `Discover hotels in ${dest}`,
+        `Find holiday packages for ${dest}`,
+      ],
+      suggestedSearch: {
+        category: 'holidays',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: dest,
+        toCode: intent.toCode,
+        departureDate: '2026-10-25',
+        travellers: 2,
+        actionLabel: `View Package Deals for ${dest} on TripYehh`,
+      },
+    };
+  }
+
+  // 7. Holiday Packages
+  if (intent.isHoliday || m.includes('package') || m.includes('holiday')) {
+    const dest = intent.toCity || 'Maldives';
+    return {
+      reply: `### 🌴 Curated Holiday Packages for ${dest}\n\nTripYehh Holiday Packages include verified stays, airport transfers, curated day tours, and complimentary breakfasts:\n\n- **Signature Getaway (4N/5D):** 4★ beachfront resort, speed-boat transfers, and island tour.\n- **Luxury All-Inclusive (5N/6D):** 5★ water villa, all meals included, sunset cruise, and spa credit.\n- **Flexible Cancellation:** Change dates up to 72 hours before departure.\n\n*Would you like to browse active deals for ${dest}?*`,
+      followUpQuestions: [
+        `Plan an international trip to ${dest}`,
+        `Help me estimate my travel budget`,
+        `Find flights to ${dest}`,
+      ],
+      suggestedSearch: {
+        category: 'holidays',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: dest,
+        toCode: intent.toCode,
+        departureDate: '2026-10-25',
+        travellers: 2,
+        actionLabel: `Explore ${dest} Holiday Packages`,
+      },
+    };
+  }
+
+  // 8. International Planner
+  if (m.includes('international') || m.includes('overseas')) {
+    const dest = intent.toCity || 'Japan';
+    return {
+      reply: `### 🌏 International Trip Planner for ${dest}\n\nTripYehh's International Planner lets you craft custom day-by-day itineraries with live flights, visa requirements, hotel recommendations, and day-wise activities:\n\n- **Step 1:** Select your origin and arrival cities.\n- **Step 2:** Pick your travel style (Relaxed, Adventure, Cultural, or Family).\n- **Step 3:** Review live flight options, verified hotels, and export an IRCTC/Visa ready checklist.\n\n*Click below to launch the International Planner tool!*`,
+      followUpQuestions: [
+        `Find flights to ${dest}`,
+        `Discover hotels in ${dest}`,
+        `Help me estimate my travel budget`,
+      ],
+      suggestedSearch: {
+        category: 'international-planner',
+        fromCity: intent.fromCity,
+        fromCode: intent.fromCode,
+        toCity: dest,
+        toCode: intent.toCode,
+        departureDate: '2026-10-20',
+        travellers: 2,
+        actionLabel: `Launch International Planner for ${dest}`,
+      },
+    };
+  }
+
+  // 9. Generic travel assistance fallback
   return {
-    reply: `### 👋 I'm SMILE, Your TripYehh Travel Assistant!\n\nI can help you explore destinations, compare flight routes, find top-rated hotels, check train schedules, calculate budgets, and build custom day-by-day itineraries.\n\n**Popular ways I can help:**\n- ✈️ **Flights:** Quick routes, baggage allowances, best travel seasons.\n- 🏨 **Stays:** Beachfront villas, central city hotels, homestays.\n- 🚆 **Transit:** Trains, luxury Volvo buses, and intercity airport cabs.\n- 🗺️ **Itineraries:** Day-by-day plans for Bali, Dubai, Tokyo, Switzerland, and India.\n- 🛂 **Visas:** Entry requirements and document checklists.\n\n*Where would you like to travel next?*`,
+    reply: `### 👋 Hi there! I'm SMILE, your personal travel assistant.\n\nWhere would you like to go next? I can help you search flights, discover hotels, plan international trips, create day-by-day itineraries, explore holiday packages, and estimate your travel budget!\n\n**Quick actions:**\n- ✈️ **Flights:** Search domestic & global airlines.\n- 🏨 **Hotels:** Verified resorts, villas, and boutique stays.\n- 🌴 **Holidays:** Complete package deals with private transfers.\n- 🗺️ **Itinerary:** Personalized day-wise travel plans.\n- 💰 **Budget:** Realistic cost breakdowns.`,
     followUpQuestions: [
-      `Flights from Delhi to Tokyo`,
-      `Find hotels in Dubai`,
-      `Plan a 5-day trip to Bali`,
-      `Find trains from Delhi to Mumbai`,
-      `Create my international travel itinerary`,
+      `Find flights`,
+      `Discover hotels`,
+      `Plan an international trip`,
+      `Create my itinerary`,
+      `Find holiday packages`,
+      `Help me estimate my travel budget`,
     ],
     suggestedSearch: {
       category: intent.category || 'flights',
