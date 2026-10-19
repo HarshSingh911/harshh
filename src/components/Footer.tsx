@@ -167,7 +167,7 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigatePage('home')}
+                  onClick={() => onNavigatePage('about-us')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   About Us
@@ -240,7 +240,7 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigatePage('account')}
+                  onClick={() => onNavigatePage('terms-of-service')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   Terms of Service
@@ -260,7 +260,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© 2025 TripYeah Inc. All rights reserved.</p>
+          <p>© 2026 TripYeah Inc. All rights reserved.</p>
 
           {/* Social Profiles Quick Bar */}
           <div className="flex items-center gap-2">
@@ -293,7 +293,7 @@ export const Footer: React.FC<FooterProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => onNavigatePage('account')}
+              onClick={() => onNavigatePage('terms-of-service')}
               className="hover:text-slate-700 cursor-pointer"
             >
               Terms

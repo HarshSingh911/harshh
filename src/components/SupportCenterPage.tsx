@@ -28,6 +28,7 @@ import {
 import { AppPageView } from './Navbar';
 import { BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
 import { SafeImage } from './SafeImage';
+import supportHeroBg from '../assets/images/support_hero_bg_1792412778981.jpg';
 
 export interface SupportCenterPageProps {
   onBackToHome: () => void;
@@ -254,133 +255,48 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      {/* =========================================================================
-          BREADCRUMB BAR
-      ========================================================================= */}
-      <div className="bg-white border-b border-slate-200/80 py-2.5 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center text-xs text-slate-500 gap-1.5">
-          <button
-            type="button"
-            onClick={onBackToHome}
-            className="hover:text-blue-600 transition-colors cursor-pointer font-medium"
-          >
-            Home
-          </button>
-          <span>&gt;</span>
-          <span className="text-slate-900 font-semibold">Customer Support</span>
-        </div>
-      </div>
-
       <div className="flex-1 pb-16">
         {/* =========================================================================
-            1. TOP HERO BANNER (CORPORATE CALL-CENTER WITH EXECUTIVE IMAGE)
+            1. TOP HERO BANNER (CONCIERGE BACKGROUND EXTENDING ALL THE WAY UP TO HEADER)
         ========================================================================= */}
-        <section className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white border-b border-slate-800">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 -right-32 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
+        <section className="relative overflow-hidden bg-slate-950 text-white min-h-[340px] sm:min-h-[400px] flex flex-col justify-end pt-24 sm:pt-28 pb-14 sm:pb-16 border-b border-slate-800">
+          {/* Full-bleed Background Image extending right up to the header */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={supportHeroBg}
+              alt="TripYehh Customer Support & Concierge"
+              className="w-full h-full object-cover object-center contrast-105 saturate-110"
+            />
+            {/* Multi-layered dark gradient overlay for optimal text contrast and seamless header integration */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-slate-950/80" />
+            <div className="absolute inset-0 bg-radial from-transparent via-slate-950/30 to-slate-950/85" />
+          </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-16 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-              
-              {/* Left Column: Heading, Subtitle & Interactive Search */}
-              <div className="lg:col-span-7 space-y-5">
-                {/* 24x7 Live Support Pill */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-sky-300 text-xs font-semibold backdrop-blur-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>24x7 Dedicated Travel Assistance · Average response time &lt; 5 mins</span>
-                </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+            {/* Breadcrumb directly inside hero beneath navbar */}
+            <div className="flex items-center text-xs text-slate-300/80 gap-1.5 mb-4">
+              <button
+                type="button"
+                onClick={onBackToHome}
+                className="hover:text-white transition-colors cursor-pointer font-medium"
+              >
+                Home
+              </button>
+              <span>/</span>
+              <span className="text-white font-semibold">Customer Support</span>
+            </div>
 
-                <div className="space-y-2">
-                  <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                    Customer Support
-                  </h1>
-                  <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed">
-                    TripYehh is here to help you. Find answers, manage your bookings and get assistance with your travel plans.
-                  </p>
-                </div>
-
-                {/* Hero Search Box */}
-                <div className="pt-2 max-w-xl">
-                  <div className="relative flex items-center bg-white/10 hover:bg-white/15 focus-within:bg-white focus-within:text-slate-900 rounded-2xl border border-white/20 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400/30 shadow-xl transition-all">
-                    <Search className="w-5 h-5 ml-4 text-slate-300 focus-within:text-blue-600 shrink-0" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search booking reference, flight issues, cancellations, refunds..."
-                      className="w-full px-3.5 py-3.5 text-xs sm:text-sm font-medium bg-transparent text-white focus:text-slate-900 focus:outline-none placeholder:text-slate-300 focus:placeholder:text-slate-400"
-                    />
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setSearchQuery('')}
-                        className="mr-3 p-1 rounded-full text-slate-300 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
-                        title="Clear search"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  {searchQuery && (
-                    <div className="mt-2 text-xs text-sky-200 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Showing results for "{searchQuery}" in FAQs below</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Quick Info Badges */}
-                <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-300">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Instant UPI Refunds</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Free Date Modifications</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>IRCTC Sync &amp; Verified PNRs</span>
-                  </span>
-                </div>
+            <div className="space-y-3">
+              {/* 24x7 Live Support Pill */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-sky-300 text-xs font-semibold backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>24x7 Dedicated Travel Assistance · Average response time &lt; 5 mins</span>
               </div>
 
-              {/* Right Column: Professional Corporate Call Center Executive Image */}
-              <div className="lg:col-span-5 hidden sm:block">
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-slate-900 max-h-[380px] group">
-                  <SafeImage
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80"
-                    alt="TripYehh Customer Support Executive"
-                    className="w-full h-full object-cover object-center max-h-[380px] transition-transform duration-500 group-hover:scale-102"
-                    fallbackTitle="TripYehh 24x7 Customer Support Operations"
-                  />
-                  {/* Subtle Gradient Overlay to ensure visual harmony with theme */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-blue-900/10 pointer-events-none" />
-
-                  {/* Floating Verified Agent Tag */}
-                  <div className="absolute bottom-4 left-4 right-4 bg-slate-950/80 border border-white/20 p-3 rounded-2xl flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
-                        <Phone className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-white block">
-                          TripYehh Travel Concierge
-                        </span>
-                        <span className="text-[11px] text-emerald-400 font-medium">
-                          Active &amp; Ready to Assist
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] uppercase font-bold text-sky-300 bg-blue-950/90 px-2.5 py-1 rounded-full border border-sky-400/30">
-                      Toll-Free 1800-120-7433
-                    </span>
-                  </div>
-                </div>
-              </div>
-
+              {/* Customer Support Title */}
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                Customer Support
+              </h1>
             </div>
           </div>
         </section>
@@ -742,7 +658,7 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
               4. FAQS SECTION ("HOW CAN WE HELP YOU?")
           ========================================================================= */}
           <section id="faqs-section" className="space-y-6 pt-4">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <h2 className="font-display text-2xl font-bold text-slate-900">
                   How can we help you?
@@ -752,19 +668,41 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 </p>
               </div>
 
-              {/* Category Filter Pills */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {(
-                  [
-                    'all',
-                    'Booking',
-                    'Payments',
-                    'Cancellations',
-                    'Refunds',
-                    'Account & Login',
-                    'Travel Assistance',
-                  ] as FaqCategory[]
-                ).map((cat) => (
+              {/* Search input for FAQs */}
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search FAQ questions & answers..."
+                  className="w-full pl-9.5 pr-8 py-2.5 text-xs font-medium bg-white rounded-xl border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(
+                [
+                  'all',
+                  'Booking',
+                  'Payments',
+                  'Cancellations',
+                  'Refunds',
+                  'Account & Login',
+                  'Travel Assistance',
+                ] as FaqCategory[]
+              ).map((cat) => (
                   <button
                     key={cat}
                     type="button"
@@ -779,7 +717,6 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                   </button>
                 ))}
               </div>
-            </div>
 
             {/* Accordion FAQ List */}
             <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm divide-y divide-slate-100 overflow-hidden">

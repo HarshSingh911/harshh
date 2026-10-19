@@ -36,6 +36,7 @@ export interface AuthModalProps {
   onLoginSuccess: (name: string, email: string, mobile?: string) => void;
   initialMobile?: string;
   onOpenPrivacyPolicy?: () => void;
+  onOpenTermsOfService?: () => void;
 }
 
 export type AuthMethod = 'phone' | 'email';
@@ -133,6 +134,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onLoginSuccess,
   initialMobile = '',
   onOpenPrivacyPolicy,
+  onOpenTermsOfService,
 }) => {
   // Navigation & Method Tabs ('phone' | 'email')
   const [authMethod, setAuthMethod] = useState<AuthMethod>('phone');
@@ -932,7 +934,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     className="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                   <label htmlFor="agree-terms-check" className="text-[11px] text-slate-500 leading-tight">
-                    I agree to TripYeah's Terms of Service and{' '}
+                    I agree to TripYeah's{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onClose();
+                        onOpenTermsOfService?.();
+                      }}
+                      className="text-blue-600 hover:underline font-semibold cursor-pointer"
+                    >
+                      Terms of Service
+                    </button>{' '}
+                    and{' '}
                     <button
                       type="button"
                       onClick={(e) => {

@@ -47,6 +47,7 @@ interface InteractiveModalsProps {
   onLoginSuccess: (name: string, email: string) => void;
   onLogout: () => void;
   onOpenPrivacyPolicy?: () => void;
+  onOpenTermsOfService?: () => void;
 }
 
 export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
@@ -71,6 +72,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
   onLoginSuccess,
   onLogout,
   onOpenPrivacyPolicy,
+  onOpenTermsOfService,
 }) => {
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
@@ -482,6 +484,7 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
           onLoginSuccess(name, email);
         }}
         onOpenPrivacyPolicy={onOpenPrivacyPolicy}
+        onOpenTermsOfService={onOpenTermsOfService}
       />
     </>
   );

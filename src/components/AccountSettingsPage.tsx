@@ -100,6 +100,7 @@ interface AccountSettingsPageProps {
   onLogout?: () => void;
   onNotify: (title: string, detail: string, type?: 'success' | 'info') => void;
   onNavigateToPrivacyPolicy?: () => void;
+  onNavigateToTermsOfService?: () => void;
 }
 
 // Preset Wallpaper choices (Compact, elegant travel banners)
@@ -148,6 +149,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
   onLogout,
   onNotify,
   onNavigateToPrivacyPolicy,
+  onNavigateToTermsOfService,
 }) => {
   // 5 Active Sidebar Options requested:
   // 'my-profile' | 'co-travellers' | 'logged-in-devices' | 'reset-password' | 'logout'
@@ -437,9 +439,9 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
   return (
     <div className="bg-[#F8FAFC] min-h-screen pb-16">
       {/* ===================================================================
-          1. TOP WALLPAPER BANNER (Extends all the way up behind header)
+          1. TOP WALLPAPER BANNER WITH PROFILE PICTURE ON TOP
       =================================================================== */}
-      <div className="relative w-full h-64 sm:h-72 lg:h-80 bg-slate-950 overflow-hidden">
+      <div className="relative w-full min-h-[300px] sm:min-h-[340px] lg:min-h-[360px] bg-slate-950 overflow-hidden flex flex-col justify-end pt-24 pb-8 sm:pb-10">
         {/* Banner Image */}
         <img
           src={profile.bannerUrl}
@@ -447,182 +449,41 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/assets/images/hero_alpine_lakeside_1790774682097.jpg';
           }}
-          className="w-full h-full object-cover object-center brightness-95 contrast-105"
+          className="absolute inset-0 w-full h-full object-cover object-center brightness-90 contrast-105"
         />
 
         {/* Top Vignette Scrim for Navbar / Brand Logo Clarity */}
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-950/75 via-slate-950/25 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-950/80 via-slate-950/35 to-transparent pointer-events-none" />
 
-        {/* Soft Bottom Feather / Dissolve to Page Background */}
-        <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/60 to-transparent pointer-events-none" />
+        {/* Dark Bottom Gradient for Text & Profile Contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none" />
 
-        {/* Change Wallpaper Button — positioned below the 64px header */}
-        <div className="absolute top-20 sm:top-20 right-4 sm:right-6 lg:right-8 z-10">
-          <button
-            type="button"
-            onClick={() => setShowWallpaperPicker(!showWallpaperPicker)}
-            className="px-3.5 py-2 rounded-xl bg-slate-900/75 hover:bg-slate-900/95 text-white backdrop-blur-md border border-white/25 text-xs font-bold flex items-center gap-1.5 shadow-xl transition-all cursor-pointer hover:scale-102"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
-            <span>Change Wallpaper</span>
-          </button>
-
-          {/* Wallpaper Selection Dropdown */}
-          {showWallpaperPicker && (
-            <div className="absolute right-0 top-11 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-30 text-slate-900 animate-in fade-in zoom-in-95">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-                <span className="text-xs font-bold text-slate-800">Select Wallpaper</span>
-                <button
-                  type="button"
-                  onClick={() => setShowWallpaperPicker(false)}
-                  className="text-slate-400 hover:text-slate-600 p-1"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 mb-2.5">
-                {CURATED_WALLPAPERS.map((wp) => (
-                  <button
-                    key={wp.id}
-                    type="button"
-                    onClick={() => {
-                      setProfile((prev) => ({ ...prev, bannerUrl: wp.url }));
-                      setShowWallpaperPicker(false);
-                      onNotify('Wallpaper Updated', `Theme set to ${wp.title}.`, 'success');
-                    }}
-                    className="group relative h-16 rounded-xl overflow-hidden border border-slate-200 hover:border-blue-600 cursor-pointer"
-                  >
-                    <img
-                      src={wp.url}
-                      alt={wp.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <span className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-[10px] font-semibold text-white px-1.5 py-0.5 truncate text-left">
-                      {wp.title}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom Image URL Option */}
-              <div className="pt-2 border-t border-slate-100">
-                <input
-                  type="text"
-                  value={customWallpaperInput}
-                  onChange={(e) => setCustomWallpaperInput(e.target.value)}
-                  placeholder="Paste custom image URL..."
-                  className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-blue-600 mb-1.5"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (customWallpaperInput.trim()) {
-                      setProfile((prev) => ({ ...prev, bannerUrl: customWallpaperInput.trim() }));
-                      setCustomWallpaperInput('');
-                      setShowWallpaperPicker(false);
-                      onNotify('Custom Wallpaper Applied', 'Custom image set as account banner.', 'success');
-                    }
-                  }}
-                  className="w-full py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer"
-                >
-                  Apply Custom URL
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ===================================================================
-          2. USER DETAILS HEADER WITH PROFILE PICTURE (Overlapping Banner)
-      =================================================================== */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-24 relative z-10 mb-8">
-        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-md shadow-slate-200/60">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            {/* Avatar & Basic Info */}
-            <div className="flex items-start sm:items-center gap-4 sm:gap-5">
-              {/* Profile Picture with Edit / Camera Option */}
-              <div className="relative group shrink-0">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl p-1 bg-white shadow-xl ring-4 ring-white overflow-hidden">
-                  <img
-                    src={profile.avatarUrl}
-                    alt={profile.fullName}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
-                    }}
-                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
-                  />
-                </div>
-
-                {/* Edit Photo Floating Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowAvatarPicker(true)}
-                  title="Change Profile Picture"
-                  className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg border-2 border-white absolute -bottom-1 -right-1 cursor-pointer transition-transform group-hover:scale-110"
-                >
-                  <Camera className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Text Information */}
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
-                    {profile.fullName}
-                  </h1>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/60">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Verified Traveller</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
-                    <Sparkles className="w-3 h-3 text-amber-500" />
-                    <span>Platinum Prime</span>
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-500 mt-1.5 font-medium">
-                  <span className="flex items-center gap-1 font-mono-tabular text-slate-700 font-semibold">
-                    <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                    {profile.mobile}
-                  </span>
-                  <span>·</span>
-                  <span className="text-slate-600">{profile.email}</span>
-                  <span>·</span>
-                  <span className="text-blue-600 font-semibold">Member ID: TY-88420-IN</span>
-                </div>
-              </div>
+        {/* Profile Picture, Name, Number & Email ON TOP OF WALLPAPER */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Profile Picture set over wallpaper */}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl sm:rounded-3xl p-1 bg-white/20 backdrop-blur-md shadow-2xl ring-4 ring-white/80 overflow-hidden shrink-0">
+              <img
+                src={profile.avatarUrl}
+                alt={profile.fullName}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+                }}
+                className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+              />
             </div>
 
-            {/* Quick Stats: TripPoints, Trips Taken, Total Savings */}
-            <div className="flex items-center gap-4 sm:gap-6 bg-slate-50/90 px-5 sm:px-6 py-3.5 rounded-2xl border border-slate-200/80 w-full md:w-auto justify-between md:justify-start">
-              <div className="text-center">
-                <span className="font-display text-lg sm:text-xl font-bold font-mono-tabular text-blue-600 block">
-                  3,450
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  TRIPPOINTS
-                </span>
-              </div>
-              <div className="w-px h-8 bg-slate-200" />
-              <div className="text-center">
-                <span className="font-display text-lg sm:text-xl font-bold font-mono-tabular text-slate-900 block">
-                  8
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  TRIPS TAKEN
-                </span>
-              </div>
-              <div className="w-px h-8 bg-slate-200" />
-              <div className="text-center">
-                <span className="font-display text-lg sm:text-xl font-bold font-mono-tabular text-emerald-600 block">
-                  ₹18,400
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  MEMBER SAVINGS
-                </span>
+            {/* In front of Profile Picture: Name, Below it Number with emoji & Email with emoji */}
+            <div className="min-w-0">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight drop-shadow-md truncate">
+                {profile.fullName}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm md:text-base text-white/95 font-semibold drop-shadow-sm mt-1 sm:mt-1.5">
+                <span>📱 {profile.mobile}</span>
+                <span className="text-white/60">·</span>
+                <span className="truncate">✉️ {profile.email}</span>
               </div>
             </div>
           </div>
@@ -630,9 +491,9 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
       </div>
 
       {/* ===================================================================
-          3. MAIN 2-COLUMN LAYOUT: LEFT SIDEBAR + RIGHT CONTENT AREA
+          2. MAIN 2-COLUMN LAYOUT: LEFT SIDEBAR + RIGHT CONTENT AREA
       =================================================================== */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* =================================================================
               LEFT SIDEBAR: 5 EXACT REQUESTED OPTIONS
@@ -742,6 +603,21 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
                   <div className="flex items-center gap-3">
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                     <span>Privacy Policy</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              )}
+
+              {/* Terms of Service */}
+              {onNavigateToTermsOfService && (
+                <button
+                  type="button"
+                  onClick={onNavigateToTermsOfService}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <span>Terms of Service</span>
                   </div>
                   <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                 </button>

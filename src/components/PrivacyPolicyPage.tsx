@@ -5,10 +5,13 @@ import { TripYeahLogo } from './TripYeahLogo';
 interface PrivacyPolicyPageProps {
   onBackToHome: () => void;
   onOpenSupport?: () => void;
+  onOpenTermsOfService?: () => void;
 }
 
 export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({
   onBackToHome,
+  onOpenSupport,
+  onOpenTermsOfService,
 }) => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800">
@@ -32,6 +35,27 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({
                 Legal &amp; Privacy Center
               </span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            {onOpenTermsOfService && (
+              <button
+                type="button"
+                onClick={onOpenTermsOfService}
+                className="text-slate-600 hover:text-blue-600 font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Terms of Service
+              </button>
+            )}
+            {onOpenSupport && (
+              <button
+                type="button"
+                onClick={onOpenSupport}
+                className="text-slate-600 hover:text-blue-600 font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Customer Support
+              </button>
+            )}
           </div>
         </div>
       </div>

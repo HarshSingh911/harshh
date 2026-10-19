@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Luggage, Sparkles, Globe, User, ChevronDown, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Building2, Luggage, Sparkles, Globe, User, ChevronDown, ShieldCheck } from 'lucide-react';
 import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelData';
 import { TripYeahLogo } from './TripYeahLogo';
 
@@ -15,7 +15,9 @@ export type AppPageView =
   | 'explore'
   | 'influencers'
   | 'privacy-policy'
-  | 'support';
+  | 'support'
+  | 'terms-of-service'
+  | 'about-us';
 
 interface NavbarProps {
   activePage: AppPageView;
@@ -29,6 +31,7 @@ interface NavbarProps {
   onOpenListProperty: () => void;
   onOpenInsurance: () => void;
   onOpenAuth: () => void;
+  onOpenOffers?: () => void;
   tripsCount: number;
   userName: string | null;
 }
@@ -56,6 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenListProperty,
   onOpenInsurance,
   onOpenAuth,
+  onOpenOffers,
   tripsCount,
   userName,
 }) => {
@@ -161,23 +165,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
             <span>Travel Insurance</span>
           </button>
-
-          {/* Customer Support Option */}
-          <button
-            type="button"
-            onClick={() => onNavigatePage('support')}
-            title="Customer Support & 24x7 Assistance"
-            className={`hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
-              activePage === 'support'
-                ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
-                : isDarkHeader
-                ? 'text-white/85 hover:text-white'
-                : 'text-slate-700 hover:text-blue-600'
-            }`}
-          >
-            <HelpCircle className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
-            <span>Support</span>
-          </button>
         </div>
 
         {/* Zone 3: Right Side Actions */}
@@ -217,49 +204,49 @@ export const Navbar: React.FC<NavbarProps> = ({
             <ChevronDown className={`w-3.5 h-3.5 ${isDarkHeader ? 'text-white/70' : 'text-slate-400'}`} />
           </button>
 
-          {/* Login or Create Account Button */}
-            {userName ? (
-              <button
-                type="button"
-                onClick={() => onNavigatePage('account')}
-                title={`Logged in as ${userName} - Account Settings`}
-                className={`relative group px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
-                  isDarkHeader
-                    ? 'bg-gradient-to-r from-white via-slate-50 to-blue-50 text-slate-900 border-white/60 shadow-white/15'
-                    : 'bg-gradient-to-r from-[#111827] to-slate-800 text-white border-slate-700 shadow-slate-900/20'
-                }`}
-              >
-                <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
-                  <User className="w-3 h-3" />
-                </span>
-                <span>{userName}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenAuth}
-                title="Login or Create a TripYeah Account"
-                className={`relative group overflow-hidden px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-tight shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
-                  isDarkHeader
-                    ? 'bg-gradient-to-r from-white via-sky-50 to-blue-100 hover:from-white hover:to-sky-50 text-slate-950 border-white/80 shadow-[0_4px_20px_rgba(255,255,255,0.25)] hover:shadow-[0_6px_25px_rgba(56,189,248,0.35)]'
-                    : 'bg-gradient-to-r from-[#2563EB] via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-400/40 shadow-blue-600/30 hover:shadow-blue-600/40'
-                }`}
-              >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform ${
-                  isDarkHeader
-                    ? 'bg-gradient-to-tr from-[#2563EB] to-indigo-600 text-white'
-                    : 'bg-white/20 text-white'
-                }`}>
-                  <User className="w-3 h-3" />
-                </span>
-                <span className={isDarkHeader ? 'bg-gradient-to-r from-slate-950 to-blue-950 bg-clip-text text-transparent font-extrabold' : 'font-bold'}>
-                  Login or Create Account
-                </span>
-                <Sparkles className={`w-3.5 h-3.5 transition-transform group-hover:rotate-12 ${
-                  isDarkHeader ? 'text-amber-500' : 'text-amber-300'
-                }`} />
-              </button>
-            )}
+          {/* Login or Account Button */}
+          {userName ? (
+            <button
+              type="button"
+              onClick={() => onNavigatePage('account')}
+              title={`Logged in as ${userName} - Account Settings`}
+              className={`relative group px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
+                isDarkHeader
+                  ? 'bg-gradient-to-r from-white via-slate-50 to-blue-50 text-slate-900 border-white/60 shadow-white/15'
+                  : 'bg-gradient-to-r from-[#111827] to-slate-800 text-white border-slate-700 shadow-slate-900/20'
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+                <User className="w-3 h-3" />
+              </span>
+              <span className="max-w-[100px] sm:max-w-[130px] truncate">{userName}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenAuth}
+              title="Login or Create a TripYeah Account"
+              className={`relative group overflow-hidden px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-tight shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
+                isDarkHeader
+                  ? 'bg-gradient-to-r from-white via-sky-50 to-blue-100 hover:from-white hover:to-sky-50 text-slate-950 border-white/80 shadow-[0_4px_20px_rgba(255,255,255,0.25)] hover:shadow-[0_6px_25px_rgba(56,189,248,0.35)]'
+                  : 'bg-gradient-to-r from-[#2563EB] via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-400/40 shadow-blue-600/30 hover:shadow-blue-600/40'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform ${
+                isDarkHeader
+                  ? 'bg-gradient-to-tr from-[#2563EB] to-indigo-600 text-white'
+                  : 'bg-white/20 text-white'
+              }`}>
+                <User className="w-3 h-3" />
+              </span>
+              <span className={isDarkHeader ? 'bg-gradient-to-r from-slate-950 to-blue-950 bg-clip-text text-transparent font-extrabold' : 'font-bold'}>
+                Login or Create Account
+              </span>
+              <Sparkles className={`w-3.5 h-3.5 transition-transform group-hover:rotate-12 ${
+                isDarkHeader ? 'text-amber-500' : 'text-amber-300'
+              }`} />
+            </button>
+          )}
           </div>
         </div>
     </header>

@@ -40,6 +40,8 @@ import { ExplorePage } from './components/ExplorePage';
 import { InfluencersPage } from './components/InfluencersPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { SupportCenterPage } from './components/SupportCenterPage';
+import { TermsOfServicePage } from './components/TermsOfServicePage';
+import { AboutUsPage } from './components/AboutUsPage';
 import { SmileAIAssistant, SmileSuggestedSearch } from './components/SmileAIAssistant';
 
 export default function App() {
@@ -171,6 +173,12 @@ export default function App() {
     const path = window.location.pathname;
     if (path.includes('/admin') || params.has('admin') || params.get('portal') === 'admin') {
       setActivePage('admin');
+    } else if (path.includes('/terms-of-service') || params.get('page') === 'terms-of-service' || path.includes('/terms')) {
+      setActivePage('terms-of-service');
+    } else if (path.includes('/about-us') || params.get('page') === 'about-us' || path.includes('/about')) {
+      setActivePage('about-us');
+    } else if (path.includes('/privacy-policy') || params.get('page') === 'privacy-policy' || path.includes('/privacy')) {
+      setActivePage('privacy-policy');
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -384,6 +392,7 @@ export default function App() {
         onOpenListProperty={() => setShowListPropertyModal(true)}
         onOpenInsurance={() => setShowInsuranceModal(true)}
         onOpenAuth={() => setShowAuthModal(true)}
+        onOpenOffers={() => setShowOffersModal(true)}
         tripsCount={bookedTrips.length}
         userName={userName}
       />
@@ -416,7 +425,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'trips' || activePage === 'account') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'trips' || activePage === 'account' || activePage === 'support') ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -641,6 +650,7 @@ export default function App() {
             }}
             onNotify={handleNotify}
             onNavigateToPrivacyPolicy={() => navigateTo('privacy-policy')}
+            onNavigateToTermsOfService={() => navigateTo('terms-of-service')}
           />
         )}
 
@@ -732,6 +742,7 @@ export default function App() {
           <PrivacyPolicyPage
             onBackToHome={() => navigateTo('home')}
             onOpenSupport={() => navigateTo('support')}
+            onOpenTermsOfService={() => navigateTo('terms-of-service')}
           />
         )}
 
@@ -747,6 +758,25 @@ export default function App() {
             onOpenOffers={() => setShowOffersModal(true)}
             onOpenAuth={() => setShowAuthModal(true)}
             onNotify={handleNotify}
+          />
+        )}
+
+        {/* TRIPYEAH TERMS OF SERVICE COMPREHENSIVE LEGAL DOCUMENT */}
+        {activePage === 'terms-of-service' && (
+          <TermsOfServicePage
+            onBackToHome={() => navigateTo('home')}
+            onNavigatePage={navigateTo}
+            onOpenSupport={() => navigateTo('support')}
+            onOpenPrivacyPolicy={() => navigateTo('privacy-policy')}
+          />
+        )}
+
+        {/* TRIP YEHH ABOUT US & FOUNDER'S VISION PAGE */}
+        {activePage === 'about-us' && (
+          <AboutUsPage
+            onBackToHome={() => navigateTo('home')}
+            onNavigatePage={navigateTo}
+            onOpenSupport={() => navigateTo('support')}
           />
         )}
       </main>
@@ -807,6 +837,10 @@ export default function App() {
         onOpenPrivacyPolicy={() => {
           setShowAuthModal(false);
           navigateTo('privacy-policy');
+        }}
+        onOpenTermsOfService={() => {
+          setShowAuthModal(false);
+          navigateTo('terms-of-service');
         }}
       />
 
