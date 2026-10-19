@@ -27,8 +27,8 @@ import {
 } from 'lucide-react';
 import { AppPageView } from './Navbar';
 import { BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
-import { SafeImage } from './SafeImage';
 import supportHeroBg from '../assets/images/support_hero_bg_1792412778981.jpg';
+import customerSupportImg from '../assets/images/customer_support_rep_1792420256877.jpg';
 
 export interface SupportCenterPageProps {
   onBackToHome: () => void;
@@ -260,21 +260,20 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
             1. TOP HERO BANNER (CONCIERGE BACKGROUND EXTENDING ALL THE WAY UP TO HEADER)
         ========================================================================= */}
         <section className="relative overflow-hidden bg-slate-950 text-white min-h-[340px] sm:min-h-[400px] flex flex-col justify-end pt-24 sm:pt-28 pb-14 sm:pb-16 border-b border-slate-800">
-          {/* Full-bleed Background Image extending right up to the header */}
+          {/* Full-bleed Background Image - Clear, vivid and fully visible */}
           <div className="absolute inset-0 z-0">
             <img
               src={supportHeroBg}
               alt="TripYehh Customer Support & Concierge"
-              className="w-full h-full object-cover object-center contrast-105 saturate-110"
+              className="w-full h-full object-cover object-center brightness-105 contrast-105 saturate-110"
             />
-            {/* Multi-layered dark gradient overlay for optimal text contrast and seamless header integration */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-slate-950/80" />
-            <div className="absolute inset-0 bg-radial from-transparent via-slate-950/30 to-slate-950/85" />
+            {/* Subtle clean neutral contrast scrim so background image is clearly visible without heavy darkness */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/20 to-black/35" />
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
             {/* Breadcrumb directly inside hero beneath navbar */}
-            <div className="flex items-center text-xs text-slate-300/80 gap-1.5 mb-4">
+            <div className="flex items-center text-xs text-white/90 gap-1.5 mb-4 drop-shadow-sm">
               <button
                 type="button"
                 onClick={onBackToHome}
@@ -286,15 +285,9 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
               <span className="text-white font-semibold">Customer Support</span>
             </div>
 
-            <div className="space-y-3">
-              {/* 24x7 Live Support Pill */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-sky-300 text-xs font-semibold backdrop-blur-md">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>24x7 Dedicated Travel Assistance · Average response time &lt; 5 mins</span>
-              </div>
-
+            <div>
               {/* Customer Support Title */}
-              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight drop-shadow-lg">
                 Customer Support
               </h1>
             </div>
@@ -769,8 +762,19 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
               5. CONTACT SUPPORT & FORM SECTION
           ========================================================================= */}
           <section id="contact-form-section" className="pt-4">
-            <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 rounded-3xl text-white p-6 sm:p-8 md:p-10 shadow-2xl border border-slate-800">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            <div className="relative rounded-3xl text-white p-6 sm:p-8 md:p-10 shadow-2xl border border-slate-700/80 overflow-hidden">
+              {/* Customer Support Representative Background Image */}
+              <div className="absolute inset-0 z-0">
+                <img
+                  src={customerSupportImg}
+                  alt="TripYehh Customer Support Team"
+                  className="w-full h-full object-cover object-center brightness-95 contrast-105"
+                />
+                {/* Clean dark scrim so contact details on left and form on right are clearly legible */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/80 to-slate-950/75" />
+              </div>
+
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                 
                 {/* Left: Verified Contact Information & Details */}
                 <div className="lg:col-span-5 space-y-6">
@@ -786,15 +790,15 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                     </p>
                   </div>
 
-                  {/* Verified Support Cards */}
+                  {/* Verified Support Cards with Glassmorphism */}
                   <div className="space-y-3.5">
                     {/* Phone Helpline */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3.5">
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
                       <div className="w-9 h-9 rounded-xl bg-blue-600/30 text-sky-400 flex items-center justify-center shrink-0 border border-blue-500/30">
                         <Phone className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
                           24x7 Toll-Free Helpline
                         </span>
                         <a
@@ -810,12 +814,12 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                     </div>
 
                     {/* Official Email */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3.5">
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
                       <div className="w-9 h-9 rounded-xl bg-cyan-600/30 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30">
                         <Mail className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
                           Priority Email Desk
                         </span>
                         <a
@@ -831,12 +835,12 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                     </div>
 
                     {/* WhatsApp Support */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3.5">
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
                       <div className="w-9 h-9 rounded-xl bg-emerald-600/30 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
                         <MessageSquare className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
                           WhatsApp Quick Chat
                         </span>
                         <span className="font-mono text-sm sm:text-base font-bold text-white">
@@ -849,14 +853,14 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-blue-900/30 border border-blue-500/20 text-xs text-sky-200 flex items-center gap-2">
+                  <div className="p-3.5 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md text-xs text-sky-200 flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>Authorized customer support system · All inquiries securely logged.</span>
                   </div>
                 </div>
 
                 {/* Right: Contact Form */}
-                <div className="lg:col-span-7 bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div className="lg:col-span-7 bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl">
                   {submittedTicket ? (
                     <div className="text-center py-8 space-y-4 animate-in fade-in zoom-in-95">
                       <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">

@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-  ChevronRight,
   ArrowUp,
-  FileText,
   Shield,
   HelpCircle,
   ExternalLink,
-  Search,
   Scale,
   Calendar,
   Building2,
@@ -35,101 +30,26 @@ export interface TermsOfServicePageProps {
   onOpenPrivacyPolicy?: () => void;
 }
 
-interface SectionItem {
-  id: string;
-  number: number;
-  title: string;
-  shortTitle: string;
-}
-
-export const TERMS_SECTIONS: SectionItem[] = [
-  { id: 'sec-1', number: 1, title: 'Applicability and Agreement', shortTitle: 'Applicability & Agreement' },
-  { id: 'sec-2', number: 2, title: 'Eligibility to Use', shortTitle: 'Eligibility & Minors' },
-  { id: 'sec-3', number: 3, title: 'Account Registration and Security', shortTitle: 'Account & Security' },
-  { id: 'sec-4', number: 4, title: 'Permitted Website Use', shortTitle: 'Permitted & Prohibited Use' },
-  { id: 'sec-5', number: 5, title: 'Travel Search and Booking Services', shortTitle: 'Search & Booking Services' },
-  { id: 'sec-6', number: 6, title: 'Role of TripYehh and Third-Party Providers', shortTitle: 'Role of TripYehh & Partners' },
-  { id: 'sec-7', number: 7, title: 'Prices, Fees, Taxes and Payments', shortTitle: 'Prices, Taxes & Payments' },
-  { id: 'sec-8', number: 8, title: 'Booking Confirmation and Changes', shortTitle: 'Booking Confirmation' },
-  { id: 'sec-9', number: 9, title: 'Cancellation, Refunds and Rescheduling', shortTitle: 'Cancellations & Refunds' },
-  { id: 'sec-10', number: 10, title: 'Flights, Hotels and Transport-Specific Terms', shortTitle: 'Travel Service Terms' },
-  { id: 'sec-11', number: 11, title: 'International Travel, Visas and Documents', shortTitle: 'Passports & Visas' },
-  { id: 'sec-12', number: 12, title: 'Offers, Discounts and Promotions', shortTitle: 'Offers & Discounts' },
-  { id: 'sec-13', number: 13, title: 'User Content and Influencer Features', shortTitle: 'User Content & Creators' },
-  { id: 'sec-14', number: 14, title: 'Intellectual Property', shortTitle: 'Intellectual Property' },
-  { id: 'sec-15', number: 15, title: 'Prohibited Conduct, Fraud and Security', shortTitle: 'Fraud & Security' },
-  { id: 'sec-16', number: 16, title: 'Service Availability and Technical Issues', shortTitle: 'Service Availability' },
-  { id: 'sec-17', number: 17, title: 'Limitation of Liability', shortTitle: 'Limitation of Liability' },
-  { id: 'sec-18', number: 18, title: 'Indemnification', shortTitle: 'Indemnification' },
-  { id: 'sec-19', number: 19, title: 'Suspension and Termination', shortTitle: 'Suspension & Termination' },
-  { id: 'sec-20', number: 20, title: 'Third-Party Links and Services', shortTitle: 'Third-Party Services' },
-  { id: 'sec-21', number: 21, title: 'Privacy and Personal Information', shortTitle: 'Privacy & Personal Data' },
-  { id: 'sec-22', number: 22, title: 'Complaints and Customer Support', shortTitle: 'Complaints & Support' },
-  { id: 'sec-23', number: 23, title: 'Governing Law and Dispute Resolution', shortTitle: 'Governing Law & Disputes' },
-  { id: 'sec-24', number: 24, title: 'Changes to These Terms', shortTitle: 'Changes to Terms' },
-  { id: 'sec-25', number: 25, title: 'General Provisions', shortTitle: 'General Provisions' },
-];
-
 export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({
   onBackToHome,
   onNavigatePage,
   onOpenSupport,
   onOpenPrivacyPolicy,
 }) => {
-  const [activeSectionId, setActiveSectionId] = useState<string>('sec-1');
-  const [mobileTocOpen, setMobileTocOpen] = useState<boolean>(false);
-  const [tocFilter, setTocFilter] = useState<string>('');
   const [showBackToTop, setShowBackToTop] = useState<boolean>(false);
 
-  // Scroll spy to highlight active section
   useEffect(() => {
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 400);
-
-      const sectionElements = TERMS_SECTIONS.map((s) => ({
-        id: s.id,
-        el: document.getElementById(s.id),
-      })).filter((item) => item.el !== null);
-
-      const scrollPos = window.scrollY + 160;
-
-      for (let i = sectionElements.length - 1; i >= 0; i--) {
-        const item = sectionElements[i];
-        if (item.el && item.el.offsetTop <= scrollPos) {
-          setActiveSectionId(item.id);
-          break;
-        }
-      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const topOffset = el.getBoundingClientRect().top + window.scrollY - 88;
-      window.scrollTo({ top: topOffset, behavior: 'smooth' });
-      setActiveSectionId(id);
-      setMobileTocOpen(false);
-    }
-  };
-
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const filteredSections = useMemo(() => {
-    if (!tocFilter.trim()) return TERMS_SECTIONS;
-    const q = tocFilter.toLowerCase().trim();
-    return TERMS_SECTIONS.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.shortTitle.toLowerCase().includes(q) ||
-        `section ${s.number}`.includes(q)
-    );
-  }, [tocFilter]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans flex flex-col selection:bg-blue-600 selection:text-white">
@@ -228,144 +148,10 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({
       </section>
 
       {/* =========================================================================
-          MAIN LAYOUT: STICKY TOC ON LEFT (DESKTOP) + CONTENT ON RIGHT
+          MAIN LAYOUT: COMPLETE DETAILED TERMS OF SERVICE CONTENT
       ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1 w-full">
-        {/* Mobile TOC Trigger Button (Collapsible on Mobile) */}
-        <div className="lg:hidden mb-6 sticky top-14 z-20">
-          <button
-            type="button"
-            onClick={() => setMobileTocOpen((prev) => !prev)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-2xl border border-slate-200/90 shadow-md text-xs font-bold text-slate-800 cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-600" />
-              <span>Table of Contents ({TERMS_SECTIONS.length} Sections)</span>
-            </div>
-            {mobileTocOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-
-          {/* Mobile TOC Drawer / Accordion */}
-          {mobileTocOpen && (
-            <div className="mt-2 bg-white rounded-2xl border border-slate-200 p-3 shadow-xl max-h-[60vh] overflow-y-auto space-y-1">
-              {TERMS_SECTIONS.map((sec) => {
-                const isActive = activeSectionId === sec.id;
-                return (
-                  <button
-                    key={`m-${sec.id}`}
-                    type="button"
-                    onClick={() => scrollToSection(sec.id)}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between cursor-pointer transition-colors ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-700 font-bold'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    <span className="truncate">
-                      {sec.number}. {sec.shortTitle}
-                    </span>
-                    <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* =========================================================================
-              DESKTOP LEFT SIDEBAR: STICKY TABLE OF CONTENTS
-          ========================================================================= */}
-          <aside className="hidden lg:block lg:col-span-4 sticky top-20 z-10">
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <h3 className="font-display text-sm font-bold text-slate-900">
-                    Table of Contents
-                  </h3>
-                </div>
-                <span className="text-[11px] font-bold text-slate-400 font-mono">
-                  25 Sections
-                </span>
-              </div>
-
-              {/* Quick Filter Box for TOC */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={tocFilter}
-                  onChange={(e) => setTocFilter(e.target.value)}
-                  placeholder="Filter sections..."
-                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Scrollable Nav List */}
-              <nav className="max-h-[calc(100vh-280px)] overflow-y-auto space-y-1 pr-1 custom-scrollbar text-xs">
-                {filteredSections.map((sec) => {
-                  const isActive = activeSectionId === sec.id;
-                  return (
-                    <button
-                      key={sec.id}
-                      type="button"
-                      onClick={() => scrollToSection(sec.id)}
-                      className={`w-full text-left px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-between group ${
-                        isActive
-                          ? 'bg-blue-600 text-white font-bold shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                      }`}
-                    >
-                      <span className="truncate pr-2">
-                        <span className={`font-mono text-[11px] mr-1.5 ${isActive ? 'text-white/80' : 'text-slate-400'}`}>
-                          {sec.number.toString().padStart(2, '0')}.
-                        </span>
-                        {sec.shortTitle}
-                      </span>
-                      <ChevronRight
-                        className={`w-3.5 h-3.5 shrink-0 transition-transform ${
-                          isActive
-                            ? 'text-white translate-x-0.5'
-                            : 'text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
-
-                {filteredSections.length === 0 && (
-                  <p className="text-center py-4 text-xs text-slate-400">
-                    No matching sections found.
-                  </p>
-                )}
-              </nav>
-
-              {/* Quick Legal Help Callout Box */}
-              <div className="pt-3 border-t border-slate-100">
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-[11px] text-slate-600 space-y-1.5">
-                  <span className="font-bold text-slate-800 block flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Questions or Grievance?</span>
-                  </span>
-                  <p className="leading-relaxed">
-                    Contact our dedicated legal and grievance desk at{' '}
-                    <span className="font-mono text-blue-600 font-semibold underline">
-                      [grievance-officer@tripyeah.com]
-                    </span>
-                    .
-                  </p>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* =========================================================================
-              RIGHT COLUMN: COMPLETE DETAILED TERMS OF SERVICE CONTENT
-          ========================================================================= */}
-          <main className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 md:p-12 shadow-sm space-y-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1 w-full">
+        <main className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 md:p-12 shadow-sm space-y-12">
             
             {/* Legal Notice Callout */}
             <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-xs sm:text-sm text-slate-700 space-y-2">
@@ -1125,7 +911,6 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({
               </button>
             </div>
           </main>
-        </div>
       </div>
 
       {/* Floating Back to Top Button */}
