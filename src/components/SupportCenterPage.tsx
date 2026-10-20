@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Compass,
   Gift,
+  UtensilsCrossed,
   Mail,
   Phone,
   MessageSquare,
@@ -602,22 +603,22 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 </div>
               </button>
 
-              {/* Card 6: Gift Cards & Offers */}
+              {/* Card 6: Dining Club & VIP Tables */}
               <button
                 type="button"
-                onClick={onOpenOffers}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-purple-400 shadow-2xs hover:shadow-md transition-all text-left flex items-start gap-3.5 group cursor-pointer"
+                onClick={() => onNavigatePage('dining-club')}
+                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 shadow-2xs hover:shadow-md transition-all text-left flex items-start gap-3.5 group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                  <Gift className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  <UtensilsCrossed className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center justify-between">
-                    <span>Gift Cards &amp; Offers</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-purple-600 transition-all" />
+                  <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors flex items-center justify-between">
+                    <span>Dining Club &amp; VIP Tables</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-amber-600 transition-all" />
                   </h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Apply promo coupons, redeem travel vouchers, and unlock exclusive discounts.
+                    Reserve Michelin-inspired restaurant seats, pre-order food, book group parties &amp; club passes.
                   </p>
                 </div>
               </button>

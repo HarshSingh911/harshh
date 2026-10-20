@@ -38,6 +38,7 @@ import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 import { HotelDetailsPage } from './components/HotelDetailsPage';
 import { ExplorePage } from './components/ExplorePage';
 import { InfluencersPage } from './components/InfluencersPage';
+import { DiningClubPage } from './components/DiningClubPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { SupportCenterPage } from './components/SupportCenterPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
@@ -70,6 +71,13 @@ export default function App() {
       return localStorage.getItem('tripyeah_logged_user');
     } catch {
       return null;
+    }
+  });
+  const [userRole, setUserRole] = useState<'user' | 'admin'>(() => {
+    try {
+      return (localStorage.getItem('tripyeah_user_role') as 'user' | 'admin') || 'user';
+    } catch {
+      return 'user';
     }
   });
   const [activePromo, setActivePromo] = useState<PromoOffer | null>(null);
@@ -395,6 +403,7 @@ export default function App() {
         onOpenOffers={() => setShowOffersModal(true)}
         tripsCount={bookedTrips.length}
         userName={userName}
+        userRole={userRole}
       />
 
       {/* Contextual Notification Toast */}
@@ -425,7 +434,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'trips' || activePage === 'account' || activePage === 'support') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support') ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -456,6 +465,7 @@ export default function App() {
               onOpenTripAI={() => navigateTo('international-planner')}
               onOpenExplorePage={() => navigateTo('explore')}
               onOpenInfluencersPage={() => navigateTo('influencers')}
+              onOpenDiningClubPage={() => navigateTo('dining-club')}
               onSelectTrustPillar={(title, detail) =>
                 setBannerMessage({
                   title: `TripYeah Guarantee: ${title}`,
@@ -737,6 +747,16 @@ export default function App() {
           />
         )}
 
+        {/* DINING CLUB: LUXURY FINE DINING SEAT BOOKING, GOURMET FOOD ORDERS, GROUP PARTIES & VIP CLUB TICKETS */}
+        {activePage === 'dining-club' && (
+          <DiningClubPage
+            currency={currency}
+            userName={userName}
+            onBackToHome={() => navigateTo('home')}
+            onNotify={handleNotify}
+          />
+        )}
+
         {/* TRIPYEAH PRIVACY POLICY FULL DOCUMENT */}
         {activePage === 'privacy-policy' && (
           <PrivacyPolicyPage
@@ -818,18 +838,32 @@ export default function App() {
         showAuthModal={showAuthModal}
         onCloseAuthModal={() => setShowAuthModal(false)}
         userName={userName}
-        onLoginSuccess={(name) => {
+        onLoginSuccess={(name, email, role) => {
           setUserName(name);
+          const activeRole = role || (email.toLowerCase().includes('admin') ? 'admin' : 'user');
+          setUserRole(activeRole);
           try {
             localStorage.setItem('tripyeah_logged_user', name);
+            localStorage.setItem('tripyeah_user_role', activeRole);
           } catch {}
-          handleNotify('Account Verified!', `Welcome, ${name}! Your TripYeah account is active.`, 'success');
-          navigateTo('account');
+          if (activeRole === 'admin') {
+            handleNotify(
+              'TripWork Company Portal Active',
+              `Welcome, ${name}! TripYeah management mode enabled. Managing bookings, fares, inventory & operations.`,
+              'success'
+            );
+            navigateTo('admin');
+          } else {
+            handleNotify('Account Verified!', `Welcome, ${name}! Your TripYeah account is active.`, 'success');
+            navigateTo('account');
+          }
         }}
         onLogout={() => {
           setUserName(null);
+          setUserRole('user');
           try {
             localStorage.removeItem('tripyeah_logged_user');
+            localStorage.removeItem('tripyeah_user_role');
           } catch {}
           handleNotify('Signed Out', 'You have been signed out successfully.', 'info');
           navigateTo('home');

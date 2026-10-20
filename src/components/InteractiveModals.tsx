@@ -44,7 +44,7 @@ interface InteractiveModalsProps {
   showAuthModal: boolean;
   onCloseAuthModal: () => void;
   userName: string | null;
-  onLoginSuccess: (name: string, email: string) => void;
+  onLoginSuccess: (name: string, email: string, role?: 'user' | 'admin') => void;
   onLogout: () => void;
   onOpenPrivacyPolicy?: () => void;
   onOpenTermsOfService?: () => void;
@@ -480,8 +480,8 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       <AuthModal
         isOpen={showAuthModal}
         onClose={onCloseAuthModal}
-        onLoginSuccess={(name, email, mobile) => {
-          onLoginSuccess(name, email);
+        onLoginSuccess={(name, email, mobile, role) => {
+          onLoginSuccess(name, email, role);
         }}
         onOpenPrivacyPolicy={onOpenPrivacyPolicy}
         onOpenTermsOfService={onOpenTermsOfService}

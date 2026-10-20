@@ -14,6 +14,7 @@ export type AppPageView =
   | 'international-planner'
   | 'explore'
   | 'influencers'
+  | 'dining-club'
   | 'privacy-policy'
   | 'support'
   | 'terms-of-service'
@@ -34,6 +35,7 @@ interface NavbarProps {
   onOpenOffers?: () => void;
   tripsCount: number;
   userName: string | null;
+  userRole?: 'user' | 'admin';
 }
 
 // Region flag helper
@@ -62,6 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenOffers,
   tripsCount,
   userName,
+  userRole = 'user',
 }) => {
   // Flag for current region
   const regionFlag = REGION_FLAGS[region] || '🇮🇳';
@@ -84,6 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     activePage === 'international-planner' ||
     activePage === 'explore' ||
     activePage === 'influencers' ||
+    activePage === 'dining-club' ||
     activePage === 'trips' ||
     activePage === 'account' ||
     activePage === 'support';
@@ -138,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Zone 2: Navigation (Clean links without category tabs) */}
-        <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
           <button
             type="button"
             onClick={onOpenListProperty}
@@ -203,6 +207,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className={`font-medium ${isDarkHeader ? 'text-white/90' : 'text-slate-700'}`}>{language}</span>
             <ChevronDown className={`w-3.5 h-3.5 ${isDarkHeader ? 'text-white/70' : 'text-slate-400'}`} />
           </button>
+
+          {/* Admin Company Management Portal button */}
+          {userName && userRole === 'admin' && (
+            <button
+              type="button"
+              onClick={() => onNavigatePage('admin')}
+              title="Open TripYeah Company Management & Extranet"
+              className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer border ${
+                activePage === 'admin'
+                  ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/40'
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 border-amber-400'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-950" />
+              <span className="hidden sm:inline">Company Admin</span>
+              <span className="sm:hidden">Admin</span>
+            </button>
+          )}
 
           {/* Login or Account Button */}
           {userName ? (

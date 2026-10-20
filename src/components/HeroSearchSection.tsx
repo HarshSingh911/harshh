@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plane,
   TrainFront,
@@ -24,6 +24,7 @@ import {
   Globe,
   Camera,
   X,
+  UtensilsCrossed,
 } from 'lucide-react';
 import {
   ASSETS,
@@ -33,6 +34,7 @@ import {
   TripType,
 } from '../data/travelData';
 import { SafeImage } from './SafeImage';
+import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 
 interface HeroSearchSectionProps {
   activeCategory: BookingCategory;
@@ -60,6 +62,7 @@ interface HeroSearchSectionProps {
   onOpenTripAI?: () => void;
   onOpenExplorePage?: () => void;
   onOpenInfluencersPage?: () => void;
+  onOpenDiningClubPage?: () => void;
 }
 
 const SERVICE_TABS: {
@@ -92,7 +95,7 @@ const CAB_TIMES = ['06:00 AM', '09:00 AM', '11:30 AM', '02:00 PM', '05:00 PM', '
 const CAB_PACKAGES = ['4 Hrs / 40 km', '8 Hrs / 80 km', '12 Hrs / 120 km'];
 
 export interface DiscoveryOption {
-  id: 'explore' | 'business-travel' | 'gift-cards' | 'influencers';
+  id: 'explore' | 'business-travel' | 'dining-club' | 'influencers';
   icon: React.FC<{ className?: string }>;
   title: string;
   subtitle: string;
@@ -118,12 +121,12 @@ const DISCOVERY_OPTIONS: DiscoveryOption[] = [
     detail: 'Automated GST tax invoices, corporate discounted airfares, zero cancellation fees, and dedicated company expense management.',
   },
   {
-    id: 'gift-cards',
-    icon: Gift,
-    title: 'Gift Cards',
-    subtitle: 'Instant Travel Vouchers',
-    badge: 'Special',
-    detail: 'Digital TripYeah travel gift cards from ₹500 to ₹50,000 with instant email & WhatsApp delivery for birthdays, weddings & rewards.',
+    id: 'dining-club',
+    icon: UtensilsCrossed,
+    title: 'Dining Club',
+    subtitle: 'VIP Tables & Parties',
+    badge: 'Luxury VIP',
+    detail: 'Reserve Michelin-inspired tables, pre-order gourmet food, book private group party banquets, secure VIP club passes & join social dining tables.',
   },
   {
     id: 'influencers',
@@ -161,6 +164,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onOpenTripAI,
   onOpenExplorePage,
   onOpenInfluencersPage,
+  onOpenDiningClubPage,
 }) => {
   const [internalDummyTripType, setInternalDummyTripType] = useState<'one-way' | 'round-trip'>('one-way');
   const activeDummyTripType = dummyTripType || internalDummyTripType;
@@ -177,6 +181,19 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [swapRotated, setSwapRotated] = useState(false);
+
+  // Close any open popover dropdown when clicking outside
+  useEffect(() => {
+    if (!openDropdown) return;
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.dropdown-field-container')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
+  }, [openDropdown]);
 
   // Business Travel & Gift Cards interactive states
   const [showBusinessModal, setShowBusinessModal] = useState<boolean>(false);
@@ -569,63 +586,116 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Departure Date (Always shown) */}
-                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer">
-                  <div className="min-w-0">
-                    <span className="block text-[11px] text-slate-500 font-medium">
-                      Departure
-                    </span>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                      {formatDisplayDate(departureDate)}
-                    </span>
-                    <span className="block text-[11px] text-slate-400 truncate">
-                      One-Way / Outbound
-                    </span>
-                  </div>
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1.5" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    onChange={(e) => onChangeDepartureDate(e.target.value)}
-                    aria-label="Departure Date"
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
+                {/* Departure Date (Always shown) — Opens Normal Inline Calendar */}
+                <div className="flex-1 min-w-0 relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'departure-date' ? null : 'departure-date');
+                    }}
+                    className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                      openDropdown === 'departure-date'
+                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                    }`}
+                    title="Click to select departure date"
+                    aria-label="Select departure date"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                        Departure Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(departureDate)}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        One-Way / Outbound
+                      </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                  </button>
+
+                  {/* Normal White & Blue Calendar Dropdown — Opens right here under the departure box */}
+                  {openDropdown === 'departure-date' && (
+                    <NormalCalendarDropdown
+                      selectedDate={departureDate}
+                      minDate="2026-10-17"
+                      onSelectDate={(newDate) => {
+                        onChangeDepartureDate(newDate);
+                        if (isRoundTripActive && returnDate <= newDate) {
+                          const nextD = new Date(newDate);
+                          nextD.setDate(nextD.getDate() + 3);
+                          const ym = nextD.toISOString().slice(0, 10);
+                          onChangeReturnDate(ym);
+                        }
+                      }}
+                      onClose={() => setOpenDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
 
                 {/* Return Date — shown when Round Trip is selected OR Dummy Flights with Round Trip is selected */}
                 {isRoundTripActive && (
-                  <label className={`flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl border transition-colors cursor-pointer ${
-                    tripType === 'dummy-flights'
-                      ? 'bg-amber-50/60 hover:bg-amber-50/90 border-amber-200'
-                      : 'bg-indigo-50/50 hover:bg-indigo-50/90 border-indigo-200'
-                  }`}>
-                    <div className="min-w-0">
-                      <span className={`block text-[11px] font-semibold ${
-                        tripType === 'dummy-flights' ? 'text-amber-700' : 'text-indigo-600'
+                  <div className="flex-1 min-w-0 relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'return-date' ? null : 'return-date');
+                      }}
+                      className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                        openDropdown === 'return-date'
+                          ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                          : tripType === 'dummy-flights'
+                          ? 'bg-amber-50/70 hover:bg-amber-50 hover:border-amber-400 border-amber-200'
+                          : 'bg-indigo-50/60 hover:bg-indigo-50 hover:border-indigo-400 border-indigo-200'
+                      }`}
+                      title="Click to select return date"
+                      aria-label="Select return date"
+                    >
+                      <div className="min-w-0">
+                        <span className={`block text-[11px] font-semibold transition-colors ${
+                          tripType === 'dummy-flights'
+                            ? 'text-amber-700 group-hover:text-amber-800'
+                            : 'text-indigo-600 group-hover:text-indigo-700'
+                        }`}>
+                          Return Date
+                        </span>
+                        <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                          {formatDisplayDate(returnDate, 'Select Return')}
+                        </span>
+                        <span className={`block text-[11px] truncate ${
+                          tripType === 'dummy-flights' ? 'text-amber-600 font-medium' : 'text-indigo-500'
+                        }`}>
+                          Round-Trip Save 10%
+                        </span>
+                      </div>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs ${
+                        tripType === 'dummy-flights'
+                          ? 'bg-amber-100/80 group-hover:bg-amber-600 text-amber-700 group-hover:text-white'
+                          : 'bg-indigo-100/80 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white'
                       }`}>
-                        Return
-                      </span>
-                      <span className="block text-xs sm:text-sm font-semibold text-slate-900 truncate mt-0.5">
-                        {formatDisplayDate(returnDate, 'Select Return')}
-                      </span>
-                      <span className={`block text-[11px] truncate ${
-                        tripType === 'dummy-flights' ? 'text-amber-600 font-medium' : 'text-indigo-500'
-                      }`}>
-                        Round-Trip Save 10%
-                      </span>
-                    </div>
-                    <Calendar className={`w-4 h-4 shrink-0 ml-1.5 ${
-                      tripType === 'dummy-flights' ? 'text-amber-600' : 'text-indigo-600'
-                    }`} />
-                    <input
-                      type="date"
-                      value={returnDate}
-                      min={departureDate}
-                      onChange={(e) => onChangeReturnDate(e.target.value)}
-                      aria-label="Return Date"
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                  </label>
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                    </button>
+
+                    {/* Normal White & Blue Calendar Dropdown — Opens right here under the return box */}
+                    {openDropdown === 'return-date' && (
+                      <NormalCalendarDropdown
+                        selectedDate={returnDate}
+                        minDate={departureDate}
+                        onSelectDate={(newDate) => {
+                          onChangeReturnDate(newDate);
+                        }}
+                        onClose={() => setOpenDropdown(null)}
+                        alignRight={true}
+                      />
+                    )}
+                  </div>
                 )}
 
                 {/* Search Button */}
@@ -779,27 +849,45 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Travel Date */}
-                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
-                    <div className="min-w-0">
-                      <span className="block text-[11px] text-slate-500 font-medium">
-                        Travel Date
-                      </span>
-                      <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                        {formatDisplayDate(departureDate)}
-                      </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        {trainQuota}
-                      </span>
-                    </div>
-                    <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
-                    <input
-                      type="date"
-                      value={departureDate}
-                      onChange={(e) => onChangeDepartureDate(e.target.value)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                  </label>
+                  {/* Travel Date — Opens Normal Inline Calendar */}
+                  <div className="flex-1 min-w-0 relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'train-date' ? null : 'train-date');
+                      }}
+                      className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                        openDropdown === 'train-date'
+                          ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                          : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                      }`}
+                      title="Click to select train travel date"
+                    >
+                      <div className="min-w-0">
+                        <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                          Travel Date
+                        </span>
+                        <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                          {formatDisplayDate(departureDate)}
+                        </span>
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          {trainQuota}
+                        </span>
+                      </div>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                    </button>
+                    {openDropdown === 'train-date' && (
+                      <NormalCalendarDropdown
+                        selectedDate={departureDate}
+                        minDate="2026-10-17"
+                        onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
+                        onClose={() => setOpenDropdown(null)}
+                      />
+                    )}
+                  </div>
 
                   {/* Train Coach Class */}
                   <div className="flex-1 min-w-0 relative">
@@ -1005,27 +1093,53 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {renderCityDropdown('to', toCity, onChangeToCity)}
                 </div>
 
-                {/* Check-In Date */}
-                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
-                  <div className="min-w-0">
-                    <span className="block text-[11px] text-slate-500 font-medium">
-                      Check-In
-                    </span>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                      {formatDisplayDate(departureDate, 'Select Check-In')}
-                    </span>
-                    <span className="block text-[11px] text-slate-400 truncate">
-                      From 14:00
-                    </span>
-                  </div>
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    onChange={(e) => onChangeDepartureDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
+                {/* Check-In Date — Opens Normal Inline Calendar */}
+                <div className="flex-1 min-w-0 relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'hotel-checkin' ? null : 'hotel-checkin');
+                    }}
+                    className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                      openDropdown === 'hotel-checkin'
+                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                    }`}
+                    title="Click to select check-in date"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                        Check-In
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(departureDate, 'Select Check-In')}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        From 14:00
+                      </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                  </button>
+                  {openDropdown === 'hotel-checkin' && (
+                    <NormalCalendarDropdown
+                      selectedDate={departureDate}
+                      minDate="2026-10-17"
+                      onSelectDate={(newDate) => {
+                        onChangeDepartureDate(newDate);
+                        if (returnDate <= newDate) {
+                          const nextD = new Date(newDate);
+                          nextD.setDate(nextD.getDate() + 1);
+                          onChangeReturnDate(nextD.toISOString().slice(0, 10));
+                        }
+                      }}
+                      onClose={() => setOpenDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
 
                 {/* Check-Out Date OR Hourly Slot */}
                 {hotelMode === 'hourly' ? (
@@ -1071,27 +1185,45 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     )}
                   </div>
                 ) : (
-                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
-                    <div className="min-w-0">
-                      <span className="block text-[11px] text-slate-500 font-medium">
-                        Check-Out
-                      </span>
-                      <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                        {formatDisplayDate(returnDate, 'Select Check-Out')}
-                      </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        Until 12:00
-                      </span>
-                    </div>
-                    <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
-                    <input
-                      type="date"
-                      value={returnDate}
-                      min={departureDate}
-                      onChange={(e) => onChangeReturnDate(e.target.value)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                  </label>
+                  <div className="flex-1 min-w-0 relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'hotel-checkout' ? null : 'hotel-checkout');
+                      }}
+                      className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                        openDropdown === 'hotel-checkout'
+                          ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                          : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                      }`}
+                      title="Click to select check-out date"
+                    >
+                      <div className="min-w-0">
+                        <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                          Check-Out
+                        </span>
+                        <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                          {formatDisplayDate(returnDate, 'Select Check-Out')}
+                        </span>
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          Until 12:00
+                        </span>
+                      </div>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                    </button>
+                    {openDropdown === 'hotel-checkout' && (
+                      <NormalCalendarDropdown
+                        selectedDate={returnDate}
+                        minDate={departureDate}
+                        onSelectDate={(newDate) => onChangeReturnDate(newDate)}
+                        onClose={() => setOpenDropdown(null)}
+                        alignRight={true}
+                      />
+                    )}
+                  </div>
                 )}
 
                 {/* Rooms & Guests */}
@@ -1312,27 +1444,46 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Travel Date (One-Way Only for Buses) */}
-                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer">
-                  <div className="min-w-0">
-                    <span className="block text-[11px] text-slate-500 font-medium">
-                      Travel Date
-                    </span>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                      {formatDisplayDate(departureDate)}
-                    </span>
-                    <span className="block text-[11px] text-slate-400 truncate">
-                      {busFilter}
-                    </span>
-                  </div>
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    onChange={(e) => onChangeDepartureDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
+                {/* Travel Date — Opens Normal Inline Calendar */}
+                <div className="flex-1 min-w-0 relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'bus-date' ? null : 'bus-date');
+                    }}
+                    className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                      openDropdown === 'bus-date'
+                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                    }`}
+                    title="Click to select bus travel date"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                        Travel Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(departureDate)}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        {busFilter}
+                      </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                  </button>
+                  {openDropdown === 'bus-date' && (
+                    <NormalCalendarDropdown
+                      selectedDate={departureDate}
+                      minDate="2026-10-17"
+                      onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
+                      onClose={() => setOpenDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
 
                 {/* Search Buses Button */}
                 <button
@@ -1527,51 +1678,95 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </div>
                 )}
 
-                {/* Pickup Date */}
-                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer">
-                  <div className="min-w-0">
-                    <span className="block text-[11px] text-slate-500 font-medium">
-                      Pickup Date
-                    </span>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                      {formatDisplayDate(departureDate)}
-                    </span>
-                    <span className="block text-[11px] text-slate-400 truncate">
-                      Zero Surge
-                    </span>
-                  </div>
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    onChange={(e) => onChangeDepartureDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
+                {/* Pickup Date — Opens Normal Inline Calendar */}
+                <div className="flex-1 min-w-0 relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'cab-pickup-date' ? null : 'cab-pickup-date');
+                    }}
+                    className={`w-full h-full text-left px-3 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                      openDropdown === 'cab-pickup-date'
+                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                    }`}
+                    title="Click to select cab pickup date"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                        Pickup Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(departureDate)}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        Zero Surge
+                      </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                  </button>
+                  {openDropdown === 'cab-pickup-date' && (
+                    <NormalCalendarDropdown
+                      selectedDate={departureDate}
+                      minDate="2026-10-17"
+                      onSelectDate={(newDate) => {
+                        onChangeDepartureDate(newDate);
+                        if (returnDate <= newDate) {
+                          const nextD = new Date(newDate);
+                          nextD.setDate(nextD.getDate() + 1);
+                          onChangeReturnDate(nextD.toISOString().slice(0, 10));
+                        }
+                      }}
+                      onClose={() => setOpenDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
 
                 {/* Return Date — ONLY shown when Outstation Round-Trip is selected */}
                 {cabMode === 'round-trip' && (
-                  <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 py-2.5 rounded-2xl bg-indigo-50/50 border border-indigo-200 cursor-pointer">
-                    <div className="min-w-0">
-                      <span className="block text-[11px] text-indigo-600 font-semibold">
-                        Return Date
-                      </span>
-                      <span className="block text-xs sm:text-sm font-semibold text-slate-900 truncate mt-0.5">
-                        {formatDisplayDate(returnDate, 'Select Return')}
-                      </span>
-                      <span className="block text-[11px] text-indigo-500 truncate">
-                        Round-Trip Cab
-                      </span>
-                    </div>
-                    <Calendar className="w-4 h-4 text-indigo-600 shrink-0 ml-1" />
-                    <input
-                      type="date"
-                      value={returnDate}
-                      min={departureDate}
-                      onChange={(e) => onChangeReturnDate(e.target.value)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                  </label>
+                  <div className="flex-1 min-w-0 relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'cab-return-date' ? null : 'cab-return-date');
+                      }}
+                      className={`w-full h-full text-left px-3 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                        openDropdown === 'cab-return-date'
+                          ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                          : 'bg-indigo-50/50 hover:bg-indigo-50/80 hover:border-indigo-400 border-indigo-200'
+                      }`}
+                      title="Click to select cab return date"
+                    >
+                      <div className="min-w-0">
+                        <span className="block text-[11px] text-indigo-600 font-semibold transition-colors">
+                          Return Date
+                        </span>
+                        <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                          {formatDisplayDate(returnDate, 'Select Return')}
+                        </span>
+                        <span className="block text-[11px] text-indigo-500 truncate">
+                          Round-Trip Cab
+                        </span>
+                      </div>
+                      <div className="w-8 h-8 rounded-xl bg-indigo-100/80 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                    </button>
+                    {openDropdown === 'cab-return-date' && (
+                      <NormalCalendarDropdown
+                        selectedDate={returnDate}
+                        minDate={departureDate}
+                        onSelectDate={(newDate) => onChangeReturnDate(newDate)}
+                        onClose={() => setOpenDropdown(null)}
+                        alignRight={true}
+                      />
+                    )}
+                  </div>
                 )}
 
                 {/* Pickup Time */}
@@ -1712,27 +1907,46 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Departure Date */}
-                <label className="flex-1 min-w-0 relative flex items-center justify-between px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer">
-                  <div className="min-w-0">
-                    <span className="block text-[11px] text-slate-500 font-medium">
-                      Departure Date
-                    </span>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                      {formatDisplayDate(departureDate)}
-                    </span>
-                    <span className="block text-[11px] text-slate-400 truncate">
-                      Flexible Dates
-                    </span>
-                  </div>
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    onChange={(e) => onChangeDepartureDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
+                {/* Departure Date — Opens Normal Inline Calendar */}
+                <div className="flex-1 min-w-0 relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'holiday-date' ? null : 'holiday-date');
+                    }}
+                    className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                      openDropdown === 'holiday-date'
+                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                    }`}
+                    title="Click to select holiday departure date"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                        Departure Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(departureDate)}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        Flexible Dates
+                      </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                  </button>
+                  {openDropdown === 'holiday-date' && (
+                    <NormalCalendarDropdown
+                      selectedDate={departureDate}
+                      minDate="2026-10-17"
+                      onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
+                      onClose={() => setOpenDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
 
                 {/* Duration & Guests */}
                 <div className="flex-1 min-w-0 relative">
@@ -1854,28 +2068,46 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {renderCityDropdown('to', toCity, onChangeToCity)}
                 </div>
 
-                {/* 2. Select Date (Departure / Activity Date) */}
-                <label className="flex-[1.5] min-w-0 relative flex items-center justify-between px-3.5 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer">
-                  <div className="min-w-0">
-                    <span className="block text-[11px] text-slate-500 font-medium">
-                      Select Date
-                    </span>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
-                      {formatDisplayDate(departureDate, 'Select Visit Date')}
-                    </span>
-                    <span className="block text-[11px] text-slate-400 truncate">
-                      Flexible Reschedule Available
-                    </span>
-                  </div>
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 ml-1.5" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    onChange={(e) => onChangeDepartureDate(e.target.value)}
-                    aria-label="Activity Date"
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
+                {/* 2. Select Date (Activity Date) — Opens Normal Inline Calendar */}
+                <div className="flex-[1.5] min-w-0 relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'experience-date' ? null : 'experience-date');
+                    }}
+                    className={`w-full h-full text-left px-3.5 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
+                      openDropdown === 'experience-date'
+                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
+                    }`}
+                    title="Click to select visit date"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
+                        Select Date
+                      </span>
+                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
+                        {formatDisplayDate(departureDate, 'Select Visit Date')}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        Flexible Reschedule Available
+                      </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                  </button>
+                  {openDropdown === 'experience-date' && (
+                    <NormalCalendarDropdown
+                      selectedDate={departureDate}
+                      minDate="2026-10-17"
+                      onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
+                      onClose={() => setOpenDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
 
                 {/* 3. Search Button */}
                 <button
@@ -1911,8 +2143,12 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       }
                     } else if (item.id === 'business-travel') {
                       setShowBusinessModal(true);
-                    } else if (item.id === 'gift-cards') {
-                      setShowGiftCardsModal(true);
+                    } else if (item.id === 'dining-club') {
+                      if (onOpenDiningClubPage) {
+                        onOpenDiningClubPage();
+                      } else {
+                        onSelectTrustPillar('Dining Club', item.detail);
+                      }
                     } else if (item.id === 'influencers') {
                       if (onOpenInfluencersPage) {
                         onOpenInfluencersPage();

@@ -20,6 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Percent,
+  Briefcase,
+  Search,
+  ChevronDown,
 } from 'lucide-react';
 import { TripYeahLogo } from './TripYeahLogo';
 
@@ -33,7 +36,7 @@ import destParis from '../assets/images/dest_paris_eiffel_1790774759266.jpg';
 export interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (name: string, email: string, mobile?: string) => void;
+  onLoginSuccess: (name: string, email: string, mobile?: string, role?: 'user' | 'admin') => void;
   initialMobile?: string;
   onOpenPrivacyPolicy?: () => void;
   onOpenTermsOfService?: () => void;
@@ -41,6 +44,46 @@ export interface AuthModalProps {
 
 export type AuthMethod = 'phone' | 'email';
 export type AuthStep = 'phone-input' | 'otp-verify' | 'email-login' | 'create-account' | 'google-picker';
+
+export interface CountryDialOption {
+  code: string;
+  name: string;
+  dialCode: string;
+  flag: string;
+}
+
+export const COUNTRIES_LIST: CountryDialOption[] = [
+  { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳' },
+  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸' },
+  { code: 'AE', name: 'United Arab Emirates', dialCode: '+971', flag: '🇦🇪' },
+  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
+  { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬' },
+  { code: 'CA', name: 'Canada', dialCode: '+1', flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺' },
+  { code: 'DE', name: 'Germany', dialCode: '+49', flag: '🇩🇪' },
+  { code: 'FR', name: 'France', dialCode: '+33', flag: '🇫🇷' },
+  { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵' },
+  { code: 'TH', name: 'Thailand', dialCode: '+66', flag: '🇹🇭' },
+  { code: 'ID', name: 'Indonesia', dialCode: '+62', flag: '🇮🇩' },
+  { code: 'MY', name: 'Malaysia', dialCode: '+60', flag: '🇲🇾' },
+  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' },
+  { code: 'QA', name: 'Qatar', dialCode: '+974', flag: '🇶🇦' },
+  { code: 'OM', name: 'Oman', dialCode: '+968', flag: '🇴🇲' },
+  { code: 'KW', name: 'Kuwait', dialCode: '+965', flag: '🇰🇼' },
+  { code: 'BH', name: 'Bahrain', dialCode: '+973', flag: '🇧🇭' },
+  { code: 'NP', name: 'Nepal', dialCode: '+977', flag: '🇳🇵' },
+  { code: 'LK', name: 'Sri Lanka', dialCode: '+94', flag: '🇱🇰' },
+  { code: 'BD', name: 'Bangladesh', dialCode: '+880', flag: '🇧🇩' },
+  { code: 'MV', name: 'Maldives', dialCode: '+960', flag: '🇲🇻' },
+  { code: 'CH', name: 'Switzerland', dialCode: '+41', flag: '🇨🇭' },
+  { code: 'IT', name: 'Italy', dialCode: '+39', flag: '🇮🇹' },
+  { code: 'ES', name: 'Spain', dialCode: '+34', flag: '🇪🇸' },
+  { code: 'NL', name: 'Netherlands', dialCode: '+31', flag: '🇳🇱' },
+  { code: 'NZ', name: 'New Zealand', dialCode: '+64', flag: '🇳🇿' },
+  { code: 'ZA', name: 'South Africa', dialCode: '+27', flag: '🇿🇦' },
+  { code: 'PH', name: 'Philippines', dialCode: '+63', flag: '🇵🇭' },
+  { code: 'VN', name: 'Vietnam', dialCode: '+84', flag: '🇻🇳' },
+];
 
 // Curated Slideshow Sceneries with Exclusive Member Travel Offers
 const SLIDESHOW_OFFERS = [
@@ -143,12 +186,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Slideshow State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Phone input states
+  const [selectedCountry, setSelectedCountry] = useState<CountryDialOption>(COUNTRIES_LIST[0]);
   const [countryCode, setCountryCode] = useState('+91');
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(initialMobile);
   const [otp, setOtp] = useState(['', '', '', '']);
+
+  const filteredCountries = COUNTRIES_LIST.filter(
+    (c) =>
+      c.name.toLowerCase().includes(countrySearchQuery.toLowerCase()) ||
+      c.dialCode.includes(countrySearchQuery) ||
+      c.code.toLowerCase().includes(countrySearchQuery.toLowerCase())
+  );
 
   // Email input states
   const [emailInput, setEmailInput] = useState('');
@@ -191,13 +243,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }, [step, countdown]);
 
   if (!isOpen) return null;
-
-  // Handle slide copy promo code
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard?.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
-  };
 
   // Format and clean phone input
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -270,7 +315,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         const existing = accounts.find((acc) => acc.phone === phoneNumber);
 
         if (existing) {
-          onLoginSuccess(existing.name || 'Rahul Sharma', existing.email || `${phoneNumber}@tripyeah.com`, phoneNumber);
+          onLoginSuccess(
+            existing.name || 'Rahul Sharma',
+            existing.email || `${phoneNumber}@tripyeah.com`,
+            phoneNumber,
+            'user'
+          );
           onClose();
         } else {
           setStep('create-account');
@@ -314,6 +364,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           name: fullName.trim(),
           email: userEmail,
           password: password,
+          role: 'user',
           createdAt: new Date().toISOString(),
         };
         const updatedAccounts = [...accounts.filter((a) => a.phone !== phoneNumber), newAccount];
@@ -322,62 +373,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         console.warn('LocalStorage save note:', err);
       }
 
-      onLoginSuccess(fullName.trim(), userEmail, phoneNumber);
+      onLoginSuccess(fullName.trim(), userEmail, phoneNumber, 'user');
       onClose();
     }, 450);
   };
 
-  // Email Login / Sign Up Submit
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  // TripWork Company Management / Operations Submit
+  const handleTripWorkSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailInput || !emailInput.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!emailPassword || emailPassword.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-    if (isEmailSignUp && !emailFullName.trim()) {
-      setError('Please enter your full name.');
+    const cleanEmail = emailInput.trim();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setError('Please enter a valid company/admin email address.');
       return;
     }
 
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      const userNameCalculated = isEmailSignUp
-        ? emailFullName.trim()
-        : emailInput.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const rawName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const adminName = rawName.toLowerCase().includes('admin') || rawName.toLowerCase().includes('trip')
+        ? rawName
+        : `${rawName} (Admin)`;
 
-      // Save user record
+      // Save user record with admin role
       try {
         const storedAccountsStr = localStorage.getItem('tripyeah_registered_accounts');
         const accounts: any[] = storedAccountsStr ? JSON.parse(storedAccountsStr) : [];
         const newAccount = {
-          email: emailInput.trim(),
-          name: userNameCalculated,
-          phone: '+91 98765 43210',
-          password: emailPassword,
+          email: cleanEmail,
+          name: adminName,
+          phone: '',
+          accountType: 'tripwork_admin',
+          role: 'admin',
           createdAt: new Date().toISOString(),
         };
-        localStorage.setItem('tripyeah_registered_accounts', JSON.stringify([...accounts, newAccount]));
+        localStorage.setItem(
+          'tripyeah_registered_accounts',
+          JSON.stringify([...accounts.filter((a) => a.email !== cleanEmail), newAccount])
+        );
+        localStorage.setItem('tripyeah_user_role', 'admin');
+        localStorage.setItem('tripyeah_logged_user', adminName);
       } catch {}
 
-      onLoginSuccess(userNameCalculated, emailInput.trim(), '+91 98765 43210');
+      onLoginSuccess(adminName, cleanEmail, '', 'admin');
       onClose();
     }, 450);
   };
 
   // Google 1-Click Login Simulation
-  const handleGoogleLogin = (chosenName?: string, chosenEmail?: string) => {
+  const handleGoogleLogin = (chosenName?: string, chosenEmail?: string, role: 'user' | 'admin' = 'user') => {
     setLoading(true);
     setError('');
 
     setTimeout(() => {
       setLoading(false);
-      const gName = chosenName || 'Aryan Kapoor';
-      const gEmail = chosenEmail || 'aryan.kapoor@gmail.com';
+      const gName = chosenName || (role === 'admin' ? 'TripWork Manager' : 'Aryan Kapoor');
+      const gEmail = chosenEmail || (role === 'admin' ? 'admin@tripyeah.com' : 'aryan.kapoor@gmail.com');
 
       // Save to registered accounts
       try {
@@ -388,17 +439,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           email: gEmail,
           phone: '+91 98110 54321',
           provider: 'google',
+          role: role,
           createdAt: new Date().toISOString(),
         };
         localStorage.setItem('tripyeah_registered_accounts', JSON.stringify([...accounts, newAccount]));
+        localStorage.setItem('tripyeah_user_role', role);
+        localStorage.setItem('tripyeah_logged_user', gName);
       } catch {}
 
-      onLoginSuccess(gName, gEmail, '+91 98110 54321');
+      onLoginSuccess(gName, gEmail, '+91 98110 54321', role);
       onClose();
     }, 500);
   };
-
-  const activeSlideData = SLIDESHOW_OFFERS[currentSlide];
 
   return (
     <div
@@ -407,7 +459,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       aria-modal="true"
     >
       {/* Medium-Sized Balanced 2-Column Modal */}
-      <div className="bg-white rounded-3xl max-w-xl md:max-w-3xl lg:max-w-[780px] w-full overflow-hidden shadow-2xl border border-slate-200/90 relative animate-in fade-in zoom-in-95 duration-200 grid grid-cols-1 md:grid-cols-12 min-h-[460px] sm:min-h-[500px]">
+      <div className="bg-slate-900 rounded-3xl max-w-xl md:max-w-3xl lg:max-w-[780px] w-full overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 grid grid-cols-1 md:grid-cols-12 min-h-[460px] sm:min-h-[500px]">
         
         {/* =====================================================================
             LEFT COLUMN (5-cols on md+): SCENERIES SLIDESHOW WITH TRAVEL OFFERS
@@ -435,72 +487,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             ))}
           </div>
-
-          {/* Top: Discreet slide indicators (No text on photo) */}
-          <div className="relative z-10 flex items-center justify-end">
-            <div className="flex items-center gap-1.5 bg-black/35 backdrop-blur-md px-2 py-1 rounded-full border border-white/20">
-              {SLIDESHOW_OFFERS.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx === currentSlide ? 'w-4 bg-white' : 'w-1.5 bg-white/50 hover:bg-white'
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom: Coupon card moved down (thoda neeche) with crisp white background */}
-          <div className="relative z-10 mt-auto pt-6">
-            <div className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-2xl border border-slate-200/80 flex items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
-                  <Percent className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider leading-none">
-                    Coupon Code
-                  </span>
-                  <span className="font-mono text-xs sm:text-sm font-extrabold text-blue-600 tracking-wider">
-                    {activeSlideData.promoCode}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleCopyCode(activeSlideData.promoCode)}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                >
-                  {copiedCode === activeSlideData.promoCode ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-white" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentSlide((prev) => (prev + 1) % SLIDESHOW_OFFERS.length)}
-                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Next coupon"
-                  aria-label="Next coupon"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* =====================================================================
@@ -520,30 +506,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Top Branding & Method Tabs */}
           <div>
-            <div className="flex items-center justify-between mb-2 pr-8">
+            <div className="flex items-center justify-between mb-3 pr-8">
               <TripYeahLogo className="h-6 sm:h-7 w-auto" />
             </div>
 
-            <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-3">
-              {step === 'otp-verify'
-                ? 'Verify Mobile Number'
-                : step === 'create-account'
-                ? 'Complete Profile'
-                : authMethod === 'email'
-                ? isEmailSignUp
-                  ? 'Create Account with Email'
-                  : 'Welcome Back! Sign In'
-                : 'Login or Create Account'}
-            </h2>
             {step === 'otp-verify' && (
-              <p className="text-xs text-slate-500 mt-0.5 mb-3.5">
-                Enter 4-digit code sent to {countryCode} {phoneNumber}
-              </p>
+              <>
+                <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                  Verify Mobile Number
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5 mb-3.5">
+                  Enter 4-digit code sent to {countryCode} {phoneNumber}
+                </p>
+              </>
             )}
 
-            {/* Method Tabs: Phone Number vs Email ID (Only visible on initial step) */}
+            {step === 'create-account' && (
+              <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-3">
+                Complete Profile
+              </h2>
+            )}
+          </div>
+
+          {/* Error Message Banner */}
+          {error && (
+            <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Form Content Area */}
+          <div className="flex-1 flex flex-col justify-center">
+
+            {/* Method Tabs: Phone vs TripWork (Positioned right above input fields with tight, clean gap) */}
             {(step === 'phone-input' || step === 'email-login') && (
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-3.5">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -558,7 +556,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }`}
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  <span>Mobile OTP</span>
+                  <span>Phone</span>
                 </button>
 
                 <button
@@ -574,23 +572,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email ID</span>
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>TripWork</span>
                 </button>
               </div>
             )}
-          </div>
-
-          {/* Error Message Banner */}
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Form Content Area */}
-          <div className="flex-1 flex flex-col justify-center">
 
             {/* -------------------------------------------------------------
                 METHOD 1: PHONE NUMBER INPUT
@@ -601,30 +587,94 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
                     Mobile Number
                   </label>
-                  <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all overflow-hidden">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="bg-slate-100/90 text-xs font-bold text-slate-800 px-2.5 py-2.5 border-r border-slate-300 focus:outline-none cursor-pointer"
+                  <div className="relative flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all">
+                    {/* Custom Country Code Selector with Search & Scroll */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCountryDropdownOpen(!isCountryDropdownOpen);
+                        setCountrySearchQuery('');
+                      }}
+                      className="bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800 px-2.5 py-2.5 rounded-l-xl border-r border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer select-none shrink-0"
                     >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+971">🇦🇪 +971</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+65">🇸🇬 +65</option>
-                    </select>
+                      <span className="text-base leading-none">{selectedCountry.flag}</span>
+                      <span className="font-mono-tabular font-bold">{selectedCountry.dialCode}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
                     <div className="relative flex-1">
                       <input
                         type="tel"
                         value={phoneNumber}
                         onChange={handlePhoneChange}
-                        placeholder="Enter 10-digit mobile number"
+                        placeholder="Enter Mobile Number"
                         maxLength={10}
                         autoFocus
                         required
-                        className="w-full px-3 py-2.5 text-xs sm:text-sm font-bold text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400 font-mono-tabular"
+                        className="w-full px-3 py-2.5 text-xs sm:text-sm font-normal text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400 rounded-r-xl"
                       />
                     </div>
+
+                    {/* Searchable Country Dropdown */}
+                    {isCountryDropdownOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setIsCountryDropdownOpen(false)}
+                        />
+                        <div className="absolute left-0 top-[calc(100%+6px)] w-72 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                          {/* Search Header */}
+                          <div className="p-2 border-b border-slate-100 bg-slate-50">
+                            <div className="relative">
+                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              <input
+                                type="text"
+                                value={countrySearchQuery}
+                                onChange={(e) => setCountrySearchQuery(e.target.value)}
+                                placeholder="Search country or code..."
+                                autoFocus
+                                className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600 font-medium text-slate-800 placeholder:text-slate-400"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Scrollable Country List */}
+                          <div className="max-h-56 overflow-y-auto divide-y divide-slate-100/70 custom-scrollbar">
+                            {filteredCountries.length > 0 ? (
+                              filteredCountries.map((c) => (
+                                <button
+                                  key={`${c.code}-${c.dialCode}`}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedCountry(c);
+                                    setCountryCode(c.dialCode);
+                                    setIsCountryDropdownOpen(false);
+                                    setCountrySearchQuery('');
+                                  }}
+                                  className={`w-full px-3 py-2 text-left flex items-center justify-between text-xs hover:bg-blue-50/80 transition-colors cursor-pointer ${
+                                    selectedCountry.code === c.code && selectedCountry.dialCode === c.dialCode
+                                      ? 'bg-blue-50 text-blue-600 font-bold'
+                                      : 'text-slate-700'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-base shrink-0 leading-none">{c.flag}</span>
+                                    <span className="truncate">{c.name}</span>
+                                  </div>
+                                  <span className="font-mono text-[11px] font-semibold text-slate-500 shrink-0 ml-2">
+                                    {c.dialCode}
+                                  </span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-xs text-slate-400">
+                                No countries found for "{countrySearchQuery}"
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -637,7 +687,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>Continue with Mobile OTP</span>
+                      <span>Continue</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -646,126 +696,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             {/* -------------------------------------------------------------
-                METHOD 2: EMAIL LOGIN & PASSWORD
+                METHOD 2: TRIPWORK COMPANY MANAGEMENT
                ------------------------------------------------------------- */}
             {step === 'email-login' && authMethod === 'email' && (
-              <form onSubmit={handleEmailSubmit} className="space-y-3.5">
-                {isEmailSignUp && (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Full Name *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={emailFullName}
-                        onChange={(e) => setEmailFullName(e.target.value)}
-                        placeholder="e.g. Rahul Sharma"
-                        required
-                        autoFocus
-                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                      />
-                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    </div>
-                  </div>
-                )}
-
+              <form onSubmit={handleTripWorkSubmit} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Email Address *
+                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                    Work Email
                   </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      placeholder="e.g. rahul@example.com"
-                      required
-                      autoFocus={!isEmailSignUp}
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">
-                      Password *
-                    </label>
-                    {!isEmailSignUp && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAuthMethod('phone');
-                          setStep('phone-input');
+                  <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all overflow-hidden">
+                    <div className="pl-3 text-slate-400">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="relative flex-1">
+                      <input
+                        type="email"
+                        value={emailInput}
+                        onChange={(e) => {
+                          setEmailInput(e.target.value);
+                          setError('');
                         }}
-                        className="text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
-                      >
-                        Forgot password?
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showEmailPassword ? 'text' : 'password'}
-                      value={emailPassword}
-                      onChange={(e) => setEmailPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      required
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <button
-                      type="button"
-                      onClick={() => setShowEmailPassword(!showEmailPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showEmailPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                        placeholder="Enter Work Email ID"
+                        autoFocus
+                        required
+                        className="w-full px-3 py-2.5 text-xs sm:text-sm font-normal text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !emailInput || !emailPassword}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                  disabled={loading || !emailInput.trim()}
+                  className="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>{isEmailSignUp ? 'Create Account & Sign In' : 'Sign In with Email'}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <span>Continue</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
                 </button>
-
-                <div className="text-center pt-1 text-xs text-slate-600">
-                  {isEmailSignUp ? (
-                    <span>
-                      Already have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => setIsEmailSignUp(false)}
-                        className="text-blue-600 font-bold hover:underline cursor-pointer"
-                      >
-                        Sign In
-                      </button>
-                    </span>
-                  ) : (
-                    <span>
-                      New to TripYeah?{' '}
-                      <button
-                        type="button"
-                        onClick={() => setIsEmailSignUp(true)}
-                        className="text-blue-600 font-bold hover:underline cursor-pointer"
-                      >
-                        Create Account
-                      </button>
-                    </span>
-                  )}
-                </div>
               </form>
             )}
 
@@ -986,20 +959,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                ------------------------------------------------------------- */}
             {(step === 'phone-input' || step === 'email-login') && (
               <div className="mt-3.5 space-y-2.5">
-                <div className="relative flex items-center justify-center">
-                  <div className="border-t border-slate-200 w-full" />
-                  <span className="bg-white px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider relative">
-                    Or continue with
+                <div className="relative my-3 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <span className="relative z-10 bg-white px-3 text-[11px] font-medium text-slate-400 text-center">
+                    {authMethod === 'email'
+                      ? 'or use your corporate account with'
+                      : 'or Login/Signup with'}
                   </span>
                 </div>
 
                 {/* Google Sign-In Button */}
                 <button
                   type="button"
-                  onClick={() => handleGoogleLogin('Aryan Kapoor', 'aryan.kapoor@gmail.com')}
+                  onClick={() =>
+                    handleGoogleLogin(
+                      authMethod === 'email' ? 'Corporate Traveler' : 'Aryan Kapoor',
+                      authMethod === 'email' ? (emailInput.trim() || 'corporate@company.com') : 'aryan.kapoor@gmail.com'
+                    )
+                  }
                   disabled={loading}
-                  title="Continue with Google"
-                  aria-label="Continue with Google"
+                  title={authMethod === 'email' ? 'Continue with Google Workspace' : 'Continue with Google'}
+                  aria-label={authMethod === 'email' ? 'Continue with Google Workspace' : 'Continue with Google'}
                   className="w-full py-2.5 px-3 rounded-xl border border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-98"
                 >
                   <GoogleIcon className="w-5 h-5" />
@@ -1010,7 +992,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Bottom Trust & Compliance Footer */}
           <div className="pt-4 mt-4 border-t border-slate-100 text-center text-[11px] text-slate-400">
-            <span>By proceeding you agree to TripYeah T&amp;C</span>
+            <span>
+              By proceeding you agree to{' '}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                  onOpenTermsOfService?.();
+                }}
+                className="text-blue-600 hover:text-blue-700 hover:underline font-semibold cursor-pointer transition-colors"
+              >
+                TripYehh T&amp;C
+              </button>
+            </span>
           </div>
 
         </div>

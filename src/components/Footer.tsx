@@ -155,6 +155,16 @@ export const Footer: React.FC<FooterProps> = ({
                   Airport Cabs
                 </button>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onNavigatePage('dining-club')}
+                  className="hover:text-amber-600 font-bold text-amber-700 cursor-pointer flex items-center gap-1"
+                >
+                  <span>Dining Club</span>
+                  <span className="text-[9px] bg-amber-100 text-amber-800 px-1 py-0.2 rounded font-bold">VIP</span>
+                </button>
+              </li>
             </ul>
           </div>
 
