@@ -187,12 +187,21 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     if (!openDropdown) return;
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('.dropdown-field-container')) {
-        setOpenDropdown(null);
+      if (
+        target.closest('.dropdown-field-container') ||
+        target.closest('[data-dropdown-container]')
+      ) {
+        return;
       }
+      setOpenDropdown(null);
     };
-    document.addEventListener('click', handleDocumentClick);
-    return () => document.removeEventListener('click', handleDocumentClick);
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleDocumentClick);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleDocumentClick);
+    };
   }, [openDropdown]);
 
   // Business Travel & Gift Cards interactive states
@@ -272,9 +281,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     if (openDropdown !== which) return null;
     return (
       <div
+        data-dropdown-container="true"
+        onClick={(e) => e.stopPropagation()}
         className={`absolute ${
           which === 'to' ? 'right-0' : 'left-0'
-        } mt-2 w-72 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30`}
+        } mt-2 w-72 max-h-64 overflow-y-auto custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40`}
       >
         {CITIES.map((city) => (
           <button
@@ -445,15 +456,20 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 {/* Right Controls: Traveller & Class Dropdown (Original Position) */}
                 <div className="flex items-center gap-2.5 sm:gap-4 relative shrink-0">
                   {/* Traveller & Flight Class Popover in original top-right position */}
-                  <div className="relative">
+                  <div className="relative dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setOpenDropdown(
                           openDropdown === 'travellers' ? null : 'travellers'
-                        )
-                      }
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-[11px] sm:text-xs font-semibold text-slate-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                        );
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                        openDropdown === 'travellers'
+                          ? 'border-indigo-500 bg-indigo-50/80 text-indigo-700 ring-2 ring-indigo-200'
+                          : 'border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-800'
+                      } text-[11px] sm:text-xs font-semibold`}
                     >
                       <span>
                         {travellers} {travellers === 1 ? 'Traveller' : 'Travellers'} · {cabinClass}
@@ -462,11 +478,18 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     </button>
 
                     {openDropdown === 'travellers' && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-30">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-slate-700">
-                            Travellers
-                          </span>
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-40 max-h-80 overflow-y-auto custom-scrollbar select-none"
+                      >
+                        <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">
+                              Travellers
+                            </span>
+                            <span className="text-[10px] text-slate-400">Adults (12+ yrs)</span>
+                          </div>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -476,11 +499,12 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                                   cabinClass
                                 )
                               }
-                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                              disabled={travellers <= 1}
+                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                             >
                               -
                             </button>
-                            <span className="w-6 text-center text-sm font-bold font-mono-tabular">
+                            <span className="w-6 text-center text-sm font-bold font-mono-tabular text-slate-900">
                               {travellers}
                             </span>
                             <button
@@ -491,15 +515,16 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                                   cabinClass
                                 )
                               }
-                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                              disabled={travellers >= 9}
+                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                             >
                               +
                             </button>
                           </div>
                         </div>
 
-                        <div className="border-t border-slate-100 pt-3">
-                          <p className="text-xs font-semibold text-slate-700 mb-2">
+                        <div>
+                          <p className="text-xs font-bold text-slate-700 mb-2">
                             Flight Class
                           </p>
                           <div className="grid grid-cols-2 gap-1.5">
@@ -511,9 +536,9 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                                   onChangeTravellers(travellers, c);
                                   setOpenDropdown(null);
                                 }}
-                                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
+                                className={`px-2.5 py-2 rounded-xl text-xs font-semibold text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
                                   cabinClass === c
-                                    ? 'bg-indigo-600 text-white'
+                                    ? 'bg-indigo-600 text-white shadow-xs'
                                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                 }`}
                               >
@@ -532,12 +557,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               <div className="flex items-stretch gap-2 w-full">
                 {/* From ⇄ To */}
                 <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
-                  <div className="relative min-w-0">
+                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === 'from' ? null : 'from')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'from' ? null : 'from');
+                      }}
                       className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
@@ -564,12 +590,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <div className="relative min-w-0">
+                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                      }}
                       className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
@@ -753,21 +780,30 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   <span className="hidden sm:inline text-[11px] text-slate-500 font-medium">
                     IRCTC Authorised Partner ·
                   </span>
-                  <div className="relative">
+                  <div className="relative dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setOpenDropdown(
                           openDropdown === 'train-quota' ? null : 'train-quota'
-                        )
-                      }
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] sm:text-xs font-semibold text-slate-800 whitespace-nowrap cursor-pointer"
+                        );
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all text-[11px] sm:text-xs font-semibold whitespace-nowrap cursor-pointer ${
+                        openDropdown === 'train-quota'
+                          ? 'border-indigo-500 bg-indigo-50/80 text-indigo-700 ring-2 ring-indigo-200'
+                          : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800'
+                      }`}
                     >
                       <span>{trainQuota}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
                     </button>
                     {openDropdown === 'train-quota' && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                      >
                         {TRAIN_QUOTAS.map((q) => (
                           <button
                             key={q}
@@ -776,7 +812,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                               setTrainQuota(q);
                               setOpenDropdown(null);
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition-colors ${
                               trainQuota === q
                                 ? 'bg-indigo-50 text-indigo-700 font-semibold'
                                 : 'hover:bg-slate-100 text-slate-700'
@@ -795,12 +831,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <div className="flex items-stretch gap-2 w-full">
                   {/* From Station ⇄ To Station */}
                   <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
-                    <div className="relative min-w-0">
+                    <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                       <button
                         type="button"
-                        onClick={() =>
-                          setOpenDropdown(openDropdown === 'from' ? null : 'from')
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(openDropdown === 'from' ? null : 'from');
+                        }}
                         className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
                       >
                         <span className="block text-[11px] text-slate-500 font-medium">
@@ -827,12 +864,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <ArrowLeftRight className="w-3.5 h-3.5" />
                     </button>
 
-                    <div className="relative min-w-0">
+                    <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                       <button
                         type="button"
-                        onClick={() =>
-                          setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                        }}
                         className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
                       >
                         <span className="block text-[11px] text-slate-500 font-medium">
@@ -882,7 +920,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     {openDropdown === 'train-date' && (
                       <NormalCalendarDropdown
                         selectedDate={departureDate}
-                        minDate="2026-10-17"
+                        minDate="2026-10-15"
                         onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
                         onClose={() => setOpenDropdown(null)}
                       />
@@ -890,15 +928,20 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </div>
 
                   {/* Train Coach Class */}
-                  <div className="flex-1 min-w-0 relative">
+                  <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setOpenDropdown(
                           openDropdown === 'train-class' ? null : 'train-class'
-                        )
-                      }
-                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
+                        );
+                      }}
+                      className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all flex items-center justify-between gap-1 cursor-pointer ${
+                        openDropdown === 'train-class'
+                          ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
+                          : 'bg-slate-50/90 hover:bg-slate-100/80 border-slate-200/90'
+                      }`}
                     >
                       <div className="min-w-0">
                         <span className="block text-[11px] text-slate-500 font-medium">
@@ -915,7 +958,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     </button>
 
                     {openDropdown === 'train-class' && (
-                      <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                      >
                         {TRAIN_CLASSES.map((tc) => (
                           <button
                             key={tc}
@@ -925,7 +972,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                               onChangeTravellers(travellers, tc);
                               setOpenDropdown(null);
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition-colors ${
                               trainClass === tc
                                 ? 'bg-indigo-50 text-indigo-700 font-semibold'
                                 : 'hover:bg-slate-100 text-slate-700'
@@ -1070,12 +1117,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
               <div className="flex items-stretch gap-2 w-full">
                 {/* City, Property Name or Location */}
-                <div className="flex-[1.6] min-w-0 relative">
+                <div className="flex-[1.6] min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                    }}
                     className="w-full h-full text-left px-3.5 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
                   >
                     <span className="block text-[11px] text-slate-500 font-medium">
@@ -1126,7 +1174,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {openDropdown === 'hotel-checkin' && (
                     <NormalCalendarDropdown
                       selectedDate={departureDate}
-                      minDate="2026-10-17"
+                      minDate="2026-10-15"
                       onSelectDate={(newDate) => {
                         onChangeDepartureDate(newDate);
                         if (returnDate <= newDate) {
@@ -1143,14 +1191,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
                 {/* Check-Out Date OR Hourly Slot */}
                 {hotelMode === 'hourly' ? (
-                  <div className="flex-1 min-w-0 relative">
+                  <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setOpenDropdown(
                           openDropdown === 'hourly-slot' ? null : 'hourly-slot'
-                        )
-                      }
+                        );
+                      }}
                       className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex items-center justify-between cursor-pointer"
                     >
                       <div className="min-w-0">
@@ -1167,7 +1216,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <ChevronDown className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                     </button>
                     {openDropdown === 'hourly-slot' && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                      >
                         {['3 Hours Stay', '6 Hours Stay', '9 Hours Stay'].map((slot) => (
                           <button
                             key={slot}
@@ -1227,14 +1280,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 )}
 
                 {/* Rooms & Guests */}
-                <div className="flex-1 min-w-0 relative">
+                <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setOpenDropdown(
                         openDropdown === 'hotel-guests' ? null : 'hotel-guests'
-                      )
-                    }
+                      );
+                    }}
                     className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
                   >
                     <div className="min-w-0">
@@ -1252,7 +1306,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </button>
 
                   {openDropdown === 'hotel-guests' && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-30 space-y-3">
+                    <div
+                      data-dropdown-container="true"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-40 max-h-80 overflow-y-auto custom-scrollbar space-y-3"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-slate-700">Rooms</span>
                         <div className="flex items-center gap-2">
@@ -1390,12 +1448,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               <div className="flex items-stretch gap-2 w-full">
                 {/* From Bus Stand ⇄ To Bus Stand */}
                 <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
-                  <div className="relative min-w-0">
+                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === 'from' ? null : 'from')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'from' ? null : 'from');
+                      }}
                       className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
@@ -1422,12 +1481,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <div className="relative min-w-0">
+                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                      }}
                       className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
@@ -1477,7 +1537,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {openDropdown === 'bus-date' && (
                     <NormalCalendarDropdown
                       selectedDate={departureDate}
-                      minDate="2026-10-17"
+                      minDate="2026-10-15"
                       onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
                       onClose={() => setOpenDropdown(null)}
                       alignRight={false}
@@ -1556,12 +1616,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 {/* Pickup & Drop (or Hourly City + Package) */}
                 {cabMode === 'hourly' ? (
                   <>
-                    <div className="flex-[1.3] min-w-0 relative">
+                    <div className="flex-[1.3] min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                       <button
                         type="button"
-                        onClick={() =>
-                          setOpenDropdown(openDropdown === 'from' ? null : 'from')
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(openDropdown === 'from' ? null : 'from');
+                        }}
                         className="w-full h-full text-left px-3.5 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
                       >
                         <span className="block text-[11px] text-slate-500 font-medium">
@@ -1577,14 +1638,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       {renderCityDropdown('from', fromCity, onChangeFromCity)}
                     </div>
 
-                    <div className="flex-1 min-w-0 relative">
+                    <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setOpenDropdown(
                             openDropdown === 'cab-pkg' ? null : 'cab-pkg'
-                          )
-                        }
+                          );
+                        }}
                         className="w-full h-full text-left px-3.5 py-2.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex items-center justify-between cursor-pointer"
                       >
                         <div className="min-w-0">
@@ -1601,7 +1663,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         <ChevronDown className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                       </button>
                       {openDropdown === 'cab-pkg' && (
-                        <div className="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                        <div
+                          data-dropdown-container="true"
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                        >
                           {CAB_PACKAGES.map((pkg) => (
                             <button
                               key={pkg}
@@ -1621,12 +1687,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   </>
                 ) : (
                   <div className="flex-[2] min-w-0 grid grid-cols-2 gap-2 relative">
-                    <div className="relative min-w-0">
+                    <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                       <button
                         type="button"
-                        onClick={() =>
-                          setOpenDropdown(openDropdown === 'from' ? null : 'from')
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(openDropdown === 'from' ? null : 'from');
+                        }}
                         className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
                       >
                         <span className="block text-[11px] text-slate-500 font-medium">
@@ -1655,12 +1722,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <ArrowLeftRight className="w-3.5 h-3.5" />
                     </button>
 
-                    <div className="relative min-w-0">
+                    <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                       <button
                         type="button"
-                        onClick={() =>
-                          setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                        }}
                         className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
                       >
                         <span className="block text-[11px] text-slate-500 font-medium">
@@ -1711,7 +1779,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {openDropdown === 'cab-pickup-date' && (
                     <NormalCalendarDropdown
                       selectedDate={departureDate}
-                      minDate="2026-10-17"
+                      minDate="2026-10-15"
                       onSelectDate={(newDate) => {
                         onChangeDepartureDate(newDate);
                         if (returnDate <= newDate) {
@@ -1770,14 +1838,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 )}
 
                 {/* Pickup Time */}
-                <div className="flex-1 min-w-0 relative">
+                <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setOpenDropdown(
                         openDropdown === 'cab-time' ? null : 'cab-time'
-                      )
-                    }
+                      );
+                    }}
                     className="w-full h-full text-left px-3 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
                   >
                     <div className="min-w-0">
@@ -1794,7 +1863,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   </button>
                   {openDropdown === 'cab-time' && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                    <div
+                      data-dropdown-container="true"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                    >
                       {CAB_TIMES.map((tm) => (
                         <button
                           key={tm}
@@ -1864,12 +1937,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               <div className="flex items-stretch gap-2 w-full">
                 {/* Departure City ⇄ Holiday Destination */}
                 <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
-                  <div className="relative min-w-0">
+                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === 'from' ? null : 'from')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'from' ? null : 'from');
+                      }}
                       className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
@@ -1885,12 +1959,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     {renderCityDropdown('from', fromCity, onChangeFromCity)}
                   </div>
 
-                  <div className="relative min-w-0">
+                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                      }}
                       className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
@@ -1940,7 +2015,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {openDropdown === 'holiday-date' && (
                     <NormalCalendarDropdown
                       selectedDate={departureDate}
-                      minDate="2026-10-17"
+                      minDate="2026-10-15"
                       onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
                       onClose={() => setOpenDropdown(null)}
                       alignRight={false}
@@ -1949,14 +2024,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 </div>
 
                 {/* Duration & Guests */}
-                <div className="flex-1 min-w-0 relative">
+                <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setOpenDropdown(
                         openDropdown === 'holiday-dur' ? null : 'holiday-dur'
-                      )
-                    }
+                      );
+                    }}
                     className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
                   >
                     <div className="min-w-0">
@@ -1973,7 +2049,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   </button>
                   {openDropdown === 'holiday-dur' && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
+                    <div
+                      data-dropdown-container="true"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                    >
                       {['3N / 4D', '4N / 5D', '6N / 7D', '8N / 9D'].map((d) => (
                         <button
                           key={d}
@@ -2045,12 +2125,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               {/* Landscape Search Bar: ONLY Destination and Select Date */}
               <div className="flex items-stretch gap-2 w-full">
                 {/* 1. Destination / Attraction Picker */}
-                <div className="flex-[2.5] min-w-0 relative">
+                <div className="flex-[2.5] min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpenDropdown(openDropdown === 'to' ? null : 'to')
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === 'to' ? null : 'to');
+                    }}
                     className="w-full h-full text-left px-3.5 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
                   >
                     <span className="block text-[11px] text-slate-500 font-medium">
@@ -2101,7 +2182,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   {openDropdown === 'experience-date' && (
                     <NormalCalendarDropdown
                       selectedDate={departureDate}
-                      minDate="2026-10-17"
+                      minDate="2026-10-15"
                       onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
                       onClose={() => setOpenDropdown(null)}
                       alignRight={false}

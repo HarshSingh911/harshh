@@ -60,6 +60,7 @@ import { SafeImage } from './SafeImage';
 import { BusSeatLayoutSelector } from './BusSeatLayoutSelector';
 import { FlightFareOptionsModal } from './FlightFareOptionsModal';
 import { TripDatePickerModal } from './TripDatePickerModal';
+import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 
 interface FlightSearchResultsPageProps {
   activeCategory: BookingCategory;
@@ -116,6 +117,17 @@ interface FlightSearchResultsPageProps {
 // ============================================================================
 // DATASETS FOR ALL 6 SERVICE CATEGORIES (MakeMyTrip / IRCTC / redBus Style)
 // ============================================================================
+
+const FLIGHT_CLASSES = ['Economy', 'Premium Eco', 'Business', 'First Class'];
+const TRAIN_CLASSES = [
+  'All Classes',
+  '1A - First AC',
+  '2A - AC 2 Tier',
+  '3A - AC 3 Tier',
+  'CC - AC Chair Car',
+  'SL - Sleeper',
+];
+const TRAIN_QUOTAS = ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'];
 
 // --- A. FLIGHT RESULTS ---
 const FLIGHT_RESULTS = [
@@ -1761,6 +1773,40 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [modHolidayDuration, setModHolidayDuration] = useState<string>('4N / 5D');
   const [calendarTarget, setCalendarTarget] = useState<'dep' | 'ret' | null>(null);
 
+  // Normal Calendar Dropdown state matching front page
+  const [openCalendarDropdown, setOpenCalendarDropdown] = useState<
+    'header-dep' | 'header-ret' | 'mod-dep' | 'mod-ret' | null
+  >(null);
+  const [openHeaderTravellers, setOpenHeaderTravellers] = useState<boolean>(false);
+  const [openModTravellers, setOpenModTravellers] = useState<boolean>(false);
+  const [openTrainDropdown, setOpenTrainDropdown] = useState<'from' | 'to' | 'class' | 'quota' | null>(null);
+
+  // Close calendar and travellers popovers on outside click
+  useEffect(() => {
+    if (!openCalendarDropdown && !openHeaderTravellers && !openModTravellers && !openCityPicker && !openTrainDropdown) return;
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.closest('.dropdown-field-container') ||
+        target.closest('[data-dropdown-container]')
+      ) {
+        return;
+      }
+      setOpenCalendarDropdown(null);
+      setOpenHeaderTravellers(false);
+      setOpenModTravellers(false);
+      setOpenCityPicker(null);
+      setOpenTrainDropdown(null);
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleDocumentClick);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [openCalendarDropdown, openHeaderTravellers, openModTravellers, openCityPicker, openTrainDropdown]);
+
   const handleOpenModify = () => {
     setModCategory(currentCategory);
     setModTripType(currentTripType);
@@ -2410,12 +2456,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Clickable Origin, Destination & Trip Type Chip */}
             <div
-              onClick={handleOpenModify}
-              className="flex flex-wrap items-center gap-2.5 sm:gap-4 cursor-pointer group"
-              title="Click to modify search details"
+              className="flex flex-wrap items-center gap-2.5 sm:gap-4"
             >
               {/* Category & Route Chip */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-blue-50 text-slate-900 group-hover:text-blue-800 font-bold text-xs sm:text-sm transition-colors border border-transparent group-hover:border-blue-200">
+              <div
+                onClick={handleOpenModify}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-900 hover:text-blue-800 font-bold text-xs sm:text-sm transition-colors border border-transparent hover:border-blue-200 cursor-pointer"
+                title="Click to modify search details"
+              >
                 {currentCategory === 'flights' && <Plane className="w-4 h-4 text-blue-600" />}
                 {currentCategory === 'trains' && <TrainFront className="w-4 h-4 text-emerald-600" />}
                 {currentCategory === 'hotels' && <Building2 className="w-4 h-4 text-amber-600" />}
@@ -2470,48 +2518,316 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 )}
               </div>
 
-              {/* Travel Date(s) with Interactive Calendar Modal */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCalendarTarget('dep');
-                }}
-                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-700 bg-slate-50 hover:bg-blue-50 px-2.5 py-1 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs hover:scale-102"
-                title="Click to view full fare calendar and select travel date"
-              >
-                <Calendar className="w-4 h-4 text-blue-600" />
-                {currentCategory === 'hotels' ? (
-                  <span>
-                    Check-in: {formatFriendlyDate(currentDepDate)}
-                    {currentRetDate ? ` · Check-out: ${formatFriendlyDate(currentRetDate)}` : ''}
-                  </span>
-                ) : (
-                  <>
+              {/* Travel Date(s) with Interactive NormalCalendarDropdown (Matching Front Page) */}
+              {currentCategory === 'hotels' ? (
+                <div className="flex items-center gap-2">
+                  {/* Check-in */}
+                  <div className="relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'header-dep' ? null : 'header-dep');
+                      }}
+                      className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                        openCalendarDropdown === 'header-dep'
+                          ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                          : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                      }`}
+                      title="Click to select check-in date"
+                    >
+                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className="text-[11px] text-slate-500 hidden sm:inline">Check-in:</span>
+                      <span className="font-bold text-slate-900">{formatFriendlyDate(currentDepDate)}</span>
+                    </button>
+
+                    {openCalendarDropdown === 'header-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setCurrentDepDate(newDate);
+                          setModDepDate(newDate);
+                          onChangeDepartureDate?.(newDate);
+                          if (currentRetDate <= newDate) {
+                            const nextD = new Date(newDate);
+                            nextD.setDate(nextD.getDate() + 2);
+                            const nextIso = nextD.toISOString().slice(0, 10);
+                            setCurrentRetDate(nextIso);
+                            setModRetDate(nextIso);
+                            onChangeReturnDate?.(nextIso);
+                          }
+                          setOpenCalendarDropdown(null);
+                          onNotify('Check-in Date Updated', `Check-in set to ${formatFriendlyDate(newDate)}`);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
+                  </div>
+
+                  {currentRetDate && (
+                    <>
+                      <span className="text-slate-300">→</span>
+                      {/* Check-out */}
+                      <div className="relative dropdown-field-container">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCalendarDropdown(openCalendarDropdown === 'header-ret' ? null : 'header-ret');
+                          }}
+                          className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                            openCalendarDropdown === 'header-ret'
+                              ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                              : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                          }`}
+                          title="Click to select check-out date"
+                        >
+                          <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                          <span className="text-[11px] text-slate-500 hidden sm:inline">Check-out:</span>
+                          <span className="font-bold text-slate-900">{formatFriendlyDate(currentRetDate)}</span>
+                        </button>
+
+                        {openCalendarDropdown === 'header-ret' && (
+                          <NormalCalendarDropdown
+                            selectedDate={currentRetDate}
+                            minDate={currentDepDate}
+                            onSelectDate={(newDate) => {
+                              setCurrentRetDate(newDate);
+                              setModRetDate(newDate);
+                              onChangeReturnDate?.(newDate);
+                              setOpenCalendarDropdown(null);
+                              onNotify('Check-out Date Updated', `Check-out set to ${formatFriendlyDate(newDate)}`);
+                            }}
+                            onClose={() => setOpenCalendarDropdown(null)}
+                            alignRight={false}
+                          />
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : currentCategory === 'flights' && isFlightRoundTrip ? (
+                <div className="flex items-center gap-2">
+                  {/* Outbound / Departure Date */}
+                  <div className="relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'header-dep' ? null : 'header-dep');
+                      }}
+                      className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                        openCalendarDropdown === 'header-dep'
+                          ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                          : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                      }`}
+                      title="Click to select departure date"
+                    >
+                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className="text-[11px] text-slate-500 hidden sm:inline">Dep:</span>
+                      <span className="font-bold text-slate-900">{formatFriendlyDate(currentDepDate)}</span>
+                    </button>
+
+                    {openCalendarDropdown === 'header-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setCurrentDepDate(newDate);
+                          setModDepDate(newDate);
+                          onChangeDepartureDate?.(newDate);
+                          if (currentRetDate <= newDate) {
+                            const nextD = new Date(newDate);
+                            nextD.setDate(nextD.getDate() + 3);
+                            const nextIso = nextD.toISOString().slice(0, 10);
+                            setCurrentRetDate(nextIso);
+                            setModRetDate(nextIso);
+                            onChangeReturnDate?.(nextIso);
+                          }
+                          setOpenCalendarDropdown(null);
+                          onNotify('Departure Date Updated', `Travel date set to ${formatFriendlyDate(newDate)}`);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
+                  </div>
+
+                  <span className="text-slate-300">→</span>
+
+                  {/* Return Date */}
+                  <div className="relative dropdown-field-container">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'header-ret' ? null : 'header-ret');
+                      }}
+                      className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                        openCalendarDropdown === 'header-ret'
+                          ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                          : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                      }`}
+                      title="Click to select return date"
+                    >
+                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className="text-[11px] text-slate-500 hidden sm:inline">Ret:</span>
+                      <span className="font-bold text-slate-900">{formatFriendlyDate(currentRetDate)}</span>
+                    </button>
+
+                    {openCalendarDropdown === 'header-ret' && (
+                      <NormalCalendarDropdown
+                        selectedDate={currentRetDate}
+                        minDate={currentDepDate}
+                        onSelectDate={(newDate) => {
+                          setCurrentRetDate(newDate);
+                          setModRetDate(newDate);
+                          onChangeReturnDate?.(newDate);
+                          setOpenCalendarDropdown(null);
+                          onNotify('Return Date Updated', `Return date set to ${formatFriendlyDate(newDate)}`);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* One-Way or Single Journey Date */
+                <div className="relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenCalendarDropdown(openCalendarDropdown === 'header-dep' ? null : 'header-dep');
+                    }}
+                    className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                      openCalendarDropdown === 'header-dep'
+                        ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                        : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                    }`}
+                    title="Click to view full calendar and select travel date"
+                  >
+                    <Calendar className="w-4 h-4 text-blue-600" />
                     <span className="font-bold text-slate-900">
                       {formatFriendlyDate(currentDepDate)}
                     </span>
-                    {currentCategory === 'flights' && isFlightRoundTrip && (
-                      <>
-                        <span className="text-slate-300">→</span>
-                        <span className="font-bold text-purple-700">{formatFriendlyDate(currentRetDate)}</span>
-                      </>
-                    )}
-                  </>
-                )}
-                <span className="text-[10px] font-mono font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded ml-0.5">
-                  Calendar
-                </span>
-              </button>
+                  </button>
 
-              {/* Travellers / Guests */}
-              <div className="hidden sm:flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-700">
-                <Users className="w-4 h-4 text-slate-400" />
-                <span>
-                  {currentCategory === 'hotels'
-                    ? `${modHotelRooms || 1} ${modHotelRooms === 1 ? 'Room' : 'Rooms'} · ${modHotelGuests || 2} Guests`
-                    : `${currentTravellers} ${currentTravellers === 1 ? 'Traveller' : 'Travellers'} · ${currentCabinClass}`}
-                </span>
+                  {openCalendarDropdown === 'header-dep' && (
+                    <NormalCalendarDropdown
+                      selectedDate={currentDepDate}
+                      minDate="2026-10-15"
+                      onSelectDate={(newDate) => {
+                        setCurrentDepDate(newDate);
+                        setModDepDate(newDate);
+                        onChangeDepartureDate?.(newDate);
+                        setOpenCalendarDropdown(null);
+                        onNotify('Travel Date Updated', `Travel date set to ${formatFriendlyDate(newDate)}`);
+                      }}
+                      onClose={() => setOpenCalendarDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Travellers / Guests (Custom Popover matching front page for flights, interactive for all) */}
+              <div className="relative dropdown-field-container">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenHeaderTravellers(!openHeaderTravellers);
+                    setOpenCalendarDropdown(null);
+                  }}
+                  className={`hidden sm:flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                    openHeaderTravellers
+                      ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                      : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                  }`}
+                  title="Click to change travellers and class"
+                >
+                  <Users className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span className="font-semibold text-slate-900">
+                    {currentCategory === 'hotels'
+                      ? `${modHotelRooms || 1} ${modHotelRooms === 1 ? 'Room' : 'Rooms'} · ${modHotelGuests || 2} Guests`
+                      : `${currentTravellers} ${currentTravellers === 1 ? 'Traveller' : 'Travellers'} · ${currentCabinClass}`}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                </button>
+
+                {openHeaderTravellers && currentCategory === 'flights' && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-0 sm:left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-40 select-none animate-in fade-in zoom-in-95 duration-100"
+                  >
+                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">Travellers</span>
+                        <span className="text-[10px] text-slate-400">Adults (12+ yrs)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCount = Math.max(1, currentTravellers - 1);
+                            setCurrentTravellers(newCount);
+                            setModTravellers(newCount);
+                            onChangeTravellers?.(newCount, currentCabinClass);
+                          }}
+                          disabled={currentTravellers <= 1}
+                          className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          -
+                        </button>
+                        <span className="w-6 text-center text-sm font-bold font-mono-tabular text-slate-900">
+                          {currentTravellers}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCount = Math.min(9, currentTravellers + 1);
+                            setCurrentTravellers(newCount);
+                            setModTravellers(newCount);
+                            onChangeTravellers?.(newCount, currentCabinClass);
+                          }}
+                          disabled={currentTravellers >= 9}
+                          className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-700 mb-2">Flight Class</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {FLIGHT_CLASSES.map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => {
+                              setCurrentCabinClass(c);
+                              setModCabinClass(c);
+                              onChangeTravellers?.(currentTravellers, c);
+                              setOpenHeaderTravellers(false);
+                            }}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
+                              currentCabinClass === c
+                                ? 'bg-blue-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2590,9 +2906,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                     {modTripType === 'dummy-flights' && (
                       <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-300/80 rounded-xl p-1 shadow-2xs">
-                        <span className="text-amber-800 font-bold text-[10px] uppercase tracking-wider pl-1.5 hidden sm:inline">
-                          Format:
-                        </span>
                         <button
                           type="button"
                           onClick={() => setModDummyTripType('one-way')}
@@ -2709,99 +3022,176 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </div>
 
                     {/* Departure Date */}
-                    <div>
+                    <div className="relative dropdown-field-container">
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                         Departure Date
                       </label>
                       <button
                         type="button"
-                        onClick={() => setCalendarTarget('dep')}
-                        className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                        }}
+                        className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
+                          openCalendarDropdown === 'mod-dep' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                        }`}
                       >
                         <div className="flex items-center gap-2 truncate">
                           <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
                           <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
                         </div>
-                        <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded font-mono shrink-0">
-                          Calendar
-                        </span>
                       </button>
+
+                      {openCalendarDropdown === 'mod-dep' && (
+                        <NormalCalendarDropdown
+                          selectedDate={modDepDate || currentDepDate}
+                          minDate="2026-10-15"
+                          onSelectDate={(newDate) => {
+                            setModDepDate(newDate);
+                            if (modTripType === 'round-trip' && modRetDate <= newDate) {
+                              const nextD = new Date(newDate);
+                              nextD.setDate(nextD.getDate() + 3);
+                              setModRetDate(nextD.toISOString().slice(0, 10));
+                            }
+                            setOpenCalendarDropdown(null);
+                          }}
+                          onClose={() => setOpenCalendarDropdown(null)}
+                          alignRight={false}
+                        />
+                      )}
                     </div>
 
                     {/* Return Date */}
-                    <div>
+                    <div className="relative dropdown-field-container">
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                        Return Date{' '}
-                        {modTripType === 'one-way' || (modTripType === 'dummy-flights' && modDummyTripType === 'one-way') ? (
-                          <span className="text-slate-400 font-normal">(Optional)</span>
-                        ) : modTripType === 'dummy-flights' ? (
-                          <span className="text-amber-700 font-bold">(Dummy Visa Return)</span>
-                        ) : null}
+                        Return Date
                       </label>
                       <button
                         type="button"
-                        onClick={() => {
-                          setCalendarTarget('ret');
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenCalendarDropdown(openCalendarDropdown === 'mod-ret' ? null : 'mod-ret');
                           if (modTripType === 'one-way') setModTripType('round-trip');
                           if (modTripType === 'dummy-flights' && modDummyTripType === 'one-way') {
                             setModDummyTripType('round-trip');
                           }
                         }}
-                        className={`w-full text-left border rounded-xl p-2.5 text-xs font-bold shadow-2xs hover:border-purple-500 cursor-pointer flex items-center justify-between ${
-                          modTripType === 'round-trip' || (modTripType === 'dummy-flights' && modDummyTripType === 'round-trip')
+                        className={`w-full text-left border rounded-xl p-2.5 text-xs font-bold shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
+                          openCalendarDropdown === 'mod-ret'
+                            ? 'border-blue-500 ring-2 ring-blue-100'
+                            : modTripType === 'round-trip' || (modTripType === 'dummy-flights' && modDummyTripType === 'round-trip')
                             ? modTripType === 'dummy-flights'
                               ? 'bg-amber-50/70 border-amber-300 text-amber-950 font-semibold'
-                              : 'bg-purple-50/60 border-purple-300 text-purple-950 font-semibold'
+                              : 'bg-blue-50/60 border-blue-300 text-blue-950 font-semibold'
                             : 'bg-white border-slate-300 text-slate-500'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
                           <Calendar className={`w-4 h-4 shrink-0 ${
-                            modTripType === 'dummy-flights' ? 'text-amber-600' : 'text-purple-600'
+                            modTripType === 'dummy-flights' ? 'text-amber-600' : 'text-blue-600'
                           }`} />
                           <span className="truncate">
                             {modRetDate ? formatFriendlyDate(modRetDate) : 'Select Return Date'}
                           </span>
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded font-mono shrink-0 ${
-                          modTripType === 'dummy-flights'
-                            ? 'text-amber-700 bg-amber-100/80'
-                            : 'text-purple-600 bg-purple-100/70'
-                        }`}>
-                          Calendar
-                        </span>
                       </button>
+
+                      {openCalendarDropdown === 'mod-ret' && (
+                        <NormalCalendarDropdown
+                          selectedDate={modRetDate || currentRetDate}
+                          minDate={modDepDate || currentDepDate}
+                          onSelectDate={(newDate) => {
+                            setModRetDate(newDate);
+                            setOpenCalendarDropdown(null);
+                          }}
+                          onClose={() => setOpenCalendarDropdown(null)}
+                          alignRight={true}
+                        />
+                      )}
                     </div>
 
                     {/* Travellers & Cabin Class */}
-                    <div>
+                    <div className="relative dropdown-field-container">
                       <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                         Travellers &amp; Class
                       </label>
-                      <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl p-1.5 shadow-2xs">
-                        <select
-                          value={modTravellers}
-                          onChange={(e) => setModTravellers(Number(e.target.value))}
-                          className="bg-transparent text-xs font-bold text-slate-900 py-1 px-1 focus:outline-hidden cursor-pointer"
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenModTravellers(!openModTravellers);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
+                          openModTravellers ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Users className="w-4 h-4 text-blue-600 shrink-0" />
+                          <span className="truncate">
+                            {modTravellers} {modTravellers === 1 ? 'Adult' : 'Adults'} · {modCabinClass}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      </button>
+
+                      {openModTravellers && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-40 select-none animate-in fade-in zoom-in-95 duration-100"
                         >
-                          {[1, 2, 3, 4, 5, 6].map((num) => (
-                            <option key={num} value={num}>
-                              {num} {num === 1 ? 'Adult' : 'Adults'}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="text-slate-300">·</span>
-                        <select
-                          value={modCabinClass}
-                          onChange={(e) => setModCabinClass(e.target.value)}
-                          className="bg-transparent text-xs font-bold text-slate-900 py-1 px-1 focus:outline-hidden cursor-pointer truncate"
-                        >
-                          <option value="Economy">Economy</option>
-                          <option value="Premium Eco">Premium Eco</option>
-                          <option value="Business">Business</option>
-                          <option value="First Class">First Class</option>
-                        </select>
-                      </div>
+                          <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                            <div>
+                              <span className="text-xs font-bold text-slate-800 block">Travellers</span>
+                              <span className="text-[10px] text-slate-400">Adults (12+ yrs)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setModTravellers(Math.max(1, modTravellers - 1))}
+                                disabled={modTravellers <= 1}
+                                className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                              >
+                                -
+                              </button>
+                              <span className="w-6 text-center text-sm font-bold font-mono-tabular text-slate-900">
+                                {modTravellers}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setModTravellers(Math.min(9, modTravellers + 1))}
+                                disabled={modTravellers >= 9}
+                                className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-bold text-slate-700 mb-2">Flight Class</p>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {FLIGHT_CLASSES.map((c) => (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  onClick={() => {
+                                    setModCabinClass(c);
+                                    setOpenModTravellers(false);
+                                  }}
+                                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
+                                    modCabinClass === c
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                  }`}
+                                >
+                                  {c}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2810,105 +3200,216 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               {/* 2. TRAINS MODIFY CONTROLS */}
               {modCategory === 'trains' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  <div>
+                  {/* From Station */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       From Station
                     </label>
-                    <select
-                      value={modFromCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModFromCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenTrainDropdown(openTrainDropdown === 'from' ? null : 'from');
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between"
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city} Junction ({c.stationCode})
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900">{modFromCity.city} Junction</div>
+                        <div className="text-[10px] text-slate-500 font-mono">{modFromCity.stationCode} · IRCTC</div>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    </button>
+
+                    {openTrainDropdown === 'from' && (
+                      <div className="absolute left-0 top-full mt-1.5 w-64 max-h-56 overflow-y-auto custom-scrollbar bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 z-40">
+                        {CITIES.map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => {
+                              setModFromCity(c);
+                              setOpenTrainDropdown(null);
+                            }}
+                            className={`w-full text-left p-2 rounded-lg text-xs cursor-pointer flex items-center justify-between ${
+                              modFromCity.code === c.code ? 'bg-emerald-50 text-emerald-700 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                            }`}
+                          >
+                            <span>{c.city} Junction</span>
+                            <span className="font-mono text-[10px] text-slate-500">{c.stationCode}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* To Station */}
+                  <div className="relative dropdown-field-container">
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-[11px] font-bold text-slate-600 uppercase">To Station</label>
                       <button
                         type="button"
                         onClick={handleSwapModCities}
                         className="text-[10px] text-emerald-600 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer"
+                        title="Swap railway stations"
                       >
                         <ArrowLeftRight className="w-3 h-3" />
                         <span>Swap</span>
                       </button>
                     </div>
-                    <select
-                      value={modToCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModToCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenTrainDropdown(openTrainDropdown === 'to' ? null : 'to');
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between"
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city} Junction ({c.stationCode})
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900">{modToCity.city} Junction</div>
+                        <div className="text-[10px] text-slate-500 font-mono">{modToCity.stationCode} · IRCTC</div>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    </button>
+
+                    {openTrainDropdown === 'to' && (
+                      <div className="absolute right-0 sm:left-0 top-full mt-1.5 w-64 max-h-56 overflow-y-auto custom-scrollbar bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 z-40">
+                        {CITIES.map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => {
+                              setModToCity(c);
+                              setOpenTrainDropdown(null);
+                            }}
+                            className={`w-full text-left p-2 rounded-lg text-xs cursor-pointer flex items-center justify-between ${
+                              modToCity.code === c.code ? 'bg-emerald-50 text-emerald-700 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                            }`}
+                          >
+                            <span>{c.city} Junction</span>
+                            <span className="font-mono text-[10px] text-slate-500">{c.stationCode}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* Trains Journey Date */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Journey Date
                     </label>
                     <button
                       type="button"
-                      onClick={() => setCalendarTarget('dep')}
-                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-dep' ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-300'
+                      }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
                         <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
                       </div>
-                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded font-mono shrink-0">
-                        Calendar
-                      </span>
                     </button>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
                   </div>
 
-                  <div>
+                  {/* Train Class Custom Popover */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Class
                     </label>
-                    <select
-                      value={modTrainClass}
-                      onChange={(e) => setModTrainClass(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenTrainDropdown(openTrainDropdown === 'class' ? null : 'class');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between ${
+                        openTrainDropdown === 'class' ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="All Classes">All Classes</option>
-                      <option value="1A - First AC">1A - First AC</option>
-                      <option value="2A - AC 2 Tier">2A - AC 2 Tier</option>
-                      <option value="3A - AC 3 Tier">3A - AC 3 Tier</option>
-                      <option value="CC - Chair Car">CC - Chair Car</option>
-                      <option value="SL - Sleeper">SL - Sleeper</option>
-                    </select>
+                      <span className="truncate">{modTrainClass}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    </button>
+
+                    {openTrainDropdown === 'class' && (
+                      <div className="absolute right-0 sm:left-0 top-full mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar">
+                        {TRAIN_CLASSES.map((tc) => (
+                          <button
+                            key={tc}
+                            type="button"
+                            onClick={() => {
+                              setModTrainClass(tc);
+                              setOpenTrainDropdown(null);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                              modTrainClass === tc
+                                ? 'bg-emerald-50 text-emerald-700 font-bold'
+                                : 'hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            {tc}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* Train Quota Custom Popover */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Quota
                     </label>
-                    <select
-                      value={modTrainQuota}
-                      onChange={(e) => setModTrainQuota(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenTrainDropdown(openTrainDropdown === 'quota' ? null : 'quota');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-emerald-500 cursor-pointer flex items-center justify-between ${
+                        openTrainDropdown === 'quota' ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="General Quota">General Quota</option>
-                      <option value="Tatkal">Tatkal Quota</option>
-                      <option value="Ladies Quota">Ladies Quota</option>
-                      <option value="Sr. Citizen">Senior Citizen</option>
-                    </select>
+                      <span className="truncate">{modTrainQuota}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    </button>
+
+                    {openTrainDropdown === 'quota' && (
+                      <div className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40">
+                        {TRAIN_QUOTAS.map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => {
+                              setModTrainQuota(q);
+                              setOpenTrainDropdown(null);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                              modTrainQuota === q
+                                ? 'bg-emerald-50 text-emerald-700 font-bold'
+                                : 'hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -2936,42 +3437,79 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </select>
                   </div>
 
-                  <div>
+                  {/* Hotels Check-in Date */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Check-in Date
                     </label>
                     <button
                       type="button"
-                      onClick={() => setCalendarTarget('dep')}
-                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-dep' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
                         <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
                       </div>
-                      <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded font-mono shrink-0">
-                        Calendar
-                      </span>
                     </button>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          if (modRetDate && modRetDate <= newDate) {
+                            const nextD = new Date(newDate);
+                            nextD.setDate(nextD.getDate() + 2);
+                            setModRetDate(nextD.toISOString().slice(0, 10));
+                          }
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
                   </div>
 
-                  <div>
+                  {/* Hotels Check-out Date */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Check-out Date
                     </label>
                     <button
                       type="button"
-                      onClick={() => setCalendarTarget('ret')}
-                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-purple-500 cursor-pointer flex items-center justify-between"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'mod-ret' ? null : 'mod-ret');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-ret' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <Calendar className="w-4 h-4 text-purple-600 shrink-0" />
+                        <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
                         <span className="truncate">{modRetDate ? formatFriendlyDate(modRetDate) : 'Select Check-out'}</span>
                       </div>
-                      <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded font-mono shrink-0">
-                        Calendar
-                      </span>
                     </button>
+
+                    {openCalendarDropdown === 'mod-ret' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modRetDate || currentRetDate}
+                        minDate={modDepDate || currentDepDate}
+                        onSelectDate={(newDate) => {
+                          setModRetDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
                   </div>
 
                   <div>
@@ -3058,14 +3596,20 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </select>
                   </div>
 
-                  <div>
+                  {/* Buses Travel Date */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Travel Date
                     </label>
                     <button
                       type="button"
-                      onClick={() => setCalendarTarget('dep')}
-                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-dep' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-300'
+                      }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
@@ -3075,6 +3619,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         Calendar
                       </span>
                     </button>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
                   </div>
 
                   <div>
@@ -3138,14 +3695,20 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </select>
                   </div>
 
-                  <div>
+                  {/* Cabs Pickup Date */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Pickup Date
                     </label>
                     <button
                       type="button"
-                      onClick={() => setCalendarTarget('dep')}
-                      className="w-full text-left bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-amber-500 cursor-pointer flex items-center justify-between"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-amber-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-dep' ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-300'
+                      }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
@@ -3155,6 +3718,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         Calendar
                       </span>
                     </button>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
                   </div>
 
                   <div>
@@ -5114,7 +5690,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                 {/* --- A. ROUND-TRIP FLIGHT SELECTION LAYOUT (MakeMyTrip Style) --- */}
                 {isFlightRoundTrip ? (
-                  <div className="space-y-4 pb-28">
+                  <div className="space-y-4 pb-6">
                     {/* Round-Trip Indicator Header */}
                     <div className={`rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md ${
                       currentTripType === 'dummy-flights'
@@ -5153,13 +5729,40 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-[11px] text-blue-300 font-medium">
-                          {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Combined Combo Fare'}
+                      <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                        <div className="text-right">
+                          <div className="text-[11px] text-blue-300 font-medium">
+                            {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Combined Combo Fare'}
+                          </div>
+                          <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">
+                            {formatPrice(totalRoundTripFare, currency)}
+                          </div>
                         </div>
-                        <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">
-                          {formatPrice(totalRoundTripFare, currency)}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFlightForFareModal({
+                              id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                              airline: selectedOutboundFlight.airline,
+                              flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                              depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                              arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                              duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                              priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                              badgeBg: selectedOutboundFlight.badgeBg,
+                              badgeCode: selectedOutboundFlight.badgeCode,
+                              aircraft: selectedOutboundFlight.aircraft,
+                              fromCode: currentFromCity.code,
+                              toCode: currentToCity.code,
+                            })
+                          }
+                          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all"
+                        >
+                          <span>
+                            {currentTripType === 'dummy-flights' ? 'Book Dummy Round Trip' : 'Book Round Trip'}
+                          </span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
 
@@ -5299,7 +5902,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[10px] font-extrabold uppercase tracking-wider">
+                              <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-extrabold uppercase tracking-wider">
                                 Return
                               </span>
                               <span className="font-bold text-xs sm:text-sm text-slate-900">
@@ -5324,7 +5927,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   onClick={() => setReturnSortBy(s)}
                                   className={`px-2 py-0.5 rounded-md font-semibold capitalize cursor-pointer transition-colors ${
                                     returnSortBy === s
-                                      ? 'bg-purple-600 text-white shadow-2xs'
+                                      ? 'bg-blue-600 text-white shadow-2xs'
                                       : 'text-slate-600 hover:bg-slate-100'
                                   }`}
                                 >
@@ -5345,7 +5948,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 onClick={() => setSelectedReturnId(fl.id)}
                                 className={`bg-white rounded-2xl border p-3.5 transition-all cursor-pointer relative ${
                                   isSelected
-                                    ? 'border-purple-600 ring-2 ring-purple-500/20 bg-purple-50/25 shadow-sm'
+                                    ? 'border-blue-600 ring-2 ring-blue-500/20 bg-blue-50/25 shadow-sm'
                                     : 'border-slate-200/80 hover:border-slate-300 hover:shadow-xs'
                                 }`}
                               >
@@ -5354,7 +5957,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                     {/* Radio Button */}
                                     <div
                                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                        isSelected ? 'border-purple-600 bg-purple-600' : 'border-slate-300 bg-white'
+                                        isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-white'
                                       }`}
                                     >
                                       {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
@@ -5394,7 +5997,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   <div className="flex flex-col items-center">
                                     <span className="text-[10px] text-slate-500">{fl.duration}</span>
                                     <div className="w-16 sm:w-20 h-[2px] bg-slate-300 relative my-0.5">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600 absolute right-0 top-1/2 -translate-y-1/2" />
+                                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600 absolute right-0 top-1/2 -translate-y-1/2" />
                                     </div>
                                     <span className="text-[9px] font-bold text-emerald-600">{fl.stops}</span>
                                   </div>
@@ -5410,7 +6013,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 </div>
 
                                 {isSelected && (
-                                  <div className="mt-2 pt-1.5 border-t border-purple-100 flex items-center justify-between text-[10px] text-purple-700 font-semibold">
+                                  <div className="mt-2 pt-1.5 border-t border-blue-100 flex items-center justify-between text-[10px] text-blue-700 font-semibold">
                                     <span>Selected Return Flight</span>
                                     <span className="text-emerald-600">Complimentary Snack</span>
                                   </div>
@@ -5418,90 +6021,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               </div>
                             );
                           })}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* =========================================================
-                        FIXED BOTTOM FLOATING SUMMARY BAR ("Trip Yeah kneeche jo line banti h")
-                    ========================================================= */}
-                    <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] z-40 py-3 px-4 sm:px-6">
-                      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        {/* Outbound & Return Leg Summary */}
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-6 divide-x divide-slate-200">
-                          {/* Selected Outbound */}
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
-                              {selectedOutboundFlight.badgeCode}
-                            </div>
-                            <div>
-                              <div className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">
-                                Departure · {currentFromCity.code} → {currentToCity.code}
-                              </div>
-                              <div className="text-xs font-bold text-slate-900">
-                                {selectedOutboundFlight.airline} {selectedOutboundFlight.flightNo} · {selectedOutboundFlight.depTime} – {selectedOutboundFlight.arrTime}
-                              </div>
-                              <div className="text-[11px] text-slate-500 font-mono">
-                                {formatPrice(selectedOutboundFlight.priceInr, currency)}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Selected Return */}
-                          <div className="pl-3 sm:pl-6 flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-xs shrink-0">
-                              {selectedReturnFlight.badgeCode}
-                            </div>
-                            <div>
-                              <div className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">
-                                Return · {currentToCity.code} → {currentFromCity.code}
-                              </div>
-                              <div className="text-xs font-bold text-slate-900">
-                                {selectedReturnFlight.airline} {selectedReturnFlight.flightNo} · {selectedReturnFlight.depTime} – {selectedReturnFlight.arrTime}
-                              </div>
-                              <div className="text-[11px] text-slate-500 font-mono">
-                                {formatPrice(selectedReturnFlight.priceInr, currency)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Combined Price & Book Now CTA */}
-                        <div className="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-2 md:pt-0 border-slate-100">
-                          <div className="text-right">
-                            <div className="text-lg sm:text-xl font-black text-slate-900 font-mono">
-                              {formatPrice(totalRoundTripFare, currency)}
-                            </div>
-                            <div className="text-[10px] text-emerald-600 font-semibold">
-                              For {currentTravellers} {currentTravellers === 1 ? 'Traveller' : 'Travellers'} · Incl. Taxes
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFlightForFareModal({
-                                id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                                airline: selectedOutboundFlight.airline,
-                                flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                                depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                                arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                                duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                                priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                                badgeBg: selectedOutboundFlight.badgeBg,
-                                badgeCode: selectedOutboundFlight.badgeCode,
-                                aircraft: selectedOutboundFlight.aircraft,
-                                fromCode: currentFromCity.code,
-                                toCode: currentToCity.code,
-                              })
-                            }
-                            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all"
-                          >
-                            <span>
-                              {currentTripType === 'dummy-flights' ? 'Book Dummy Round Trip (Live PNR)' : 'Book Round Trip'}
-                            </span>
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
                     </div>

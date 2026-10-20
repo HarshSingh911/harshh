@@ -27,7 +27,7 @@ const MONTH_NAMES = [
 const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 function parseIso(str: string): Date {
-  if (!str) return new Date(2026, 9, 17);
+  if (!str) return new Date(2026, 9, 15);
   const parts = str.split('-');
   if (parts.length === 3) {
     const y = parseInt(parts[0], 10);
@@ -37,12 +37,12 @@ function parseIso(str: string): Date {
   }
   const parsed = new Date(str);
   if (!isNaN(parsed.getTime())) return parsed;
-  return new Date(2026, 9, 17);
+  return new Date(2026, 9, 15);
 }
 
 export const NormalCalendarDropdown: React.FC<NormalCalendarDropdownProps> = ({
   selectedDate,
-  minDate = '2026-10-17',
+  minDate = '2026-10-15',
   onSelectDate,
   onClose,
   alignRight = false,
