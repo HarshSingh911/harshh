@@ -1182,91 +1182,10 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
           </div>
 
           {/* ===============================================================
-              RIGHT COLUMN (4 COLS): Offers & Sticky Fare Summary
+              RIGHT COLUMN (4 COLS): Sticky Fare Summary & Offers
           =============================================================== */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
-            {/* OFFERS, BANK DISCOUNTS & COUPONS CARD */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-blue-600" />
-                <h3 className="font-display font-bold text-sm text-slate-900">
-                  Offers &amp; Bank Discounts
-                </h3>
-              </div>
-
-              {/* Offer Category Tabs: All, Bank, Add-ons */}
-              <div className="flex items-center p-1 rounded-xl bg-slate-100 text-xs font-bold">
-                {[
-                  { id: 'all', label: 'All Offers' },
-                  { id: 'bank', label: 'Bank Offers' },
-                  { id: 'addons', label: 'Add-on Perks' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveOfferTab(tab.id as any)}
-                    className={`flex-1 py-1.5 rounded-lg transition-colors cursor-pointer text-center ${
-                      activeOfferTab === tab.id
-                        ? 'bg-white text-blue-700 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Coupon Code Input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customCouponInput}
-                  onChange={(e) => setCustomCouponInput(e.target.value.toUpperCase())}
-                  placeholder="Enter Coupon Code"
-                  className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleApplyCoupon(customCouponInput)}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {/* Filtered Offers List */}
-              <div className="space-y-2 pt-1 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                {FLIGHT_COUPONS.filter((c) => activeOfferTab === 'all' || c.category === activeOfferTab).map((cp) => {
-                  const isApplied = appliedCoupon === cp.code;
-                  return (
-                    <div
-                      key={cp.code}
-                      onClick={() => (isApplied ? handleRemoveCoupon() : handleApplyCoupon(cp.code))}
-                      className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs ${
-                        isApplied
-                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
-                          : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-1.5 font-mono font-bold">
-                          <span>{cp.code}</span>
-                          <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-sans">
-                            {cp.title}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-normal">{cp.detail}</div>
-                      </div>
-                      <span className={`text-xs font-bold shrink-0 ml-2 ${isApplied ? 'text-rose-600' : 'text-blue-600'}`}>
-                        {isApplied ? 'Remove' : 'Apply'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* STICKY FARE BREAKUP CARD */}
+            {/* STICKY FARE BREAKUP CARD (NOW ON TOP) */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="font-display font-bold text-base text-slate-900">
@@ -1435,6 +1354,87 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
 
               <div className="text-[11px] text-center text-slate-400">
                 🔒 Safe 256-Bit SSL Encrypted Airline Verified Transaction
+              </div>
+            </div>
+
+            {/* OFFERS, BANK DISCOUNTS & COUPONS CARD (NOW BELOW FARE SUMMARY) */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-blue-600" />
+                <h3 className="font-display font-bold text-sm text-slate-900">
+                  Offers &amp; Bank Discounts
+                </h3>
+              </div>
+
+              {/* Offer Category Tabs: All, Bank, Add-ons */}
+              <div className="flex items-center p-1 rounded-xl bg-slate-100 text-xs font-bold">
+                {[
+                  { id: 'all', label: 'All Offers' },
+                  { id: 'bank', label: 'Bank Offers' },
+                  { id: 'addons', label: 'Add-on Perks' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveOfferTab(tab.id as any)}
+                    className={`flex-1 py-1.5 rounded-lg transition-colors cursor-pointer text-center ${
+                      activeOfferTab === tab.id
+                        ? 'bg-white text-blue-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Coupon Code Input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customCouponInput}
+                  onChange={(e) => setCustomCouponInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Coupon Code"
+                  className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleApplyCoupon(customCouponInput)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+
+              {/* Filtered Offers List */}
+              <div className="space-y-2 pt-1 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                {FLIGHT_COUPONS.filter((c) => activeOfferTab === 'all' || c.category === activeOfferTab).map((cp) => {
+                  const isApplied = appliedCoupon === cp.code;
+                  return (
+                    <div
+                      key={cp.code}
+                      onClick={() => (isApplied ? handleRemoveCoupon() : handleApplyCoupon(cp.code))}
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs ${
+                        isApplied
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
+                          : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-1.5 font-mono font-bold">
+                          <span>{cp.code}</span>
+                          <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-sans">
+                            {cp.title}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-normal">{cp.detail}</div>
+                      </div>
+                      <span className={`text-xs font-bold shrink-0 ml-2 ${isApplied ? 'text-rose-600' : 'text-blue-600'}`}>
+                        {isApplied ? 'Remove' : 'Apply'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
