@@ -32,7 +32,6 @@ import {
 } from 'lucide-react';
 import { BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
 import { CheckoutItem } from './CheckoutPaymentPage';
-import { TripDatePickerModal } from './TripDatePickerModal';
 
 interface TrainBookingCheckoutPageProps {
   item: CheckoutItem;
@@ -128,6 +127,16 @@ const GENDER_OPTIONS = [
   { value: 'Male', label: 'Male' },
   { value: 'Female', label: 'Female' },
   { value: 'Transgender', label: 'Transgender' },
+];
+
+const BERTH_OPTIONS = [
+  { value: 'No Preference', label: 'No Preference' },
+  { value: 'Lower Berth', label: 'Lower Berth' },
+  { value: 'Middle Berth', label: 'Middle Berth' },
+  { value: 'Upper Berth', label: 'Upper Berth' },
+  { value: 'Side Lower', label: 'Side Lower' },
+  { value: 'Side Upper', label: 'Side Upper' },
+  { value: 'Window Seat', label: 'Window Seat' },
 ];
 
 const TRAIN_COUPONS = [
@@ -231,9 +240,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [confirmedBooking, setConfirmedBooking] = useState<BookedTrip | null>(null);
 
-  // Travel Journey Date & Calendar State (Replaces countdown timer)
-  const [trainTravelDate, setTrainTravelDate] = useState<string>(travelDate);
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  // Travel Journey Date Display (Static)
+  const [trainTravelDate] = useState<string>(travelDate);
 
   // --- Dynamic Pricing Calculations ---
   const passengerCount = passengers.length;
@@ -476,10 +484,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
                       <span>Runs: All Days</span>
-                      <span>·</span>
-                      <span className="text-emerald-700 font-bold">Pantry Car Attached</span>
-                      <span>·</span>
-                      <span className="text-indigo-600 font-bold">LHB Superfast Rake</span>
                     </div>
                   </div>
                 </div>
@@ -504,16 +508,9 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                   <div className="text-sm font-bold text-slate-900 mt-1">
                     {selectedBoardingStation.name} ({selectedBoardingStation.code})
                   </div>
-                  <div className="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setShowDatePicker(true)}
-                      className="hover:text-emerald-700 font-bold inline-flex items-center gap-1 text-slate-700 cursor-pointer"
-                      title="Change Journey Date"
-                    >
-                      <Calendar className="w-3 h-3 text-emerald-600" />
-                      <span>{trainTravelDate}</span>
-                    </button>
+                  <div className="text-xs font-semibold text-slate-600 flex items-center gap-1.5 mt-0.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                    <span>{trainTravelDate}</span>
                   </div>
                 </div>
 
@@ -606,15 +603,10 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                   </div>
                 </div>
 
-                {isIrctcVerified ? (
+                {isIrctcVerified && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Verified IRCTC ID</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Verification Required</span>
                   </span>
                 )}
               </div>
@@ -812,8 +804,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                       </div>
                     </div>
 
-                    {/* Age, Gender, Berth Preference & Food Preference */}
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    {/* Age, Gender & Berth Preference (Food preference removed) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {/* Age */}
                       <div>
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">
@@ -887,37 +879,61 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                         </div>
                       </div>
 
-                      {/* Berth Preference */}
-                      <div>
+                      {/* 3. Custom Berth Preference Dropdown (Matching gender style & scroll) */}
+                      <div className="relative" data-pax-dropdown="true">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">Berth Preference</label>
-                        <select
-                          value={p.berthPref}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'berthPref', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Lower Berth">Lower Berth</option>
-                          <option value="Middle Berth">Middle Berth</option>
-                          <option value="Upper Berth">Upper Berth</option>
-                          <option value="Side Lower">Side Lower</option>
-                          <option value="Side Upper">Side Upper</option>
-                          <option value="Window Seat">Window Seat</option>
-                          <option value="No Preference">No Preference</option>
-                        </select>
-                      </div>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPaxDropdown(
+                                openPaxDropdown === `${p.id}-berth` ? null : `${p.id}-berth`
+                              );
+                            }}
+                            className={`w-full px-3 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                              openPaxDropdown === `${p.id}-berth`
+                                ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                                : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <span className="truncate">{p.berthPref}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
+                                openPaxDropdown === `${p.id}-berth` ? 'rotate-180 text-blue-600' : ''
+                              }`}
+                            />
+                          </button>
 
-                      {/* Food Preference */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1">Food Preference</label>
-                        <select
-                          value={p.foodPref}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'foodPref', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Veg Meal">Veg Meal</option>
-                          <option value="Non-Veg Meal">Non-Veg Meal</option>
-                          <option value="Jain Meal">Jain Meal</option>
-                          <option value="No Food">No Food</option>
-                        </select>
+                          {openPaxDropdown === `${p.id}-berth` && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-48 custom-scrollbar animate-modal-slide-up"
+                            >
+                              {BERTH_OPTIONS.map((opt) => {
+                                const isSelected = p.berthPref === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePassenger(p.id, 'berthPref', opt.value);
+                                      setOpenPaxDropdown(null);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-blue-50 text-blue-700 font-bold'
+                                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                    }`}
+                                  >
+                                    <span className="font-semibold">{opt.label}</span>
+                                    {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1016,23 +1032,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                 </div>
               </div>
 
-              {/* WhatsApp notification opt-in */}
-              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={whatsappUpdates}
-                  onChange={(e) => setWhatsappUpdates(e.target.checked)}
-                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 mt-0.5 focus:ring-emerald-500"
-                />
-                <div className="text-xs">
-                  <span className="font-bold text-emerald-900 block">
-                    Get Instant PNR Status, Platform Number &amp; Live Train Running Updates on WhatsApp
-                  </span>
-                  <span className="text-emerald-700">
-                    Real-time alerts if your train is delayed or if the platform number changes.
-                  </span>
-                </div>
-              </label>
             </div>
 
             {/* 5. RAILWAY BOOKING PREFERENCES & AUTO-UPGRADE */}
@@ -1300,65 +1299,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
               RIGHT COLUMN (4 COLS): Dynamic Fare Breakup & Payment CTA
           =============================================================== */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
-            {/* COUPONS SECTION */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-blue-600" />
-                <h3 className="font-display font-bold text-sm text-slate-900">
-                  Coupons &amp; Rail Offers
-                </h3>
-              </div>
-
-              {/* Coupon input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponCodeInput}
-                  onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                  placeholder="Enter Coupon Code"
-                  className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleApplyCoupon(couponCodeInput)}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {/* Verified Coupons Pills */}
-              <div className="space-y-2 pt-1">
-                {TRAIN_COUPONS.map((cp) => {
-                  const isCurrent = appliedCoupon === cp.code;
-                  return (
-                    <div
-                      key={cp.code}
-                      onClick={() => (isCurrent ? handleRemoveCoupon() : handleApplyCoupon(cp.code))}
-                      className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs ${
-                        isCurrent
-                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
-                          : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-1.5 font-mono font-bold">
-                          <span>{cp.code}</span>
-                          <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-sans">
-                            {cp.title}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-normal">{cp.detail}</div>
-                      </div>
-                      <span className={`text-xs font-bold ${isCurrent ? 'text-rose-600' : 'text-blue-600'}`}>
-                        {isCurrent ? 'Remove' : 'Apply'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* DYNAMIC REAL-TIME FARE BREAKUP CARD */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1468,7 +1408,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                     type="text"
                     value={upiVpa}
                     onChange={(e) => setUpiVpa(e.target.value)}
-                    placeholder="Enter UPI VPA (e.g. mobile@upi)"
+                    placeholder="Enter UPI Number"
                     className="w-full mt-2 px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-800"
                   />
                 )}
@@ -1493,9 +1433,64 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                   </>
                 )}
               </button>
+            </div>
 
-              <div className="text-[11px] text-center text-slate-400">
-                🔒 Safe 256-Bit SSL Encrypted Indian Railways Certified Transaction
+            {/* COUPONS SECTION (Moved below Fare Summary) */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-blue-600" />
+                <h3 className="font-display font-bold text-sm text-slate-900">
+                  Coupons &amp; Rail Offers
+                </h3>
+              </div>
+
+              {/* Coupon input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCodeInput}
+                  onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Coupon Code"
+                  className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleApplyCoupon(couponCodeInput)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+
+              {/* Verified Coupons Pills */}
+              <div className="space-y-2 pt-1">
+                {TRAIN_COUPONS.map((cp) => {
+                  const isCurrent = appliedCoupon === cp.code;
+                  return (
+                    <div
+                      key={cp.code}
+                      onClick={() => (isCurrent ? handleRemoveCoupon() : handleApplyCoupon(cp.code))}
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs ${
+                        isCurrent
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
+                          : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-1.5 font-mono font-bold">
+                          <span>{cp.code}</span>
+                          <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-sans">
+                            {cp.title}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-normal">{cp.detail}</div>
+                      </div>
+                      <span className={`text-xs font-bold ${isCurrent ? 'text-rose-600' : 'text-blue-600'}`}>
+                        {isCurrent ? 'Remove' : 'Apply'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1698,20 +1693,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
             </div>
           </div>
         </div>
-      )}
-
-      {/* Interactive TripYeah IRCTC Train Journey Calendar Modal */}
-      {showDatePicker && (
-        <TripDatePickerModal
-          selectedDateStr={trainTravelDate}
-          title="Select Train Journey Date"
-          subtitle="Check live seat availability, quota status & lowest fares"
-          onSelectDate={(formatted) => {
-            setTrainTravelDate(formatted);
-            setShowDatePicker(false);
-          }}
-          onClose={() => setShowDatePicker(false)}
-        />
       )}
     </div>
   );

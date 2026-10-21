@@ -52,10 +52,12 @@
   background: #2563eb;
 }
 
-/* Firefox scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 rgba(241, 245, 249, 0.75);
+/* Sleek custom scrollbars across all modern browsers */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
 }
 
 /* Prevent scrollbars from appearing inside native select, input, and button controls */
@@ -87,21 +89,22 @@ button::-webkit-scrollbar {
 /* Explicit smooth custom scrollbar class matching TripYeah theme */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 rgba(241, 245, 249, 0.85);
+  scrollbar-color: #cbd5e1 #f8fafc;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.85);
+  background: #f1f5f9;
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.95);
   transition: all 0.2s ease;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {

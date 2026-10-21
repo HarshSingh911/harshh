@@ -18,7 +18,8 @@ export type AppPageView =
   | 'privacy-policy'
   | 'support'
   | 'terms-of-service'
-  | 'about-us';
+  | 'about-us'
+  | 'hostels';
 
 interface NavbarProps {
   activePage: AppPageView;
@@ -90,7 +91,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     activePage === 'dining-club' ||
     activePage === 'trips' ||
     activePage === 'account' ||
-    activePage === 'support';
+    activePage === 'support' ||
+    activePage === 'hostels';
 
   // Categories show in top navigation after searching (search-results page or checkout)
   const isSearchResultsPage = activePage === 'search-results';
@@ -143,6 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Zone 2: Navigation (Clean links without category tabs) */}
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+
           <button
             type="button"
             onClick={onOpenListProperty}

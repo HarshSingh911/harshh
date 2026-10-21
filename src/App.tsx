@@ -43,6 +43,7 @@ import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { SupportCenterPage } from './components/SupportCenterPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { AboutUsPage } from './components/AboutUsPage';
+import { HostelsPage } from './components/HostelsPage';
 import { SmileAIAssistant, SmileSuggestedSearch } from './components/SmileAIAssistant';
 
 export default function App() {
@@ -61,6 +62,7 @@ export default function App() {
   const [studentFare, setStudentFare] = useState<boolean>(false);
   const [travellers, setTravellers] = useState<number>(1);
   const [cabinClass, setCabinClass] = useState<string>('Economy');
+  const [hotelMode, setHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>('overnight');
 
   // Display & User State
   const [currency, setCurrency] = useState<CurrencyCode>('INR');
@@ -434,7 +436,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support' || activePage === 'hostels') ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -461,11 +463,14 @@ export default function App() {
                 setTravellers(count);
                 setCabinClass(cabin);
               }}
+              hotelMode={hotelMode}
+              onChangeHotelMode={setHotelMode}
               onTriggerSearch={handleTriggerSearch}
               onOpenTripAI={() => navigateTo('international-planner')}
               onOpenExplorePage={() => navigateTo('explore')}
               onOpenInfluencersPage={() => navigateTo('influencers')}
               onOpenDiningClubPage={() => navigateTo('dining-club')}
+              onOpenHostelsPage={() => navigateTo('hostels')}
               onSelectTrustPillar={(title, detail) =>
                 setBannerMessage({
                   title: `TripYeah Guarantee: ${title}`,
@@ -537,7 +542,10 @@ export default function App() {
               setCabinClass(cabin);
             }}
             onChangeCategory={setActiveCategory}
+            hotelMode={hotelMode}
+            onChangeHotelMode={setHotelMode}
             onModifySearch={() => navigateTo('home')}
+            onOpenHostelsPage={() => navigateTo('hostels')}
             onSelectFlightOrStayForCheckout={(item) => {
               setCheckoutItem({
                 ...item,
@@ -797,6 +805,19 @@ export default function App() {
             onBackToHome={() => navigateTo('home')}
             onNavigatePage={navigateTo}
             onOpenSupport={() => navigateTo('support')}
+          />
+        )}
+
+        {/* HOSTELS & BACKPACKER STAYS PAGE (THE HOSTELLER, GOSTOPS, ZOSTEL, MADPACKERS) */}
+        {activePage === 'hostels' && (
+          <HostelsPage
+            currency={currency}
+            onBackToHome={() => navigateTo('home')}
+            onSelectHostelForCheckout={(checkoutSummary) => {
+              setCheckoutItem(checkoutSummary);
+              navigateTo('checkout');
+            }}
+            onNotify={handleNotify}
           />
         )}
       </main>

@@ -63,6 +63,9 @@ interface HeroSearchSectionProps {
   onOpenExplorePage?: () => void;
   onOpenInfluencersPage?: () => void;
   onOpenDiningClubPage?: () => void;
+  onOpenHostelsPage?: () => void;
+  hotelMode?: 'overnight' | 'hourly' | 'villas' | 'hostels';
+  onChangeHotelMode?: (mode: 'overnight' | 'hourly' | 'villas' | 'hostels') => void;
 }
 
 const SERVICE_TABS: {
@@ -165,6 +168,9 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   onOpenExplorePage,
   onOpenInfluencersPage,
   onOpenDiningClubPage,
+  onOpenHostelsPage,
+  hotelMode: propHotelMode,
+  onChangeHotelMode,
 }) => {
   const [internalDummyTripType, setInternalDummyTripType] = useState<'one-way' | 'round-trip'>('one-way');
   const activeDummyTripType = dummyTripType || internalDummyTripType;
@@ -230,7 +236,12 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   const [liveTrainStatusMsg, setLiveTrainStatusMsg] = useState<string | null>(null);
 
   // 2. Hotels state
-  const [hotelMode, setHotelMode] = useState<'overnight' | 'hourly' | 'villas'>('overnight');
+  const [internalHotelMode, setInternalHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>('overnight');
+  const hotelMode = propHotelMode !== undefined ? propHotelMode : internalHotelMode;
+  const setHotelMode = (mode: 'overnight' | 'hourly' | 'villas' | 'hostels') => {
+    setInternalHotelMode(mode);
+    onChangeHotelMode?.(mode);
+  };
   const [hotelRooms, setHotelRooms] = useState<number>(1);
   const [hotelGuests, setHotelGuests] = useState<number>(2);
   const [hotelPriceFilter, setHotelPriceFilter] = useState<string>('₹0 - ₹15,000+');
@@ -1084,34 +1095,36 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     { id: 'overnight', label: 'Upto 4 Rooms' },
                     { id: 'hourly', label: 'Hourly Stays' },
                     { id: 'villas', label: 'Luxury Villas & Resorts' },
+                    { id: 'hostels', label: 'Hostels (Hosteller / goSTOPS)' },
                   ].map((m) => (
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() =>
-                        setHotelMode(m.id as 'overnight' | 'hourly' | 'villas')
-                      }
+                      onClick={() => {
+                        if (m.id === 'hostels') {
+                          if (onOpenHostelsPage) {
+                            onOpenHostelsPage();
+                          } else {
+                            setHotelMode('hostels');
+                          }
+                        } else {
+                          setHotelMode(m.id as 'overnight' | 'hourly' | 'villas' | 'hostels');
+                        }
+                      }}
                       className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         hotelMode === m.id
                           ? 'bg-[#2563EB] text-white shadow-xs'
+                          : m.id === 'hostels'
+                          ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
                       }`}
                     >
+                      {m.id === 'hostels' && (
+                        <Sparkles className="w-3.5 h-3.5 inline-block mr-1 text-amber-600 fill-amber-500" />
+                      )}
                       {m.label}
                     </button>
                   ))}
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={freeBreakfast}
-                      onChange={() => setFreeBreakfast((prev) => !prev)}
-                      className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer"
-                    />
-                    <span>Free Breakfast Included</span>
-                  </label>
                 </div>
               </div>
 
@@ -1135,6 +1148,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     <span className="block text-[11px] text-slate-500 truncate">
                       {hotelMode === 'villas'
                         ? 'Private Pool Villas & Beach Resorts'
+                        : hotelMode === 'hostels'
+                        ? 'The Hosteller, goSTOPS, Zostel & Dorms'
                         : '320+ Verified Properties'}
                     </span>
                   </button>
@@ -1398,13 +1413,48 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 {/* Search Hotels Button */}
                 <button
                   type="button"
-                  onClick={onTriggerSearch}
+                  onClick={() => {
+                    if (hotelMode === 'hostels' && onOpenHostelsPage) {
+                      onOpenHostelsPage();
+                    } else {
+                      onTriggerSearch();
+                    }
+                  }}
                   className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span>Search</span>
+                  <span>{hotelMode === 'hostels' ? 'Search Hostels' : 'Search'}</span>
                 </button>
               </div>
+
+              {hotelMode === 'hostels' && (
+                <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-300 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-base shrink-0 shadow-2xs">
+                      🎒
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                        <span>The Hosteller · goSTOPS · Zostel Collection</span>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-900 uppercase">
+                          Backpacker Stays
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-amber-800">
+                        Book social dorms &amp; private rooms with 100+ Mbps Wi-Fi, cafes, female-only dorms &amp; community events starting ₹449.
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onOpenHostelsPage?.()}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-colors shrink-0 shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>Open Hostels Page</span>
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </>
           )}
 

@@ -111,6 +111,9 @@ interface FlightSearchResultsPageProps {
     travellers?: number;
   }) => void;
   onSelectHotelForDetails?: (hotel: any) => void;
+  onOpenHostelsPage?: () => void;
+  hotelMode?: 'overnight' | 'hourly' | 'villas' | 'hostels';
+  onChangeHotelMode?: (mode: 'overnight' | 'hourly' | 'villas' | 'hostels') => void;
   onNotify: (title: string, detail: string) => void;
 }
 
@@ -1680,6 +1683,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   travellers = 1,
   cabinClass = 'Economy',
   currency,
+  hotelMode: initialHotelMode = 'overnight',
+  onChangeHotelMode,
   onChangeTripType,
   onChangeDummyTripType,
   onChangeFromCity,
@@ -1691,6 +1696,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   onModifySearch,
   onSelectFlightOrStayForCheckout,
   onSelectHotelForDetails,
+  onOpenHostelsPage,
   onNotify,
 }) => {
   // Current active results tab (Flights, Trains, Hotels, Buses, Cabs, Holidays)
@@ -1703,6 +1709,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [currentRetDate, setCurrentRetDate] = useState<string>(returnDate || '2026-10-19');
   const [currentTravellers, setCurrentTravellers] = useState<number>(travellers || 1);
   const [currentCabinClass, setCurrentCabinClass] = useState<string>(cabinClass || 'Economy');
+  const [currentHotelMode, setCurrentHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
+  const [modHotelMode, setModHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
+
+  useEffect(() => {
+    if (initialHotelMode) {
+      setCurrentHotelMode(initialHotelMode);
+      setModHotelMode(initialHotelMode);
+    }
+  }, [initialHotelMode]);
 
   // Sync with prop changes
   useEffect(() => {
@@ -1759,7 +1774,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [modRetDate, setModRetDate] = useState<string>(currentRetDate);
   const [modTravellers, setModTravellers] = useState<number>(currentTravellers);
   const [modCabinClass, setModCabinClass] = useState<string>(currentCabinClass);
-  const [openCityPicker, setOpenCityPicker] = useState<'from' | 'to' | null>(null);
+  const [openCityPicker, setOpenCityPicker] = useState<'from' | 'to' | 'hotel-dest' | null>(null);
 
   // Category specific fields in modify bar
   const [modTrainClass, setModTrainClass] = useState<string>('All Classes');
@@ -1775,7 +1790,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
   // Normal Calendar Dropdown state matching front page
   const [openCalendarDropdown, setOpenCalendarDropdown] = useState<
-    'header-dep' | 'header-ret' | 'mod-dep' | 'mod-ret' | null
+    'header-dep' | 'header-ret' | 'header-hotel-checkin' | 'header-hotel-checkout' | 'mod-dep' | 'mod-ret' | null
   >(null);
   const [openHeaderTravellers, setOpenHeaderTravellers] = useState<boolean>(false);
   const [openModTravellers, setOpenModTravellers] = useState<boolean>(false);
@@ -1817,6 +1832,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setModRetDate(currentRetDate);
     setModTravellers(currentTravellers);
     setModCabinClass(currentCabinClass);
+    setModHotelMode(currentHotelMode);
     setIsModifyOpen((prev) => !prev);
   };
 
@@ -1836,6 +1852,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setCurrentRetDate(modRetDate);
     setCurrentTravellers(modTravellers);
     setCurrentCabinClass(modCabinClass);
+    setCurrentHotelMode(modHotelMode);
+    onChangeHotelMode?.(modHotelMode);
 
     onChangeCategory?.(modCategory);
     onChangeTripType?.(modTripType);
@@ -1858,10 +1876,18 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
         : modTripType === 'round-trip'
         ? 'Round Trip'
         : 'One Way';
+    
+    let stayTypeLabel = 'Hotels & Stays';
+    if (modCategory === 'hotels') {
+      if (modHotelMode === 'villas') stayTypeLabel = 'Luxury Villas & Resorts';
+      else if (modHotelMode === 'hourly') stayTypeLabel = 'Hourly Stays';
+      else if (modHotelMode === 'hostels') stayTypeLabel = 'Hostels';
+    }
+
     onNotify(
-      `Search Updated for ${catLabel}`,
+      `Search Updated for ${modCategory === 'hotels' ? stayTypeLabel : catLabel}`,
       modCategory === 'hotels'
-        ? `${modToCity.city}, ${modToCity.country} · Check-in: ${modDepDate}`
+        ? `${modToCity.city}, ${modToCity.country} · ${stayTypeLabel} · In: ${modDepDate}`
         : `${modFromCity.city} → ${modToCity.city} (${flightTypeLabel}), ${modDepDate}`
     );
   };
@@ -2220,6 +2246,16 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       return true;
     });
 
+    if (currentHotelMode === 'villas' && hotelSelectedPropertyTypes.length === 0) {
+      list = [...list].sort((a, b) => {
+        const aIsVR = a.propertyType === 'Villa' || a.propertyType === 'Resort';
+        const bIsVR = b.propertyType === 'Villa' || b.propertyType === 'Resort';
+        if (aIsVR && !bIsVR) return -1;
+        if (!aIsVR && bIsVR) return 1;
+        return 0;
+      });
+    }
+
     return list.sort((a, b) => {
       if (sortBy === 'cheapest') return a.priceInr - b.priceInr;
       if (sortBy === 'fastest') return b.rating - a.rating; // best value
@@ -2228,6 +2264,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       return a.priceInr - b.priceInr;
     });
   }, [
+    currentHotelMode,
     hotelSearchQuery,
     hotelMaxPrice,
     hotelMinPrice,
@@ -2458,18 +2495,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             <div
               className="flex flex-wrap items-center gap-2.5 sm:gap-4"
             >
-              {/* Category & Route Chip */}
+              {/* Category & Route Chip (Clicking opens/toggles modify search) */}
               <div
                 onClick={handleOpenModify}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-900 hover:text-blue-800 font-bold text-xs sm:text-sm transition-colors border border-transparent hover:border-blue-200 cursor-pointer"
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all border cursor-pointer select-none ${
+                  isModifyOpen
+                    ? 'bg-blue-50 text-blue-800 border-blue-300 ring-2 ring-blue-100 shadow-xs'
+                    : 'bg-slate-100 hover:bg-blue-50 text-slate-900 hover:text-blue-800 border-slate-200 hover:border-blue-200 shadow-2xs'
+                }`}
                 title="Click to modify search details"
               >
-                {currentCategory === 'flights' && <Plane className="w-4 h-4 text-blue-600" />}
-                {currentCategory === 'trains' && <TrainFront className="w-4 h-4 text-emerald-600" />}
-                {currentCategory === 'hotels' && <Building2 className="w-4 h-4 text-amber-600" />}
-                {currentCategory === 'buses' && <Bus className="w-4 h-4 text-indigo-600" />}
-                {currentCategory === 'cabs' && <Car className="w-4 h-4 text-sky-600" />}
-                {currentCategory === 'holidays' && <Palmtree className="w-4 h-4 text-purple-600" />}
+                {currentCategory === 'flights' && <Plane className="w-4 h-4 text-blue-600 shrink-0" />}
+                {currentCategory === 'trains' && <TrainFront className="w-4 h-4 text-emerald-600 shrink-0" />}
+                {currentCategory === 'hotels' && <Building2 className="w-4 h-4 text-amber-600 shrink-0" />}
+                {currentCategory === 'buses' && <Bus className="w-4 h-4 text-indigo-600 shrink-0" />}
+                {currentCategory === 'cabs' && <Car className="w-4 h-4 text-sky-600 shrink-0" />}
+                {currentCategory === 'holidays' && <Palmtree className="w-4 h-4 text-purple-600 shrink-0" />}
 
                 {currentCategory === 'hotels' ? (
                   <>
@@ -2477,8 +2518,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <span className="text-[11px] font-mono text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded font-bold">
                       {currentToCity.country}
                     </span>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                      Hotels &amp; Stays
+                    <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
+                      currentHotelMode === 'villas'
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs'
+                        : currentHotelMode === 'hourly'
+                        ? 'bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-2xs'
+                        : currentHotelMode === 'hostels'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {currentHotelMode === 'villas'
+                        ? 'Luxury Villas & Resorts'
+                        : currentHotelMode === 'hourly'
+                        ? 'Hourly Stays'
+                        : currentHotelMode === 'hostels'
+                        ? 'Hostels & Backpackers'
+                        : 'Hotels & Stays'}
                     </span>
                   </>
                 ) : (
@@ -2516,96 +2571,115 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </>
                 )}
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${isModifyOpen ? 'rotate-180 text-blue-600' : ''}`} />
               </div>
 
-              {/* Travel Date(s) with Interactive NormalCalendarDropdown (Matching Front Page) */}
+              {/* Hotel Check-In & Check-Out Adjusted into a Single Combined Box */}
               {currentCategory === 'hotels' ? (
-                <div className="flex items-center gap-2">
-                  {/* Check-in */}
-                  <div className="relative dropdown-field-container">
+                <div className="relative dropdown-field-container">
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (openCalendarDropdown === 'header-hotel-checkin' || openCalendarDropdown === 'header-hotel-checkout') {
+                        setOpenCalendarDropdown(null);
+                      } else {
+                        setOpenCalendarDropdown('header-hotel-checkin');
+                      }
+                    }}
+                    className={`inline-flex items-center gap-2 text-xs sm:text-sm font-medium px-3 sm:px-3.5 py-1.5 rounded-xl border transition-all shadow-2xs select-none cursor-pointer ${
+                      openCalendarDropdown === 'header-hotel-checkin' || openCalendarDropdown === 'header-hotel-checkout'
+                        ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                        : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                    }`}
+                    title="Click to change check-in and check-out dates"
+                  >
+                    <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenCalendarDropdown(openCalendarDropdown === 'header-dep' ? null : 'header-dep');
+                        setOpenCalendarDropdown(
+                          openCalendarDropdown === 'header-hotel-checkin' ? null : 'header-hotel-checkin'
+                        );
                       }}
-                      className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
-                        openCalendarDropdown === 'header-dep'
-                          ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
-                          : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
-                      }`}
+                      className="cursor-pointer hover:text-blue-600 flex items-center gap-1 font-bold text-slate-900"
                       title="Click to select check-in date"
                     >
-                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
-                      <span className="text-[11px] text-slate-500 hidden sm:inline">Check-in:</span>
-                      <span className="font-bold text-slate-900">{formatFriendlyDate(currentDepDate)}</span>
+                      <span className="text-[11px] text-slate-500 font-normal hidden sm:inline">In:</span>
+                      <span>{formatFriendlyDate(currentDepDate)}</span>
                     </button>
 
-                    {openCalendarDropdown === 'header-dep' && (
-                      <NormalCalendarDropdown
-                        selectedDate={currentDepDate}
-                        minDate="2026-10-15"
-                        onSelectDate={(newDate) => {
-                          setCurrentDepDate(newDate);
-                          setModDepDate(newDate);
-                          onChangeDepartureDate?.(newDate);
-                          if (currentRetDate <= newDate) {
-                            const nextD = new Date(newDate);
-                            nextD.setDate(nextD.getDate() + 2);
-                            const nextIso = nextD.toISOString().slice(0, 10);
-                            setCurrentRetDate(nextIso);
-                            setModRetDate(nextIso);
-                            onChangeReturnDate?.(nextIso);
-                          }
-                          setOpenCalendarDropdown(null);
-                          onNotify('Check-in Date Updated', `Check-in set to ${formatFriendlyDate(newDate)}`);
-                        }}
-                        onClose={() => setOpenCalendarDropdown(null)}
-                        alignRight={false}
-                      />
-                    )}
+                    <span className="text-slate-400 font-mono text-xs">→</span>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(
+                          openCalendarDropdown === 'header-hotel-checkout' ? null : 'header-hotel-checkout'
+                        );
+                      }}
+                      className="cursor-pointer hover:text-blue-600 flex items-center gap-1 font-bold text-slate-900"
+                      title="Click to select check-out date"
+                    >
+                      <span className="text-[11px] text-slate-500 font-normal hidden sm:inline">Out:</span>
+                      <span>{formatFriendlyDate(currentRetDate)}</span>
+                    </button>
+
+                    {(() => {
+                      try {
+                        const d1 = new Date(currentDepDate);
+                        const d2 = new Date(currentRetDate);
+                        const diffDays = Math.max(1, Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)));
+                        return (
+                          <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 ml-0.5">
+                            {diffDays} {diffDays === 1 ? 'Night' : 'Nights'}
+                          </span>
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })()}
                   </div>
 
-                  {currentRetDate && (
-                    <>
-                      <span className="text-slate-300">→</span>
-                      {/* Check-out */}
-                      <div className="relative dropdown-field-container">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenCalendarDropdown(openCalendarDropdown === 'header-ret' ? null : 'header-ret');
-                          }}
-                          className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
-                            openCalendarDropdown === 'header-ret'
-                              ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
-                              : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
-                          }`}
-                          title="Click to select check-out date"
-                        >
-                          <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
-                          <span className="text-[11px] text-slate-500 hidden sm:inline">Check-out:</span>
-                          <span className="font-bold text-slate-900">{formatFriendlyDate(currentRetDate)}</span>
-                        </button>
+                  {openCalendarDropdown === 'header-hotel-checkin' && (
+                    <NormalCalendarDropdown
+                      selectedDate={currentDepDate}
+                      minDate="2026-10-15"
+                      onSelectDate={(newDate) => {
+                        setCurrentDepDate(newDate);
+                        setModDepDate(newDate);
+                        onChangeDepartureDate?.(newDate);
+                        if (currentRetDate <= newDate) {
+                          const nextD = new Date(newDate);
+                          nextD.setDate(nextD.getDate() + 1);
+                          const nextIso = nextD.toISOString().slice(0, 10);
+                          setCurrentRetDate(nextIso);
+                          setModRetDate(nextIso);
+                          onChangeReturnDate?.(nextIso);
+                        }
+                        setOpenCalendarDropdown('header-hotel-checkout');
+                        onNotify('Check-in Selected', `Now select check-out date`);
+                      }}
+                      onClose={() => setOpenCalendarDropdown(null)}
+                      alignRight={false}
+                    />
+                  )}
 
-                        {openCalendarDropdown === 'header-ret' && (
-                          <NormalCalendarDropdown
-                            selectedDate={currentRetDate}
-                            minDate={currentDepDate}
-                            onSelectDate={(newDate) => {
-                              setCurrentRetDate(newDate);
-                              setModRetDate(newDate);
-                              onChangeReturnDate?.(newDate);
-                              setOpenCalendarDropdown(null);
-                              onNotify('Check-out Date Updated', `Check-out set to ${formatFriendlyDate(newDate)}`);
-                            }}
-                            onClose={() => setOpenCalendarDropdown(null)}
-                            alignRight={false}
-                          />
-                        )}
-                      </div>
-                    </>
+                  {openCalendarDropdown === 'header-hotel-checkout' && (
+                    <NormalCalendarDropdown
+                      selectedDate={currentRetDate}
+                      minDate={currentDepDate}
+                      onSelectDate={(newDate) => {
+                        setCurrentRetDate(newDate);
+                        setModRetDate(newDate);
+                        onChangeReturnDate?.(newDate);
+                        setOpenCalendarDropdown(null);
+                        onNotify('Check-out Date Updated', `Check-out set to ${formatFriendlyDate(newDate)}`);
+                      }}
+                      onClose={() => setOpenCalendarDropdown(null)}
+                      alignRight={false}
+                    />
                   )}
                 </div>
               ) : currentCategory === 'flights' && isFlightRoundTrip ? (
@@ -2734,101 +2808,101 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
               )}
 
-              {/* Travellers / Guests (Custom Popover matching front page for flights, interactive for all) */}
-              <div className="relative dropdown-field-container">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenHeaderTravellers(!openHeaderTravellers);
-                    setOpenCalendarDropdown(null);
-                  }}
-                  className={`hidden sm:flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
-                    openHeaderTravellers
-                      ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
-                      : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
-                  }`}
-                  title="Click to change travellers and class"
-                >
-                  <Users className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span className="font-semibold text-slate-900">
-                    {currentCategory === 'hotels'
-                      ? `${modHotelRooms || 1} ${modHotelRooms === 1 ? 'Room' : 'Rooms'} · ${modHotelGuests || 2} Guests`
-                      : `${currentTravellers} ${currentTravellers === 1 ? 'Traveller' : 'Travellers'} · ${currentCabinClass}`}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                </button>
-
-                {openHeaderTravellers && currentCategory === 'flights' && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 sm:left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-40 select-none animate-in fade-in zoom-in-95 duration-100"
+              {/* Travellers / Guests (Custom Popover matching front page for flights, hidden for trains and hotels as requested) */}
+              {currentCategory !== 'trains' && currentCategory !== 'hotels' && (
+                <div className="relative dropdown-field-container">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenHeaderTravellers(!openHeaderTravellers);
+                      setOpenCalendarDropdown(null);
+                    }}
+                    className={`hidden sm:flex items-center gap-1.5 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                      openHeaderTravellers
+                        ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
+                        : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                    }`}
+                    title="Click to change travellers and class"
                   >
-                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 block">Travellers</span>
-                        <span className="text-[10px] text-slate-400">Adults (12+ yrs)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newCount = Math.max(1, currentTravellers - 1);
-                            setCurrentTravellers(newCount);
-                            setModTravellers(newCount);
-                            onChangeTravellers?.(newCount, currentCabinClass);
-                          }}
-                          disabled={currentTravellers <= 1}
-                          className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                        >
-                          -
-                        </button>
-                        <span className="w-6 text-center text-sm font-bold font-mono-tabular text-slate-900">
-                          {currentTravellers}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newCount = Math.min(9, currentTravellers + 1);
-                            setCurrentTravellers(newCount);
-                            setModTravellers(newCount);
-                            onChangeTravellers?.(newCount, currentCabinClass);
-                          }}
-                          disabled={currentTravellers >= 9}
-                          className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
+                    <Users className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span className="font-semibold text-slate-900">
+                      {`${currentTravellers} ${currentTravellers === 1 ? 'Traveller' : 'Travellers'} · ${currentCabinClass}`}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  </button>
 
-                    <div>
-                      <p className="text-xs font-bold text-slate-700 mb-2">Flight Class</p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {FLIGHT_CLASSES.map((c) => (
+                  {openHeaderTravellers && currentCategory === 'flights' && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 sm:left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-40 select-none animate-in fade-in zoom-in-95 duration-100"
+                    >
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 block">Travellers</span>
+                          <span className="text-[10px] text-slate-400">Adults (12+ yrs)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <button
-                            key={c}
                             type="button"
                             onClick={() => {
-                              setCurrentCabinClass(c);
-                              setModCabinClass(c);
-                              onChangeTravellers?.(currentTravellers, c);
-                              setOpenHeaderTravellers(false);
+                              const newCount = Math.max(1, currentTravellers - 1);
+                              setCurrentTravellers(newCount);
+                              setModTravellers(newCount);
+                              onChangeTravellers?.(newCount, currentCabinClass);
                             }}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
-                              currentCabinClass === c
-                                ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
+                            disabled={currentTravellers <= 1}
+                            className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                           >
-                            {c}
+                            -
                           </button>
-                        ))}
+                          <span className="w-6 text-center text-sm font-bold font-mono-tabular text-slate-900">
+                            {currentTravellers}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newCount = Math.min(9, currentTravellers + 1);
+                              setCurrentTravellers(newCount);
+                              setModTravellers(newCount);
+                              onChangeTravellers?.(newCount, currentCabinClass);
+                            }}
+                            disabled={currentTravellers >= 9}
+                            className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-slate-700 mb-2">Flight Class</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {FLIGHT_CLASSES.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setCurrentCabinClass(c);
+                                setModCabinClass(c);
+                                onChangeTravellers?.(currentTravellers, c);
+                                setOpenHeaderTravellers(false);
+                              }}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors whitespace-nowrap truncate cursor-pointer ${
+                                currentCabinClass === c
+                                  ? 'bg-blue-600 text-white shadow-xs'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -2842,18 +2916,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 <span>Filters</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleOpenModify}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
-                  isModifyOpen
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
-                }`}
-              >
-                <span>{isModifyOpen ? 'Close' : 'Modify Search'}</span>
-                {isModifyOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
+              {isModifyOpen && (
+                <button
+                  type="button"
+                  onClick={handleOpenModify}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white border border-slate-900 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Close search panel"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>Close</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -3416,25 +3489,101 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
               {/* 3. HOTELS MODIFY CONTROLS */}
               {modCategory === 'hotels' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      City / Destination
-                    </label>
-                    <select
-                      value={modToCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModToCity(match);
-                      }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city}, {c.country}
-                        </option>
+                <div className="space-y-3">
+                  {/* Stay Type Selector Pills matching front page */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="text-xs font-bold text-slate-600">Stay Type:</label>
+                    <div className="inline-flex rounded-xl p-1 bg-white border border-slate-200 shadow-2xs gap-1">
+                      {[
+                        { id: 'overnight', label: 'Hotels & Stays' },
+                        { id: 'villas', label: 'Luxury Villas & Resorts' },
+                        { id: 'hourly', label: 'Hourly Stays' },
+                        { id: 'hostels', label: 'Hostels' },
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            if (m.id === 'hostels' && onOpenHostelsPage) {
+                              onOpenHostelsPage();
+                            } else {
+                              setModHotelMode(m.id as any);
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            modHotelMode === m.id
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
                       ))}
-                    </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* City / Destination with Modern Popover matching front page */}
+                  <div className="relative dropdown-field-container">
+                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                      City, Property Name or Location
+                    </label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCityPicker(openCityPicker === 'hotel-dest' ? null : 'hotel-dest');
+                        setOpenCalendarDropdown(null);
+                        setOpenModTravellers(false);
+                      }}
+                      className="w-full text-left bg-white border border-slate-300 hover:border-blue-500 rounded-xl p-2.5 shadow-2xs cursor-pointer flex items-center justify-between transition-colors"
+                    >
+                      <div className="truncate">
+                        <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                          {modToCity.city}, {modToCity.country}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate">
+                          320+ Verified Properties · {modToCity.airportName || 'Top Tourist Destination'}
+                        </div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openCityPicker === 'hotel-dest' ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+
+                    {openCityPicker === 'hotel-dest' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute left-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModToCity(city);
+                              setOpenCityPicker(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modToCity.code === city.code
+                                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city}, {city.country}
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                {city.airportName}
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Hotels Check-in Date */}
@@ -3447,6 +3596,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                        setOpenCityPicker(null);
+                        setOpenModTravellers(false);
                       }}
                       className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
                         openCalendarDropdown === 'mod-dep' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
@@ -3487,6 +3638,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenCalendarDropdown(openCalendarDropdown === 'mod-ret' ? null : 'mod-ret');
+                        setOpenCityPicker(null);
+                        setOpenModTravellers(false);
                       }}
                       className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
                         openCalendarDropdown === 'mod-ret' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
@@ -3512,38 +3665,120 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </div>
 
-                  <div>
+                  {/* Rooms & Guests with Modern Popover matching front page */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Rooms &amp; Guests
                     </label>
-                    <div className="flex items-center gap-2 bg-white border border-slate-300 rounded-xl p-2 shadow-2xs">
-                      <select
-                        value={modHotelRooms}
-                        onChange={(e) => setModHotelRooms(Number(e.target.value))}
-                        className="bg-transparent text-xs font-bold text-slate-900 focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenModTravellers(!openModTravellers);
+                        setOpenCityPicker(null);
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openModTravellers ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Users className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                          {modHotelRooms} {modHotelRooms === 1 ? 'Room' : 'Rooms'}, {modHotelGuests} Guests
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openModTravellers ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+
+                    {openModTravellers && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 max-h-80 overflow-y-auto overscroll-contain custom-scrollbar space-y-3 select-none animate-in fade-in zoom-in-95 duration-100"
                       >
-                        {[1, 2, 3, 4].map((r) => (
-                          <option key={r} value={r}>
-                            {r} {r === 1 ? 'Room' : 'Rooms'}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="text-slate-300">·</span>
-                      <select
-                        value={modHotelGuests}
-                        onChange={(e) => setModHotelGuests(Number(e.target.value))}
-                        className="bg-transparent text-xs font-bold text-slate-900 focus:outline-hidden cursor-pointer"
-                      >
-                        {[1, 2, 3, 4, 6, 8].map((g) => (
-                          <option key={g} value={g}>
-                            {g} {g === 1 ? 'Guest' : 'Guests'}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        {/* Option 1: Rooms Counter */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-semibold text-slate-700 block">Rooms</span>
+                            <span className="text-[10px] text-slate-400">Up to 4 rooms</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setModHotelRooms(Math.max(1, modHotelRooms - 1))}
+                              disabled={modHotelRooms <= 1}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                              {modHotelRooms}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setModHotelRooms(Math.min(4, modHotelRooms + 1))}
+                              disabled={modHotelRooms >= 4}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Option 2: Guests / Adults Counter */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-semibold text-slate-700 block">Guests (Adults &amp; Children)</span>
+                            <span className="text-[10px] text-slate-400">Up to 10 guests</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setModHotelGuests(Math.max(1, modHotelGuests - 1))}
+                              disabled={modHotelGuests <= 1}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                              {modHotelGuests}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setModHotelGuests(Math.min(10, modHotelGuests + 1))}
+                              disabled={modHotelGuests >= 10}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Price Per Night filter options matching front page */}
+                        <div className="border-t border-slate-100 pt-2">
+                          <p className="text-[11px] font-semibold text-slate-500 mb-1.5">
+                            Price Per Night
+                          </p>
+                          <div className="grid grid-cols-2 gap-1">
+                            {['₹0 - ₹5,000', '₹5,000 - ₹12,000', '₹12,000 - ₹25,000', '₹0 - ₹15,000+'].map((p) => (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => setOpenModTravellers(false)}
+                                className="px-2 py-1 rounded-lg text-[11px] font-medium truncate cursor-pointer bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 transition-colors"
+                              >
+                                {p}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
               {/* 4. BUSES MODIFY CONTROLS */}
               {modCategory === 'buses' && (
@@ -4424,22 +4659,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <span>₹6,500</span>
                   </div>
                 </div>
-
-                {/* 11. Onboard Catering */}
-                <div className="pt-2 border-t border-slate-100">
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900 p-2 rounded-xl bg-slate-50 border border-slate-200">
-                    <input
-                      type="checkbox"
-                      checked={trainPantryOnly}
-                      onChange={() => setTrainPantryOnly(!trainPantryOnly)}
-                      className="w-4 h-4 rounded border-slate-300 text-emerald-600 cursor-pointer accent-emerald-600"
-                    />
-                    <div>
-                      <div className="font-bold text-xs text-slate-800">Pantry Car Available</div>
-                      <div className="text-[10px] text-slate-500">Fresh breakfast, lunch, and dinner on-board</div>
-                    </div>
-                  </label>
-                </div>
               </div>
             )}
 
@@ -4615,39 +4834,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 </div>
 
-                {/* 6. Popular Localities */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Popular Localities</span>
-                  <div className="space-y-1.5">
-                    {[
-                      { id: 'Calangute', label: 'Calangute & Baga (North Goa)' },
-                      { id: 'Candolim', label: 'Candolim & Sinquerim' },
-                      { id: 'Vagator', label: 'Vagator & Anjuna Cliffs' },
-                      { id: 'Majorda', label: 'Majorda & South Goa Sands' },
-                      { id: 'Panaji', label: 'Panaji City & Heritage Quarter' },
-                    ].map((loc) => {
-                      const checked = hotelSelectedLocalities.includes(loc.id);
-                      return (
-                        <label
-                          key={loc.id}
-                          className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setHotelSelectedLocalities((prev) =>
-                                checked ? prev.filter((l) => l !== loc.id) : [...prev, loc.id]
-                              )
-                            }
-                            className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                          />
-                          <span className="text-[11px]">{loc.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
 
                 {/* 7. Property Type */}
                 <div className="pt-2 border-t border-slate-100">
@@ -6244,8 +6430,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       trainDepSlots.length > 0 ||
                       trainArrSlots.length > 0 ||
                       trainSelectedDepStations.length > 0 ||
-                      trainSelectedArrStations.length > 0 ||
-                      trainPantryOnly) && (
+                      trainSelectedArrStations.length > 0) && (
                       <button
                         type="button"
                         onClick={handleResetFilters}
@@ -6301,12 +6486,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           {train.hasAlternateGuarantee && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
                               3X Trip Guarantee
-                            </span>
-                          )}
-
-                          {train.pantryAvailable && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                              Pantry Available
                             </span>
                           )}
                         </div>
@@ -6451,6 +6630,36 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'hotels' && (
               <div className="space-y-4">
+                {/* Backpacker Hostels & Dorms Banner */}
+                {onOpenHostelsPage && (
+                  <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-amber-500/10 border border-amber-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0">
+                        🎒
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-slate-900 text-sm">Looking for Backpacker Hostels &amp; Social Dorms?</h4>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-900 uppercase">
+                            The Hosteller · goSTOPS · Zostel
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          Explore verified bunk beds starting ₹449 with 100+ Mbps Wi-Fi, cafes, female-only dorms &amp; community events.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onOpenHostelsPage}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>Explore Hostels Page</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Active Hotel Filters & Result Count Strip */}
                 <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
