@@ -589,20 +589,6 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
               </div>
             ))}
           </div>
-
-          <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 px-1">
-            <span className="flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5 text-blue-600" />
-              100% verified traveler and property photography
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsPhotoModalOpen(true)}
-              className="font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
-            >
-              Open Interactive Gallery ({HOTEL_GALLERY_IMAGES.length} curated angles) →
-            </button>
-          </div>
         </div>
 
         {/* 4. STICKY SUB-NAVIGATION TABS */}
@@ -641,9 +627,6 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
                       Select Your Room
                     </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Choose from {DEFAULT_ROOMS.length} luxury categories. All rooms include air conditioning, en-suite bathroom, and premium linen.
-                    </p>
                   </div>
 
                   {/* Stay Dates Pill */}
@@ -857,9 +840,6 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
                     Facilities &amp; Luxury Amenities
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Thoughtfully designed hospitality services to make your beach escape effortless and indulgent.
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -977,9 +957,6 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
                     Location &amp; What's Nearby
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {hotel.location} · Prime beachfront address with convenient connectivity.
-                  </p>
                 </div>
 
                 {/* Visual Map Mock Card */}
@@ -1082,9 +1059,6 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
                       Guest Reviews &amp; Ratings
                     </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Based on {hotel.reviews || 1290} genuine verified traveler stays on TripYeah.
-                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -1383,17 +1357,8 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
           {/* RIGHT COLUMN: STICKY BOOKING SUMMARY CARD (Col 9 to 12) */}
           <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
             <div className="bg-white rounded-3xl border-2 border-blue-600/30 p-5 sm:p-6 shadow-xl shadow-blue-500/5">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Your Stay Selection
-                </span>
-                <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Instant Confirmation
-                </span>
-              </div>
-
               {/* Selected Room Snippet */}
-              <div className="mt-4 p-3 rounded-2xl bg-blue-50/60 border border-blue-200/80">
+              <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-200/80">
                 <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
                   Selected Room:
                 </div>
@@ -1489,16 +1454,8 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
                 onClick={() => handleSelectRoomAndBook(currentSelectedRoom)}
                 className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm shadow-lg shadow-blue-600/25 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Book Now: {currentSelectedRoom.name.split(' ')[0]}</span>
-                <span>→</span>
+                <span>Book Now</span>
               </button>
-
-              <div className="mt-3 text-center">
-                <p className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Zero cancellation fee · Pay now or pay at check-in</span>
-                </p>
-              </div>
             </div>
 
             {/* Need Assistance Card */}
