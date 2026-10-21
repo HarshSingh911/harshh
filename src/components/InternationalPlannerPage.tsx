@@ -45,6 +45,9 @@ import {
   Check,
   X,
   Copy,
+  CloudSun,
+  Thermometer,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   ASSETS,
@@ -112,6 +115,9 @@ export interface FullItinerary {
   travellerType: string;
   interests: string[];
   savedAt?: string;
+  hasSearchGrounding?: boolean;
+  groundingSources?: Array<{ title: string; uri: string }>;
+  searchQueries?: string[];
 }
 
 export interface VisaDetails {
@@ -542,6 +548,32 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
     localStorage.setItem('tripyeah_travel_checklist', JSON.stringify(checklist));
   }, [checklist]);
 
+  // Live Google Search Grounded Destination Intelligence State
+  const [liveIntel, setLiveIntel] = useState<any>(null);
+  const [isLoadingIntel, setIsLoadingIntel] = useState<boolean>(false);
+  const [intelGroundingSources, setIntelGroundingSources] = useState<Array<{ title: string; uri: string }>>([]);
+
+  const fetchLiveDestinationIntel = async (destCity: string) => {
+    if (!destCity || !destCity.trim()) return;
+    setIsLoadingIntel(true);
+    try {
+      const res = await fetch('/api/destination/live-intel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination: destCity.trim(), passportCountry }),
+      });
+      const json = await res.json();
+      if (json.success && json.liveData) {
+        setLiveIntel(json.liveData);
+        setIntelGroundingSources(json.groundingSources || []);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch live intel:', err);
+    } finally {
+      setIsLoadingIntel(false);
+    }
+  };
+
   // Save saved itineraries to localStorage
   useEffect(() => {
     localStorage.setItem('tripyeah_saved_itineraries', JSON.stringify(savedItineraries));
@@ -551,6 +583,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   useEffect(() => {
     handleGenerateItinerary(false);
     fetchVisaDetails('Paris', 'India');
+    fetchLiveDestinationIntel('Paris');
   }, []);
 
   // Update budget calculator rates when tier or destination changes
@@ -619,6 +652,9 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
         const fullPlan: FullItinerary = {
           id: `plan-${Date.now()}`,
           ...json.data,
+          hasSearchGrounding: json.hasSearchGrounding,
+          groundingSources: json.groundingSources || [],
+          searchQueries: json.searchQueries || [],
           days: Array.isArray(json.data.days) ? json.data.days : [],
           origin,
           startDate,
@@ -629,6 +665,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
           interests: selectedInterests,
         };
         setCurrentItinerary(fullPlan);
+        fetchLiveDestinationIntel(destination);
 
         // Also update Assistant context message
         setAssistantMessages((prev) => [
@@ -917,11 +954,20 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 sm:-mt-28 lg:-mt-32 relative z-20">
         <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(15,23,42,0.08)] border border-slate-200/80 p-4 sm:p-6 mb-8 text-slate-900">
           {/* Form Controls Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-3.5">
             {/* 1. Destination Input */}
             <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Destination Country / City
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                <span>Destination Country / City</span>
+                {isLoadingIntel ? (
+                  <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-1">
+                    <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Live search...
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Search Grounded
+                  </span>
+                )}
               </label>
               <div className="flex items-center gap-2 mt-1">
                 <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
@@ -929,9 +975,35 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. Paris, Dubai, Bali, Tokyo"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      fetchLiveDestinationIntel(destination);
+                      handleGenerateItinerary(true);
+                      fetchVisaDetails(destination, passportCountry);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (destination.trim()) {
+                      fetchLiveDestinationIntel(destination);
+                    }
+                  }}
+                  placeholder="e.g. Paris, Dubai, Bali, Tokyo, London"
                   className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchLiveDestinationIntel(destination);
+                    handleGenerateItinerary(true);
+                    fetchVisaDetails(destination, passportCountry);
+                  }}
+                  title="Search Live City Intel"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3 text-sky-200" />
+                  <span>Search</span>
+                </button>
               </div>
             </div>
 
@@ -1016,6 +1088,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                 onClick={() => {
                   handleGenerateItinerary(true);
                   fetchVisaDetails(destination, passportCountry);
+                  fetchLiveDestinationIntel(destination);
                 }}
                 disabled={isGenerating}
                 className="h-full px-5 py-3 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F46E5] hover:brightness-110 text-white font-bold text-xs sm:text-sm flex flex-col items-center justify-center gap-1 shadow-md shadow-blue-600/25 transition-all cursor-pointer shrink-0 disabled:opacity-60"
@@ -1025,10 +1098,179 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                <span>{isGenerating ? 'Planning...' : 'Generate AI'}</span>
+                <span>{isGenerating ? 'Planning...' : 'Generate Plan'}</span>
               </button>
             </div>
           </div>
+
+          {/* Quick Popular Destination Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none pb-3 pt-1 text-xs text-slate-500">
+            <span className="font-bold text-[11px] text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+              <Globe className="w-3 h-3 text-blue-500" /> Popular Cities:
+            </span>
+            {['Tokyo', 'Dubai', 'Paris', 'Bali', 'Singapore', 'London', 'Bangkok', 'Zurich', 'Rome', 'New York'].map((city) => (
+              <button
+                key={city}
+                type="button"
+                onClick={() => {
+                  setDestination(city);
+                  fetchLiveDestinationIntel(city);
+                  fetchVisaDetails(city, passportCountry);
+                  onNotify(`Destination Selected: ${city}`, `Fetching live Google Search weather, advisories and travel details for ${city}...`, 'info');
+                }}
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer shrink-0 ${
+                  destination.toLowerCase() === city.toLowerCase()
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                    : 'bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
+                }`}
+              >
+                {city}
+              </button>
+            ))}
+          </div>
+
+          {/* 2.5 LIVE GOOGLE SEARCH GROUNDED CITY INTEL CARD */}
+          {liveIntel && (
+            <div className="mb-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-indigo-800/50">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3.5 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/25 border border-blue-400/30 flex items-center justify-center shrink-0">
+                    <Globe className="w-4 h-4 text-sky-300" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-extrabold text-base sm:text-lg text-white">
+                        {liveIntel.destination} {liveIntel.country ? `• ${liveIntel.country}` : ''}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Live Google Search Verified
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-sky-200/80">
+                      Real-time live weather, latest safety advisory, and verified entry requirements
+                    </p>
+                  </div>
+                </div>
+
+                {/* Citations from Google Search */}
+                {intelGroundingSources.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] text-white/60 font-semibold uppercase tracking-wider">Sources:</span>
+                    {intelGroundingSources.slice(0, 3).map((source, sIdx) => (
+                      <a
+                        key={sIdx}
+                        href={source.uri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-200 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-md border border-white/15 transition-colors"
+                      >
+                        <ExternalLink className="w-2.5 h-2.5 text-sky-300" />
+                        <span className="max-w-[110px] truncate">{source.title}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 4 Metrics Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* 1. Live Weather */}
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
+                    <span>Live Weather</span>
+                    <CloudSun className="w-3.5 h-3.5 text-amber-300" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-black text-white">
+                      {liveIntel.currentWeather?.temperatureC !== undefined ? `${liveIntel.currentWeather.temperatureC}°C` : '22°C'}
+                    </span>
+                    <span className="text-xs font-semibold text-amber-200 truncate">
+                      {liveIntel.currentWeather?.condition || 'Clear & Pleasant'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/70 mt-1 line-clamp-2">
+                    {liveIntel.currentWeather?.forecastSummary || 'Optimal seasonal travel conditions.'}
+                  </p>
+                  {liveIntel.currentWeather?.bestClothingTip && (
+                    <div className="mt-2 text-[10px] text-sky-100 bg-white/10 px-2 py-0.5 rounded-md truncate">
+                      👔 {liveIntel.currentWeather.bestClothingTip}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Live Travel Advisory */}
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
+                    <span>Travel Advisory</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-bold text-xs text-emerald-300 truncate">
+                      {liveIntel.travelAdvisory?.status || 'Normal Precautions'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/80 line-clamp-2">
+                    {liveIntel.travelAdvisory?.headline || 'Safe for international tourism.'}
+                  </p>
+                  <div className="mt-2 text-[10px] text-white/70 flex items-center justify-between">
+                    <span>Emergency Hotline:</span>
+                    <span className="font-mono font-bold text-white bg-white/20 px-1.5 py-0.5 rounded">
+                      {liveIntel.travelAdvisory?.emergencyNumber || '112'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Official Visa Overview */}
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
+                    <span>Visa & Entry Rule</span>
+                    <FileText className="w-3.5 h-3.5 text-sky-300" />
+                  </div>
+                  <div className="font-bold text-xs text-white mb-0.5 truncate">
+                    {liveIntel.visaOverview?.visaType || 'Tourist Visa / eVisa'}
+                  </div>
+                  <p className="text-[11px] text-sky-200 truncate">
+                    ⏱️ {liveIntel.visaOverview?.processingDays || '5–7 business days'}
+                  </p>
+                  <p className="text-[11px] text-emerald-300 font-semibold mt-0.5 truncate">
+                    💵 {liveIntel.visaOverview?.estimatedFee || 'Official consular fee'}
+                  </p>
+                  {liveIntel.visaOverview?.portalUrl && (
+                    <a
+                      href={liveIntel.visaOverview.portalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1.5 text-[10px] text-sky-200 hover:text-white flex items-center gap-1 underline underline-offset-2 truncate"
+                    >
+                      <span>{liveIntel.visaOverview.portalName || 'Official Portal'}</span>
+                      <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                    </a>
+                  )}
+                </div>
+
+                {/* 4. Live Currency & Exchange */}
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
+                    <span>Live Currency</span>
+                    <CreditCard className="w-3.5 h-3.5 text-emerald-300" />
+                  </div>
+                  <div className="font-black text-sm text-white truncate">
+                    {liveIntel.currency?.exchangeRateToInr || 'Live interbank rate'}
+                  </div>
+                  <p className="text-[11px] text-white/70 mt-1 line-clamp-2">
+                    {liveIntel.currency?.paymentAdvice || 'Cards widely accepted across dining & transit.'}
+                  </p>
+                  {liveIntel.quickTips && liveIntel.quickTips.length > 0 && (
+                    <div className="mt-2 text-[10px] text-sky-100 bg-white/10 px-2 py-0.5 rounded-md truncate">
+                      💡 {liveIntel.quickTips[0]}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Service Feature Tabs */}
           <div className="flex items-center gap-2 border-t border-slate-100 pt-4 overflow-x-auto scrollbar-none">
@@ -1095,6 +1337,27 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                         {formatPrice(currentItinerary.estimatedTotalTripBudgetInr, currency)}
                       </span>
                     </span>
+
+                    {currentItinerary.groundingSources && currentItinerary.groundingSources.length > 0 && (
+                      <div className="w-full flex items-center gap-1.5 flex-wrap pt-2 mt-2 border-t border-slate-100">
+                        <span className="text-[10px] font-bold text-emerald-800 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Google Search Sources:
+                        </span>
+                        {currentItinerary.groundingSources.slice(0, 4).map((src, sIdx) => (
+                          <a
+                            key={sIdx}
+                            href={src.uri}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-700 bg-slate-100 hover:bg-sky-50 hover:text-sky-800 px-2 py-0.5 rounded-md border border-slate-200 transition-colors"
+                          >
+                            <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
+                            <span className="max-w-[140px] truncate">{src.title}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

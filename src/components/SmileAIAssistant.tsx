@@ -16,6 +16,9 @@ import {
   Calendar,
   Users,
   Info,
+  Globe,
+  ExternalLink,
+  CloudSun,
 } from 'lucide-react';
 import { BookingCategory, CityOption } from '../data/travelData';
 import { SmileAnimeCompanion, SmileCharacterState } from './SmileAnimeCompanion';
@@ -39,6 +42,9 @@ export interface SmileMessage {
   followUpQuestions?: string[];
   suggestedSearch?: SmileSuggestedSearch | null;
   isLiveAI?: boolean;
+  hasSearchGrounding?: boolean;
+  groundingSources?: Array<{ title: string; uri: string }>;
+  searchQueries?: string[];
 }
 
 interface SmileAIAssistantProps {
@@ -53,12 +59,12 @@ interface SmileAIAssistantProps {
 }
 
 const OFFICIAL_SUGGESTED_PROMPTS = [
-  'Find flights',
-  'Discover hotels',
+  'Current weather in Tokyo',
+  'Latest travel advisories',
+  'Find flights to Dubai',
+  'Bali weather & best season',
   'Plan an international trip',
-  'Create my itinerary',
-  'Find holiday packages',
-  'Help me estimate my travel budget',
+  'Help me estimate travel budget',
 ];
 
 export const SmileAIAssistant: React.FC<SmileAIAssistantProps> = ({
@@ -83,7 +89,7 @@ export const SmileAIAssistant: React.FC<SmileAIAssistantProps> = ({
   const initialGreeting: SmileMessage = {
     id: 'msg-initial-greeting',
     sender: 'assistant',
-    text: "Hi there! I'm SMILE, your personal travel assistant. Where would you like to go next?",
+    text: "Hi there! I'm SMILE, your personal travel assistant powered by live Google Search grounding. Ask me about real-time weather in any city, current travel advisories, flight options, or international itineraries!",
     timestamp: 'Just now',
     followUpQuestions: OFFICIAL_SUGGESTED_PROMPTS,
   };
@@ -167,6 +173,9 @@ export const SmileAIAssistant: React.FC<SmileAIAssistantProps> = ({
         followUpQuestions: data.followUpQuestions || OFFICIAL_SUGGESTED_PROMPTS.slice(0, 3),
         suggestedSearch: data.suggestedSearch || null,
         isLiveAI: data.isLiveAI,
+        hasSearchGrounding: data.hasSearchGrounding,
+        groundingSources: data.groundingSources || [],
+        searchQueries: data.searchQueries || [],
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
@@ -513,6 +522,32 @@ export const SmileAIAssistant: React.FC<SmileAIAssistantProps> = ({
                     </div>
                   )}
 
+                  {/* Verified Google Search Grounding Sources */}
+                  {msg.groundingSources && msg.groundingSources.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 bg-sky-50/60 -mx-1 -mb-1 p-2 rounded-xl border border-sky-100/80">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-sky-900 mb-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Live Google Search Verified</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {msg.groundingSources.slice(0, 4).map((src, sIdx) => (
+                          <a
+                            key={sIdx}
+                            href={src.uri}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={src.title}
+                            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-700 bg-white hover:bg-sky-100/80 hover:text-sky-900 px-2 py-0.5 rounded-md border border-slate-200 transition-colors shadow-2xs"
+                          >
+                            <Globe className="w-2.5 h-2.5 text-sky-600 shrink-0" />
+                            <span className="max-w-[130px] sm:max-w-[160px] truncate">{src.title}</span>
+                            <ExternalLink className="w-2 h-2 opacity-50 shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Timestamp & Brand tag */}
                   <div
                     className={`mt-1.5 flex items-center justify-between text-[10px] ${
@@ -555,8 +590,8 @@ export const SmileAIAssistant: React.FC<SmileAIAssistantProps> = ({
                   <span className="w-2 h-2 rounded-full bg-[#08A9F7] animate-bounce [animation-delay:-0.3s]" />
                   <span className="w-2 h-2 rounded-full bg-[#08A9F7] animate-bounce [animation-delay:-0.15s]" />
                   <span className="w-2 h-2 rounded-full bg-[#08A9F7] animate-bounce" />
-                  <span className="text-[11px] text-slate-500 font-medium ml-1.5">
-                    SMILE is planning your options...
+                  <span className="text-[11px] text-slate-600 font-medium ml-1.5">
+                    Searching Google for live weather, advisories & travel facts...
                   </span>
                 </div>
               </div>

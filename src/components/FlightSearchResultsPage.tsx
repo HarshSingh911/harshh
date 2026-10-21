@@ -5690,82 +5690,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                 {/* --- A. ROUND-TRIP FLIGHT SELECTION LAYOUT (MakeMyTrip Style) --- */}
                 {isFlightRoundTrip ? (
-                  <div className="space-y-4 pb-6">
-                    {/* Round-Trip Indicator Header */}
-                    <div className={`rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md ${
-                      currentTripType === 'dummy-flights'
-                        ? 'bg-gradient-to-r from-amber-950 via-slate-900 to-amber-900 border border-amber-400/40'
-                        : 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900'
-                    }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          currentTripType === 'dummy-flights'
-                            ? 'bg-amber-500/20 border border-amber-400/40'
-                            : 'bg-blue-500/20 border border-blue-400/30'
-                        }`}>
-                          <ArrowLeftRight className={`w-5 h-5 ${
-                            currentTripType === 'dummy-flights' ? 'text-amber-300' : 'text-blue-300'
-                          }`} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-sm sm:text-base">
-                              {currentTripType === 'dummy-flights'
-                                ? 'Round-Trip Dummy Flight Selection (Live Verifiable PNR)'
-                                : 'Round Trip Flight Selection'}
-                            </h3>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              currentTripType === 'dummy-flights'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
-                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
-                            }`}>
-                              {currentTripType === 'dummy-flights' ? 'VISA EMBASSY VERIFIED' : 'COMBO DEAL APPLIED'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-blue-200">
-                            {currentTripType === 'dummy-flights'
-                              ? 'Select Outbound & Return flights for your official verifiable airline PNR itinerary.'
-                              : 'Select one Outbound departure flight and one Inbound return flight below.'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                        <div className="text-right">
-                          <div className="text-[11px] text-blue-300 font-medium">
-                            {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Combined Combo Fare'}
-                          </div>
-                          <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">
-                            {formatPrice(totalRoundTripFare, currency)}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFlightForFareModal({
-                              id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                              airline: selectedOutboundFlight.airline,
-                              flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                              depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                              arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                              duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                              priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                              badgeBg: selectedOutboundFlight.badgeBg,
-                              badgeCode: selectedOutboundFlight.badgeCode,
-                              aircraft: selectedOutboundFlight.aircraft,
-                              fromCode: currentFromCity.code,
-                              toCode: currentToCity.code,
-                            })
-                          }
-                          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all"
-                        >
-                          <span>
-                            {currentTripType === 'dummy-flights' ? 'View Dummy Ticket Prices' : 'View Prices'}
-                          </span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
+                  <div className="space-y-4 pb-36 sm:pb-32">
                     {/* TWO-COLUMN SIDE-BY-SIDE SPLIT GRID */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* ---------------------------------------------------------
@@ -6024,6 +5949,56 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         </div>
                       </div>
                     </div>
+
+                    {/* Inline Round-Trip Summary & Book Now Card */}
+                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-500/30">
+                      <div className="space-y-1 text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <span className="text-xs font-bold text-amber-300 uppercase tracking-wider bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                            {currentTripType === 'dummy-flights' ? 'Verifiable PNR Itinerary' : 'Combo Saver Deal'}
+                          </span>
+                          <span className="text-xs text-slate-300 font-semibold">
+                            {currentFromCity.code} ⇄ {currentToCity.code} · {currentTravellers} Traveller{currentTravellers > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-slate-200">
+                          {selectedOutboundFlight.airline} ({selectedOutboundFlight.depTime}) + {selectedReturnFlight.airline} ({selectedReturnFlight.depTime})
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
+                        <div className="text-center sm:text-right">
+                          <div className="text-[11px] text-blue-200 font-medium">Total Round-Trip Fare</div>
+                          <div className="text-2xl font-black text-amber-300 font-mono">
+                            {formatPrice(totalRoundTripFare, currency)}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFlightForFareModal({
+                              id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                              airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                              flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                              depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                              arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                              duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                              priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                              badgeBg: selectedOutboundFlight.badgeBg,
+                              badgeCode: selectedOutboundFlight.badgeCode,
+                              aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
+                              fromCode: currentFromCity.code,
+                              toCode: currentToCity.code,
+                            })
+                          }
+                          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 active:scale-95 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-500/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl"
+                        >
+                          <span>Book Now</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   /* --- B. ONE-WAY FLIGHT SELECTION LAYOUT --- */
@@ -6118,7 +6093,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 }
                                 className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 hover:shadow-lg"
                               >
-                                <span>View Prices</span>
+                                <span>Book Now</span>
                                 <ArrowRight className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -7667,6 +7642,121 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           </main>
         </div>
       </div>
+
+      {/* Sticky Bottom Booking Bar for Round-Trip Flight Selection (MakeMyTrip Style) */}
+      {currentCategory === 'flights' && isFlightRoundTrip && (
+        <aside
+          aria-label="Selected Round-Trip Booking Summary"
+          className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl py-3 px-3 sm:px-6 animate-in slide-in-from-bottom duration-300"
+        >
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Outbound & Return Selected Details */}
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-4 flex-1">
+              {/* Outbound Flight Pill */}
+              <div className="flex items-center gap-2 sm:gap-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl p-2 sm:px-3 sm:py-2 flex-1 min-w-0">
+                <div
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${selectedOutboundFlight.badgeBg} text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-2xs`}
+                >
+                  {selectedOutboundFlight.badgeCode}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-extrabold text-blue-800 uppercase tracking-wider truncate">
+                      Departure · {currentFromCity.code} → {currentToCity.code}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-900 hidden sm:inline">
+                      {formatPrice(selectedOutboundFlight.priceInr, currency)}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-slate-900 truncate">
+                    {selectedOutboundFlight.airline}{' '}
+                    <span className="font-mono text-[10px] sm:text-[11px] text-slate-500 font-normal">
+                      ({selectedOutboundFlight.flightNo})
+                    </span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-600 font-mono">
+                    {selectedOutboundFlight.depTime} → {selectedOutboundFlight.arrTime}{' '}
+                    <span className="text-slate-400">({selectedOutboundFlight.duration})</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Arrow divider */}
+              <div className="hidden sm:flex text-slate-400 shrink-0">
+                <ArrowLeftRight className="w-4 h-4 text-blue-500" />
+              </div>
+
+              {/* Return Flight Pill */}
+              <div className="flex items-center gap-2 sm:gap-2.5 bg-indigo-50/70 border border-indigo-200/80 rounded-xl p-2 sm:px-3 sm:py-2 flex-1 min-w-0">
+                <div
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${selectedReturnFlight.badgeBg} text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-2xs`}
+                >
+                  {selectedReturnFlight.badgeCode}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-extrabold text-indigo-800 uppercase tracking-wider truncate">
+                      Return · {currentToCity.code} → {currentFromCity.code}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-900 hidden sm:inline">
+                      {formatPrice(selectedReturnFlight.priceInr, currency)}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-slate-900 truncate">
+                    {selectedReturnFlight.airline}{' '}
+                    <span className="font-mono text-[10px] sm:text-[11px] text-slate-500 font-normal">
+                      ({selectedReturnFlight.flightNo})
+                    </span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-600 font-mono">
+                    {selectedReturnFlight.depTime} → {selectedReturnFlight.arrTime}{' '}
+                    <span className="text-slate-400">({selectedReturnFlight.duration})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Price & Book Now CTA Button */}
+            <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 shrink-0 pt-1 md:pt-0 border-t md:border-t-0 border-slate-100">
+              <div className="text-left md:text-right">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Total Round-Trip Fare'}
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono leading-tight">
+                  {formatPrice(totalRoundTripFare, currency)}
+                </div>
+                <div className="text-[10px] text-emerald-600 font-semibold hidden sm:block">
+                  Combo Deal Applied · {currentTravellers} Traveller{currentTravellers > 1 ? 's' : ''}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setFlightForFareModal({
+                    id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                    airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                    flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                    depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                    arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                    duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                    priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                    badgeBg: selectedOutboundFlight.badgeBg,
+                    badgeCode: selectedOutboundFlight.badgeCode,
+                    aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
+                    fromCode: currentFromCity.code,
+                    toCode: currentToCity.code,
+                  })
+                }
+                className="px-6 sm:px-9 py-2.5 sm:py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-black text-xs sm:text-base shadow-lg shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl group"
+              >
+                <span>Book Now</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
 
       {/* Flight Fare Options (Saver, Flexi Plus, Corporate, SpiceMax) Modal */}
       {flightForFareModal && (

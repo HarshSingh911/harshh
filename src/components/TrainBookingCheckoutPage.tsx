@@ -28,6 +28,7 @@ import {
   ExternalLink,
   Lock,
   Zap,
+  Check,
 } from 'lucide-react';
 import { BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
 import { CheckoutItem } from './CheckoutPaymentPage';
@@ -116,11 +117,17 @@ const DEFAULT_BOARDING_STATIONS: BoardingStationOption[] = [
   { code: 'ET', name: 'Itarsi Junction', time: '04:55 PM', day: 'Day 1', distanceKm: 794, platform: 'Platform 3' },
 ];
 
-const SAVED_FREQUENT_TRAVELLERS = [
-  { title: 'Mr', firstName: 'Rahul', lastName: 'Sharma', age: 31, gender: 'Male', berthPref: 'Lower Berth', foodPref: 'Veg Meal' },
-  { title: 'Mrs', firstName: 'Pooja', lastName: 'Sharma', age: 29, gender: 'Female', berthPref: 'Middle Berth', foodPref: 'Veg Meal' },
-  { title: 'Master', firstName: 'Aarav', lastName: 'Sharma', age: 7, gender: 'Male', berthPref: 'Window Seat', foodPref: 'Veg Meal' },
-  { title: 'Mr', firstName: 'Rajesh', lastName: 'Sharma', age: 62, gender: 'Male', berthPref: 'Lower Berth', foodPref: 'Jain Meal' },
+const TITLE_OPTIONS = [
+  { value: 'Mr', label: 'Mr', desc: 'Adult Male' },
+  { value: 'Mrs', label: 'Mrs', desc: 'Adult Female' },
+  { value: 'Ms', label: 'Ms', desc: 'Adult Female' },
+  { value: 'Master', label: 'Master', desc: 'Child / Minor' },
+];
+
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Transgender', label: 'Transgender' },
 ];
 
 const TRAIN_COUPONS = [
@@ -156,33 +163,46 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
   );
   const [showBoardingModal, setShowBoardingModal] = useState<boolean>(false);
 
-  // 2. IRCTC User ID State
-  const [irctcUserId, setIrctcUserId] = useState<string>('rahul_sharma99');
-  const [isIrctcVerified, setIsIrctcVerified] = useState<boolean>(true);
+  // 2. IRCTC User ID State (Empty default as requested)
+  const [irctcUserId, setIrctcUserId] = useState<string>('');
+  const [isIrctcVerified, setIsIrctcVerified] = useState<boolean>(false);
   const [isVerifyingIrctc, setIsVerifyingIrctc] = useState<boolean>(false);
   const [showIrctcHelpModal, setShowIrctcHelpModal] = useState<boolean>(false);
 
-  // 3. Dynamic Passengers State (1 to 6)
+  // 3. Dynamic Passengers State (1 to 6) - No pre-filled names
   const [passengers, setPassengers] = useState<TrainPassenger[]>([
     {
       id: 'p-1',
       title: 'Mr',
-      firstName: 'Rahul',
-      lastName: 'Sharma',
-      age: 31,
+      firstName: '',
+      lastName: '',
+      age: '' as any,
       gender: 'Male',
-      berthPref: 'Lower Berth',
+      berthPref: 'No Preference',
       foodPref: 'Veg Meal',
     },
   ]);
+  const [openPaxDropdown, setOpenPaxDropdown] = useState<string | null>(null);
 
   // Infants without berth
   const [infants, setInfants] = useState<TrainInfant[]>([]);
 
-  // 4. Contact Details
-  const [email, setEmail] = useState<string>('rahul.sharma@example.com');
-  const [mobileNumber, setMobileNumber] = useState<string>('9876543210');
+  // 4. Contact Details (Empty defaults as requested)
+  const [email, setEmail] = useState<string>('');
+  const [mobileNumber, setMobileNumber] = useState<string>('');
   const [whatsappUpdates, setWhatsappUpdates] = useState<boolean>(true);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-pax-dropdown="true"]')) {
+        setOpenPaxDropdown(null);
+      }
+    };
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
+  }, []);
 
   // 5. Booking Preferences
   const [autoUpgradation, setAutoUpgradation] = useState<boolean>(true);
@@ -207,7 +227,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
 
   // 10. Payment & Booking state
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
-  const [upiVpa, setUpiVpa] = useState<string>('rahulsharma@okaxis');
+  const [upiVpa, setUpiVpa] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [confirmedBooking, setConfirmedBooking] = useState<BookedTrip | null>(null);
 
@@ -252,7 +272,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
       title: 'Mr',
       firstName: '',
       lastName: '',
-      age: 28,
+      age: '' as any,
       gender: 'Male',
       berthPref: 'No Preference',
       foodPref: 'Veg Meal',
@@ -302,26 +322,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
 
   const handleRemoveInfant = (id: string) => {
     setInfants(infants.filter((i) => i.id !== id));
-  };
-
-  const handleFastAddSavedTraveller = (saved: typeof SAVED_FREQUENT_TRAVELLERS[0]) => {
-    if (passengers.length >= 6) {
-      onNotify('Maximum Limit Reached', 'IRCTC allows up to 6 passengers per booking.', 'info');
-      return;
-    }
-    const newPassenger: TrainPassenger = {
-      id: `p-${Date.now()}`,
-      title: saved.title as any,
-      firstName: saved.firstName,
-      lastName: saved.lastName,
-      age: saved.age,
-      gender: saved.gender as any,
-      berthPref: saved.berthPref,
-      foodPref: saved.foodPref,
-      isSeniorCitizen: saved.age >= 60,
-    };
-    setPassengers([...passengers, newPassenger]);
-    onNotify('Auto-Filled', `${saved.firstName} ${saved.lastName} added to passenger list.`, 'success');
   };
 
   // --- IRCTC Verification Simulation ---
@@ -435,37 +435,19 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen pb-24 text-slate-900">
-      {/* Top Breadcrumb & Lock Timer Banner */}
-      <div className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      {/* Top Navigation Bar (Matches Flights Checkout Header) */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onBackToResults}
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 text-slate-500" />
               <span>Back to Train Results</span>
             </button>
-            <span className="text-slate-600">|</span>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs sm:text-sm font-bold text-emerald-300">
-                Official IRCTC Authorized Booking Gateway
-              </span>
-            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowDatePicker(true)}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
-            title="Click to view calendar and change journey date"
-          >
-            <Calendar className="w-3.5 h-3.5 text-emerald-300" />
-            <span>Journey: <strong>{trainTravelDate}</strong></span>
-            <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-md font-mono">Calendar</span>
-          </button>
         </div>
       </div>
 
@@ -532,8 +514,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                       <Calendar className="w-3 h-3 text-emerald-600" />
                       <span>{trainTravelDate}</span>
                     </button>
-                    <span>·</span>
-                    <span>{selectedBoardingStation.platform}</span>
                   </div>
                 </div>
 
@@ -544,10 +524,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                     <div className="w-3 h-3 rounded-full bg-emerald-600 absolute right-0 shadow-xs" />
                     <TrainFront className="w-4 h-4 text-emerald-600 absolute bg-white px-0.5" />
                   </div>
-                  <span className="text-[11px] font-bold text-emerald-700 mt-1.5 flex items-center gap-1">
-                    <Zap className="w-3 h-3" />
-                    <span>Express Superfast Speed</span>
-                  </span>
                 </div>
 
                 {/* Arrival */}
@@ -559,7 +535,7 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                     {destinationStation}
                   </div>
                   <div className="text-xs text-slate-500 font-medium">
-                    Next Day · Platform 3
+                    Scheduled Arrival
                   </div>
                 </div>
               </div>
@@ -653,8 +629,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                         setIrctcUserId(e.target.value);
                         setIsIrctcVerified(false);
                       }}
-                      placeholder="Enter IRCTC Username"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Enter IRCTC username"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-sans text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
 
@@ -690,14 +666,9 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-display font-bold text-lg text-slate-900">
-                      Passenger Details
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                      {passengers.length} of 6 Added
-                    </span>
-                  </div>
+                  <h3 className="font-display font-bold text-lg text-slate-900">
+                    Passenger Details
+                  </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Names must match original Govt photo ID proof carried during the journey.
                   </p>
@@ -713,26 +684,6 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                   <Plus className="w-4 h-4" />
                   <span>+ Add Traveller</span>
                 </button>
-              </div>
-
-              {/* Fast Auto-Fill Saved Travellers */}
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Quick Add Saved Travellers:</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {SAVED_FREQUENT_TRAVELLERS.map((s, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleFastAddSavedTraveller(s)}
-                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-blue-500 text-xs font-semibold text-slate-800 hover:text-blue-700 transition-colors cursor-pointer shadow-2xs"
-                    >
-                      + {s.firstName} ({s.age}, {s.gender})
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Passenger Cards List */}
@@ -772,19 +723,66 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
 
                     {/* Inputs Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                      {/* Title */}
-                      <div className="sm:col-span-2">
+                      {/* 1. Custom Title Dropdown (Matches flight style & scroll) */}
+                      <div className="sm:col-span-2 relative" data-pax-dropdown="true">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">Title</label>
-                        <select
-                          value={p.title}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'title', e.target.value)}
-                          className="w-full px-2.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Mr">Mr</option>
-                          <option value="Mrs">Mrs</option>
-                          <option value="Ms">Ms</option>
-                          <option value="Master">Master</option>
-                        </select>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPaxDropdown(
+                                openPaxDropdown === `${p.id}-title` ? null : `${p.id}-title`
+                              );
+                            }}
+                            className={`w-full px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                              openPaxDropdown === `${p.id}-title`
+                                ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                                : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <span>{p.title}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                openPaxDropdown === `${p.id}-title` ? 'rotate-180 text-blue-600' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {openPaxDropdown === `${p.id}-title` && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute left-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-56 custom-scrollbar animate-modal-slide-up"
+                            >
+                              {TITLE_OPTIONS.map((opt) => {
+                                const isSelected = p.title === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePassenger(p.id, 'title', opt.value as any);
+                                      setOpenPaxDropdown(null);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-blue-50 text-blue-700 font-bold'
+                                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                    }`}
+                                  >
+                                    <div>
+                                      <span className="block font-bold">{opt.label}</span>
+                                      <span className="block text-[10px] text-slate-400 font-normal">
+                                        {opt.desc}
+                                      </span>
+                                    </div>
+                                    {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* First & Middle Name */}
@@ -796,8 +794,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                           type="text"
                           value={p.firstName}
                           onChange={(e) => handleUpdatePassenger(p.id, 'firstName', e.target.value)}
-                          placeholder="As per Aadhaar / Passport"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="First & Middle Name"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
                         />
                       </div>
 
@@ -808,8 +806,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                           type="text"
                           value={p.lastName}
                           onChange={(e) => handleUpdatePassenger(p.id, 'lastName', e.target.value)}
-                          placeholder="Surname"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Last Name"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
                         />
                       </div>
                     </div>
@@ -825,24 +823,68 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                           type="number"
                           min={1}
                           max={120}
-                          value={p.age}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'age', Number(e.target.value))}
-                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={p.age || ''}
+                          onChange={(e) => handleUpdatePassenger(p.id, 'age', e.target.value ? Number(e.target.value) : '')}
+                          placeholder="Age"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
                         />
                       </div>
 
-                      {/* Gender */}
-                      <div>
+                      {/* 2. Custom Gender Dropdown (Matches flight style & scroll) */}
+                      <div className="relative" data-pax-dropdown="true">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">Gender</label>
-                        <select
-                          value={p.gender}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'gender', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Transgender">Transgender</option>
-                        </select>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPaxDropdown(
+                                openPaxDropdown === `${p.id}-gender` ? null : `${p.id}-gender`
+                              );
+                            }}
+                            className={`w-full px-3 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                              openPaxDropdown === `${p.id}-gender`
+                                ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                                : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <span>{p.gender}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                openPaxDropdown === `${p.id}-gender` ? 'rotate-180 text-blue-600' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {openPaxDropdown === `${p.id}-gender` && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-48 custom-scrollbar animate-modal-slide-up"
+                            >
+                              {GENDER_OPTIONS.map((opt) => {
+                                const isSelected = p.gender === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePassenger(p.id, 'gender', opt.value as any);
+                                      setOpenPaxDropdown(null);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-blue-50 text-blue-700 font-bold'
+                                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                    }`}
+                                  >
+                                    <span className="font-semibold">{opt.label}</span>
+                                    {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Berth Preference */}
@@ -948,8 +990,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter Email Id"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
                     />
                   </div>
                 </div>
@@ -967,8 +1009,8 @@ export const TrainBookingCheckoutPage: React.FC<TrainBookingCheckoutPageProps> =
                       maxLength={10}
                       value={mobileNumber}
                       onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                      placeholder="10-digit mobile number"
-                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter Mobile Number"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
                     />
                   </div>
                 </div>
