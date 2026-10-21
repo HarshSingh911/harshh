@@ -40,6 +40,8 @@ import {
   BadgeCheck,
   Wifi,
   ExternalLink,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import {
   ASSETS,
@@ -94,6 +96,28 @@ interface CheckoutPaymentPageProps {
   onGoToTrips?: () => void;
 }
 
+const TITLE_OPTIONS = [
+  { value: 'Mr', label: 'Mr', desc: 'Adult Male' },
+  { value: 'Mrs', label: 'Mrs', desc: 'Adult Female' },
+  { value: 'Ms', label: 'Ms', desc: 'Adult Female' },
+];
+
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Others', label: 'Others' },
+];
+
+export interface DynamicPassenger {
+  id: string;
+  title: 'Mr' | 'Mrs' | 'Ms';
+  firstName: string;
+  lastName: string;
+  age: number | '';
+  gender: 'Male' | 'Female' | 'Others';
+  isSeniorCitizen?: boolean;
+}
+
 const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
   currency,
   item,
@@ -103,24 +127,79 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
   onGoToTrips,
 }) => {
   const category = item.category || 'flights';
-  const travellersCount = Math.max(1, item.travellers || 1);
 
-  // 1. Primary Contact & Lead Guest State
-  const [leadTitle, setLeadTitle] = useState<'Mr' | 'Mrs' | 'Ms'>('Mr');
-  const [leadFirstName, setLeadFirstName] = useState('Rahul');
-  const [leadLastName, setLeadLastName] = useState('Sharma');
-  const [email, setEmail] = useState('rahul.sharma@example.com');
-  const [phone, setPhone] = useState('9876543210');
-  const [age, setAge] = useState<number>(31);
-  const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
-
-  // Co-Travellers (if travellers > 1)
-  const [coTravellers, setCoTravellers] = useState<
-    { title: string; firstName: string; lastName: string; age: number; gender: string }[]
-  >([
-    { title: 'Mrs', firstName: 'Pooja', lastName: 'Sharma', age: 29, gender: 'Female' },
-    { title: 'Master', firstName: 'Aarav', lastName: 'Sharma', age: 7, gender: 'Male' },
+  // Dynamic Passengers (Matching Train Checkout Page: Empty defaults, custom dropdowns, dynamic add/remove)
+  const [passengers, setPassengers] = useState<DynamicPassenger[]>([
+    {
+      id: 'p-1',
+      title: 'Mr',
+      firstName: '',
+      lastName: '',
+      age: '' as any,
+      gender: 'Male',
+    },
   ]);
+  const [openPaxDropdown, setOpenPaxDropdown] = useState<string | null>(null);
+
+  // Close custom dropdown on outside click
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-pax-dropdown="true"]')) {
+        setOpenPaxDropdown(null);
+      }
+    };
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
+  }, []);
+
+  // Passenger Handlers
+  const handleAddPassenger = () => {
+    if (passengers.length >= 6) {
+      onNotify('Maximum Limit Reached', 'Maximum 6 passengers allowed per booking.', 'info');
+      return;
+    }
+    setPassengers((prev) => [
+      ...prev,
+      {
+        id: `p-${Date.now()}`,
+        title: 'Mr',
+        firstName: '',
+        lastName: '',
+        age: '' as any,
+        gender: 'Male',
+      },
+    ]);
+    onNotify('Passenger Added', `Passenger ${passengers.length + 1} added. Fare updated dynamically.`, 'success');
+  };
+
+  const handleRemovePassenger = (id: string) => {
+    if (passengers.length === 1) {
+      onNotify('Action Denied', 'At least 1 primary passenger is required.', 'info');
+      return;
+    }
+    setPassengers((prev) => prev.filter((p) => p.id !== id));
+    onNotify('Passenger Removed', 'Passenger removed. Total fare recalculated.', 'info');
+  };
+
+  const handleUpdatePassenger = (id: string, field: keyof DynamicPassenger, value: any) => {
+    setPassengers((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const updated = { ...p, [field]: value };
+        if (field === 'age') {
+          updated.isSeniorCitizen = Number(value) >= 60;
+        }
+        return updated;
+      })
+    );
+  };
+
+  const travellersCount = Math.max(1, category === 'buses' ? passengers.length : (item.travellers || passengers.length));
+
+  // Contact Details (Matching Train Checkout Page: Empty defaults)
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
 
   // GST & Business Details
   const [hasGst, setHasGst] = useState(false);
@@ -262,6 +341,27 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
 
   // Confirm and Pay Action
   const handleProceedPayment = () => {
+    // 1. Validate Primary Passenger
+    const primary = passengers[0];
+    if (!primary || !primary.firstName.trim()) {
+      onNotify('Passenger Name Required', 'Please enter the First & Middle Name for Primary Passenger 1.', 'info');
+      return;
+    }
+    if (!primary.age || Number(primary.age) < 1 || Number(primary.age) > 120) {
+      onNotify('Invalid Age', 'Please enter a valid age for Primary Passenger 1.', 'info');
+      return;
+    }
+
+    // 2. Validate Contact
+    if (!email.trim() || !email.includes('@')) {
+      onNotify('Invalid Email', 'Please enter a valid email address to receive your ticket.', 'info');
+      return;
+    }
+    if (!phone.trim() || phone.length < 10) {
+      onNotify('Invalid Mobile Number', 'Please enter a valid 10-digit mobile number.', 'info');
+      return;
+    }
+
     setIsProcessingPayment(true);
 
     setTimeout(() => {
@@ -280,7 +380,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
           ? `TY-CAB-${Math.floor(1000 + Math.random() * 9000)}`
           : `TY-PKG-${Math.floor(1000 + Math.random() * 9000)}`;
 
-      const leadFullName = `${leadTitle} ${leadFirstName} ${leadLastName}`;
+      const leadFullName = `${primary.title} ${primary.firstName} ${primary.lastName}`.trim() || 'Passenger';
 
       const cabinOrRoomLabel =
         category === 'flights'
@@ -370,21 +470,23 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
               <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[10px]">
                 3
               </span>
-              <span>3. Payment &amp; E-Ticket</span>
+              <span>3. Payment</span>
             </div>
           </div>
 
-          {/* Travel / Journey Date Calendar Selector (Replaces countdown timer) */}
-          <button
-            type="button"
-            onClick={() => setShowDatePickerModal(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200/90 text-xs font-semibold text-blue-700 transition-all cursor-pointer shadow-2xs hover:scale-102"
-            title="Click to view calendar and change travel date"
-          >
-            <Calendar className="w-3.5 h-3.5 text-blue-600" />
-            <span>Travel Date: <strong className="font-bold text-blue-900">{bookingTravelDate}</strong></span>
-            <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md font-mono">Calendar</span>
-          </button>
+          {/* Travel / Journey Date Calendar Selector (Hidden for buses and cabs as requested) */}
+          {category !== 'buses' && category !== 'cabs' && (
+            <button
+              type="button"
+              onClick={() => setShowDatePickerModal(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200/90 text-xs font-semibold text-blue-700 transition-all cursor-pointer shadow-2xs hover:scale-102"
+              title="Click to view calendar and change travel date"
+            >
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              <span>Travel Date: <strong className="font-bold text-blue-900">{bookingTravelDate}</strong></span>
+              <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md font-mono">Calendar</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -411,12 +513,14 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                 </div>
               </div>
 
-              <div className="text-right">
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Instant Confirmation Guaranteed</span>
-                </span>
-              </div>
+              {category !== 'buses' && category !== 'cabs' && (
+                <div className="text-right">
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Instant Confirmation Guaranteed</span>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* FLIGHT REVIEW SUMMARY */}
@@ -616,20 +720,6 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
             {/* BUS REVIEW SUMMARY */}
             {category === 'buses' && (
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-purple-50/40 border border-slate-200/80 space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded bg-purple-600 text-white font-bold text-xs">
-                      {item.busOperator || 'Zingbus Plus'}
-                    </span>
-                    <span className="font-semibold text-slate-700">
-                      {item.busType || 'Volvo 9600 A/C Multi-Axle Sleeper (2+1)'}
-                    </span>
-                  </div>
-                  <span className="text-purple-700 bg-purple-50 px-2 py-0.5 rounded font-bold">
-                    GPS Live Tracking Enabled
-                  </span>
-                </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
                   <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1">
                     <div className="text-[11px] font-bold text-purple-600 uppercase">Boarding Point</div>
@@ -644,11 +734,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                 </div>
 
                 <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600">
-                  <span>Selected Seat: <strong className="text-slate-900 font-mono">Lower Berth L3 (Window)</strong></span>
-                  <span>·</span>
-                  <span>Clean Sanitized Blanket</span>
-                  <span>·</span>
-                  <span>USB Fast Charger at Seat</span>
+                  <span>Selected Seat: <strong className="text-slate-900 font-mono">{item.seatNumbers || 'Lower Berth L3 (Window)'}</strong></span>
                 </div>
               </div>
             )}
@@ -659,13 +745,10 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded bg-blue-600 text-white font-bold text-xs">
-                      {item.cabType || 'Sedan (Dzire / Etios)'}
+                      {item.cabType || 'Sedan'}
                     </span>
                     <span className="font-bold text-slate-900">Dedicated Chauffeur Driven</span>
                   </div>
-                  <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">
-                    All Tolls &amp; Taxes Included
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
@@ -707,195 +790,278 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
           </div>
 
           {/* B. PASSENGER & GUEST CONTACT DETAILS FORM */}
-          <div className="bg-white rounded-3xl border border-slate-200/85 p-5 sm:p-6 shadow-xs space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-display text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                <span>
-                  {category === 'hotels' ? 'Guest Information' : 'Passenger & Contact Details'}
-                </span>
-              </h3>
-              <span className="text-xs text-slate-500">
-                Ticket &amp; PNR will be dispatched here
-              </span>
-            </div>
-
-            {/* IRCTC Username Step for Trains */}
-            {category === 'trains' && (
-              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrainFront className="w-4 h-4 text-amber-700" />
-                    <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                      IRCTC User Verification
-                    </span>
-                  </div>
-                  {irctcVerified && (
-                    <span className="text-xs text-emerald-700 font-bold flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Verified IRCTC ID</span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="text"
-                    value={irctcUsername}
-                    onChange={(e) => setIrctcUsername(e.target.value)}
-                    placeholder="Enter IRCTC Username"
-                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIrctcVerified(true);
-                      onNotify('IRCTC ID Verified!', `${irctcUsername} is authorized for tatkal & general reservation.`, 'success');
-                    }}
-                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors cursor-pointer"
-                  >
-                    Verify ID
-                  </button>
-                </div>
-                <p className="text-[11px] text-amber-800">
-                  Note: IRCTC password will be required on the official Railway gateway after payment.
+          <div className="bg-white rounded-3xl border border-slate-200/85 p-5 sm:p-6 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="font-display text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  <span>
+                    {category === 'hotels' ? 'Guest Information' : 'Passenger Details'}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Names must match original Govt photo ID proof carried during the journey.
                 </p>
               </div>
-            )}
 
-            {/* Lead Passenger / Guest Inputs */}
-            <div className="space-y-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Primary Passenger 1 (Adult)
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Title</label>
-                  <select
-                    value={leadTitle}
-                    onChange={(e) => setLeadTitle(e.target.value as any)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Mr">Mr</option>
-                    <option value="Mrs">Mrs</option>
-                    <option value="Ms">Ms</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-5">
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">First &amp; Middle Name</label>
-                  <input
-                    type="text"
-                    value={leadFirstName}
-                    onChange={(e) => setLeadFirstName(e.target.value)}
-                    placeholder="As per Passport / Aadhaar"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="sm:col-span-5">
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Last Name</label>
-                  <input
-                    type="text"
-                    value={leadLastName}
-                    onChange={(e) => setLeadLastName(e.target.value)}
-                    placeholder="Surname"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Age</label>
-                  <input
-                    type="number"
-                    value={age}
-                    onChange={(e) => setAge(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Gender</label>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                {/* Train Berth Preference */}
-                {category === 'trains' && (
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Berth Preference</label>
-                    <select
-                      value={trainBerthPref}
-                      onChange={(e) => setTrainBerthPref(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="Lower Berth">Lower Berth</option>
-                      <option value="Upper Berth">Upper Berth</option>
-                      <option value="Middle Berth">Middle Berth</option>
-                      <option value="Side Lower">Side Lower</option>
-                      <option value="Side Upper">Side Upper</option>
-                      <option value="No Preference">No Preference</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Flight Frequent Flyer */}
-                {category === 'flights' && (
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Frequent Flyer (Optional)</label>
-                    <input
-                      type="text"
-                      value={frequentFlyerNo}
-                      onChange={(e) => setFrequentFlyerNo(e.target.value)}
-                      placeholder="e.g. 6E-904128"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                )}
-              </div>
+              {/* Add Traveller Button */}
+              <button
+                type="button"
+                onClick={handleAddPassenger}
+                disabled={passengers.length >= 6}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Traveller</span>
+              </button>
             </div>
 
-            {/* Contact Phone & Email */}
-            <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Email ID (For E-Ticket &amp; Vouchers)</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+            {/* Passenger Cards List */}
+            <div className="space-y-4">
+              {passengers.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition-all space-y-4 relative"
+                >
+                  {/* Header Strip */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center">
+                        {index + 1}
+                      </span>
+                      <span className="font-bold text-slate-900 text-sm">
+                        {index === 0 ? 'Primary Passenger' : `Passenger ${index + 1}`}
+                      </span>
+                      {p.isSeniorCitizen && (
+                        <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold text-[10px] border border-purple-200">
+                          Senior Citizen
+                        </span>
+                      )}
+                    </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Mobile Number (+91)</span>
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-xs font-bold text-slate-600">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    maxLength={10}
-                    className="flex-1 px-3.5 py-2.5 rounded-r-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono-tabular"
-                  />
+                    {passengers.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePassenger(p.id)}
+                        className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Remove Passenger"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Inputs Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    {/* Custom Title Dropdown */}
+                    <div className="sm:col-span-2 relative" data-pax-dropdown="true">
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Title</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenPaxDropdown(
+                              openPaxDropdown === `${p.id}-title` ? null : `${p.id}-title`
+                            );
+                          }}
+                          className={`w-full px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                            openPaxDropdown === `${p.id}-title`
+                              ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                              : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                          }`}
+                        >
+                          <span>{p.title}</span>
+                          <ChevronDown
+                            className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                              openPaxDropdown === `${p.id}-title` ? 'rotate-180 text-blue-600' : ''
+                            }`}
+                          />
+                        </button>
+
+                        {openPaxDropdown === `${p.id}-title` && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-56 custom-scrollbar animate-modal-slide-up"
+                          >
+                            {TITLE_OPTIONS.map((opt) => {
+                              const isSelected = p.title === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    handleUpdatePassenger(p.id, 'title', opt.value as any);
+                                    setOpenPaxDropdown(null);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-blue-50 text-blue-700 font-bold'
+                                      : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                  }`}
+                                >
+                                  <div>
+                                    <span className="block font-bold">{opt.label}</span>
+                                    <span className="block text-[10px] text-slate-400 font-normal">
+                                      {opt.desc}
+                                    </span>
+                                  </div>
+                                  {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* First & Middle Name */}
+                    <div className="sm:col-span-5">
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        First &amp; Middle Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={p.firstName}
+                        onChange={(e) => handleUpdatePassenger(p.id, 'firstName', e.target.value)}
+                        placeholder="First & Middle Name"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
+                      />
+                    </div>
+
+                    {/* Last Name */}
+                    <div className="sm:col-span-5">
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Last Name</label>
+                      <input
+                        type="text"
+                        value={p.lastName}
+                        onChange={(e) => handleUpdatePassenger(p.id, 'lastName', e.target.value)}
+                        placeholder="Last Name"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Age & Gender */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Age */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        Age <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={120}
+                        value={p.age || ''}
+                        onChange={(e) => handleUpdatePassenger(p.id, 'age', e.target.value ? Number(e.target.value) : '')}
+                        placeholder="Age"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
+                      />
+                    </div>
+
+                    {/* Custom Gender Dropdown */}
+                    <div className="relative" data-pax-dropdown="true">
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Gender</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenPaxDropdown(
+                              openPaxDropdown === `${p.id}-gender` ? null : `${p.id}-gender`
+                            );
+                          }}
+                          className={`w-full px-3 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                            openPaxDropdown === `${p.id}-gender`
+                              ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                              : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                          }`}
+                        >
+                          <span>{p.gender}</span>
+                          <ChevronDown
+                            className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                              openPaxDropdown === `${p.id}-gender` ? 'rotate-180 text-blue-600' : ''
+                            }`}
+                          />
+                        </button>
+
+                        {openPaxDropdown === `${p.id}-gender` && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-48 custom-scrollbar animate-modal-slide-up"
+                          >
+                            {GENDER_OPTIONS.map((opt) => {
+                              const isSelected = p.gender === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    handleUpdatePassenger(p.id, 'gender', opt.value as any);
+                                    setOpenPaxDropdown(null);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-blue-50 text-blue-700 font-bold'
+                                      : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                  }`}
+                                >
+                                  <span className="font-semibold">{opt.label}</span>
+                                  {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CONTACT DETAILS & NOTIFICATIONS */}
+            <div className="pt-4 border-t border-slate-100 space-y-4">
+              <h4 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+                <Phone className="w-4 h-4 text-blue-600" />
+                <span>Contact Information</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Email Address <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter Email Id"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Mobile Number <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700">
+                      🇮🇳 +91
+                    </span>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Enter Mobile Number"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-normal text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1020,7 +1186,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                           type="button"
                           onClick={() => {
                             setSelectedSeat(s.seat);
-                            onNotify('Seat Assigned', `${s.seat} (${s.type}) selected for ${leadFirstName}.`, 'info');
+                            onNotify('Seat Assigned', `${s.seat} (${s.type}) selected for ${passengers[0]?.firstName || 'Primary Passenger'}.`, 'info');
                           }}
                           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border ${
                             isSelected
@@ -1172,234 +1338,6 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
             )}
           </div>
 
-          {/* D. REALISTIC MULTI-GATEWAY PAYMENT SECTION */}
-          <div className="bg-white rounded-3xl border border-slate-200/85 p-5 sm:p-6 shadow-xs space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-display text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Lock className="w-5 h-5 text-emerald-600" />
-                <span>Select Payment Method (256-Bit SSL Encrypted)</span>
-              </h3>
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                PCI-DSS Level 1
-              </span>
-            </div>
-
-            {/* Payment Method Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {[
-                { id: 'upi', label: 'UPI / QR', icon: QrCode, desc: 'Instant 0% fee' },
-                { id: 'card', label: 'Debit / Credit Card', icon: CreditCard, desc: 'Visa, Master, RuPay' },
-                { id: 'netbanking', label: 'Net Banking', icon: Building, desc: 'All Major Banks' },
-                { id: 'emi', label: 'EMI / PayLater', icon: Wallet, desc: 'No-Cost EMI' },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isSelected = payTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setPayTab(tab.id as any)}
-                    className={`p-3 rounded-2xl text-left transition-all cursor-pointer border ${
-                      isSelected
-                        ? 'bg-blue-50/80 border-blue-600 text-blue-900 shadow-xs'
-                        : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    <Icon className={`w-5 h-5 mb-1.5 ${isSelected ? 'text-blue-600' : 'text-slate-500'}`} />
-                    <div className="text-xs font-bold leading-tight">{tab.label}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{tab.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* TAB 1: UPI CONTENT */}
-            {payTab === 'upi' && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  {/* Dynamic QR Code for Payment */}
-                  <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
-                    <div className="w-24 h-24 bg-slate-900 rounded-xl p-1.5 flex items-center justify-center text-white shrink-0">
-                      <QrCode className="w-full h-full text-white" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                        Scan &amp; Pay
-                      </span>
-                      <div className="font-bold text-xs sm:text-sm text-slate-900 mt-1">
-                        Any UPI App (GPay, PhonePe, Paytm, BHIM)
-                      </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
-                        Amount: <strong className="text-slate-900 font-mono-tabular">{formatPrice(totalPayableInr, currency)}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Manual UPI ID Input */}
-                  <div className="w-full sm:max-w-xs space-y-2">
-                    <label className="block text-[11px] font-bold text-slate-700">
-                      Or Enter Virtual Payment Address (UPI ID)
-                    </label>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={upiVpa}
-                        onChange={(e) => setUpiVpa(e.target.value)}
-                        placeholder="username@bank"
-                        className="flex-1 px-3 py-2 rounded-l-xl border border-slate-200 bg-white text-xs font-mono font-bold"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVpaVerified(true);
-                          onNotify('UPI ID Verified', `${upiVpa} is ready for transaction.`, 'success');
-                        }}
-                        className="px-3.5 py-2 rounded-r-xl bg-blue-600 text-white font-bold text-xs cursor-pointer"
-                      >
-                        Verify
-                      </button>
-                    </div>
-                    {vpaVerified && (
-                      <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                        ✓ Verified: Rahul Sharma (Primary Account)
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: CREDIT / DEBIT CARDS */}
-            {payTab === 'card' && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Card Number</label>
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      placeholder="XXXX XXXX XXXX XXXX"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono font-bold text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Name on Card</label>
-                    <input
-                      type="text"
-                      value={cardHolder}
-                      onChange={(e) => setCardHolder(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold uppercase"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Expiry Date</label>
-                      <input
-                        type="text"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        placeholder="MM/YY"
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">CVV</label>
-                      <input
-                        type="password"
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        maxLength={3}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono font-bold"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: NET BANKING */}
-            {payTab === 'netbanking' && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {['HDFC Bank', 'State Bank of India', 'ICICI Bank', 'Axis Bank', 'Kotak Bank'].map((b) => (
-                    <button
-                      key={b}
-                      type="button"
-                      onClick={() => setSelectedBank(b)}
-                      className={`p-2.5 rounded-xl border text-xs font-bold text-center cursor-pointer ${
-                        selectedBank === b
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      {b}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 4: EMI */}
-            {payTab === 'emi' && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <div className="text-xs font-bold text-slate-800">
-                  Select No-Cost EMI Plan on Credit Card
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {[
-                    { tenure: '3 Months', rate: '₹0 Interest' },
-                    { tenure: '6 Months', rate: '₹0 Interest' },
-                    { tenure: '9 Months', rate: '14% p.a.' },
-                  ].map((e) => (
-                    <button
-                      key={e.tenure}
-                      type="button"
-                      onClick={() => setSelectedEmiTenure(e.tenure)}
-                      className={`p-3 rounded-xl border text-left cursor-pointer ${
-                        selectedEmiTenure === e.tenure
-                          ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold'
-                          : 'bg-white border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold">{e.tenure}</div>
-                      <div className="text-[11px] text-emerald-600 mt-0.5">{e.rate}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* PAY NOW CTA BUTTON */}
-            <div className="pt-3">
-              <button
-                type="button"
-                onClick={handleProceedPayment}
-                disabled={isProcessingPayment}
-                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-extrabold text-base sm:text-lg shadow-xl shadow-blue-600/30 flex items-center justify-center gap-3 transition-all cursor-pointer disabled:opacity-75"
-              >
-                {isProcessingPayment ? (
-                  <>
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Authorizing &amp; Issuing Ticket...</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-5 h-5 text-amber-300" />
-                    <span>
-                      Pay {formatPrice(totalPayableInr, currency)} &amp; Generate {category === 'hotels' ? 'Hotel Voucher' : 'E-Ticket'}
-                    </span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-              <p className="text-center text-[11px] text-slate-500 mt-2">
-                By clicking pay, you agree to TripYeah Booking Policies &amp; Carrier Terms. Instant receipt dispatched.
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* ===================================================================
@@ -1457,6 +1395,28 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                   {formatPrice(totalPayableInr, currency)}
                 </div>
               </div>
+
+              {/* CONTINUE / BOOKING BUTTON */}
+              <div className="pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={handleProceedPayment}
+                  disabled={isProcessingPayment}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-extrabold text-base shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-75"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Confirming Booking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1513,18 +1473,6 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
             </div>
           </div>
 
-          {/* TRUST PILLARS */}
-          <div className="p-4 rounded-3xl bg-slate-100/70 border border-slate-200/80 space-y-2.5 text-xs text-slate-600">
-            <div className="flex items-center gap-2 font-bold text-slate-900">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>TripYeah 100% Trust Guarantee</span>
-            </div>
-            <p className="text-[11px] leading-relaxed">
-              • Instant PNR &amp; live carrier confirmation
-              <br />• 24x7 priority support on WhatsApp &amp; Call
-              <br />• Automated instant refund to source upon cancellation
-            </p>
-          </div>
         </div>
       </div>
 
@@ -1564,7 +1512,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Passenger / Lead:</span>
-                <span className="font-semibold text-slate-800">{leadTitle} {leadFirstName} {leadLastName}</span>
+                <span className="font-semibold text-slate-800">{`${passengers[0]?.title} ${passengers[0]?.firstName} ${passengers[0]?.lastName}`.trim() || 'Primary Passenger'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Route / Stay:</span>

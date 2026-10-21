@@ -788,9 +788,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
                 {/* Right: IRCTC Quota Selector */}
                 <div className="flex items-center gap-2 relative shrink-0">
-                  <span className="hidden sm:inline text-[11px] text-slate-500 font-medium">
-                    IRCTC Authorised Partner ·
-                  </span>
                   <div className="relative dropdown-field-container" data-dropdown-container="true">
                     <button
                       type="button"
@@ -1484,15 +1481,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   ))}
                 </div>
 
-                <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={singleLadySeat}
-                    onChange={() => setSingleLadySeat((prev) => !prev)}
-                    className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer"
-                  />
-                  <span>Women / Single Lady Berth</span>
-                </label>
               </div>
 
               <div className="flex items-stretch gap-2 w-full">
@@ -1640,26 +1628,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   ))}
                 </div>
 
-                {/* Vehicle Preference */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {['Hatchback', 'Sedan', 'SUV (Innova)'].map((car) => (
-                    <button
-                      key={car}
-                      type="button"
-                      onClick={() => {
-                        setCabCarType(car);
-                        onChangeTravellers(travellers, car);
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer ${
-                        cabCarType === car
-                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {car}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div className="flex items-stretch gap-2 w-full">

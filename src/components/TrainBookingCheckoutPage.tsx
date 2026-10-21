@@ -44,11 +44,11 @@ interface TrainBookingCheckoutPageProps {
 
 export interface TrainPassenger {
   id: string;
-  title: 'Mr' | 'Mrs' | 'Ms' | 'Master';
+  title: 'Mr' | 'Mrs' | 'Ms';
   firstName: string;
   lastName: string;
   age: number;
-  gender: 'Male' | 'Female' | 'Transgender';
+  gender: 'Male' | 'Female' | 'Others';
   berthPref: string;
   foodPref: string;
   isSeniorCitizen?: boolean;
@@ -120,13 +120,12 @@ const TITLE_OPTIONS = [
   { value: 'Mr', label: 'Mr', desc: 'Adult Male' },
   { value: 'Mrs', label: 'Mrs', desc: 'Adult Female' },
   { value: 'Ms', label: 'Ms', desc: 'Adult Female' },
-  { value: 'Master', label: 'Master', desc: 'Child / Minor' },
 ];
 
 const GENDER_OPTIONS = [
   { value: 'Male', label: 'Male' },
   { value: 'Female', label: 'Female' },
-  { value: 'Transgender', label: 'Transgender' },
+  { value: 'Others', label: 'Others' },
 ];
 
 const BERTH_OPTIONS = [

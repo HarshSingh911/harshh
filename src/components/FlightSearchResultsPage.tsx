@@ -17,13 +17,16 @@ import {
   Clock,
   Compass,
   CreditCard,
+  Crown,
   DollarSign,
   Eye,
   Filter,
   Flame,
+  Heart,
   HelpCircle,
   Hotel,
   Info,
+  Landmark,
   Luggage,
   MapPin,
   Moon,
@@ -1277,7 +1280,7 @@ const CAB_RESULTS: CabResult[] = [
   {
     id: 'CAB-SEDAN',
     cabType: 'Comfort Sedan',
-    modelExamples: 'Maruti Suzuki Dzire, Hyundai Aura or similar',
+    modelExamples: '',
     cabCategory: 'Sedan',
     seats: 4,
     bags: 2,
@@ -1285,16 +1288,16 @@ const CAB_RESULTS: CabResult[] = [
     priceInr: 3490,
     perKmRate: 13,
     includedKm: 350,
-    tollTaxesIncluded: true,
+    tollTaxesIncluded: false,
     driverRating: 4.88,
     driverTrips: 840,
-    perks: ['Doorstep Pickup & Drop', 'State Taxes & Tolls Included', 'Sanitized Cab', 'Free Cancellation up to 6h before'],
+    perks: ['Doorstep Pickup & Drop', 'Sanitized Cab', 'Free Cancellation up to 6h before', 'Expert Highway Chauffeur'],
     tag: 'Most Popular',
   },
   {
     id: 'CAB-SUV-ERTIGA',
     cabType: 'Spacious SUV',
-    modelExamples: 'Maruti Ertiga, Kia Carens or similar',
+    modelExamples: '',
     cabCategory: 'SUV',
     seats: 6,
     bags: 3,
@@ -1302,16 +1305,16 @@ const CAB_RESULTS: CabResult[] = [
     priceInr: 4890,
     perKmRate: 16.5,
     includedKm: 350,
-    tollTaxesIncluded: true,
+    tollTaxesIncluded: false,
     driverRating: 4.92,
     driverTrips: 1250,
-    perks: ['Extra Luggage Boot', 'Spacious Legroom for Families', 'Verified Highway Expert Driver', 'Zero Extra Toll on Way'],
+    perks: ['Extra Luggage Boot', 'Spacious Legroom for Families', 'Verified Highway Expert Driver', 'Clean & Sanitized Ride'],
     tag: 'Best for Families',
   },
   {
     id: 'CAB-PRIME-INNOVA',
-    cabType: 'Prime SUV (Innova Crysta)',
-    modelExamples: 'Toyota Innova Crysta (Captain Seats)',
+    cabType: 'Prime SUV',
+    modelExamples: '',
     cabCategory: 'Prime Crysta',
     seats: 7,
     bags: 4,
@@ -1319,7 +1322,7 @@ const CAB_RESULTS: CabResult[] = [
     priceInr: 6450,
     perKmRate: 19,
     includedKm: 350,
-    tollTaxesIncluded: true,
+    tollTaxesIncluded: false,
     driverRating: 4.98,
     driverTrips: 1820,
     perks: ['Plush Leather Captain Seats', 'Chauffeur in Uniform & Water Bottles', 'Silent Suspension Ride', 'Top Tier Highway Rating'],
@@ -1328,7 +1331,7 @@ const CAB_RESULTS: CabResult[] = [
   {
     id: 'CAB-TEMPO',
     cabType: 'Luxury Tempo Traveller',
-    modelExamples: 'Force Urbania / Winger (12 Seater)',
+    modelExamples: '',
     cabCategory: 'Tempo',
     seats: 12,
     bags: 8,
@@ -1336,7 +1339,7 @@ const CAB_RESULTS: CabResult[] = [
     priceInr: 11800,
     perKmRate: 26,
     includedKm: 350,
-    tollTaxesIncluded: true,
+    tollTaxesIncluded: false,
     driverRating: 4.85,
     driverTrips: 410,
     perks: ['Pushback Recliners', 'Dedicated Roof Luggage Carrier', 'Music & Mic System', 'Perfect for Group Outstation'],
@@ -1353,7 +1356,7 @@ interface HolidayPackageResult {
   durationNightsCount: number; // e.g. 3, 4, 5, 6
   durationNights: string;
   durationDays: number;
-  theme: 'Beach' | 'Honeymoon' | 'Luxury' | 'Adventure' | 'Culture' | 'Family';
+  theme: 'Beach' | 'Honeymoon' | 'Luxury' | 'Adventure' | 'Culture' | 'Family' | 'Group Tours' | 'Pilgrimage' | 'Wildlife';
   hotelCategory: '<3★' | '3★' | '4★' | '5★';
   hotelStars: number;
   rating: number;
@@ -1647,7 +1650,7 @@ const HOLIDAY_RESULTS: HolidayPackageResult[] = [
     hotelStars: 4,
     rating: 4.85,
     reviewsCount: 460,
-    inclusions: ['Return Domestic Flights to Kochi', '2N Munnar Tea Resort + 1N Thekkady + 1N Alleppey Houseboat + 1N Marari Beach', 'All Meals on Houseboat', 'Private AC Innova for All 6 Days'],
+    inclusions: ['Return Domestic Flights to Kochi', '2N Munnar Tea Resort + 1N Thekkady + 1N Alleppey Houseboat + 1N Marari Beach', 'All Meals on Houseboat', 'Private AC SUV for All 6 Days'],
     highlights: ['Overnight stay on traditional wooden Kettuvallam houseboat', 'Tea tasting tour at Kolukkumalai Estate', 'Spice plantation walk in Thekkady'],
     itinerary: [
       { day: 'Day 1', title: 'Arrival in Cochin & Drive to Munnar', desc: 'Scenic uphill drive past Cheeyappara waterfalls to lush tea plantation resort.' },
@@ -1668,6 +1671,115 @@ const HOLIDAY_RESULTS: HolidayPackageResult[] = [
     bestSeason: 'Sep – Apr',
     dealTag: 'Family Bestseller',
   },
+  {
+    id: 'HOL-GOA-GROUP-TOURS',
+    title: '3N/4D Goa Fun Fiesta: Group Tours & Party Catamaran Cruise',
+    destination: 'Goa, India',
+    city: 'Goa',
+    durationNightsCount: 3,
+    durationNights: '3 Nights / 4 Days',
+    durationDays: 4,
+    theme: 'Group Tours',
+    hotelCategory: '3★',
+    hotelStars: 3,
+    rating: 4.80,
+    reviewsCount: 360,
+    inclusions: ['3★ Calangute Group Hotel', 'Daily Buffet Breakfast', 'Exclusive Group Catamaran Party with DJ', 'North Goa Beach Bar Crawl', 'Group AC Bus Transfers'],
+    highlights: ['Private sunset catamaran charter with DJ sound system', 'Free entry & VIP drinks at top Baga club', 'Group beach volleyball & watersports combo'],
+    itinerary: [
+      { day: 'Day 1', title: 'Group Arrival & Welcome Party', desc: 'Transfer from Goa airport or station in group coach. Welcome cocktail and evening sunset walk on Calangute beach.' },
+      { day: 'Day 2', title: 'North Goa Beach Hop & Club Night', desc: 'Group tour of Anjuna flea market, Vagator cliff viewpoints, and night celebration at Tito’s lane.' },
+      { day: 'Day 3', title: 'Private Catamaran Cruise & Watersports', desc: '3-hour private catamaran sail on Arabian sea with DJ music, dance, and banana boat rides.' },
+      { day: 'Day 4', title: 'Souvenir Shopping & Group Farewell', desc: 'Breakfast, souvenir shopping in Panaji, and group drop to airport/railway station.' },
+    ],
+    hotelStayTitle: 'Bloom Beach Resort / Sea Breeze Village (3★)',
+    startingPricePerPersonInr: 10999,
+    originalPriceInr: 16500,
+    image: ASSETS.goa,
+    flightsIncluded: false,
+    bookAtOneRupee: true,
+    isCustomizable: true,
+    isPremiumPackage: false,
+    bestSeason: 'Oct – May',
+    dealTag: 'Group Special',
+  },
+  {
+    id: 'HOL-GOA-PILGRIMAGE',
+    title: '3N/4D Holy Goa Pilgrimage & Ancient Temples Heritage Tour',
+    destination: 'Goa, India',
+    city: 'Goa',
+    durationNightsCount: 3,
+    durationNights: '3 Nights / 4 Days',
+    durationDays: 4,
+    theme: 'Pilgrimage',
+    hotelCategory: '3★',
+    hotelStars: 3,
+    rating: 4.88,
+    reviewsCount: 275,
+    inclusions: ['3★ Heritage Hotel in Old Goa', 'Daily Pure Veg Breakfast & Dinner', 'VIP Darshan at Mangueshi & Shanta Durga Temples', 'Basilica of Bom Jesus & Se Cathedral Pilgrimage', 'Dedicated AC Chauffeur'],
+    highlights: ['Guided pilgrimage of sacred Basilica of Bom Jesus', 'VIP Darshan at Shree Mangueshi Temple', 'Ponda Spice Farm Satvik lunch'],
+    itinerary: [
+      { day: 'Day 1', title: 'Arrival & Old Goa Sacred Trail', desc: 'Chauffeur pickup from airport/station and check-in to peaceful heritage hotel. Evening prayer visit to Se Cathedral.' },
+      { day: 'Day 2', title: 'Sacred Temples of Ponda Darshan', desc: 'Full-day pilgrimage to Shree Mangueshi Temple, Mahalaxmi Temple, and Shanta Durga Temple with Satvik thali lunch.' },
+      { day: 'Day 3', title: 'Church of St. Francis & Tambdi Surla', desc: 'Visit ancient 12th-century Tambdi Surla Mahadev Temple nestled in Western Ghats foothills.' },
+      { day: 'Day 4', title: 'Morning Aarti & Departure Drop', desc: 'Morning darshan at Maruti Temple on Altinho hill and comfortable transfer to airport/station.' },
+    ],
+    hotelStayTitle: 'The Fern Kadamba / Heritage Govinda Resort (3★/4★)',
+    startingPricePerPersonInr: 11499,
+    originalPriceInr: 17000,
+    image: ASSETS.paris,
+    flightsIncluded: false,
+    bookAtOneRupee: true,
+    isCustomizable: true,
+    isPremiumPackage: false,
+    bestSeason: 'Year Round',
+    dealTag: 'Devotional Tour',
+  },
+  {
+    id: 'HOL-GOA-WILDLIFE',
+    title: '3N/4D Goa Jungle Safari, Dudhsagar Falls & Wildlife Sanctuary Tour',
+    destination: 'Goa, India',
+    city: 'Goa',
+    durationNightsCount: 3,
+    durationNights: '3 Nights / 4 Days',
+    durationDays: 4,
+    theme: 'Wildlife',
+    hotelCategory: '4★',
+    hotelStars: 4,
+    rating: 4.84,
+    reviewsCount: 390,
+    inclusions: ['4★ Eco Resort near Mollem National Park', 'Daily Buffet Breakfast & Dinner', '4x4 Open Jeep Safari to Dudhsagar Waterfalls', 'Bhagwan Mahaveer Wildlife Sanctuary Birdwatching', 'Return AC Cab Transfers'],
+    highlights: ['Thrilling 4x4 Jeep Safari through dense Western Ghats', 'Swim in natural pools at Dudhsagar Waterfall', 'Spot leopards, flying squirrels, and hornbills at Mollem'],
+    itinerary: [
+      { day: 'Day 1', title: 'Arrival & Eco-Resort Check-in', desc: 'Pickup and drive inland towards Mollem rainforest. Check-in to luxury cottage and evening birdwatching walk.' },
+      { day: 'Day 2', title: 'Dudhsagar Waterfalls Jeep Expedition', desc: 'Early morning 4x4 jeep safari through jungle river crossings to majestic Dudhsagar four-tiered waterfall.' },
+      { day: 'Day 3', title: 'Bhagwan Mahaveer Wildlife Safari', desc: 'Guided forest trek with naturalist to spot wild deer, malabar giant squirrels, and endemic butterflies.' },
+      { day: 'Day 4', title: 'Nature Walk & Drop to Airport', desc: 'Organic breakfast, spice orchard walk, and private drop to Goa airport or Madgaon station.' },
+    ],
+    hotelStayTitle: 'Dudhsagar Spa & Nature Resort / Wildernest Nature (4★)',
+    startingPricePerPersonInr: 15999,
+    originalPriceInr: 23500,
+    image: ASSETS.mountainTraveler,
+    flightsIncluded: false,
+    bookAtOneRupee: true,
+    isCustomizable: true,
+    isPremiumPackage: true,
+    bestSeason: 'Oct – May',
+    dealTag: 'Eco & Wildlife',
+  },
+];
+
+const HOLIDAY_THEME_OPTIONS = [
+  { id: 'all', label: 'All Packages', icon: Sparkles },
+  { id: 'Honeymoon', label: 'Honeymoon', icon: Heart },
+  { id: 'Group Tours', label: 'Group Tours', icon: Users },
+  { id: 'Pilgrimage', label: 'Pilgrimage', icon: Landmark },
+  { id: 'Wildlife', label: 'Wildlife', icon: Compass },
+  { id: 'Beach', label: 'Beach & Islands', icon: Palmtree },
+  { id: 'Adventure', label: 'Adventure', icon: Zap },
+  { id: 'Luxury', label: 'Luxury', icon: Crown },
+  { id: 'Family', label: 'Family Special', icon: Sun },
+  { id: 'Culture', label: 'Culture & Heritage', icon: Landmark },
 ];
 
 // ============================================================================
@@ -1798,10 +1910,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [openModTravellers, setOpenModTravellers] = useState<boolean>(false);
   const [openTrainDropdown, setOpenTrainDropdown] = useState<'from' | 'to' | 'class' | 'quota' | null>(null);
   const [openBusDropdown, setOpenBusDropdown] = useState<'from' | 'to' | 'type' | null>(null);
+  const [openCabDropdown, setOpenCabDropdown] = useState<'from' | 'to' | 'time' | 'type' | null>(null);
+  const [openHolidayDropdown, setOpenHolidayDropdown] = useState<'from' | 'to' | 'duration' | 'theme' | null>(null);
 
   // Close calendar, travellers and custom popovers on outside click
   useEffect(() => {
-    if (!openCalendarDropdown && !openHeaderTravellers && !openModTravellers && !openCityPicker && !openTrainDropdown && !openBusDropdown) return;
+    if (!openCalendarDropdown && !openHeaderTravellers && !openModTravellers && !openCityPicker && !openTrainDropdown && !openBusDropdown && !openCabDropdown && !openHolidayDropdown) return;
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (
@@ -1816,6 +1930,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       setOpenCityPicker(null);
       setOpenTrainDropdown(null);
       setOpenBusDropdown(null);
+      setOpenCabDropdown(null);
+      setOpenHolidayDropdown(null);
     };
     const timer = setTimeout(() => {
       document.addEventListener('click', handleDocumentClick);
@@ -1824,7 +1940,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       clearTimeout(timer);
       document.removeEventListener('click', handleDocumentClick);
     };
-  }, [openCalendarDropdown, openHeaderTravellers, openModTravellers, openCityPicker, openTrainDropdown, openBusDropdown]);
+  }, [openCalendarDropdown, openHeaderTravellers, openModTravellers, openCityPicker, openTrainDropdown, openBusDropdown, openCabDropdown, openHolidayDropdown]);
 
   const handleOpenModify = () => {
     setModCategory(currentCategory);
@@ -1864,6 +1980,20 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       if (parts.length === 3) {
         const newAnchor = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
         setBusCarouselStartDate(new Date(newAnchor.getFullYear(), newAnchor.getMonth(), newAnchor.getDate() - 2));
+      }
+    }
+
+    if (modCategory === 'cabs') {
+      if (modCabType === 'Sedan') {
+        setCabSelectedCategories(['Sedan']);
+      } else if (modCabType === 'SUV') {
+        setCabSelectedCategories(['SUV']);
+      } else if (modCabType === 'Prime Crysta') {
+        setCabSelectedCategories(['Prime Crysta']);
+      } else if (modCabType === 'Tempo') {
+        setCabSelectedCategories(['Tempo']);
+      } else {
+        setCabSelectedCategories(['Sedan', 'SUV', 'Prime Crysta', 'Tempo']);
       }
     }
 
@@ -1970,8 +2100,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [busMinRating, setBusMinRating] = useState<number>(0);
   const [expandedBusId, setExpandedBusId] = useState<string | null>(null);
 
-  // Bus date carousel scroll ref and interactive date cards
+  // Bus date carousel scroll ref and Holiday theme options strip ref
   const busDateStripRef = React.useRef<HTMLDivElement>(null);
+  const holidayDateStripRef = React.useRef<HTMLDivElement>(null);
+  const holidayThemeStripRef = React.useRef<HTMLDivElement>(null);
 
   // Initialize carousel start date ONCE based on search date so selecting a date doesn't re-center or shift cards
   const [busCarouselStartDate, setBusCarouselStartDate] = useState<Date>(() => {
@@ -1991,6 +2123,24 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     if (busDateStripRef.current) {
       busDateStripRef.current.scrollBy({
         left: dir === 'left' ? -240 : 240,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const scrollHolidayDates = (dir: 'left' | 'right') => {
+    if (holidayDateStripRef.current) {
+      holidayDateStripRef.current.scrollBy({
+        left: dir === 'left' ? -240 : 240,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const scrollHolidayThemes = (dir: 'left' | 'right') => {
+    if (holidayThemeStripRef.current) {
+      holidayThemeStripRef.current.scrollBy({
+        left: dir === 'left' ? -260 : 260,
         behavior: 'smooth',
       });
     }
@@ -2021,6 +2171,29 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     return list;
   }, [busCarouselStartDate]);
 
+  const holidayDateCards = useMemo(() => {
+    const list = [];
+    for (let i = 0; i < 45; i++) {
+      const d = new Date(
+        busCarouselStartDate.getFullYear(),
+        busCarouselStartDate.getMonth(),
+        busCarouselStartDate.getDate() + i
+      );
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${dayNum}`;
+      const dayOfWeek = d.toLocaleDateString('en-IN', { weekday: 'short' });
+      const displayDate = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      list.push({
+        dateStr,
+        dayOfWeek,
+        displayDate,
+      });
+    }
+    return list;
+  }, [busCarouselStartDate]);
+
   // 5. Cabs
   const [cabMaxPrice, setCabMaxPrice] = useState<number>(13000);
   const [cabSelectedCategories, setCabSelectedCategories] = useState<string[]>(['Sedan', 'SUV', 'Prime Crysta', 'Tempo']);
@@ -2040,6 +2213,25 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [holidayCustomizableOnly, setHolidayCustomizableOnly] = useState<boolean>(false);
   const [holidayPremiumOnly, setHolidayPremiumOnly] = useState<boolean>(false);
   const [expandedHolidayId, setExpandedHolidayId] = useState<string | null>(null);
+
+  // Holiday header background slideshow (weekend getaways, holiday destinations, honeymoon retreats - no slide labels/names)
+  const HOLIDAY_HERO_SLIDES = [
+    ASSETS.goa,
+    ASSETS.maldives,
+    ASSETS.heroSantorini,
+    ASSETS.bali,
+    ASSETS.manali,
+    ASSETS.udaipur,
+  ];
+  const [holidaySlideIndex, setHolidaySlideIndex] = useState<number>(0);
+
+  useEffect(() => {
+    if (currentCategory !== 'holidays') return;
+    const interval = setInterval(() => {
+      setHolidaySlideIndex((prev) => (prev + 1) % HOLIDAY_HERO_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [currentCategory]);
 
   // Reset all filters function
   const handleResetFilters = () => {
@@ -2573,7 +2765,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 {currentCategory === 'hotels' && <Building2 className="w-4 h-4 text-amber-600 shrink-0" />}
                 {currentCategory === 'buses' && <Bus className="w-4 h-4 text-indigo-600 shrink-0" />}
                 {currentCategory === 'cabs' && <Car className="w-4 h-4 text-sky-600 shrink-0" />}
-                {currentCategory === 'holidays' && <Palmtree className="w-4 h-4 text-purple-600 shrink-0" />}
+                {currentCategory === 'holidays' && <Palmtree className="w-4 h-4 text-blue-600 shrink-0" />}
 
                 {currentCategory === 'hotels' ? (
                   <>
@@ -2602,18 +2794,28 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 ) : (
                   <>
                     <span className="text-slate-900 font-semibold">{currentFromCity.city}</span>
-                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
-                      {currentCategory === 'trains' ? currentFromCity.stationCode : currentFromCity.code}
-                    </span>
+                    {currentCategory !== 'holidays' && (
+                      <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
+                        {currentCategory === 'trains' ? currentFromCity.stationCode : currentFromCity.code}
+                      </span>
+                    )}
 
                     <span className="text-slate-400 font-mono">
                       {currentCategory === 'flights' && isFlightRoundTrip ? '⇄' : '→'}
                     </span>
 
                     <span className="text-slate-900 font-semibold">{currentToCity.city}</span>
-                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
-                      {currentCategory === 'trains' ? currentToCity.stationCode : currentToCity.code}
-                    </span>
+                    {currentCategory !== 'holidays' && (
+                      <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
+                        {currentCategory === 'trains' ? currentToCity.stationCode : currentToCity.code}
+                      </span>
+                    )}
+
+                    {currentCategory === 'holidays' && (
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        Holiday Packages
+                      </span>
+                    )}
 
                     {currentCategory === 'flights' && (
                       <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
@@ -2871,8 +3073,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
               )}
 
-              {/* Travellers / Guests (Custom Popover matching front page for flights, hidden for trains, hotels, and buses as requested) */}
-              {currentCategory !== 'trains' && currentCategory !== 'hotels' && currentCategory !== 'buses' && (
+              {/* Travellers / Guests (Custom Popover matching front page for flights, hidden for trains, hotels, buses, cabs, and holidays as requested) */}
+              {currentCategory !== 'trains' && currentCategory !== 'hotels' && currentCategory !== 'buses' && currentCategory !== 'cabs' && currentCategory !== 'holidays' && (
                 <div className="relative dropdown-field-container">
                   <button
                     type="button"
@@ -4086,44 +4288,124 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               {/* 5. CABS MODIFY CONTROLS */}
               {modCategory === 'cabs' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  <div>
+                  {/* Cabs Pickup City */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Pickup City
                     </label>
-                    <select
-                      value={modFromCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModFromCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCabDropdown(openCabDropdown === 'from' ? null : 'from');
+                        setOpenCalendarDropdown(null);
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-sky-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openCabDropdown === 'from' ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-300'
+                      }`}
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modFromCity.city}</div>
+                        <div className="text-[10px] text-slate-500">{modFromCity.country}</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openCabDropdown === 'from' ? 'rotate-180 text-sky-600' : ''}`} />
+                    </button>
+
+                    {openCabDropdown === 'from' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute left-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModFromCity(city);
+                              setOpenCabDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modFromCity.code === city.code
+                                ? 'bg-sky-50 text-sky-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city}, {city.country}
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                {city.airportName || `${city.city} City Center`}
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* Cabs Drop City */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Drop City
                     </label>
-                    <select
-                      value={modToCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModToCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCabDropdown(openCabDropdown === 'to' ? null : 'to');
+                        setOpenCalendarDropdown(null);
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-sky-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openCabDropdown === 'to' ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-300'
+                      }`}
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modToCity.city}</div>
+                        <div className="text-[10px] text-slate-500">{modToCity.country}</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openCabDropdown === 'to' ? 'rotate-180 text-sky-600' : ''}`} />
+                    </button>
+
+                    {openCabDropdown === 'to' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 sm:left-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModToCity(city);
+                              setOpenCabDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modToCity.code === city.code
+                                ? 'bg-sky-50 text-sky-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city}, {city.country}
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                {city.airportName || `${city.city} City Center`}
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Cabs Pickup Date */}
@@ -4136,16 +4418,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                        setOpenCabDropdown(null);
                       }}
-                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-amber-500 cursor-pointer flex items-center justify-between ${
-                        openCalendarDropdown === 'mod-dep' ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-300'
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-sky-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-dep' ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
+                        <Calendar className="w-4 h-4 text-sky-600 shrink-0" />
                         <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
                       </div>
-                      <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded font-mono shrink-0">
+                      <span className="text-[10px] text-sky-800 font-bold bg-sky-50 px-2 py-0.5 rounded font-mono shrink-0">
                         Calendar
                       </span>
                     </button>
@@ -4164,106 +4447,431 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </div>
 
-                  <div>
+                  {/* Cabs Pickup Time */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Pickup Time
                     </label>
-                    <select
-                      value={modCabTime}
-                      onChange={(e) => setModCabTime(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCabDropdown(openCabDropdown === 'time' ? null : 'time');
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-sky-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openCabDropdown === 'time' ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="06:00 AM">06:00 AM</option>
-                      <option value="09:00 AM">09:00 AM</option>
-                      <option value="10:00 AM">10:00 AM</option>
-                      <option value="01:00 PM">01:00 PM</option>
-                      <option value="05:30 PM">05:30 PM</option>
-                      <option value="09:00 PM">09:00 PM</option>
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modCabTime}</div>
+                        <div className="text-[10px] text-slate-500">Scheduled Time</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openCabDropdown === 'time' ? 'rotate-180 text-sky-600' : ''}`} />
+                    </button>
+
+                    {openCabDropdown === 'time' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-1.5 w-48 max-h-60 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {[
+                          '06:00 AM',
+                          '07:30 AM',
+                          '09:00 AM',
+                          '10:30 AM',
+                          '01:00 PM',
+                          '03:30 PM',
+                          '05:30 PM',
+                          '07:00 PM',
+                          '09:00 PM',
+                          '11:00 PM',
+                        ].map((timeSlot) => (
+                          <button
+                            key={timeSlot}
+                            type="button"
+                            onClick={() => {
+                              setModCabTime(timeSlot);
+                              setOpenCabDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modCabTime === timeSlot
+                                ? 'bg-sky-50 text-sky-700 font-bold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <span className="font-semibold">{timeSlot}</span>
+                            {modCabTime === timeSlot && (
+                              <Check className="w-4 h-4 text-sky-600 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* Cabs Cab Type */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Cab Type
                     </label>
-                    <select
-                      value={modCabType}
-                      onChange={(e) => setModCabType(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCabDropdown(openCabDropdown === 'type' ? null : 'type');
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-sky-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openCabDropdown === 'type' ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="SUV / Sedan">SUV / Sedan</option>
-                      <option value="Sedan">Sedan (Dzire / Etios)</option>
-                      <option value="Prime Crysta">Innova Crysta</option>
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">
+                          {modCabType === 'Prime Crysta' ? 'Prime SUV' : modCabType}
+                        </div>
+                        <div className="text-[10px] text-slate-500">Vehicle Category</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openCabDropdown === 'type' ? 'rotate-180 text-sky-600' : ''}`} />
+                    </button>
+
+                    {openCabDropdown === 'type' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-1.5 w-60 max-h-60 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {[
+                          { val: 'SUV / Sedan', label: 'All Cabs', desc: 'Any Available Vehicle' },
+                          { val: 'Sedan', label: 'Sedan', desc: 'Comfortable 4-Seater' },
+                          { val: 'SUV', label: 'SUV', desc: 'Spacious 6-Seater' },
+                          { val: 'Prime Crysta', label: 'Prime SUV', desc: 'Premium 7-Seater' },
+                          { val: 'Tempo', label: 'Tempo Traveller', desc: '12-Seater Coach' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => {
+                              setModCabType(item.val);
+                              setOpenCabDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modCabType === item.val
+                                ? 'bg-sky-50 text-sky-700 font-bold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {item.label}
+                              </div>
+                              <div className="text-slate-500 text-[10px]">
+                                {item.desc}
+                              </div>
+                            </div>
+                            {modCabType === item.val && (
+                              <Check className="w-4 h-4 text-sky-600 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               {/* 6. HOLIDAYS MODIFY CONTROLS */}
               {modCategory === 'holidays' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {/* From City Custom Dropdown */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      Destination Package
+                      From City
                     </label>
-                    <select
-                      value={modToCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModToCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenHolidayDropdown(openHolidayDropdown === 'from' ? null : 'from');
+                        setOpenCalendarDropdown(null);
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openHolidayDropdown === 'from' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city} Getaways
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modFromCity.city}</div>
+                        <div className="text-[10px] text-slate-500 truncate">Departure City</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'from' ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+
+                    {openHolidayDropdown === 'from' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute left-0 top-full mt-1.5 w-72 max-h-60 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModFromCity(city);
+                              setOpenHolidayDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modFromCity.code === city.code
+                                ? 'bg-blue-50 text-blue-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city}, {city.country}
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                Flights / Cabs available
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* Destination Package Custom Dropdown */}
+                  <div className="relative dropdown-field-container">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-600 uppercase">Destination</label>
+                      <button
+                        type="button"
+                        onClick={handleSwapModCities}
+                        className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer"
+                        title="Swap cities"
+                      >
+                        <ArrowLeftRight className="w-3 h-3" />
+                        <span>Swap</span>
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenHolidayDropdown(openHolidayDropdown === 'to' ? null : 'to');
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openHolidayDropdown === 'to' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
+                    >
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modToCity.city}</div>
+                        <div className="text-[10px] text-slate-500 truncate">Holiday Packages</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'to' ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+
+                    {openHolidayDropdown === 'to' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 sm:left-0 top-full mt-1.5 w-72 max-h-60 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModToCity(city);
+                              setOpenHolidayDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modToCity.code === city.code
+                                ? 'bg-blue-50 text-blue-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city} Getaways
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                {city.city}, {city.country}
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Travel Date with Calendar */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      Month of Travel
+                      Travel Date
                     </label>
-                    <input
-                      type="date"
-                      value={modDepDate}
-                      onChange={(e) => setModDepDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
-                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                        setOpenHolidayDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
+                        openCalendarDropdown === 'mod-dep' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="truncate">{formatFriendlyDate(modDepDate || currentDepDate)}</span>
+                      </div>
+                      <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded font-mono shrink-0">
+                        Calendar
+                      </span>
+                    </button>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-10-15"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
                   </div>
 
-                  <div>
+                  {/* Duration Custom Dropdown */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Duration
                     </label>
-                    <select
-                      value={modHolidayDuration}
-                      onChange={(e) => setModHolidayDuration(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenHolidayDropdown(openHolidayDropdown === 'duration' ? null : 'duration');
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openHolidayDropdown === 'duration' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="3N / 4D">3 Nights / 4 Days</option>
-                      <option value="4N / 5D">4 Nights / 5 Days</option>
-                      <option value="5N / 6D">5 Nights / 6 Days</option>
-                      <option value="6N / 7D">6 Nights / 7 Days</option>
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modHolidayDuration}</div>
+                        <div className="text-[10px] text-slate-500 truncate">Tour Length</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'duration' ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+
+                    {openHolidayDropdown === 'duration' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-1.5 w-56 max-h-60 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {[
+                          { val: '3N / 4D', label: '3 Nights / 4 Days', desc: 'Weekend Getaway' },
+                          { val: '4N / 5D', label: '4 Nights / 5 Days', desc: 'Short Break' },
+                          { val: '5N / 6D', label: '5 Nights / 6 Days', desc: 'Standard Tour' },
+                          { val: '6N / 7D', label: '6 Nights / 7 Days', desc: 'Extended Vacation' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => {
+                              setModHolidayDuration(item.val);
+                              setOpenHolidayDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modHolidayDuration === item.val
+                                ? 'bg-blue-50 text-blue-700 font-bold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-slate-900">{item.label}</div>
+                              <div className="text-slate-400 text-[10px]">{item.desc}</div>
+                            </div>
+                            {modHolidayDuration === item.val && (
+                              <Check className="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* Theme Custom Dropdown */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Theme
                     </label>
-                    <select
-                      value={modHolidayTheme}
-                      onChange={(e) => setModHolidayTheme(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenHolidayDropdown(openHolidayDropdown === 'theme' ? null : 'theme');
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openHolidayDropdown === 'theme' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="All Packages">All Packages</option>
-                      <option value="Beach">Beach Getaway</option>
-                      <option value="Honeymoon">Romantic Honeymoon</option>
-                      <option value="Luxury">5-Star Luxury</option>
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modHolidayTheme}</div>
+                        <div className="text-[10px] text-slate-500 truncate">Holiday Style</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'theme' ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+
+                    {openHolidayDropdown === 'theme' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-1.5 w-60 max-h-60 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {[
+                          { val: 'All Packages', label: 'All Packages', desc: 'Any Theme' },
+                          { val: 'Beach', label: 'Beach Getaway', desc: 'Sun, Sand & Sea' },
+                          { val: 'Honeymoon', label: 'Romantic Honeymoon', desc: 'Couples Special' },
+                          { val: 'Luxury', label: '5-Star Luxury', desc: 'Premium Resorts' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => {
+                              setModHolidayTheme(item.val);
+                              setOpenHolidayDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modHolidayTheme === item.val
+                                ? 'bg-blue-50 text-blue-700 font-bold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-slate-900">{item.label}</div>
+                              <div className="text-slate-400 text-[10px]">{item.desc}</div>
+                            </div>
+                            {modHolidayTheme === item.val && (
+                              <Check className="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -5494,7 +6102,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             }
                             className="w-4 h-4 rounded border-slate-300 text-sky-600 cursor-pointer"
                           />
-                          <span>{v}</span>
+                          <span>{v === 'Prime Crysta' ? 'Prime SUV' : v}</span>
                         </label>
                       );
                     })}
@@ -5516,7 +6124,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       value={holidaySearchQuery}
                       onChange={(e) => setHolidaySearchQuery(e.target.value)}
                       placeholder="e.g. Goa, Honeymoon, Villa..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-7 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-purple-500 focus:bg-white transition-colors"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-7 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors"
                     />
                     {holidaySearchQuery && (
                       <button
@@ -5534,7 +6142,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 <div className="pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between font-bold text-slate-800 mb-1.5">
                     <span>Duration (in Nights)</span>
-                    <span className="text-purple-700 font-mono text-[11px] font-bold">
+                    <span className="text-blue-700 font-mono text-[11px] font-bold">
                       {holidayMinNights}N – {holidayMaxNights}N
                     </span>
                   </div>
@@ -5545,7 +6153,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     step={1}
                     value={holidayMaxNights}
                     onChange={(e) => setHolidayMaxNights(Number(e.target.value))}
-                    className="w-full accent-purple-600 cursor-pointer"
+                    className="w-full accent-blue-600 cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-0.5">
                     <span>2N</span>
@@ -5571,7 +6179,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           }}
                           className={`py-1.5 px-2 rounded-lg text-center border font-semibold text-[11px] transition-colors cursor-pointer ${
                             isActive
-                              ? 'bg-purple-50 border-purple-500 text-purple-700 font-bold shadow-2xs'
+                              ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-2xs'
                               : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
                           }`}
                         >
@@ -5593,12 +6201,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       }
                       className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
                         holidayFlightOption === 'with-flight'
-                          ? 'bg-purple-600 border-purple-600 text-white font-bold shadow-xs'
+                          ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                       }`}
                     >
                       <div className="font-bold text-[11px]">With Flight</div>
-                      <div className={`text-[10px] ${holidayFlightOption === 'with-flight' ? 'text-purple-200' : 'text-slate-400'}`}>
+                      <div className={`text-[10px] ${holidayFlightOption === 'with-flight' ? 'text-blue-100' : 'text-slate-400'}`}>
                         ({HOLIDAY_RESULTS.filter((p) => p.flightsIncluded).length})
                       </div>
                     </button>
@@ -5610,12 +6218,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       }
                       className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
                         holidayFlightOption === 'without-flight'
-                          ? 'bg-purple-600 border-purple-600 text-white font-bold shadow-xs'
+                          ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                       }`}
                     >
                       <div className="font-bold text-[11px]">Without Flight</div>
-                      <div className={`text-[10px] ${holidayFlightOption === 'without-flight' ? 'text-purple-200' : 'text-slate-400'}`}>
+                      <div className={`text-[10px] ${holidayFlightOption === 'without-flight' ? 'text-blue-100' : 'text-slate-400'}`}>
                         ({HOLIDAY_RESULTS.filter((p) => !p.flightsIncluded).length})
                       </div>
                     </button>
@@ -5626,7 +6234,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 <div className="pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between font-bold text-slate-800 mb-1.5">
                     <span>Budget (per person)</span>
-                    <span className="font-bold text-purple-700 font-mono">
+                    <span className="font-bold text-blue-700 font-mono">
                       {formatPrice(holidayMaxBudget, currency)}
                     </span>
                   </div>
@@ -5637,7 +6245,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     step={2000}
                     value={holidayMaxBudget}
                     onChange={(e) => setHolidayMaxBudget(Number(e.target.value))}
-                    className="w-full accent-purple-600 cursor-pointer"
+                    className="w-full accent-blue-600 cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-0.5">
                     <span>₹0</span>
@@ -5687,7 +6295,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   checked ? prev.filter((b) => b !== bracket.id) : [...prev, bracket.id]
                                 )
                               }
-                              className="w-4 h-4 rounded border-slate-300 text-purple-600 cursor-pointer accent-purple-600"
+                              className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                             />
                             <span className="text-[11px] font-medium">{bracket.label}</span>
                           </div>
@@ -5732,7 +6340,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           }
                           className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
                             active
-                              ? 'bg-purple-50 border-purple-500 text-purple-700 font-bold shadow-2xs'
+                              ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-2xs'
                               : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                           }`}
                         >
@@ -5769,7 +6377,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   checked ? prev.filter((c) => c !== cityItem.id) : [...prev, cityItem.id]
                                 )
                               }
-                              className="w-4 h-4 rounded border-slate-300 text-purple-600 cursor-pointer accent-purple-600"
+                              className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                             />
                             <span className="text-[11px] font-medium">{cityItem.label}</span>
                           </div>
@@ -5786,7 +6394,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   <label
                     className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
                       holidayBookAtOneRupeeOnly
-                        ? 'bg-purple-50 border-purple-400 text-purple-900'
+                        ? 'bg-blue-50 border-blue-400 text-blue-950'
                         : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                     }`}
                   >
@@ -5795,14 +6403,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         type="checkbox"
                         checked={holidayBookAtOneRupeeOnly}
                         onChange={() => setHolidayBookAtOneRupeeOnly(!holidayBookAtOneRupeeOnly)}
-                        className="w-4 h-4 rounded border-slate-300 text-purple-600 cursor-pointer accent-purple-600"
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                       />
                       <div>
-                        <span className="font-bold text-xs text-purple-900 block">Book @ ₹1</span>
+                        <span className="font-bold text-xs text-blue-950 block">Book @ ₹1</span>
                         <span className="text-[10px] text-slate-500">Pay remaining balance 7 days before trip</span>
                       </div>
                     </div>
-                    <span className="text-[11px] text-purple-700 font-mono font-bold">
+                    <span className="text-[11px] text-blue-700 font-mono font-bold">
                       ({HOLIDAY_RESULTS.filter((p) => p.bookAtOneRupee).length})
                     </span>
                   </label>
@@ -5814,9 +6422,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   <div className="space-y-1.5">
                     {[
                       { id: 'Adventure', label: 'Adventure', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Adventure').length },
-                      { id: 'Culture', label: 'Culture', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Culture').length },
-                      { id: 'Beach', label: 'Beach', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Beach').length },
+                      { id: 'Culture', label: 'Culture & Heritage', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Culture').length },
+                      { id: 'Beach', label: 'Beach & Islands', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Beach').length },
                       { id: 'Honeymoon', label: 'Honeymoon', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Honeymoon').length },
+                      { id: 'Group Tours', label: 'Group Tours', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Group Tours').length },
+                      { id: 'Pilgrimage', label: 'Pilgrimage', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Pilgrimage').length },
+                      { id: 'Wildlife', label: 'Wildlife', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Wildlife').length },
                       { id: 'Luxury', label: 'Luxury', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Luxury').length },
                       { id: 'Family', label: 'Family', count: HOLIDAY_RESULTS.filter((p) => p.theme === 'Family').length },
                     ].map((th) => {
@@ -5835,7 +6446,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   checked ? prev.filter((item) => item !== th.id) : [...prev, th.id]
                                 )
                               }
-                              className="w-4 h-4 rounded border-slate-300 text-purple-600 cursor-pointer accent-purple-600"
+                              className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                             />
                             <span className="text-[11px] font-medium">{th.label}</span>
                           </div>
@@ -5855,7 +6466,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         type="checkbox"
                         checked={holidayCustomizableOnly}
                         onChange={() => setHolidayCustomizableOnly(!holidayCustomizableOnly)}
-                        className="w-4 h-4 rounded border-slate-300 text-purple-600 cursor-pointer accent-purple-600"
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                       />
                       <span className="text-[11px] font-medium">Customizable Packages</span>
                     </div>
@@ -5874,10 +6485,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         type="checkbox"
                         checked={holidayPremiumOnly}
                         onChange={() => setHolidayPremiumOnly(!holidayPremiumOnly)}
-                        className="w-4 h-4 rounded border-slate-300 text-purple-600 cursor-pointer accent-purple-600"
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                       />
                       <div className="flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                        <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                         <span className="text-[11px] font-medium">Premium Packages</span>
                       </div>
                     </div>
@@ -5907,7 +6518,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
 
                 {/* Horizontal Date Strip with Left and Right Scroll Buttons */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-2 shadow-xs flex items-center gap-2">
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-2 shadow-xs flex items-center gap-2 overflow-hidden max-w-full">
                   <button
                     type="button"
                     onClick={() => scrollBusDates('left')}
@@ -5919,8 +6530,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                   <div
                     ref={busDateStripRef}
-                    className="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 px-1 flex-1 custom-scrollbar"
-                    style={{ scrollbarWidth: 'none' }}
+                    className="flex items-center gap-2 overflow-x-auto overflow-y-hidden scroll-smooth py-1 px-1 flex-1 min-w-0 max-w-full custom-scrollbar"
                   >
                     {busDateCards.map((item) => {
                       const cleanDep = (currentDepDate || '').split('T')[0];
@@ -5963,52 +6573,173 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               </div>
             )}
 
-            {/* MakeMyTrip Style Horizontal Quick Sort Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-              {currentCategory === 'buses' ? (
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-900 text-sm sm:text-base font-mono">
-                    {processedBuses.length} Buses Found
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  <SlidersHorizontal className="w-4 h-4 text-slate-600" />
-                  <span>Sort By:</span>
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                {currentCategory === 'buses' && (
-                  <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Sort by:</span>
-                  </span>
-                )}
-                {[
-                  { id: 'cheapest', label: 'Cheapest First' },
-                  { id: 'fastest', label: currentCategory === 'hotels' ? 'Best Value' : 'Fastest Duration' },
-                  { id: 'rating', label: 'Highest Rated' },
-                  { id: 'departure', label: 'Earliest Departure' },
-                ].map((s) => {
-                  const isSelected = sortBy === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setSortBy(s.id as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-slate-900 text-white shadow-xs'
-                          : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
+            {/* Holiday Specific Header: Single Unified Block with Background Slideshow (NO slide names or text, purely visual) */}
+            {currentCategory === 'holidays' && (
+              <div className="relative rounded-2xl border border-white/20 shadow-md overflow-hidden max-w-full">
+                {/* Background Slideshow (Weekend, Holidays, Honeymoon) - Pure visual with NO slide names/labels */}
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                  {HOLIDAY_HERO_SLIDES.map((slideImg, idx) => (
+                    <img
+                      key={idx}
+                      src={slideImg}
+                      alt=""
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+                        idx === holidaySlideIndex ? 'opacity-100 scale-105 transition-all duration-[6000ms]' : 'opacity-0 scale-100'
                       }`}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
+                    />
+                  ))}
+                  {/* Subtle uniform scrim so the entire slideshow image is vividly visible without black darkening */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/35" />
+                </div>
+
+                {/* Foreground Content */}
+                <div className="relative z-10 py-3.5 space-y-3">
+                  {/* Top Row: Destination City (Goa) + Packages Found (no green dot) + Sort in Scroll */}
+                  <div className="px-3.5 sm:px-4 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2 drop-shadow-md">
+                        <span>{currentToCity.city}</span>
+                        <span className="text-xs font-bold text-blue-100 bg-blue-600/60 border border-blue-400/40 px-2.5 py-0.5 rounded-full ml-0.5 shadow-xs">
+                          Holiday Packages
+                        </span>
+                      </h2>
+                      <span className="text-xs font-bold text-white bg-white/15 backdrop-blur-md border border-white/25 px-2.5 py-1 rounded-full shadow-xs">
+                        <span>{processedHolidays.length} Packages Found</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5 max-w-full">
+                      <span className="text-xs font-bold text-white/90 hidden md:inline-flex items-center gap-1 shrink-0 mr-1 drop-shadow-xs">
+                        <SlidersHorizontal className="w-3.5 h-3.5 text-white/80" />
+                        <span>Sort:</span>
+                      </span>
+                      {[
+                        { id: 'cheapest', label: 'Cheapest First' },
+                        { id: 'fastest', label: 'Best Value' },
+                        { id: 'rating', label: 'Highest Rated' },
+                        { id: 'departure', label: 'Popular' },
+                      ].map((s) => {
+                        const isSelected = sortBy === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setSortBy(s.id as any)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                              isSelected
+                                ? 'bg-blue-600 text-white shadow-md border border-blue-400'
+                                : 'bg-white/15 hover:bg-white/25 text-white hover:text-white border border-white/25 backdrop-blur-xs shadow-2xs'
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Bottom Row: Theme / Category Filter Scroll extending edge-to-edge with no arrow buttons and no black fill */}
+                  <div
+                    ref={holidayThemeStripRef}
+                    className="flex items-center gap-2 overflow-x-auto overflow-y-hidden scroll-smooth py-1 px-3 sm:px-4 max-w-full [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  >
+                    {HOLIDAY_THEME_OPTIONS.map((item) => {
+                      const isSelected = item.id === 'all'
+                        ? holidaySelectedThemes.length === 0
+                        : holidaySelectedThemes.includes(item.id);
+                      const IconComponent = item.icon;
+                      const count = item.id === 'all'
+                        ? HOLIDAY_RESULTS.length
+                        : HOLIDAY_RESULTS.filter((p) => p.theme === item.id).length;
+
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            if (item.id === 'all') {
+                              setHolidaySelectedThemes([]);
+                            } else {
+                              if (holidaySelectedThemes.length === 1 && holidaySelectedThemes[0] === item.id) {
+                                setHolidaySelectedThemes([]);
+                              } else {
+                                setHolidaySelectedThemes([item.id]);
+                              }
+                            }
+                          }}
+                          className={`flex items-center gap-1.5 py-2 px-3 sm:px-3.5 rounded-xl border text-xs whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                            isSelected
+                              ? 'bg-blue-600 border-blue-400 text-white font-bold shadow-md ring-2 ring-blue-400/30'
+                              : 'bg-white/15 hover:bg-white/25 border-white/25 hover:border-white/40 text-white font-semibold backdrop-blur-xs shadow-2xs'
+                          }`}
+                        >
+                          <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-blue-200'}`} />
+                          <span className="drop-shadow-xs">{item.label}</span>
+                          {count > 0 && (
+                            <span
+                              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5 ${
+                                isSelected ? 'bg-blue-700 text-white' : 'bg-white/20 text-white'
+                              }`}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* MakeMyTrip Style Horizontal Quick Sort Bar (Flights, Trains, Hotels, Buses) */}
+            {currentCategory !== 'holidays' && (
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                {currentCategory === 'buses' ? (
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900 text-sm sm:text-base font-mono">
+                      {processedBuses.length} Buses Found
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <SlidersHorizontal className="w-4 h-4 text-slate-600" />
+                    <span>Sort By:</span>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {currentCategory === 'buses' && (
+                    <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Sort by:</span>
+                    </span>
+                  )}
+                  {[
+                    { id: 'cheapest', label: 'Cheapest First' },
+                    { id: 'fastest', label: currentCategory === 'hotels' ? 'Best Value' : 'Fastest Duration' },
+                    { id: 'rating', label: 'Highest Rated' },
+                    { id: 'departure', label: 'Earliest Departure' },
+                  ].map((s) => {
+                    const isSelected = sortBy === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSortBy(s.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ===============================================================
                 1. FLIGHT RESULTS LIST (ONE-WAY & ROUND-TRIP LAYOUTS)
@@ -7426,7 +8157,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <div>
                       <h3 className="font-bold text-sm sm:text-base">All-Inclusive Outstation Cabs</h3>
                       <p className="text-xs text-sky-100">
-                        Toll taxes, state entry tax &amp; driver allowance included · Zero hidden charges on highway
+                        Driver allowance included · Zero hidden charges on highway
                       </p>
                     </div>
                   </div>
@@ -7460,7 +8191,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 {cab.tag}
                               </span>
                               <h4 className="font-bold text-slate-900 text-lg mt-1.5">{cab.cabType}</h4>
-                              <p className="text-xs text-slate-500">{cab.modelExamples}</p>
                             </div>
 
                             <div className="text-right">
@@ -7475,9 +8205,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           <div className="flex items-center gap-4 py-3 my-2 border-y border-slate-100 text-xs text-slate-600">
                             <span className="flex items-center gap-1">
                               <Users className="w-3.5 h-3.5 text-slate-400" /> {cab.seats} Seats
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Luggage className="w-3.5 h-3.5 text-slate-400" /> {cab.bags} Large Bags
                             </span>
                             <span className="flex items-center gap-1">
                               <Zap className="w-3.5 h-3.5 text-slate-400" /> AC Included
@@ -7499,14 +8226,13 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             <div className="text-2xl font-black text-slate-900">
                               {formatPrice(cab.priceInr, currency)}
                             </div>
-                            <div className="text-[11px] text-emerald-600 font-semibold">Tolls &amp; Taxes Included</div>
                           </div>
 
                           <button
                             type="button"
                             onClick={() =>
                               onSelectFlightOrStayForCheckout({
-                                title: `${cab.cabType} (${cab.modelExamples.split(',')[0]})`,
+                                title: cab.cabType,
                                 code: cab.id,
                                 depTime: 'Pickup: As Scheduled',
                                 arrTime: 'Doorstep Drop',
@@ -7533,210 +8259,182 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'holidays' && (
               <div className="space-y-4">
-                {/* Promo Banner */}
-                <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-slate-900 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                      <Palmtree className="w-5 h-5 text-purple-300" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base flex items-center gap-2">
-                        <span>Curated All-Inclusive Holiday Packages</span>
-                        <span className="text-[10px] bg-purple-400/20 text-purple-200 border border-purple-300/30 px-2 py-0.5 rounded-full font-extrabold uppercase">
-                          Book @ ₹1
+                {/* Active Holiday Filter Chips (Only shown when filters are active) */}
+                {(holidaySearchQuery ||
+                  holidayFlightOption !== 'all' ||
+                  holidayMinNights > 2 ||
+                  holidayMaxNights < 7 ||
+                  holidayBudgetBrackets.length > 0 ||
+                  holidayHotelCategories.length > 0 ||
+                  holidaySelectedCities.length > 0 ||
+                  holidayBookAtOneRupeeOnly ||
+                  holidaySelectedThemes.length > 0 ||
+                  holidayCustomizableOnly ||
+                  holidayPremiumOnly) && (
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-2.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+                        <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Active Filters:</span>
+                      </span>
+
+                      {holidaySearchQuery && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                          "{holidaySearchQuery}"
+                          <button
+                            type="button"
+                            onClick={() => setHolidaySearchQuery('')}
+                            className="hover:text-blue-900 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </span>
-                      </h3>
-                      <p className="text-xs text-purple-200 mt-0.5">
-                        Selected meals + handpicked 3★ to 5★ stays + private sightseeing cab · 100% customizable
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-xs font-semibold text-purple-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                    Zero Cancellation EMI Options
-                  </div>
-                </div>
+                      )}
 
-                {/* Active Holiday Filters & Count Strip */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm sm:text-base">
-                      {processedHolidays.length} Packages Found
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      from {currentFromCity.city} to {currentToCity.city}
-                    </span>
-                  </div>
+                      {holidayFlightOption !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                          {holidayFlightOption === 'with-flight' ? 'Flights Included' : 'Without Flights'}
+                          <button
+                            type="button"
+                            onClick={() => setHolidayFlightOption('all')}
+                            className="hover:text-blue-950 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
 
-                  {/* Active Filter Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {holidaySearchQuery && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                        "{holidaySearchQuery}"
-                        <button
-                          type="button"
-                          onClick={() => setHolidaySearchQuery('')}
-                          className="hover:text-purple-900 cursor-pointer"
+                      {(holidayMinNights > 2 || holidayMaxNights < 7) && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          {holidayMinNights}N – {holidayMaxNights}N
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHolidayMinNights(2);
+                              setHolidayMaxNights(7);
+                            }}
+                            className="hover:text-indigo-900 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+
+                      {holidayBudgetBrackets.map((b) => (
+                        <span
+                          key={b}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
+                          {b === '<15000' && '< ₹15,000'}
+                          {b === '15000-25000' && '₹15,000 - ₹25,000'}
+                          {b === '25000-35000' && '₹25,000 - ₹35,000'}
+                          {b === '>35000' && '> ₹35,000'}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setHolidayBudgetBrackets((prev) => prev.filter((item) => item !== b))
+                            }
+                            className="hover:text-slate-900 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
 
-                    {holidayFlightOption !== 'all' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">
-                        {holidayFlightOption === 'with-flight' ? 'Flights Included' : 'Without Flights'}
-                        <button
-                          type="button"
-                          onClick={() => setHolidayFlightOption('all')}
-                          className="hover:text-purple-950 cursor-pointer"
+                      {holidayHotelCategories.map((cat) => (
+                        <span
+                          key={cat}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
+                          {cat} Hotel
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setHolidayHotelCategories((prev) => prev.filter((c) => c !== cat))
+                            }
+                            className="hover:text-amber-950 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
 
-                    {(holidayMinNights > 2 || holidayMaxNights < 7) && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        {holidayMinNights}N – {holidayMaxNights}N
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setHolidayMinNights(2);
-                            setHolidayMaxNights(7);
-                          }}
-                          className="hover:text-indigo-900 cursor-pointer"
+                      {holidaySelectedCities.map((city) => (
+                        <span
+                          key={city}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
+                          {city}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setHolidaySelectedCities((prev) => prev.filter((c) => c !== city))
+                            }
+                            className="hover:text-blue-900 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
 
-                    {holidayBudgetBrackets.map((b) => (
-                      <span
-                        key={b}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700"
-                      >
-                        {b === '<15000' && '< ₹15,000'}
-                        {b === '15000-25000' && '₹15,000 - ₹25,000'}
-                        {b === '25000-35000' && '₹25,000 - ₹35,000'}
-                        {b === '>35000' && '> ₹35,000'}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setHolidayBudgetBrackets((prev) => prev.filter((item) => item !== b))
-                          }
-                          className="hover:text-slate-900 cursor-pointer"
+                      {holidayBookAtOneRupeeOnly && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-900 border border-blue-300">
+                          Book @ ₹1
+                          <button
+                            type="button"
+                            onClick={() => setHolidayBookAtOneRupeeOnly(false)}
+                            className="hover:text-blue-950 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+
+                      {holidaySelectedThemes.map((th) => (
+                        <span
+                          key={th}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-pink-50 text-pink-700 border border-pink-200"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                          {th}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setHolidaySelectedThemes((prev) => prev.filter((t) => t !== th))
+                            }
+                            className="hover:text-pink-900 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
 
-                    {holidayHotelCategories.map((cat) => (
-                      <span
-                        key={cat}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200"
-                      >
-                        {cat} Hotel
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setHolidayHotelCategories((prev) => prev.filter((c) => c !== cat))
-                          }
-                          className="hover:text-amber-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                      {holidayCustomizableOnly && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          Customizable
+                          <button
+                            type="button"
+                            onClick={() => setHolidayCustomizableOnly(false)}
+                            className="hover:text-emerald-950 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
 
-                    {holidaySelectedCities.map((city) => (
-                      <span
-                        key={city}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200"
-                      >
-                        {city}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setHolidaySelectedCities((prev) => prev.filter((c) => c !== city))
-                          }
-                          className="hover:text-blue-900 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                      {holidayPremiumOnly && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-900 border border-blue-300">
+                          <Sparkles className="w-3 h-3 text-blue-600" />
+                          Premium Packages
+                          <button
+                            type="button"
+                            onClick={() => setHolidayPremiumOnly(false)}
+                            className="hover:text-blue-950 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
 
-                    {holidayBookAtOneRupeeOnly && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-900 border border-purple-300">
-                        Book @ ₹1
-                        <button
-                          type="button"
-                          onClick={() => setHolidayBookAtOneRupeeOnly(false)}
-                          className="hover:text-purple-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {holidaySelectedThemes.map((th) => (
-                      <span
-                        key={th}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-pink-50 text-pink-700 border border-pink-200"
-                      >
-                        {th}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setHolidaySelectedThemes((prev) => prev.filter((t) => t !== th))
-                          }
-                          className="hover:text-pink-900 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-
-                    {holidayCustomizableOnly && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        Customizable
-                        <button
-                          type="button"
-                          onClick={() => setHolidayCustomizableOnly(false)}
-                          className="hover:text-emerald-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {holidayPremiumOnly && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-900 border border-purple-300">
-                        <Sparkles className="w-3 h-3 text-purple-600" />
-                        Premium Packages
-                        <button
-                          type="button"
-                          onClick={() => setHolidayPremiumOnly(false)}
-                          className="hover:text-purple-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {(holidaySearchQuery ||
-                      holidayFlightOption !== 'all' ||
-                      holidayMinNights > 2 ||
-                      holidayMaxNights < 7 ||
-                      holidayBudgetBrackets.length > 0 ||
-                      holidayHotelCategories.length > 0 ||
-                      holidaySelectedCities.length > 0 ||
-                      holidayBookAtOneRupeeOnly ||
-                      holidaySelectedThemes.length > 0 ||
-                      holidayCustomizableOnly ||
-                      holidayPremiumOnly) && (
                       <button
                         type="button"
                         onClick={handleResetFilters}
@@ -7744,9 +8442,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       >
                         Clear All
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Holiday Cards List */}
                 {processedHolidays.length === 0 ? (
@@ -7759,7 +8457,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <button
                       type="button"
                       onClick={handleResetFilters}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                     >
                       Reset All Filters
                     </button>
@@ -7793,7 +8491,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 </span>
                               )}
                               {pkg.bookAtOneRupee && (
-                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-600 text-white shadow-xs">
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white shadow-xs">
                                   Book @ ₹1
                                 </span>
                               )}
@@ -7810,7 +8508,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               <div className="flex items-start justify-between gap-2">
                                 <div>
                                   <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                    <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                                       {pkg.theme}
                                     </span>
                                     <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -7828,7 +8526,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                     )}
                                   </div>
 
-                                  <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-purple-700 transition-colors">
+                                  <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors">
                                     {pkg.title}
                                   </h3>
                                   <p className="text-xs text-slate-500 font-semibold mt-0.5">
@@ -7837,7 +8535,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 </div>
 
                                 <div className="text-right shrink-0">
-                                  <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-600 text-white font-extrabold text-xs shadow-xs">
+                                  <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-xs">
                                     <span>{pkg.rating}</span>
                                     <Star className="w-3 h-3 fill-current" />
                                   </div>
@@ -7864,7 +8562,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               <button
                                 type="button"
                                 onClick={() => setExpandedHolidayId(isExpanded ? null : pkg.id)}
-                                className="text-xs font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer"
+                                className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
                               >
                                 <span>{isExpanded ? 'Hide Day-by-Day Itinerary' : 'View Day-by-Day Plan'}</span>
                                 <ChevronDown
@@ -7904,7 +8602,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                       holidayTheme: pkg.theme,
                                     })
                                   }
-                                  className="px-6 py-2.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/20 cursor-pointer transition-all active:scale-95"
+                                  className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
                                 >
                                   Book Package
                                 </button>
@@ -7925,7 +8623,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   key={idx}
                                   className="flex gap-3 bg-white p-3 rounded-xl border border-slate-200/80"
                                 >
-                                  <span className="font-bold text-xs font-mono text-purple-700 bg-purple-50 px-2 py-1 rounded shrink-0 self-start">
+                                  <span className="font-bold text-xs font-mono text-blue-700 bg-blue-50 px-2 py-1 rounded shrink-0 self-start">
                                     {item.day}
                                   </span>
                                   <div>

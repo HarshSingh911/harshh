@@ -50,11 +50,11 @@ interface FlightBookingCheckoutPageProps {
 
 export interface FlightPassenger {
   id: string;
-  title: 'Mr' | 'Mrs' | 'Ms' | 'Master';
+  title: 'Mr' | 'Mrs' | 'Ms';
   firstName: string;
   lastName: string;
   age: number | string;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: 'Male' | 'Female' | 'Others';
   frequentFlyerNo?: string;
   wheelchair: boolean;
 }
@@ -63,13 +63,12 @@ const TITLE_OPTIONS = [
   { value: 'Mr', label: 'Mr', desc: 'Adult Male' },
   { value: 'Mrs', label: 'Mrs', desc: 'Adult Female' },
   { value: 'Ms', label: 'Ms', desc: 'Adult Female' },
-  { value: 'Master', label: 'Master', desc: 'Child / Minor' },
 ];
 
 const GENDER_OPTIONS = [
   { value: 'Male', label: 'Male' },
   { value: 'Female', label: 'Female' },
-  { value: 'Other', label: 'Other' },
+  { value: 'Others', label: 'Others' },
 ];
 
 const INDIAN_STATES = [
