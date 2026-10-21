@@ -62,56 +62,56 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
     {
       id: 'bp-1',
       name: bus.depPoint,
-      time: bus.depTime,
-      landmark: 'Main Bus Terminal / Reporting Gate 1',
+      time: '',
+      landmark: '',
     },
     {
       id: 'bp-2',
       name: `${bus.depPoint.split(' ')[0]} Metro Station Gate 2`,
-      time: '15 mins after origin',
-      landmark: 'Near Pillar 42 / Metro Parking Exit',
+      time: '',
+      landmark: '',
     },
     {
       id: 'bp-3',
       name: 'Expressway Highway Toll Plaza',
-      time: '45 mins after origin',
-      landmark: 'Opposite HP Petrol Pump Service Lane',
+      time: '',
+      landmark: '',
     },
     {
       id: 'bp-4',
       name: 'City Bypass Junction Boarding Point',
-      time: '1h 10m after origin',
-      landmark: 'Near Flyover Walkway Escalator',
+      time: '',
+      landmark: '',
     },
-  ], [bus.depPoint, bus.depTime]);
+  ], [bus.depPoint]);
 
   // Dynamic Drop-off Points based on bus.arrPoint & arrTime
   const droppingPoints: BoardingPointOption[] = useMemo(() => [
     {
       id: 'dp-1',
       name: bus.arrPoint,
-      time: bus.arrTime,
-      landmark: 'Central Stand / Platform 2 Exit',
+      time: '',
+      landmark: '',
     },
     {
       id: 'dp-2',
       name: `${bus.arrPoint.split(' ')[0]} Outer Ring Road Circle`,
-      time: '20 mins before arrival',
-      landmark: 'Near Flyover Subway Entrance',
+      time: '',
+      landmark: '',
     },
     {
       id: 'dp-3',
       name: 'Airport Junction Main Highway Bypass',
-      time: '25 mins after arrival',
-      landmark: 'Service Lane Underpass',
+      time: '',
+      landmark: '',
     },
     {
       id: 'dp-4',
       name: 'South Bus Terminal Stand',
-      time: '45 mins after arrival',
-      landmark: 'KTC Long Distance Bay 6',
+      time: '',
+      landmark: '',
     },
-  ], [bus.arrPoint, bus.arrTime]);
+  ], [bus.arrPoint]);
 
   const [selectedBoardingId, setSelectedBoardingId] = useState<string>(boardingPoints[0].id);
   const [selectedDroppingId, setSelectedDroppingId] = useState<string>(droppingPoints[0].id);
@@ -202,7 +202,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
     const isFemale = seat.status === 'female';
 
     if (seat.type === 'sleeper') {
-      // Sleeper berth layout: elongated rectangle with pillow line
+      // Sleeper berth layout: vertical rectangle (elongated downwards) matching Indian sleeper bus diagrams
       return (
         <button
           key={seat.id}
@@ -210,21 +210,21 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
           disabled={isBooked}
           onClick={() => handleToggleSeat(seat)}
           title={`Seat ${seat.seatNo} (${seat.deck === 'lower' ? 'Lower' : 'Upper'} Sleeper) - ₹${seat.priceInr}`}
-          className={`relative group rounded-xl p-1.5 transition-all text-left flex flex-col justify-between cursor-pointer border ${
+          className={`relative group rounded-xl p-1.5 transition-all text-center flex flex-col justify-between items-center cursor-pointer border shrink-0 ${
             isBooked
               ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
               : isSelected
-              ? 'bg-gradient-to-tr from-emerald-600 to-teal-600 border-emerald-700 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400 scale-[1.02]'
+              ? 'bg-gradient-to-b from-emerald-600 to-teal-700 border-emerald-700 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400 scale-[1.02]'
               : isFemale
               ? 'bg-pink-50 hover:bg-pink-100 border-pink-300 text-pink-700 hover:border-pink-400'
               : 'bg-white hover:bg-indigo-50/70 border-slate-300 hover:border-indigo-500 text-slate-800 shadow-2xs'
-          } ${seat.berthType === 'single' ? 'w-24 h-12' : 'w-24 h-12'}`}
+          } w-[48px] sm:w-[54px] h-[78px] sm:h-[84px]`}
         >
-          {/* Headrest / Pillow graphic accent */}
+          {/* Headrest / Pillow graphic accent at top (horizontal pillow bar) */}
           <div
-            className={`w-3 h-full rounded-sm absolute left-1 top-0 bottom-0 my-auto h-8 ${
+            className={`w-7 sm:w-8 h-2 rounded-xs shrink-0 transition-colors ${
               isSelected
-                ? 'bg-white/30'
+                ? 'bg-white/40'
                 : isBooked
                 ? 'bg-slate-300'
                 : isFemale
@@ -233,25 +233,33 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
             }`}
           />
 
-          <div className="pl-4 flex items-center justify-between w-full">
+          {/* Seat Number & Status */}
+          <div className="flex flex-col items-center justify-center -my-0.5 w-full">
             <span className="font-mono text-xs font-black tracking-tight">{seat.seatNo}</span>
-            {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
-            {isFemale && !isSelected && <span className="text-[10px] text-pink-500 font-bold">♀</span>}
+            {isSelected ? (
+              <Check className="w-3.5 h-3.5 text-white stroke-[3] mt-0.5" />
+            ) : isFemale ? (
+              <span className="text-[10px] text-pink-500 font-bold leading-none mt-0.5">♀</span>
+            ) : (
+              <span className={`text-[8px] uppercase font-bold tracking-tight leading-none mt-0.5 ${
+                isSelected ? 'text-emerald-100' : 'text-slate-400'
+              }`}>
+                Slpr
+              </span>
+            )}
           </div>
 
-          <div className="pl-4 flex items-center justify-between w-full text-[9px] font-mono leading-none">
-            <span className={isSelected ? 'text-emerald-100' : 'text-slate-500'}>
+          {/* Price at bottom */}
+          <div className="text-[9px] font-mono leading-none font-bold">
+            <span className={isSelected ? 'text-emerald-100' : 'text-slate-600'}>
               ₹{seat.priceInr}
-            </span>
-            <span className={`text-[8px] uppercase font-bold ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-              Slpr
             </span>
           </div>
         </button>
       );
     }
 
-    // Seater Chair Layout: square chair shape
+    // Seater Chair Layout: chair shape matching column width
     return (
       <button
         key={seat.id}
@@ -259,22 +267,27 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
         disabled={isBooked}
         onClick={() => handleToggleSeat(seat)}
         title={`Seat ${seat.seatNo} (Seater Chair) - ₹${seat.priceInr}`}
-        className={`relative group rounded-xl p-1.5 transition-all text-left flex flex-col justify-between cursor-pointer border ${
+        className={`relative group rounded-xl p-1.5 transition-all text-center flex flex-col justify-between items-center cursor-pointer border shrink-0 ${
           isBooked
             ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
             : isSelected
-            ? 'bg-gradient-to-tr from-emerald-600 to-teal-600 border-emerald-700 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400 scale-[1.02]'
+            ? 'bg-gradient-to-b from-emerald-600 to-teal-700 border-emerald-700 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400 scale-[1.02]'
             : isFemale
             ? 'bg-pink-50 hover:bg-pink-100 border-pink-300 text-pink-700 hover:border-pink-400'
             : 'bg-white hover:bg-indigo-50/70 border-slate-300 hover:border-indigo-500 text-slate-800 shadow-2xs'
-        } w-11 h-12`}
+        } w-[48px] sm:w-[54px] h-[54px] sm:h-[58px]`}
       >
-        <div className="flex items-center justify-between w-full">
+        <div
+          className={`w-6 h-1 rounded-full ${
+            isSelected ? 'bg-white/40' : isBooked ? 'bg-slate-300' : 'bg-slate-200'
+          }`}
+        />
+        <div className="flex items-center justify-center gap-0.5">
           <span className="font-mono text-xs font-black">{seat.seatNo}</span>
           {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
         </div>
-        <div className="text-[8px] font-mono leading-none">
-          <span className={isSelected ? 'text-emerald-100 font-bold' : 'text-slate-500'}>
+        <div className="text-[8px] font-mono leading-none font-bold">
+          <span className={isSelected ? 'text-emerald-100' : 'text-slate-600'}>
             ₹{seat.priceInr}
           </span>
         </div>
@@ -289,8 +302,8 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
       bus,
       selectedSeatNumbers: selectedSeatIds,
       totalPriceInr: totalSeatsPrice,
-      boardingPoint: `${selectedBoardingObj.name} (${selectedBoardingObj.time})`,
-      droppingPoint: `${selectedDroppingObj.name} (${selectedDroppingObj.time})`,
+      boardingPoint: selectedBoardingObj.name,
+      droppingPoint: selectedDroppingObj.name,
     });
   };
 
@@ -308,7 +321,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Double-Decker 2+1 Luxury Multi-Axle · Select your preferred sleeper berths &amp; boarding point
+            Double-Decker 2+1 Layout · Select your preferred seats &amp; boarding point
           </p>
         </div>
 
@@ -375,7 +388,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* --- DECK 1: LOWER DECK (नीचली बर्थ / Seaters & Sleepers) --- */}
+            {/* --- DECK 1: LOWER DECK --- */}
             {(activeDeckTab === 'both' || activeDeckTab === 'lower') && (
               <div className="p-4 rounded-3xl bg-white border border-slate-200/90 shadow-xs relative">
                 {/* Deck Title */}
@@ -383,10 +396,9 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-600" />
                     <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                      Lower Deck (निचली मंजिल)
+                      Lower Deck
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold">Sleepers + Seaters</span>
                 </div>
 
                 {/* Bus Front & Driver Cabin Representation */}
@@ -406,7 +418,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                 </div>
 
                 {/* Seats Arrangement (2+1 Column Layout) */}
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-center gap-2 sm:gap-4 overflow-x-auto custom-scrollbar pb-2">
                   {/* Left Column: Single Lower Sleepers (L1-L5) */}
                   <div className="space-y-2.5">
                     <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight text-center">
@@ -416,14 +428,14 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                   </div>
 
                   {/* Aisle Walkway */}
-                  <div className="flex flex-col items-center justify-center px-1 text-[10px] font-mono text-slate-300 h-64 border-x border-dashed border-slate-200">
+                  <div className="flex flex-col items-center justify-center px-1 text-[10px] font-mono text-slate-300 self-stretch min-h-[440px] border-x border-dashed border-slate-200">
                     <span className="rotate-90 whitespace-nowrap tracking-widest text-[9px]">AISLE</span>
                   </div>
 
                   {/* Right Column: Front 2 Seaters (S1-S4) + 3 Lower Double Sleepers (L6-L11) */}
                   <div className="space-y-2.5">
                     <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight text-center">
-                      Double Berths / Chairs
+                      Double Berths
                     </div>
 
                     {/* Front Seater Chairs Row 1 */}
@@ -458,7 +470,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
               </div>
             )}
 
-            {/* --- DECK 2: UPPER DECK (ऊपरी मंजिल / Luxury Sleepers) --- */}
+            {/* --- DECK 2: UPPER DECK --- */}
             {(activeDeckTab === 'both' || activeDeckTab === 'upper') && (
               <div className="p-4 rounded-3xl bg-white border border-slate-200/90 shadow-xs relative">
                 {/* Deck Title */}
@@ -466,12 +478,9 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-purple-600" />
                     <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                      Upper Deck (ऊपरी मंजिल)
+                      Upper Deck
                     </span>
                   </div>
-                  <span className="text-[10px] text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded">
-                    100% Full Sleepers
-                  </span>
                 </div>
 
                 {/* Upper Deck Front Header */}
@@ -481,7 +490,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                 </div>
 
                 {/* Upper Deck Seats Arrangement (2+1 Layout) */}
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-center gap-2 sm:gap-4 overflow-x-auto custom-scrollbar pb-2">
                   {/* Left Column: Single Upper Sleepers (U1-U5) */}
                   <div className="space-y-2.5">
                     <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight text-center">
@@ -491,7 +500,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                   </div>
 
                   {/* Aisle Walkway */}
-                  <div className="flex flex-col items-center justify-center px-1 text-[10px] font-mono text-slate-300 h-64 border-x border-dashed border-slate-200">
+                  <div className="flex flex-col items-center justify-center px-1 text-[10px] font-mono text-slate-300 self-stretch min-h-[440px] border-x border-dashed border-slate-200">
                     <span className="rotate-90 whitespace-nowrap tracking-widest text-[9px]">AISLE</span>
                   </div>
 
@@ -562,7 +571,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                     <div
                       key={bp.id}
                       onClick={() => setSelectedBoardingId(bp.id)}
-                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                         isChecked
                           ? 'bg-indigo-50/80 border-indigo-400 text-indigo-950 shadow-2xs'
                           : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
@@ -573,16 +582,10 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                         name={`boarding-${bus.id}`}
                         checked={isChecked}
                         onChange={() => setSelectedBoardingId(bp.id)}
-                        className="w-3.5 h-3.5 text-indigo-600 mt-0.5"
+                        className="w-3.5 h-3.5 text-indigo-600 shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="font-bold text-xs truncate">{bp.name}</span>
-                          <span className="font-mono text-[11px] font-black text-indigo-700 shrink-0">
-                            {bp.time}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 truncate">{bp.landmark}</div>
+                        <span className="font-bold text-xs text-slate-900 block truncate">{bp.name}</span>
                       </div>
                     </div>
                   );
@@ -604,7 +607,7 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                     <div
                       key={dp.id}
                       onClick={() => setSelectedDroppingId(dp.id)}
-                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                      className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                         isChecked
                           ? 'bg-purple-50/80 border-purple-400 text-purple-950 shadow-2xs'
                           : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700'
@@ -615,16 +618,10 @@ export const BusSeatLayoutSelector: React.FC<BusSeatLayoutSelectorProps> = ({
                         name={`dropping-${bus.id}`}
                         checked={isChecked}
                         onChange={() => setSelectedDroppingId(dp.id)}
-                        className="w-3.5 h-3.5 text-purple-600 mt-0.5"
+                        className="w-3.5 h-3.5 text-purple-600 shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="font-bold text-xs truncate">{dp.name}</span>
-                          <span className="font-mono text-[11px] font-black text-purple-700 shrink-0">
-                            {dp.time}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 truncate">{dp.landmark}</div>
+                        <span className="font-bold text-xs text-slate-900 block truncate">{dp.name}</span>
                       </div>
                     </div>
                   );

@@ -11,6 +11,8 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Clock,
   Compass,
@@ -1198,7 +1200,7 @@ const BUS_RESULTS: BusResult[] = [
     hasLiveTracking: false,
     hasFreeCancellation: false,
     amenities: ['USB Charging Port', 'Reading Light'],
-    badges: ['Budget Friendly', 'Direct Route'],
+    badges: [],
   },
   {
     id: 'BUS-108',
@@ -1795,10 +1797,11 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [openHeaderTravellers, setOpenHeaderTravellers] = useState<boolean>(false);
   const [openModTravellers, setOpenModTravellers] = useState<boolean>(false);
   const [openTrainDropdown, setOpenTrainDropdown] = useState<'from' | 'to' | 'class' | 'quota' | null>(null);
+  const [openBusDropdown, setOpenBusDropdown] = useState<'from' | 'to' | 'type' | null>(null);
 
-  // Close calendar and travellers popovers on outside click
+  // Close calendar, travellers and custom popovers on outside click
   useEffect(() => {
-    if (!openCalendarDropdown && !openHeaderTravellers && !openModTravellers && !openCityPicker && !openTrainDropdown) return;
+    if (!openCalendarDropdown && !openHeaderTravellers && !openModTravellers && !openCityPicker && !openTrainDropdown && !openBusDropdown) return;
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (
@@ -1812,6 +1815,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       setOpenModTravellers(false);
       setOpenCityPicker(null);
       setOpenTrainDropdown(null);
+      setOpenBusDropdown(null);
     };
     const timer = setTimeout(() => {
       document.addEventListener('click', handleDocumentClick);
@@ -1820,7 +1824,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       clearTimeout(timer);
       document.removeEventListener('click', handleDocumentClick);
     };
-  }, [openCalendarDropdown, openHeaderTravellers, openModTravellers, openCityPicker, openTrainDropdown]);
+  }, [openCalendarDropdown, openHeaderTravellers, openModTravellers, openCityPicker, openTrainDropdown, openBusDropdown]);
 
   const handleOpenModify = () => {
     setModCategory(currentCategory);
@@ -1854,6 +1858,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setCurrentCabinClass(modCabinClass);
     setCurrentHotelMode(modHotelMode);
     onChangeHotelMode?.(modHotelMode);
+
+    if (modDepDate && modDepDate.includes('-')) {
+      const parts = modDepDate.split('T')[0].split('-');
+      if (parts.length === 3) {
+        const newAnchor = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        setBusCarouselStartDate(new Date(newAnchor.getFullYear(), newAnchor.getMonth(), newAnchor.getDate() - 2));
+      }
+    }
 
     onChangeCategory?.(modCategory);
     onChangeTripType?.(modTripType);
@@ -1957,6 +1969,57 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [busSelectedAmenities, setBusSelectedAmenities] = useState<string[]>([]);
   const [busMinRating, setBusMinRating] = useState<number>(0);
   const [expandedBusId, setExpandedBusId] = useState<string | null>(null);
+
+  // Bus date carousel scroll ref and interactive date cards
+  const busDateStripRef = React.useRef<HTMLDivElement>(null);
+
+  // Initialize carousel start date ONCE based on search date so selecting a date doesn't re-center or shift cards
+  const [busCarouselStartDate, setBusCarouselStartDate] = useState<Date>(() => {
+    let anchor = new Date();
+    const target = departureDate || currentDepDate || '2026-10-15';
+    if (target && target.includes('-')) {
+      const parts = target.split('T')[0].split('-');
+      if (parts.length === 3) {
+        anchor = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      }
+    }
+    // Start 2 days before initial departure date
+    return new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - 2);
+  });
+
+  const scrollBusDates = (dir: 'left' | 'right') => {
+    if (busDateStripRef.current) {
+      busDateStripRef.current.scrollBy({
+        left: dir === 'left' ? -240 : 240,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const busDateCards = useMemo(() => {
+    const list = [];
+    for (let i = 0; i < 45; i++) {
+      const d = new Date(
+        busCarouselStartDate.getFullYear(),
+        busCarouselStartDate.getMonth(),
+        busCarouselStartDate.getDate() + i
+      );
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${dayNum}`;
+      const dayOfWeek = d.toLocaleDateString('en-IN', { weekday: 'short' });
+      const displayDate = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const indicativeFare = 1420 + ((i * 7) % 5) * 80;
+      list.push({
+        dateStr,
+        dayOfWeek,
+        displayDate,
+        fareLabel: `₹${indicativeFare}`,
+      });
+    }
+    return list;
+  }, [busCarouselStartDate]);
 
   // 5. Cabs
   const [cabMaxPrice, setCabMaxPrice] = useState<number>(13000);
@@ -2808,8 +2871,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
               )}
 
-              {/* Travellers / Guests (Custom Popover matching front page for flights, hidden for trains and hotels as requested) */}
-              {currentCategory !== 'trains' && currentCategory !== 'hotels' && (
+              {/* Travellers / Guests (Custom Popover matching front page for flights, hidden for trains, hotels, and buses as requested) */}
+              {currentCategory !== 'trains' && currentCategory !== 'hotels' && currentCategory !== 'buses' && (
                 <div className="relative dropdown-field-container">
                   <button
                     type="button"
@@ -3783,52 +3846,133 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               {/* 4. BUSES MODIFY CONTROLS */}
               {modCategory === 'buses' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div>
+                  {/* From City Custom Dropdown with sleek frontpage style scrollbar */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       From City
                     </label>
-                    <select
-                      value={modFromCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModFromCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenBusDropdown(openBusDropdown === 'from' ? null : 'from');
+                        setOpenCalendarDropdown(null);
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openBusDropdown === 'from' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-300'
+                      }`}
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modFromCity.city}</div>
+                        <div className="text-[10px] text-slate-500 truncate">ISBT / Main Boarding Point</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openBusDropdown === 'from' ? 'rotate-180 text-indigo-600' : ''}`} />
+                    </button>
+
+                    {openBusDropdown === 'from' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute left-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModFromCity(city);
+                              setOpenBusDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modFromCity.code === city.code
+                                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city}, {city.country}
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                {city.city} ISBT / Main Boarding Point
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  {/* To City Custom Dropdown with sleek frontpage style scrollbar */}
+                  <div className="relative dropdown-field-container">
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-[11px] font-bold text-slate-600 uppercase">To City</label>
                       <button
                         type="button"
                         onClick={handleSwapModCities}
                         className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 cursor-pointer"
+                        title="Swap cities"
                       >
                         <ArrowLeftRight className="w-3 h-3" />
                         <span>Swap</span>
                       </button>
                     </div>
-                    <select
-                      value={modToCity.code}
-                      onChange={(e) => {
-                        const match = CITIES.find((c) => c.code === e.target.value);
-                        if (match) setModToCity(match);
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenBusDropdown(openBusDropdown === 'to' ? null : 'to');
+                        setOpenCalendarDropdown(null);
                       }}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openBusDropdown === 'to' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-300'
+                      }`}
                     >
-                      {CITIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.city}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modToCity.city}</div>
+                        <div className="text-[10px] text-slate-500 truncate">Central Bus Terminal</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openBusDropdown === 'to' ? 'rotate-180 text-indigo-600' : ''}`} />
+                    </button>
+
+                    {openBusDropdown === 'to' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 sm:left-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {CITIES.map((city) => (
+                          <button
+                            key={city.code}
+                            type="button"
+                            onClick={() => {
+                              setModToCity(city);
+                              setOpenBusDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modToCity.code === city.code
+                                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {city.city}, {city.country}
+                              </div>
+                              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
+                                {city.city} Central Bus Stand
+                              </div>
+                            </div>
+                            <span className="font-mono-tabular font-bold text-xs text-slate-600">
+                              {city.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Buses Travel Date */}
@@ -3841,6 +3985,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                        setOpenBusDropdown(null);
                       }}
                       className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between ${
                         openCalendarDropdown === 'mod-dep' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-300'
@@ -3869,20 +4014,71 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </div>
 
-                  <div>
+                  {/* Bus Type Custom Dropdown with sleek frontpage style scrollbar */}
+                  <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                       Bus Type
                     </label>
-                    <select
-                      value={modBusType}
-                      onChange={(e) => setModBusType(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-hidden cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenBusDropdown(openBusDropdown === 'type' ? null : 'type');
+                        setOpenCalendarDropdown(null);
+                      }}
+                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-indigo-500 cursor-pointer flex items-center justify-between transition-colors ${
+                        openBusDropdown === 'type' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-300'
+                      }`}
                     >
-                      <option value="All Buses">All Buses</option>
-                      <option value="Volvo Multi-Axle">Volvo Multi-Axle</option>
-                      <option value="AC Sleeper">AC Sleeper (2+1)</option>
-                      <option value="Electric">Electric AC Coach</option>
-                    </select>
+                      <div className="truncate">
+                        <div className="text-slate-900 font-bold">{modBusType}</div>
+                        <div className="text-[10px] text-slate-500">Coach Category</div>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openBusDropdown === 'type' ? 'rotate-180 text-indigo-600' : ''}`} />
+                    </button>
+
+                    {openBusDropdown === 'type' && (
+                      <div
+                        data-dropdown-container="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-1.5 w-64 max-h-60 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {[
+                          { label: 'All Buses', desc: 'Sleeper, Seater & Volvo' },
+                          { label: 'Volvo Multi-Axle', desc: 'Ultra-Comfort AC Ride' },
+                          { label: 'AC Sleeper', desc: '2+1 Luxury Sleeper Berths' },
+                          { label: 'Electric', desc: 'Zero Emission Green Coach' },
+                          { label: 'AC Semi-Sleeper', desc: 'Pushback Recliner Seats' },
+                          { label: 'BharatBenz Sleeper', desc: 'Air Suspension Club Class' },
+                        ].map((item) => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => {
+                              setModBusType(item.label);
+                              setOpenBusDropdown(null);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              modBusType === item.label
+                                ? 'bg-indigo-50 text-indigo-700 font-bold'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-xs sm:text-sm text-slate-900">
+                                {item.label}
+                              </div>
+                              <div className="text-slate-500 text-[10px]">
+                                {item.desc}
+                              </div>
+                            </div>
+                            {modBusType === item.label && (
+                              <Check className="w-4 h-4 text-indigo-600 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -4908,14 +5104,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               <div className="space-y-4 text-xs">
                 {/* 1. Quick Search Box */}
                 <div>
-                  <span className="font-bold text-slate-800 block mb-1.5">Search Operator / Station</span>
+                  <span className="font-bold text-slate-800 block mb-1.5">Search Operators</span>
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={busSearchQuery}
                       onChange={(e) => setBusSearchQuery(e.target.value)}
-                      placeholder="e.g. IntrCity, Zingbus, ISBT..."
+                      placeholder="Search"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-7 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500 focus:bg-white transition-colors"
                     />
                     {busSearchQuery && (
@@ -4930,54 +5126,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 </div>
 
-                {/* 2. Primo Certified Bus Toggle */}
-                <div
-                  onClick={() => setBusPrimoOnly((prev) => !prev)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer select-none flex items-start gap-2.5 ${
-                    busPrimoOnly
-                      ? 'bg-indigo-50 border-indigo-400 text-indigo-900 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-700'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={busPrimoOnly}
-                    onChange={() => {}}
-                    className="w-4 h-4 mt-0.5 rounded border-slate-300 text-indigo-600 cursor-pointer accent-indigo-600"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-indigo-900">
-                      <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Primo Certified Buses</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                      Top 1% rated operators, 98% on-time guarantee &amp; verified clean linen
-                    </p>
-                  </div>
-                </div>
-
-                {/* 3. Safety & Convenience Quick Toggles */}
+                {/* 2. Safety & Convenience Quick Toggles */}
                 <div className="pt-2 border-t border-slate-100 space-y-2">
                   <span className="font-bold text-slate-800 block mb-1">Safety &amp; Convenience</span>
-
-                  {/* Single Lady Berths */}
-                  <label className="flex items-center justify-between p-2 rounded-xl bg-pink-50/50 hover:bg-pink-50 border border-pink-200/80 cursor-pointer select-none text-slate-800">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={busSingleLadyOnly}
-                        onChange={() => setBusSingleLadyOnly(!busSingleLadyOnly)}
-                        className="w-4 h-4 rounded border-pink-300 text-pink-600 cursor-pointer accent-pink-600"
-                      />
-                      <div>
-                        <div className="font-bold text-xs text-pink-950 flex items-center gap-1">
-                          <Users className="w-3 h-3 text-pink-600" />
-                          <span>Single Lady Reserved</span>
-                        </div>
-                        <div className="text-[10px] text-pink-700">Adjacent berth reserved for female travelers</div>
-                      </div>
-                    </div>
-                  </label>
 
                   {/* Live GPS Tracking */}
                   <label className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-200/80 cursor-pointer select-none text-slate-800">
@@ -5134,9 +5285,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   <div className="mt-2.5 space-y-1.5">
                     {[
                       { id: 'all', label: 'All Bus Fares' },
-                      { id: 'under-1500', label: 'Under ₹1,500 (Budget)' },
-                      { id: '1500-2000', label: '₹1,500 - ₹2,000 (Popular)' },
-                      { id: 'above-2000', label: '₹2,000+ (Luxury Sleeper)' },
+                      { id: 'under-1500', label: 'Under ₹1,500' },
+                      { id: '1500-2000', label: '₹1,500 - ₹2,000' },
+                      { id: 'above-2000', label: '₹2,000 & Above' },
                     ].map((bracket) => {
                       const isSelected = busPriceBracket === bracket.id;
                       return (
@@ -5199,80 +5350,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 </div>
 
-                {/* 8. Boarding Points (Origin) */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">
-                    Boarding Points ({currentFromCity.city})
-                  </span>
-                  <div className="space-y-1.5">
-                    {[
-                      { id: 'Kashmere Gate ISBT', label: 'Kashmere Gate ISBT' },
-                      { id: 'Majnu Ka Tilla', label: 'Majnu Ka Tilla' },
-                      { id: 'Dhaula Kuan', label: 'Dhaula Kuan' },
-                      { id: 'Anand Vihar', label: 'Anand Vihar' },
-                      { id: 'IFFCO Chowk Gurgaon', label: 'IFFCO Chowk Gurgaon' },
-                      { id: 'Karol Bagh', label: 'Karol Bagh' },
-                    ].map((pt) => {
-                      const checked = busSelectedBoardingPoints.includes(pt.id);
-                      return (
-                        <label
-                          key={pt.id}
-                          className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setBusSelectedBoardingPoints((prev) =>
-                                checked ? prev.filter((p) => p !== pt.id) : [...prev, pt.id]
-                              )
-                            }
-                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 cursor-pointer accent-indigo-600"
-                          />
-                          <span className="text-[11px]">{pt.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 9. Dropping Points (Destination) */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">
-                    Dropping Points ({currentToCity.city})
-                  </span>
-                  <div className="space-y-1.5">
-                    {[
-                      { id: 'Panjim Central Bus Stand', label: 'Panjim Central Bus Stand' },
-                      { id: 'Mapusa Bus Stand', label: 'Mapusa Bus Stand' },
-                      { id: 'Calangute Beach Circle', label: 'Calangute Beach Circle' },
-                      { id: 'Margao KTC Bus Terminal', label: 'Margao KTC Bus Terminal' },
-                      { id: 'Porvorim', label: 'Porvorim' },
-                    ].map((pt) => {
-                      const checked = busSelectedDroppingPoints.includes(pt.id);
-                      return (
-                        <label
-                          key={pt.id}
-                          className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setBusSelectedDroppingPoints((prev) =>
-                                checked ? prev.filter((p) => p !== pt.id) : [...prev, pt.id]
-                              )
-                            }
-                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 cursor-pointer accent-indigo-600"
-                          />
-                          <span className="text-[11px]">{pt.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 10. Bus Operators */}
+                {/* Popular Bus Operators */}
                 <div className="pt-2 border-t border-slate-100">
                   <span className="font-bold text-slate-800 block mb-2">Popular Bus Operators</span>
                   <div className="space-y-1.5">
@@ -5816,14 +5894,97 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               RIGHT COLUMN: SORT BAR & LIVE RESULTS
           =================================================================== */}
           <main className="lg:col-span-9 space-y-4">
+            {/* Bus Specific Header: Cities Route & Horizontal Date Carousel with Left/Right Buttons */}
+            {currentCategory === 'buses' && (
+              <div className="space-y-3">
+                {/* Cities Destination Header (e.g. New Delhi to Goa) */}
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>{currentFromCity.city}</span>
+                    <span className="text-slate-400 font-normal text-base">to</span>
+                    <span>{currentToCity.city}</span>
+                  </h2>
+                </div>
+
+                {/* Horizontal Date Strip with Left and Right Scroll Buttons */}
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-2 shadow-xs flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollBusDates('left')}
+                    className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                    aria-label="Previous Dates"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <div
+                    ref={busDateStripRef}
+                    className="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 px-1 flex-1 custom-scrollbar"
+                    style={{ scrollbarWidth: 'none' }}
+                  >
+                    {busDateCards.map((item) => {
+                      const cleanDep = (currentDepDate || '').split('T')[0];
+                      const isSelected = item.dateStr === cleanDep;
+                      return (
+                        <button
+                          key={item.dateStr}
+                          type="button"
+                          onClick={() => {
+                            setCurrentDepDate(item.dateStr);
+                            setModDepDate(item.dateStr);
+                            if (onChangeDepartureDate) onChangeDepartureDate(item.dateStr);
+                          }}
+                          className={`min-w-[76px] sm:min-w-[88px] py-2 px-3 rounded-xl border text-center transition-all cursor-pointer shrink-0 ${
+                            isSelected
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs ring-2 ring-indigo-500/20'
+                              : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
+                            {item.dayOfWeek}
+                          </div>
+                          <div className="font-extrabold text-xs sm:text-sm font-mono mt-0.5">
+                            {item.displayDate}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollBusDates('right')}
+                    className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                    aria-label="Next Dates"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* MakeMyTrip Style Horizontal Quick Sort Bar */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <SlidersHorizontal className="w-4 h-4 text-slate-600" />
-                <span>Sort By:</span>
-              </div>
+              {currentCategory === 'buses' ? (
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 text-sm sm:text-base font-mono">
+                    {processedBuses.length} Buses Found
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <SlidersHorizontal className="w-4 h-4 text-slate-600" />
+                  <span>Sort By:</span>
+                </div>
+              )}
 
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                {currentCategory === 'buses' && (
+                  <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Sort by:</span>
+                  </span>
+                )}
                 {[
                   { id: 'cheapest', label: 'Cheapest First' },
                   { id: 'fastest', label: currentCategory === 'hotels' ? 'Best Value' : 'Fastest Duration' },
@@ -6943,42 +7104,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'buses' && (
               <div className="space-y-4">
-                {/* Top Promo Banner */}
-                <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                      <Bus className="w-5 h-5 text-indigo-300" />
+                {/* Active Bus Filter Chips */}
+                {(busSearchQuery ||
+                  busLiveTrackingOnly ||
+                  busFreeCancellationOnly ||
+                  busDepSlots.length > 0 ||
+                  busSelectedCategories.length > 0 ||
+                  busSelectedOperators.length > 0) && (
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                        Active Filters:
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base flex items-center gap-2">
-                        <span>Guaranteed Clean Buses &amp; Live GPS Tracking</span>
-                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-extrabold uppercase">
-                          redBus Primo
-                        </span>
-                      </h3>
-                      <p className="text-xs text-indigo-200 mt-0.5">
-                        Women-only single berths reserved · 98% On-time guarantee or 50% refund · Free rescheduling
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-xs font-semibold text-indigo-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                    Instant E-Ticket on WhatsApp
-                  </div>
-                </div>
 
-                {/* Active Bus Filters & Count Strip */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm sm:text-base">
-                      {processedBuses.length} Buses Found
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {currentFromCity.city} to {currentToCity.city}
-                    </span>
-                  </div>
-
-                  {/* Active Filter Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5">
+                    {/* Active Filter Chips */}
+                    <div className="flex flex-wrap items-center gap-1.5">
                     {busSearchQuery && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
                         "{busSearchQuery}"
@@ -6992,32 +7133,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       </span>
                     )}
 
-                    {busPrimoOnly && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
-                        <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                        Primo Certified
-                        <button
-                          type="button"
-                          onClick={() => setBusPrimoOnly(false)}
-                          className="hover:text-indigo-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {busSingleLadyOnly && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
-                        Single Lady Berths
-                        <button
-                          type="button"
-                          onClick={() => setBusSingleLadyOnly(false)}
-                          className="hover:text-pink-900 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
 
                     {busLiveTrackingOnly && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -7109,6 +7224,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Bus Cards List */}
                 {processedBuses.length === 0 ? (
@@ -7152,31 +7268,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                           {/* Badges strip */}
                           <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                            {bus.isPrimo && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-200">
-                                <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                                Primo Certified
-                              </span>
-                            )}
                             {bus.hasLiveTracking && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Live Tracking
                               </span>
                             )}
-                            {bus.isSingleLadyBerth && (
-                              <span className="text-[10px] font-bold bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full border border-pink-200">
-                                Single Lady Berths
-                              </span>
-                            )}
-                            {bus.badges.slice(0, 2).map((b) => (
-                              <span
-                                key={b}
-                                className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
-                              >
-                                {b}
-                              </span>
-                            ))}
                           </div>
                         </div>
 
