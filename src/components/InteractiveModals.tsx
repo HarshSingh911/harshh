@@ -96,12 +96,12 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       {/* 1. DESTINATION EXPLORER MODAL */}
       {selectedDestination && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-modal-backdrop"
           role="dialog"
           aria-modal="true"
           aria-labelledby="dest-modal-title"
         >
-          <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 my-8">
+          <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 my-8 animate-modal-slide-up">
             <div className="relative h-64 w-full">
               <SafeImage
                 src={selectedDestination.image}
@@ -383,12 +383,12 @@ export const InteractiveModals: React.FC<InteractiveModalsProps> = ({
       {/* 4. MY TRIPS MODAL / DRAWER */}
       {showTripsModal && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4 animate-modal-backdrop"
           role="dialog"
           aria-modal="true"
           aria-labelledby="trips-modal-title"
         >
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col animate-modal-slide-up">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
               <div>
                 <h3

@@ -130,6 +130,7 @@ import goa from '../assets/images/dest_goa_beach_1792241006825.jpg';
 import maldives from '../assets/images/dest_maldives_resort_1792241008307.jpg';
 import manali from '../assets/images/dest_manali_snow_1792241007871.jpg';
 import udaipur from '../assets/images/dest_udaipur_palace_1792241008240.jpg';
+import flightBoardingHero from '../assets/images/flight_boarding_hero_1792552345678.jpg';
 
 export const ASSETS = {
   heroMultimodal,
@@ -145,6 +146,7 @@ export const ASSETS = {
   maldives,
   manali,
   udaipur,
+  flightBoardingHero,
 };
 
 export const SAMPLE_DEMO_TRIPS: BookedTrip[] = [

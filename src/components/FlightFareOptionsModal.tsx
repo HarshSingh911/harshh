@@ -12,6 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { CurrencyCode, formatPrice } from '../data/travelData';
+import flightBoardingHero from '../assets/images/flight_boarding_hero_1792552345678.jpg';
 
 export interface FlightFareTier {
   id: 'saver' | 'flexi' | 'corporate' | 'max';
@@ -121,29 +122,57 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
   const finalPriceInr = flight.priceInr + selectedTier.priceDelta;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/75 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
-        {/* Header Strip with Flight Info */}
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-2xl ${flight.badgeBg || 'bg-blue-600'} text-white font-extrabold flex items-center justify-center text-sm shadow-md`}>
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-modal-backdrop">
+      {/* Outer Modal Container: bg-slate-950 + overflow-hidden eliminates any white corner gap at the top */}
+      <div className="bg-slate-950 rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-hidden shadow-2xl border border-slate-700/60 animate-modal-slide-up flex flex-col">
+        
+        {/* Header Strip with Aeroplane / Boarding Gate Background Image (Standard compact original size) */}
+        <div className="relative overflow-hidden rounded-t-3xl border-b border-slate-700/80 shrink-0 p-5 sm:p-6 text-white flex flex-wrap items-center justify-between gap-4">
+          {/* Background Aeroplane / Boarding Gate Image: Clear, bright and natural */}
+          <img
+            src={flightBoardingHero}
+            alt="Airplane at airport boarding gate"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          {/* Natural subtle gradient overlay so image details are clearly visible */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-950/35 pointer-events-none" />
+
+          {/* Header Content */}
+          <div className="relative z-10 flex items-center gap-3.5">
+            <div
+              className={`w-12 h-12 rounded-2xl ${
+                flight.badgeBg || 'bg-blue-600'
+              } text-white font-black flex items-center justify-center text-sm shadow-lg ring-2 ring-white/25 shrink-0`}
+            >
               {flight.badgeCode || flight.airline.slice(0, 2).toUpperCase()}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-display text-lg sm:text-xl font-black">
+              <div className="flex items-center gap-2.5">
+                <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">
                   {flight.airline} {flight.flightNo}
                 </h3>
-                <span className="text-[11px] font-bold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-400/30">
-                  Select Fare Option
-                </span>
               </div>
-              <div className="text-xs text-slate-300 flex items-center gap-2 mt-0.5">
-                <span>{flight.fromCode} ({flight.depTime})</span>
-                <span>→</span>
-                <span>{flight.toCode} ({flight.arrTime})</span>
-                <span>·</span>
-                <span>{flight.duration}</span>
+
+              <div className="text-xs text-slate-200 flex items-center gap-2 mt-1.5 font-medium flex-wrap">
+                <span className="bg-slate-900/80 px-2.5 py-0.5 rounded-md border border-white/15 font-mono text-white shadow-xs">
+                  {flight.fromCode} ({flight.depTime})
+                </span>
+                <span className="text-blue-400 font-black">→</span>
+                <span className="bg-slate-900/80 px-2.5 py-0.5 rounded-md border border-white/15 font-mono text-white shadow-xs">
+                  {flight.toCode} ({flight.arrTime})
+                </span>
+                <span className="text-slate-400">·</span>
+                <span className="text-amber-300 font-bold bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/30">
+                  {flight.duration}
+                </span>
+                {flight.aircraft && (
+                  <>
+                    <span className="text-slate-400 hidden sm:inline">·</span>
+                    <span className="text-slate-300 text-[11px] hidden sm:inline font-medium">
+                      {flight.aircraft}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -151,18 +180,19 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Close modal"
+            className="relative z-10 p-2 rounded-full text-slate-200 hover:text-white bg-slate-900/70 hover:bg-slate-800 border border-white/15 transition-all shadow-md backdrop-blur-xs cursor-pointer hover:scale-105"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Body: 4 Fare Option Cards */}
-        <div className="p-5 sm:p-6 space-y-4 flex-1">
+        {/* Modal Body: 4 Fare Option Cards (Scrollable inside white surface) */}
+        <div className="bg-white p-5 sm:p-6 space-y-4 flex-1 overflow-y-auto">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="font-display font-extrabold text-base sm:text-lg text-slate-900">
-                Choose Your Fare Family
+                Choose Your Fare
               </h4>
               <p className="text-xs text-slate-500">
                 Tailor your flight with customized baggage, free meals, preferred seats &amp; date change flexibility
@@ -196,9 +226,11 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded">
                         {tier.badge}
                       </span>
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
-                        isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                          isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
+                        }`}
+                      >
                         {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
                     </div>
@@ -231,14 +263,22 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
 
                       <div className="flex items-start gap-1.5">
                         <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                        <span className={`text-[11px] ${tier.seatSelection.includes('FREE') ? 'font-bold text-emerald-700' : 'text-slate-600'}`}>
+                        <span
+                          className={`text-[11px] ${
+                            tier.seatSelection.includes('FREE') ? 'font-bold text-emerald-700' : 'text-slate-600'
+                          }`}
+                        >
                           {tier.seatSelection}
                         </span>
                       </div>
 
                       <div className="flex items-start gap-1.5">
                         <Utensils className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
-                        <span className={`text-[11px] ${tier.meal.includes('FREE') ? 'font-bold text-emerald-700' : 'text-slate-600'}`}>
+                        <span
+                          className={`text-[11px] ${
+                            tier.meal.includes('FREE') ? 'font-bold text-emerald-700' : 'text-slate-600'
+                          }`}
+                        >
                           {tier.meal}
                         </span>
                       </div>
@@ -269,13 +309,19 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
                   <div className="mt-4 pt-3 border-t border-slate-100">
                     <button
                       type="button"
-                      className={`w-full py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTierId(tier.id);
+                        onSelectFareAndProceed(tier, tierPrice);
+                      }}
+                      className={`w-full py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         isSelected
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 active:scale-95'
+                          : 'bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700'
                       }`}
                     >
-                      {isSelected ? 'Selected' : 'Select'}
+                      <span>{isSelected ? 'Book Now' : 'Select & Book'}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -284,26 +330,28 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
           </div>
         </div>
 
-        {/* Footer CTA Bar */}
-        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky bottom-0 z-20 rounded-b-3xl">
+        {/* Footer CTA Bar with prominent Book Now button (no price next to Book Now) */}
+        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 rounded-b-3xl">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500">Selected Fare Option:</span>
-              <span className="font-extrabold text-sm text-blue-700">{selectedTier.name}</span>
+              <span className="font-extrabold text-sm text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                {selectedTier.name}
+              </span>
             </div>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-2xl font-black text-slate-900 font-mono">
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
                 {formatPrice(finalPriceInr, currency)}
               </span>
-              <span className="text-xs text-slate-400">Total Base Fare · Includes Baggage</span>
+              <span className="text-xs text-slate-500">Total Base Fare · Includes Baggage</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 font-bold text-xs text-slate-700 transition-colors cursor-pointer"
+              className="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-200/80 font-bold text-xs sm:text-sm text-slate-700 transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -311,10 +359,10 @@ export const FlightFareOptionsModal: React.FC<FlightFareOptionsModalProps> = ({
             <button
               type="button"
               onClick={() => onSelectFareAndProceed(selectedTier, finalPriceInr)}
-              className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-600/30 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+              className="px-9 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-600/30 transition-all active:scale-95 cursor-pointer flex items-center gap-2 group"
             >
-              <span>Book {selectedTier.name.split(' ')[0]} Fare</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>Book Now</span>
+              <ArrowRight className="w-4 h-4 ml-0.5 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
         </div>

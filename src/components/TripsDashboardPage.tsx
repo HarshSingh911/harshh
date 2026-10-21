@@ -1302,11 +1302,11 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
       ========================================================================= */}
       {selectedTripForManage && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-modal-backdrop"
           onClick={() => setSelectedTripForManage(null)}
         >
           <div
-            className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto"
+            className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto animate-modal-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}

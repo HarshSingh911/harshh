@@ -5759,7 +5759,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all"
                         >
                           <span>
-                            {currentTripType === 'dummy-flights' ? 'Book Dummy Round Trip' : 'Book Round Trip'}
+                            {currentTripType === 'dummy-flights' ? 'View Dummy Ticket Prices' : 'View Prices'}
                           </span>
                           <ArrowRight className="w-4 h-4" />
                         </button>
@@ -6116,9 +6116,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                     toCode: currentToCity.code,
                                   })
                                 }
-                                className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer"
+                                className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 hover:shadow-lg"
                               >
-                                Book Flight
+                                <span>View Prices</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>

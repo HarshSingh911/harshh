@@ -53,11 +53,24 @@ export interface FlightPassenger {
   title: 'Mr' | 'Mrs' | 'Ms' | 'Master';
   firstName: string;
   lastName: string;
-  age: number;
+  age: number | string;
   gender: 'Male' | 'Female' | 'Other';
   frequentFlyerNo?: string;
   wheelchair: boolean;
 }
+
+const TITLE_OPTIONS = [
+  { value: 'Mr', label: 'Mr', desc: 'Adult Male' },
+  { value: 'Mrs', label: 'Mrs', desc: 'Adult Female' },
+  { value: 'Ms', label: 'Ms', desc: 'Adult Female' },
+  { value: 'Master', label: 'Master', desc: 'Child / Minor' },
+];
+
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Other', label: 'Other' },
+];
 
 const INDIAN_STATES = [
   'Andhra Pradesh',
@@ -172,9 +185,9 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
       {
         id: 'pax-1',
         title: 'Mr',
-        firstName: 'Rahul',
-        lastName: 'Sharma',
-        age: 31,
+        firstName: '',
+        lastName: '',
+        age: '',
         gender: 'Male',
         frequentFlyerNo: '',
         wheelchair: false,
@@ -184,9 +197,9 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
       list.push({
         id: `pax-${i}`,
         title: i % 2 === 0 ? 'Mrs' : 'Mr',
-        firstName: i % 2 === 0 ? 'Pooja' : 'Aarav',
-        lastName: 'Sharma',
-        age: i % 2 === 0 ? 29 : 8,
+        firstName: '',
+        lastName: '',
+        age: '',
         gender: i % 2 === 0 ? 'Female' : 'Male',
         frequentFlyerNo: '',
         wheelchair: false,
@@ -218,14 +231,14 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
   const [destinationHotelDeal, setDestinationHotelDeal] = useState<boolean>(false);
 
   // 9. Contact Details
-  const [email, setEmail] = useState<string>('rahul.sharma@example.com');
-  const [mobileNumber, setMobileNumber] = useState<string>('9876543210');
+  const [email, setEmail] = useState<string>('');
+  const [mobileNumber, setMobileNumber] = useState<string>('');
   const [whatsappUpdates, setWhatsappUpdates] = useState<boolean>(true);
 
   // 10. GST Billing
   const [hasGst, setHasGst] = useState<boolean>(false);
-  const [gstNumber, setGstNumber] = useState<string>('07AAAAA0000A1Z5');
-  const [gstCompanyName, setGstCompanyName] = useState<string>('Sharma Global Tech Pvt Ltd');
+  const [gstNumber, setGstNumber] = useState<string>('');
+  const [gstCompanyName, setGstCompanyName] = useState<string>('');
   const [gstState, setGstState] = useState<string>('Delhi');
 
   // 11. Coupons & Bank Offers
@@ -236,6 +249,8 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
   // 12. Accordions & Modals
   const [expandedSection, setExpandedSection] = useState<'cancellation' | 'advisory' | null>('cancellation');
   const [showSeatMapModal, setShowSeatMapModal] = useState<boolean>(false);
+  const [showFareRulesModal, setShowFareRulesModal] = useState<boolean>(false);
+  const [fareRulesTab, setFareRulesTab] = useState<'cancellation' | 'dateChange'>('cancellation');
 
   // 13. Payment & Confirmation
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'netbanking'>('card');
@@ -245,6 +260,26 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
   // Travel Date & Calendar State (Replaces countdown timer)
   const [flightTravelDate, setFlightTravelDate] = useState<string>(travelDate);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+
+  // Custom Popover Dropdown State for Passenger Title & Gender (matches frontpage)
+  const [openPaxDropdown, setOpenPaxDropdown] = useState<string | null>(null);
+
+  // Close custom dropdown on outside click
+  useEffect(() => {
+    if (!openPaxDropdown) return;
+    const handleDocClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-pax-dropdown]')) return;
+      setOpenPaxDropdown(null);
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleDocClick);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleDocClick);
+    };
+  }, [openPaxDropdown]);
 
   // --- Dynamic Pricing Calculations ---
   const paxCount = passengers.length;
@@ -261,8 +296,8 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
   };
   const extraBaggageCost = (extraBaggagePriceMap[extraBaggageKg] || 0) * paxCount;
 
-  // Seat Selection Cost (e.g. ₹250 per seat)
-  const seatCost = selectedSeats.length * 250;
+  // Seat Selection Cost (0 as allocated seats block is removed)
+  const seatCost = 0;
 
   // Meals Cost
   const mealCost = selectedMeals.length * 250;
@@ -314,7 +349,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
       title: 'Mr',
       firstName: '',
       lastName: '',
-      age: 26,
+      age: '',
       gender: 'Male',
       frequentFlyerNo: '',
       wheelchair: false,
@@ -372,7 +407,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
         onNotify('Passenger Name Required', `Please enter the Last Name for Passenger ${i + 1}.`, 'info');
         return;
       }
-      if (!p.age || p.age < 1 || p.age > 120) {
+      if (!p.age || Number(p.age) < 1 || Number(p.age) > 120) {
         onNotify('Invalid Age', `Please enter a valid age for Passenger ${i + 1}.`, 'info');
         return;
       }
@@ -418,37 +453,19 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen pb-24 text-slate-900">
-      {/* Top Breadcrumb & Lock Timer Banner */}
-      <div className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      {/* Top Breadcrumb & Navigation Bar */}
+      <div className="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onBackToResults}
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 text-slate-500" />
               <span>Back to Flight Results</span>
             </button>
-            <span className="text-slate-600">|</span>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-xs sm:text-sm font-bold text-blue-200">
-                Official Airline Booking &amp; Instant PNR Issuance
-              </span>
-            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowDatePicker(true)}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/40 text-blue-200 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
-            title="Click to view calendar and change departure date"
-          >
-            <Calendar className="w-3.5 h-3.5 text-blue-300" />
-            <span>Departure: <strong>{flightTravelDate}</strong></span>
-            <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md font-mono">Calendar</span>
-          </button>
         </div>
       </div>
 
@@ -484,16 +501,9 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDatePicker(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs font-mono transition-colors cursor-pointer"
-                    title="Change travel date"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-blue-300" />
-                    <span>{flightTravelDate}</span>
-                  </button>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-400 font-medium block">Travel Date</span>
+                  <span className="font-mono text-sm font-bold text-slate-900">{flightTravelDate}</span>
                 </div>
               </div>
 
@@ -507,20 +517,15 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     {fromCity}
                   </div>
                   <div className="text-xs text-slate-500 font-medium">
-                    Terminal 1D · Gate Opens 45m Prior
+                    Gate Opens 45m Prior
                   </div>
                 </div>
 
                 <div className="sm:col-span-4 flex flex-col items-center justify-center px-2">
                   <span className="text-xs font-bold text-slate-500 mb-1">{duration}</span>
                   <div className="w-full h-1 bg-slate-200 rounded-full relative flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-blue-600 absolute right-0 shadow-xs" />
                     <Plane className="w-4 h-4 text-blue-600 absolute bg-white px-0.5" />
                   </div>
-                  <span className="text-[11px] font-bold text-emerald-700 mt-1.5 flex items-center gap-1">
-                    <Zap className="w-3 h-3" />
-                    <span>On-Time Performance 98%</span>
-                  </span>
                 </div>
 
                 <div className="sm:col-span-4 text-left sm:text-right">
@@ -549,9 +554,15 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     <span>Included Check-in Bag: <strong>15 kg / pax</strong></span>
                   </div>
                 </div>
-                <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Free Web Check-in 48h Prior
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowFareRulesModal(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs hover:scale-102"
+                  title="Click to view cancellation charges and date change policies"
+                >
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                  <span>View Fare Rules</span>
+                </button>
               </div>
             </div>
 
@@ -564,9 +575,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     Pre-Book Extra Check-in Baggage
                   </h3>
                 </div>
-                <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  Save up to 50% vs Airport Counter Rates
-                </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
@@ -599,39 +607,17 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
               </div>
             </div>
 
-            {/* 3. SEAT SELECTION & IN-FLIGHT MEALS */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-5">
+            {/* 3. IN-FLIGHT MEALS */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-display font-bold text-base text-slate-900">
-                    Seat Selection &amp; In-Flight Hot Meals
+                    In-Flight Meals &amp; Refreshments
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Reserve your preferred window/aisle seat and pre-book fresh chef meals
+                    Pre-book fresh chef meals and hot beverage selection
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSeatMapModal(true)}
-                  className="px-4 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs cursor-pointer border border-blue-200 transition-colors"
-                >
-                  View 3-3 Seat Map
-                </button>
-              </div>
-
-              {/* Selected Seats summary */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-700">Allocated Seats:</span>
-                  <div className="flex items-center gap-1.5">
-                    {selectedSeats.map((st) => (
-                      <span key={st} className="px-2.5 py-1 rounded-lg bg-white border border-slate-300 font-mono font-bold text-blue-700 shadow-2xs">
-                        {st} (Window)
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <span className="text-slate-500 font-mono">₹250 / seat included</span>
               </div>
 
               {/* Meals Multi-Select */}
@@ -686,9 +672,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     <h3 className="font-display font-bold text-lg text-slate-900">
                       Traveller Details
                     </h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                      {passengers.length} of 9 Added
-                    </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Enter names exactly as displayed on Govt Photo ID (Aadhaar / Passport).
@@ -702,7 +685,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95 cursor-pointer disabled:opacity-40"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ Add Traveller</span>
+                  <span>Add Traveller</span>
                 </button>
               </div>
 
@@ -721,9 +704,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                         <span className="font-bold text-slate-900 text-sm">
                           {index === 0 ? 'Primary Passenger (Adult)' : `Passenger ${index + 1}`}
                         </span>
-                        <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                          Seat: {selectedSeats[index] || '14A'}
-                        </span>
                       </div>
 
                       {passengers.length > 1 && (
@@ -738,18 +718,66 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                      <div className="sm:col-span-2">
+                      {/* 1. Custom Title Dropdown (Matches frontpage style & scroll) */}
+                      <div className="sm:col-span-2 relative" data-pax-dropdown="true">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">Title</label>
-                        <select
-                          value={p.title}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'title', e.target.value)}
-                          className="w-full px-2.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Mr">Mr</option>
-                          <option value="Mrs">Mrs</option>
-                          <option value="Ms">Ms</option>
-                          <option value="Master">Master</option>
-                        </select>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPaxDropdown(
+                                openPaxDropdown === `${p.id}-title` ? null : `${p.id}-title`
+                              );
+                            }}
+                            className={`w-full px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                              openPaxDropdown === `${p.id}-title`
+                                ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                                : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <span>{p.title}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                openPaxDropdown === `${p.id}-title` ? 'rotate-180 text-blue-600' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {openPaxDropdown === `${p.id}-title` && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute left-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-56 custom-scrollbar animate-modal-slide-up"
+                            >
+                              {TITLE_OPTIONS.map((opt) => {
+                                const isSelected = p.title === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePassenger(p.id, 'title', opt.value);
+                                      setOpenPaxDropdown(null);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-blue-50 text-blue-700 font-bold'
+                                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                    }`}
+                                  >
+                                    <div>
+                                      <span className="block font-bold">{opt.label}</span>
+                                      <span className="block text-[10px] text-slate-400 font-normal">
+                                        {opt.desc}
+                                      </span>
+                                    </div>
+                                    {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div className="sm:col-span-5">
@@ -760,7 +788,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                           type="text"
                           value={p.firstName}
                           onChange={(e) => handleUpdatePassenger(p.id, 'firstName', e.target.value)}
-                          placeholder="As per Passport / Aadhaar"
+                          placeholder="First & Middle Name"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -773,7 +801,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                           type="text"
                           value={p.lastName}
                           onChange={(e) => handleUpdatePassenger(p.id, 'lastName', e.target.value)}
-                          placeholder="Surname"
+                          placeholder="Last Name"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -788,23 +816,68 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                           type="number"
                           min={1}
                           max={120}
-                          value={p.age}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'age', Number(e.target.value))}
+                          value={p.age || ''}
+                          onChange={(e) => handleUpdatePassenger(p.id, 'age', e.target.value ? Number(e.target.value) : '')}
+                          placeholder="Age (Years)"
                           className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
-                      <div>
+                      {/* 2. Custom Gender Dropdown (Matches frontpage style & scroll) */}
+                      <div className="relative" data-pax-dropdown="true">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">Gender</label>
-                        <select
-                          value={p.gender}
-                          onChange={(e) => handleUpdatePassenger(p.id, 'gender', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other</option>
-                        </select>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPaxDropdown(
+                                openPaxDropdown === `${p.id}-gender` ? null : `${p.id}-gender`
+                              );
+                            }}
+                            className={`w-full px-3 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                              openPaxDropdown === `${p.id}-gender`
+                                ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 text-slate-900 shadow-xs'
+                                : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <span>{p.gender}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                openPaxDropdown === `${p.id}-gender` ? 'rotate-180 text-blue-600' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {openPaxDropdown === `${p.id}-gender` && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute left-0 top-full mt-1.5 w-full min-w-[140px] bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 overflow-y-auto max-h-56 custom-scrollbar animate-modal-slide-up"
+                            >
+                              {GENDER_OPTIONS.map((opt) => {
+                                const isSelected = p.gender === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdatePassenger(p.id, 'gender', opt.value);
+                                      setOpenPaxDropdown(null);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-blue-50 text-blue-700 font-bold'
+                                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                                    }`}
+                                  >
+                                    <span className="font-semibold">{opt.label}</span>
+                                    {isSelected && <Check className="w-4 h-4 text-blue-600 stroke-[2.5] shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div>
@@ -851,7 +924,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
+                      placeholder="Enter Email ID"
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -870,7 +943,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                       maxLength={10}
                       value={mobileNumber}
                       onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                      placeholder="10-digit mobile number"
+                      placeholder="Enter Mobile Number"
                       className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -924,9 +997,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                       <span className="text-xs font-extrabold text-indigo-950">
                         Zero Cancellation / Free Date Change Guarantee
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-indigo-600 text-white uppercase">
-                        100% Refundable
-                      </span>
                     </div>
                     <p className="text-xs text-indigo-700 mt-0.5">
                       Reschedule your flight anytime up to 2 hours before departure with zero airline change penalty.
@@ -976,10 +1046,10 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
               </div>
             </div>
 
-            {/* 7. AIRPORT CABS & EXCLUSIVE HOTEL DEALS ADD-ONS */}
+            {/* 7. AIRPORT CAB GROUND TRANSFER */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-4">
               <h3 className="font-display font-bold text-base text-slate-900">
-                Ground Transfer &amp; Exclusive Hotel Deals
+                Airport Ground Transfer
               </h3>
 
               {/* Airport Cab */}
@@ -989,9 +1059,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     <Car className="w-4 h-4 text-sky-600" />
                     <span className="text-xs font-bold text-slate-900">Airport Transfer at Destination ({toCity.split(' ')[0]})</span>
                   </div>
-                  <span className="text-[10px] text-sky-700 font-bold bg-sky-50 px-2 py-0.5 rounded">
-                    Flight Delay Waiting Included
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -1016,41 +1083,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                       </div>
                     </button>
                   ))}
-                </div>
-              </div>
-
-              {/* Exclusive Hotel Deal Card */}
-              <div
-                onClick={() => setDestinationHotelDeal(!destinationHotelDeal)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                  destinationHotelDeal
-                    ? 'bg-amber-50/70 border-amber-300 shadow-xs'
-                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={destinationHotelDeal}
-                    onChange={() => {}}
-                    className="w-4 h-4 text-amber-600 rounded border-slate-300 mt-0.5 focus:ring-amber-500"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-amber-700" />
-                      <span className="text-xs font-bold text-amber-950">
-                        Exclusive Destination Stay Voucher (Flat 30% Off)
-                      </span>
-                    </div>
-                    <p className="text-xs text-amber-800 mt-0.5">
-                      Lock a 4-Star Resort in {toCity.split(' ')[0]} with free breakfast and pool access at exclusive flight-bundled rates.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="font-mono text-sm font-bold text-slate-900">+₹1,999</span>
-                  <div className="text-[10px] text-slate-400">per room / night</div>
                 </div>
               </div>
             </div>
@@ -1351,10 +1383,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   </>
                 )}
               </button>
-
-              <div className="text-[11px] text-center text-slate-400">
-                🔒 Safe 256-Bit SSL Encrypted Airline Verified Transaction
-              </div>
             </div>
 
             {/* OFFERS, BANK DISCOUNTS & COUPONS CARD (NOW BELOW FARE SUMMARY) */}
@@ -1445,8 +1473,8 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
           MODAL: INTERACTIVE 3-3 AIRCRAFT SEAT MAP
       =============================================================== */}
       {showSeatMapModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 space-y-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-modal-backdrop">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-modal-slide-up space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Plane className="w-5 h-5 text-blue-600" />
@@ -1556,8 +1584,8 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
           MODAL: CONFIRMATION SUCCESS WITH PNR & TICKETS
       =============================================================== */}
       {confirmedBooking && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 space-y-5">
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-modal-backdrop">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-modal-slide-up space-y-5">
             <div className="text-center space-y-2">
               <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto shadow-md">
                 <CheckCircle2 className="w-8 h-8" />
@@ -1638,6 +1666,216 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
           }}
           onClose={() => setShowDatePicker(false)}
         />
+      )}
+
+      {/* ===============================================================
+          MODAL: FARE RULES (CANCELLATION CHARGES & DATE CHANGES)
+      =============================================================== */}
+      {showFareRulesModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-modal-backdrop">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200/90 flex flex-col animate-modal-slide-up">
+            {/* Header: Whitish, modern, seamless without corner artifacts */}
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-50 via-white to-blue-50/30 border-b border-slate-200 flex items-center justify-between shrink-0 rounded-t-3xl">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shadow-2xs shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-black text-lg sm:text-xl text-slate-900">
+                    Fare Rules &amp; Policy
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    {airline} {flightNo} · <span className="text-blue-700 font-semibold">{fareCategory}</span> · {cabinClass} Class
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowFareRulesModal(false)}
+                aria-label="Close fare rules"
+                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tab Switcher */}
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setFareRulesTab('cancellation')}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  fareRulesTab === 'cancellation'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Cancellation Charges</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFareRulesTab('dateChange')}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  fareRulesTab === 'dateChange'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>Date Change Charges</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 text-slate-800 text-xs sm:text-sm leading-relaxed">
+              {fareRulesTab === 'cancellation' && (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200 text-blue-950 text-xs font-medium">
+                    <p>
+                      <strong>Important:</strong> All cancellation fees mentioned are charged per passenger per sector. Statutory airport taxes (UDF, PSF, Aviation Security Fee) are always 100% refundable.
+                    </p>
+                  </div>
+
+                  {/* Cancellation Fee Slabs */}
+                  <div className="space-y-2.5">
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          More than 72 hours before flight
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Standard early cancellation window
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="font-mono font-bold text-rose-600 text-sm">₹3,000</span>
+                        <span className="text-[11px] text-slate-400 block">per passenger</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          Between 24 to 72 hours before flight
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Mid-window cancellation fee
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="font-mono font-bold text-rose-600 text-sm">₹3,500</span>
+                        <span className="text-[11px] text-slate-400 block">per passenger</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          Within 24 hours of flight departure
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Late cancellation / airline non-refundable tier
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="font-bold text-amber-700 text-sm">Non-Refundable</span>
+                        <span className="text-[11px] text-slate-400 block">Airport taxes refunded</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Refund Process details */}
+                  <div className="pt-2 border-t border-slate-200 space-y-1.5 text-xs text-slate-600">
+                    <p className="font-bold text-slate-800">Refund Processing Timeline:</p>
+                    <p>• Refunds are initiated instantly upon online cancellation request.</p>
+                    <p>• Credited back to original source account (UPI / Card / NetBanking) within 2 to 4 bank working days.</p>
+                    <p>• If flight is cancelled or rescheduled &gt; 2 hours by airline, 100% full refund is issued with zero deduction.</p>
+                  </div>
+                </div>
+              )}
+
+              {fareRulesTab === 'dateChange' && (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-indigo-950 text-xs font-medium">
+                    <p>
+                      <strong>Flexible Date Change:</strong> If you select the "Flexible Booking / Date Change Guarantee" addon, airline date change penalty is <strong>₹0 (Completely FREE)</strong>.
+                    </p>
+                  </div>
+
+                  {/* Date Change Fee Slabs */}
+                  <div className="space-y-2.5">
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          With TripProtect / Zero Cancellation Protection
+                        </div>
+                        <div className="text-xs text-emerald-600 font-semibold mt-0.5">
+                          Unlimited free date change anytime up to 2 hours prior
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="font-bold text-emerald-600 text-sm">FREE (₹0)</span>
+                        <span className="text-[11px] text-slate-400 block">+ Fare diff if any</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          Standard Date Change (&gt; 72 hours)
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Standard rescheduling fee
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="font-mono font-bold text-slate-900 text-sm">₹2,500</span>
+                        <span className="text-[11px] text-slate-400 block">+ Fare diff per pax</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          Standard Date Change (24 to 72 hours)
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Within 3 days of departure
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="font-mono font-bold text-slate-900 text-sm">₹3,000</span>
+                        <span className="text-[11px] text-slate-400 block">+ Fare diff per pax</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rescheduling Rules details */}
+                  <div className="pt-2 border-t border-slate-200 space-y-1.5 text-xs text-slate-600">
+                    <p className="font-bold text-slate-800">Date Change Guidelines:</p>
+                    <p>• Reschedule to any available date up to 365 days from original date.</p>
+                    <p>• If new flight fare is lower, airline does not refund fare difference; if new flight fare is higher, difference is payable.</p>
+                    <p>• Name corrections (up to 3 characters for spelling mistakes) are supported free before web check-in.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0 rounded-b-3xl">
+              <button
+                type="button"
+                onClick={() => setShowFareRulesModal(false)}
+                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm cursor-pointer shadow-md shadow-blue-600/20 active:scale-95 transition-all"
+              >
+                Close Fare Rules
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
