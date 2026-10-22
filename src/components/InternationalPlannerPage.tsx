@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { GhibliBorderWalker } from './GhibliBorderWalker';
+import { GhibliHeroScenery } from './GhibliHeroScenery';
 import {
   Compass,
   Sparkles,
@@ -17,9 +19,6 @@ import {
   ArrowRight,
   ChevronRight,
   ChevronLeft,
-  Play,
-  Pause,
-  Camera,
   ExternalLink,
   Plus,
   Trash2,
@@ -29,15 +28,11 @@ import {
   Globe,
   FileText,
   CreditCard,
-  Wifi,
-  Luggage,
   AlertCircle,
   HelpCircle,
   RefreshCw,
   Send,
   Eye,
-  Sliders,
-  SlidersHorizontal,
   Bookmark,
   BookmarkCheck,
   Palmtree,
@@ -50,16 +45,13 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import {
-  ASSETS,
   BookingCategory,
   CITIES,
   CityOption,
   CurrencyCode,
-  DestinationPlace,
   formatPrice,
-  TOP_DESTINATIONS,
 } from '../data/travelData';
-import { SafeImage } from './SafeImage';
+import tropicalPlannerHero from '../assets/images/tropical_planner_hero_1792686268357.jpg';
 
 interface InternationalPlannerProps {
   currency: CurrencyCode;
@@ -142,309 +134,585 @@ interface ChecklistItem {
   priority: 'High' | 'Medium' | 'Optional';
 }
 
-const POPULAR_DESTINATIONS = [
-  { name: 'Paris', country: 'France', code: 'CDG', image: ASSETS.paris, tag: 'Culture & Romance' },
-  { name: 'Dubai', country: 'United Arab Emirates', code: 'DXB', image: ASSETS.dubai, tag: 'Futuristic & Luxury' },
-  { name: 'Bali', country: 'Indonesia', code: 'DPS', image: ASSETS.bali, tag: 'Beaches & Temples' },
-  { name: 'Singapore', country: 'Singapore', code: 'SIN', image: ASSETS.singapore, tag: 'Gardens & Food' },
-  { name: 'Bangkok', country: 'Thailand', code: 'BKK', image: ASSETS.bangkok, tag: 'Temples & Street Food' },
-  { name: 'Tokyo', country: 'Japan', code: 'HND', image: ASSETS.heroSantorini, tag: 'Anime & Modernity' },
-  { name: 'London', country: 'United Kingdom', code: 'LHR', image: ASSETS.heroAlpine, tag: 'History & Royalty' },
-];
+// ============================================================================
+// WHIMSICAL STORYBOOK ILLUSTRATED ICONS & MASCOTS
+// ============================================================================
 
-export interface BackgroundSlide {
-  id: string;
-  title: string;
-  location: string;
-  tag: string;
-  category: 'japan' | 'beach';
-  image: string;
-  fallbackImage: string;
-}
+const CuteTempleIcon = () => (
+  <svg className="w-7 h-7 shrink-0" viewBox="0 0 36 36" fill="none">
+    <path d="M12 32h12v-6h-12v6z" fill="#D97706" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M9 26h18l-2-4H11l-2 4z" fill="#F59E0B" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M11 22h14v-5H11v5z" fill="#D97706" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M8 17h20l-3-4H11l-3 4z" fill="#FBBF24" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M14 13h8v-3h-8v3z" fill="#D97706" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M18 4l-4 6h8l-4-6z" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+    <circle cx="18" cy="3" r="1.5" fill="#F59E0B" />
+    {/* Mini palm beside temple */}
+    <path d="M29 32c0-8-3-12-3-12" stroke="#15803D" strokeWidth="2" strokeLinecap="round" />
+    <path d="M26 20c-3-2-6 0-7 2" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M26 20c2-3 5-2 6 0" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M26 20c0-4 3-5 5-4" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
 
-export const BACKGROUND_SLIDES: BackgroundSlide[] = [
-  {
-    id: 'fuji-cherry-blossoms',
-    title: 'Mount Fuji & Sakura Cherry Blossoms',
-    location: 'Chureito Pagoda, Yamanashi, Japan',
-    tag: 'Iconic Japan',
-    category: 'japan',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroAlpine,
-  },
-  {
-    id: 'tropical-coral-beach',
-    title: 'Turquoise Coral Ocean & White Sands',
-    location: 'Maldives & South Pacific Lagoon',
-    tag: 'Pristine Beach',
-    category: 'beach',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroMultimodal,
-  },
-  {
-    id: 'kyoto-temple-lanterns',
-    title: 'Historic Kyoto & Yasaka Pagoda',
-    location: 'Higashiyama Lantern District, Kyoto, Japan',
-    tag: 'Traditional Japan',
-    category: 'japan',
-    image: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.bangkok,
-  },
-  {
-    id: 'okinawa-sunset-beach',
-    title: 'Okinawa Emerald Waters & White Sand Bay',
-    location: 'Ryukyu Archipelago, Okinawa, Japan',
-    tag: 'Japan Coastal Beach',
-    category: 'beach',
-    image: 'https://images.unsplash.com/photo-1512100356356-de1b84283e18?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroSantorini,
-  },
-  {
-    id: 'tokyo-shibuya-night',
-    title: 'Tokyo Tower & Neon Skyline at Twilight',
-    location: 'Minato & Roppongi, Tokyo, Japan',
-    tag: 'Modern Japan Metropole',
-    category: 'japan',
-    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.dubai,
-  },
-  {
-    id: 'maldives-overwater-beach',
-    title: 'Maldives Overwater Lagoon & Coral Sandbar',
-    location: 'North Malé Atoll, Maldives',
-    tag: 'Crystal Lagoon Beach',
-    category: 'beach',
-    image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroMultimodal,
-  },
-  {
-    id: 'kyoto-zen-cherry-garden',
-    title: 'Zen Temple Gardens & Spring Sakura',
-    location: 'Arashiyama & Philosopher Path, Kyoto, Japan',
-    tag: 'Japan Sakura Garden',
-    category: 'japan',
-    image: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroAlpine,
-  },
-  {
-    id: 'bora-bora-sunset-beach',
-    title: 'Sunset Tropical Palms & Gentle Turquoise Surf',
-    location: 'Matira Beachfront, Bora Bora',
-    tag: 'Sunset Paradise Beach',
-    category: 'beach',
-    image: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroSantorini,
-  },
-  {
-    id: 'fushimi-inari-torii',
-    title: 'Fushimi Inari Vermilion Torii Shrines',
-    location: 'Mount Inari, Kyoto, Japan',
-    tag: 'Sacred Japan Shrines',
-    category: 'japan',
-    image: 'https://images.unsplash.com/photo-1478436127897-769e00d28e19?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.bangkok,
-  },
-  {
-    id: 'bali-water-shrine',
-    title: 'Pura Ulun Danu Crater Lake & Coast',
-    location: 'Bedugul & Uluwatu, Bali',
-    tag: 'Tropical Island Escape',
-    category: 'beach',
-    image: ASSETS.bali,
-    fallbackImage: ASSETS.heroMultimodal,
-  },
-  {
-    id: 'santorini-cliffside-sea',
-    title: 'Santorini White Cliffs & Aegean Blue Sea',
-    location: 'Oia Bayfront, Cyclades, Greece',
-    tag: 'Mediterranean Beach & Cliffs',
-    category: 'beach',
-    image: ASSETS.heroSantorini,
-    fallbackImage: ASSETS.heroSantorini,
-  },
-  {
-    id: 'osaka-castle-sakura',
-    title: 'Osaka Castle & Blossoming Sakura Moat',
-    location: 'Chuo Ward, Osaka, Japan',
-    tag: 'Imperial Japan Sakura',
-    category: 'japan',
-    image: 'https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=2400&q=85',
-    fallbackImage: ASSETS.heroAlpine,
-  },
-];
+const CuteCalendarIcon = () => (
+  <svg className="w-7 h-7 shrink-0" viewBox="0 0 36 36" fill="none">
+    <rect x="5" y="8" width="26" height="23" rx="4" fill="#FDE68A" stroke="#B45309" strokeWidth="2" />
+    <rect x="5" y="8" width="26" height="7" rx="4" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
+    <path d="M11 4v6M25 4v6" stroke="#78350F" strokeWidth="2.5" strokeLinecap="round" />
+    <circle cx="11" cy="20" r="1.5" fill="#B45309" />
+    <circle cx="18" cy="20" r="1.5" fill="#B45309" />
+    <circle cx="25" cy="20" r="1.5" fill="#B45309" />
+    <circle cx="11" cy="25" r="1.5" fill="#B45309" />
+    <circle cx="18" cy="25" r="1.5" fill="#B45309" />
+    <circle cx="25" cy="25" r="1.5" fill="#EF4444" />
+  </svg>
+);
 
-const INITIAL_CHECKLIST: ChecklistItem[] = [
-  { id: 'chk-1', category: 'passport', label: 'Check Passport Validity (6+ Months)', description: 'Ensure your passport has at least 6 months remaining validity from travel date and 2 blank pages.', completed: true, priority: 'High' },
-  { id: 'chk-2', category: 'passport', label: 'Carry Visa Approval / e-Visa Printout', description: 'Print 2 physical copies of your valid visa, eVisa, or VoA confirmation receipt.', completed: true, priority: 'High' },
-  { id: 'chk-3', category: 'passport', label: 'Color Photocopies & Cloud Backup', description: 'Store digital copies of passport first & last pages, visas, and IDs in a secure cloud drive.', completed: false, priority: 'Medium' },
-  { id: 'chk-4', category: 'forex', label: 'Activate International Banking & Zero-Forex Card', description: 'Enable international transactions on credit/debit cards and load your multi-currency travel card.', completed: true, priority: 'High' },
-  { id: 'chk-5', category: 'forex', label: 'Carry Local Cash Buffer ($100–$150 Equivalent)', description: 'Small bills for public transit kiosks, local tips, and street vendors.', completed: false, priority: 'Medium' },
-  { id: 'chk-6', category: 'sim', label: 'Set Up International eSIM (Airalo/Holafly)', description: 'Install an eSIM before boarding or keep local airport SIM purchase details handy.', completed: true, priority: 'High' },
-  { id: 'chk-7', category: 'insurance', label: 'Comprehensive International Travel Insurance', description: 'Covers emergency medical hospitalization, flight delay, baggage loss, and trip cancellation.', completed: true, priority: 'High' },
-  { id: 'chk-8', category: 'packing', label: 'Universal Power Adapter & Power Bank', description: 'Check destination plug socket type (Type C/E/G). Keep 10,000mAh power bank in cabin baggage.', completed: false, priority: 'High' },
-  { id: 'chk-9', category: 'packing', label: 'Prescription Medications & First Aid', description: 'Carry doctor prescription letter for any prescribed medicines in original packaging.', completed: false, priority: 'Medium' },
-  { id: 'chk-10', category: 'airport', label: 'Complete Web Check-in (24h Prior)', description: 'Select preferred seats, confirm baggage allowances, and download digital boarding passes.', completed: false, priority: 'High' },
-  { id: 'chk-11', category: 'airport', label: 'Submit Electronic Arrival Card (SGAC / e-CD)', description: 'Complete mandatory destination digital customs/arrival cards 48h before flight.', completed: false, priority: 'High' },
-];
+const CuteTravelersIcon = () => (
+  <svg className="w-8 h-8 shrink-0" viewBox="0 0 40 36" fill="none">
+    {/* Person 1 */}
+    <circle cx="14" cy="11" r="6" fill="#FCD34D" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M10 10c0-3 2-5 5-5s5 2 5 3-2 3-5 3-5-1-5-1z" fill="#92400E" />
+    <path d="M7 29c0-6 4-9 9-9s9 3 9 9" fill="#60A5FA" stroke="#1E40AF" strokeWidth="1.5" />
+    <circle cx="12" cy="11" r="1" fill="#78350F" />
+    <circle cx="16" cy="11" r="1" fill="#78350F" />
+    <path d="M13 14c1 1 2 1 3 0" stroke="#78350F" strokeWidth="1" strokeLinecap="round" />
+    {/* Person 2 */}
+    <circle cx="27" cy="13" r="5.5" fill="#FDE68A" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M22 12c0-4 3-6 6-6s6 3 6 5-1 4-3 5-4-1-6-1z" fill="#78350F" />
+    <path d="M21 29c0-5 3-8 8-8s8 3 8 8" fill="#F472B6" stroke="#9D174D" strokeWidth="1.5" />
+    <circle cx="25" cy="13" r="1" fill="#78350F" />
+    <circle cx="29" cy="13" r="1" fill="#78350F" />
+    <path d="M26 15c1 1 2 1 3 0" stroke="#78350F" strokeWidth="1" strokeLinecap="round" />
+    {/* Cute tiny flower clip */}
+    <circle cx="31" cy="8" r="1.5" fill="#EF4444" />
+  </svg>
+);
 
-const INITIAL_PARIS_ITINERARY: FullItinerary = {
-  id: 'plan-default-paris',
-  destination: 'Paris',
-  country: 'France',
-  currency: 'EUR',
-  destinationSummary: 'The City of Light captivates travellers with world-renowned art, romantic Seine riverbanks, iconic Belle Époque boulevards, and Michelin-star gastronomy.',
-  bestTimeToVisit: 'April – October & December (Holiday Lights)',
-  estimatedTotalTripBudgetInr: 165000,
+const CuteMoneyPouchIcon = () => (
+  <svg className="w-7 h-7 shrink-0" viewBox="0 0 36 36" fill="none">
+    <path
+      d="M10 13c-3 4-4 10-3 14 1 4 5 5 11 5s10-1 11-5c1-4 0-10-3-14H10z"
+      fill="#D97706"
+      stroke="#78350F"
+      strokeWidth="2"
+    />
+    <path d="M12 13c-1-3 0-6 2-7 2-1 4 2 4 4" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+    <path d="M24 13c1-3 0-6-2-7-2-1-4 2-4 4" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+    {/* Tied cord */}
+    <path d="M9 13h18" stroke="#FEF08A" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="18" cy="13" r="2" fill="#EF4444" />
+    {/* Gold coin mark */}
+    <circle cx="18" cy="22" r="4" fill="#FCD34D" stroke="#78350F" strokeWidth="1.2" />
+    <text x="18" y="24" textAnchor="middle" fontSize="6" fontWeight="bold" fill="#78350F">$</text>
+  </svg>
+);
+
+const CuteDogMascot = () => (
+  <svg className="w-7 h-7 shrink-0" viewBox="0 0 32 32" fill="none">
+    {/* Shiba / fox ears */}
+    <path d="M7 14L4 6l9 4-6 4z" fill="#EA580C" stroke="#7C2D12" strokeWidth="1.2" />
+    <path d="M25 14l3-8-9 4 6 4z" fill="#EA580C" stroke="#7C2D12" strokeWidth="1.2" />
+    <path d="M6 8l3 3-2 1z" fill="#FED7AA" />
+    <path d="M26 8l-3 3 2 1z" fill="#FED7AA" />
+    {/* Head */}
+    <circle cx="16" cy="17" r="10" fill="#F97316" stroke="#7C2D12" strokeWidth="1.5" />
+    {/* White muzzle cheeks */}
+    <path d="M10 20c0 4 3 6 6 6s6-2 6-6c0-3-2-4-6-4s-6 1-6 4z" fill="#FFF7ED" />
+    {/* Eyes */}
+    <ellipse cx="12" cy="16" rx="1.5" ry="2" fill="#431407" />
+    <ellipse cx="20" cy="16" rx="1.5" ry="2" fill="#431407" />
+    <circle cx="11.5" cy="15.5" r="0.6" fill="#FFF" />
+    <circle cx="19.5" cy="15.5" r="0.6" fill="#FFF" />
+    {/* Nose & smile */}
+    <polygon points="16,19 14.5,20.5 17.5,20.5" fill="#431407" />
+    <path d="M16 21v1.5c-1 0-1.5-.5-2-.5m2 .5c1 0 1.5-.5 2-.5" stroke="#431407" strokeWidth="1" strokeLinecap="round" />
+  </svg>
+);
+
+const CuteTravelerBoyMascot = () => (
+  <svg className="w-7 h-7 shrink-0" viewBox="0 0 32 32" fill="none">
+    {/* Brown hair & cap */}
+    <path d="M8 12c0-5 3-7 8-7s8 2 8 7" fill="#78350F" />
+    <path d="M6 13h20v2H6z" fill="#B45309" stroke="#78350F" strokeWidth="1" />
+    {/* Face */}
+    <circle cx="16" cy="18" r="8" fill="#FDE68A" stroke="#78350F" strokeWidth="1.5" />
+    {/* Hair bangs */}
+    <path d="M10 13c2 2 4 1 6 2 2-1 4-2 6-2" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
+    {/* Eyes */}
+    <circle cx="13" cy="17" r="1.2" fill="#451A03" />
+    <circle cx="19" cy="17" r="1.2" fill="#451A03" />
+    <path d="M14 21c1 1 3 1 4 0" stroke="#451A03" strokeWidth="1.2" strokeLinecap="round" />
+    <circle cx="11" cy="19" r="1" fill="#FCA5A5" />
+    <circle cx="21" cy="19" r="1" fill="#FCA5A5" />
+  </svg>
+);
+
+// Leafy Vine flourishes for card corners
+const LeafyCornerFlourish = ({ className = '' }: { className?: string }) => (
+  <svg className={`w-12 h-12 pointer-events-none text-emerald-600 ${className}`} viewBox="0 0 60 60" fill="none">
+    <path d="M6 54C10 38 20 22 40 14" stroke="#2D6A4F" strokeWidth="2.5" strokeLinecap="round" />
+    {/* Leaves */}
+    <path d="M14 42c-5-2-8-6-7-10 4 1 7 4 7 10z" fill="#52B788" stroke="#1B4332" strokeWidth="1.2" />
+    <path d="M22 32c4-3 8-3 11 0-1 4-4 7-11 0z" fill="#74C69D" stroke="#1B4332" strokeWidth="1.2" />
+    <path d="M30 22c-4-4-5-8-3-11 4 1 6 4 3 11z" fill="#52B788" stroke="#1B4332" strokeWidth="1.2" />
+    <path d="M40 14c3-4 6-5 9-3-1 4-3 6-9 3z" fill="#74C69D" stroke="#1B4332" strokeWidth="1.2" />
+    {/* Pink Cherry Blossom Flowers */}
+    <circle cx="18" cy="38" r="3" fill="#F472B6" />
+    <circle cx="18" cy="38" r="1.2" fill="#FDE047" />
+    <circle cx="34" cy="18" r="3.5" fill="#FB7185" />
+    <circle cx="34" cy="18" r="1.3" fill="#FEF08A" />
+  </svg>
+);
+
+// Eiffel Tower line-art sketch
+const EiffelTowerSketch = () => (
+  <svg className="w-10 h-14 mx-auto text-amber-900/80" viewBox="0 0 40 60" fill="none" stroke="currentColor">
+    <path d="M20 4v8M18 12h4M16 20h8M12 36h16M7 56l9-36h8l9 36" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M13 56c0-7 3-10 7-10s7 3 7 10" strokeWidth="1.8" />
+    <path d="M16 20l-3 16h14l-3-16" strokeWidth="1.2" />
+    <circle cx="20" cy="4" r="1.5" fill="currentColor" />
+  </svg>
+);
+
+// Arc de Triomphe sketch
+const ArcDeTriompheSketch = () => (
+  <svg className="w-12 h-12 mx-auto text-amber-900/80" viewBox="0 0 50 44" fill="none" stroke="currentColor">
+    <rect x="6" y="8" width="38" height="30" rx="3" strokeWidth="1.8" fill="#FFFDF8" />
+    <rect x="4" y="5" width="42" height="4" rx="1" strokeWidth="1.8" fill="#FEF3C7" />
+    <path d="M18 38v-14c0-4 3-7 7-7s7 3 7 7v14" strokeWidth="1.8" />
+    <line x1="6" y1="18" x2="44" y2="18" strokeWidth="1.2" strokeDasharray="2,2" />
+    <rect x="10" y="24" width="4" height="8" strokeWidth="1" />
+    <rect x="36" y="24" width="4" height="8" strokeWidth="1" />
+  </svg>
+);
+
+// Starry Cruise Postcard Illustration
+const StarryCruisePostcard = () => (
+  <div className="w-20 h-14 mx-auto rounded-xl overflow-hidden border-2 border-indigo-900/60 bg-gradient-to-b from-[#0F172A] via-[#1E1B4B] to-[#1E3A8A] relative shadow-xs flex items-center justify-center">
+    {/* Stars */}
+    <div className="absolute top-1.5 left-2.5 w-1 h-1 bg-amber-200 rounded-full animate-ping" />
+    <div className="absolute top-3 right-4 w-1 h-1 bg-white rounded-full" />
+    <div className="absolute top-2 left-8 w-1 h-1 bg-white/70 rounded-full" />
+    {/* Crescent Moon */}
+    <div className="absolute top-1.5 right-2 w-3 h-3 rounded-full border-r-2 border-t-2 border-amber-300" />
+    {/* River water */}
+    <div className="absolute bottom-0 inset-x-0 h-4 bg-sky-900/80 border-t border-sky-400/30" />
+    {/* Cruise Boat */}
+    <svg className="w-12 h-7 relative z-10 -bottom-1" viewBox="0 0 40 24" fill="none">
+      <path d="M4 18h32l-4 5H8l-4-5z" fill="#F8FAFC" stroke="#0F172A" strokeWidth="1" />
+      <rect x="10" y="11" width="18" height="7" rx="1.5" fill="#F8FAFC" stroke="#0F172A" strokeWidth="1" />
+      <circle cx="14" cy="14" r="1.2" fill="#F59E0B" />
+      <circle cx="19" cy="14" r="1.2" fill="#F59E0B" />
+      <circle cx="24" cy="14" r="1.2" fill="#F59E0B" />
+      <rect x="13" y="7" width="10" height="4" rx="1" fill="#E2E8F0" stroke="#0F172A" strokeWidth="0.8" />
+      <line x1="18" y1="4" x2="18" y2="7" stroke="#EF4444" strokeWidth="1" />
+    </svg>
+  </div>
+);
+
+// Blue Ribbon Rosette Medal Badge with D1, D2 etc.
+const RibbonBadge = ({ day }: { day: number }) => (
+  <div className="relative inline-flex flex-col items-center shrink-0">
+    {/* Rosette Circle */}
+    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] border-2 border-white text-white font-extrabold text-sm flex items-center justify-center shadow-md relative z-10">
+      D{day}
+    </div>
+    {/* Hanging Ribbon Tails */}
+    <div className="ribbon-tail-left" />
+    <div className="ribbon-tail-right" />
+  </div>
+);
+
+// ============================================================================
+// INITIAL BALI & PARIS DATASETS
+// ============================================================================
+
+const INITIAL_BALI_ITINERARY: FullItinerary = {
+  id: 'plan-default-bali',
+  destination: 'Bali',
+  country: 'Indonesia',
+  currency: 'IDR',
+  destinationSummary:
+    'The Island of the Gods seamlessly enchants with emerald tiered rice terraces, sacred ocean clifftop temples, tropical waterfalls, vibrant beach clubs, and serene Balinese spas.',
+  bestTimeToVisit: 'April – October (Dry Sunny Season)',
+  estimatedTotalTripBudgetInr: 96000,
   origin: 'New Delhi',
   startDate: '2026-10-20',
   endDate: '2026-10-24',
   budget: 'mid-range',
   travellersCount: 2,
   travellerType: 'Couple',
-  interests: ['Sightseeing & Iconic Landmarks', 'Food & Culinary Trails', 'Art & Museums'],
+  interests: ['Beaches & Coastline', 'Temples & Culture', 'Nature & Rice Terraces'],
   days: [
     {
       dayNumber: 1,
-      title: 'Iconic Iron Lady & Seine Sunset Cruise',
+      title: 'Arrival in Bali & Cultural Ubud',
       morning: {
-        time: '09:00 AM – 12:30 PM',
-        activity: 'Eiffel Tower Summit & Champ de Mars',
-        details: 'Ascend to the top deck of the Eiffel Tower for panoramic views over Paris, followed by photos at Champ de Mars.',
-        costEstimateInr: 5800,
-        transport: 'Metro Line 6 to Bir-Hakeim',
+        time: '08:30 AM – 12:00 PM',
+        activity: 'Tegallalang Rice Terraces & Jungle Swing',
+        details: 'Walk through cascading emerald rice paddies and fly above coconut palms on a giant jungle swing.',
+        costEstimateInr: 1800,
+        transport: 'Private Driver Transfer (30m)',
       },
       afternoon: {
-        time: '02:00 PM – 05:30 PM',
-        activity: 'Trocadéro Gardens & Arc de Triomphe',
-        details: 'Stroll across Pont d’Iéna to Trocadéro terrace, then take Avenue Kléber to the iconic Arc de Triomphe.',
-        costEstimateInr: 3200,
-        transport: 'Walk or Metro Line 1 to Charles de Gaulle – Étoile',
+        time: '01:30 PM – 04:30 PM',
+        activity: 'Sacred Monkey Forest & Ubud Royal Palace',
+        details: 'Encounter friendly long-tailed macaques in lush banyan ruins and admire carved gold-leaf teak palace gates.',
+        costEstimateInr: 900,
+        transport: 'Short 10-minute drive to Ubud Central',
       },
       evening: {
-        time: '06:30 PM – 09:30 PM',
-        activity: 'Bateaux Parisiens Glass-Canopy River Cruise',
-        details: 'Glide down the River Seine as the Eiffel Tower illuminates every hour with glittering golden strobes.',
-        costEstimateInr: 4500,
-        transport: 'Boarding at Port de la Bourdonnais',
+        time: '06:00 PM – 09:30 PM',
+        activity: 'Campuhan Ridge Sunset & Balinese Feast',
+        details: 'Stroll along the breezy ridge between two river valleys, followed by organic duck and satay dinner.',
+        costEstimateInr: 2200,
+        transport: 'Scenic walk along Campuhan trail',
       },
-      diningTip: 'Classic French duck confit or steak frites at Café de Flore or Le Relais de Venise.',
-      proTip: 'Book Eiffel Tower summit elevator passes 60 days ahead to skip the 2-hour queue.',
-      estimatedDayTotalInr: 13500,
+      diningTip: 'Crispy duck (Bebek Betutu) or fresh Nasi Campur with house sambal at Bebek Bengil.',
+      proTip: 'Whenever refilling water bottles, use filtered hotel stations; tap water is not recommended for drinking.',
+      estimatedDayTotalInr: 7600,
     },
     {
       dayNumber: 2,
-      title: 'Masterpieces of the Louvre & Tuileries Garden',
+      title: 'Sacred Water Temples & Mountain Views',
       morning: {
-        time: '09:00 AM – 01:00 PM',
-        activity: 'Louvre Museum Timed Entry',
-        details: 'Marvel at Mona Lisa, Venus de Milo, Winged Victory of Samothrace, and Napoleon III Apartments.',
-        costEstimateInr: 4200,
-        transport: 'Metro Line 1 to Palais Royal – Musée du Louvre',
+        time: '08:00 AM – 11:30 AM',
+        activity: 'Ulun Danu Bratan Floating Lake Temple',
+        details: 'Photograph the iconic 17th-century multi-tiered pagoda floating serenely on Lake Bratan crater.',
+        costEstimateInr: 1400,
+        transport: 'Scenic mountain highway drive',
       },
       afternoon: {
-        time: '02:30 PM – 05:30 PM',
-        activity: 'Jardin des Tuileries & Place de la Concorde',
-        details: 'Relax by grand circular fountain basins with hot chocolate and pastries from Angelina.',
-        costEstimateInr: 2100,
-        transport: 'Leisurely walk through royal gardens',
+        time: '12:30 PM – 04:00 PM',
+        activity: 'Jatiluwih UNESCO Rice Terraces & Waterfall',
+        details: 'Trek through Bali’s largest living Subak agricultural landscape with Mount Batukaru backdrop.',
+        costEstimateInr: 1600,
+        transport: 'Private driver transfer',
       },
       evening: {
-        time: '06:30 PM – 09:30 PM',
-        activity: 'Le Marais Historic District & Dinner',
-        details: 'Explore trendy boutiques, Place des Vosges brick arches, and artisanal crêperies.',
-        costEstimateInr: 3900,
-        transport: 'Metro Line 1 to Saint-Paul',
+        time: '05:30 PM – 09:00 PM',
+        activity: 'Tirta Empul Holy Spring Purification Ritual',
+        details: 'Experience traditional water blessing under crystal-clear spring spouts alongside local Balinese worshippers.',
+        costEstimateInr: 1500,
+        transport: 'Private car to Tampaksiring',
       },
-      diningTip: 'Try savoury galettes and sweet caramel crêpes at Breizh Café in Le Marais.',
-      proTip: 'Enter Louvre via the Carrousel du Louvre underground mall entrance for much shorter lines.',
-      estimatedDayTotalInr: 10200,
+      diningTip: 'Traditional Mie Goreng and Balinese Sate Lilit with sweet peanut glaze.',
+      proTip: 'Sarongs are provided at temple gates; modest attire covering shoulders and knees is strictly required.',
+      estimatedDayTotalInr: 6800,
     },
     {
       dayNumber: 3,
-      title: 'Bohemian Montmartre & Sacré-Cœur Sunset',
+      title: 'Uluwatu Clifftops & Kecak Fire Dance',
       morning: {
-        time: '09:30 AM – 12:30 PM',
-        activity: 'Montmartre Hilltop & Place du Tertre',
-        details: 'Wander cobblestone alleyways where Picasso and Van Gogh painted; see portrait artists at Place du Tertre.',
-        costEstimateInr: 1500,
-        transport: 'Metro Line 2 to Anvers + Montmartre Funicular',
+        time: '09:30 AM – 01:00 PM',
+        activity: 'Padang Padang Beach & Clifftop Cafés',
+        details: 'Descend through limestone sea cave stairs to golden sands, pristine surf waves, and fresh dragonfruit bowls.',
+        costEstimateInr: 1200,
+        transport: 'Private transfer to South Bukit peninsula',
       },
       afternoon: {
-        time: '02:00 PM – 05:00 PM',
-        activity: 'Sacré-Cœur Basilica & Panoramic Steps',
-        details: 'Visit the Romano-Byzantine white basilica and sit on the steps overlooking the Parisian skyline.',
-        costEstimateInr: 1200,
-        transport: 'Walk uphill along Rue Foyatier',
+        time: '02:00 PM – 04:30 PM',
+        activity: 'Garuda Wisnu Kencana Cultural Park',
+        details: 'Stand beneath the colossal 122m Vishnu monument overlooking the entire Bali coast.',
+        costEstimateInr: 1800,
+        transport: 'Short 15-minute coastal drive',
       },
       evening: {
-        time: '06:30 PM – 09:30 PM',
-        activity: 'Moulin Rouge Exterior & Pigalle Dining',
-        details: 'Photograph the iconic red windmill and enjoy French bistro onion soup and crème brûlée.',
-        costEstimateInr: 4800,
-        transport: 'Metro Line 2 to Blanche',
+        time: '05:15 PM – 09:30 PM',
+        activity: 'Uluwatu Sunset Temple & Kecak Fire Dance',
+        details: 'Watch 50 chanting dancers perform the Ramayana epic as the orange sun sinks into the Indian Ocean.',
+        costEstimateInr: 2800,
+        transport: 'Walk along clifftop amphitheatre',
       },
-      diningTip: 'Traditional French onion soup and escargots at La Boîte aux Lettres.',
-      proTip: 'Watch out for wristband scammers near Sacré-Cœur funicular stairs; keep hands in pockets.',
-      estimatedDayTotalInr: 7500,
+      diningTip: 'Candlelit grilled snapper, jumbo prawns, and squid directly on Jimbaran beach sands.',
+      proTip: 'Arrive at Uluwatu amphitheatre by 17:00 sharp to secure prime sunset seats for the Kecak performance.',
+      estimatedDayTotalInr: 8500,
     },
     {
       dayNumber: 4,
-      title: 'Île de la Cité, Notre-Dame & Latin Quarter',
+      title: 'Seminyak Beach Clubs & Farewell Spa',
       morning: {
         time: '09:00 AM – 12:30 PM',
-        activity: 'Notre-Dame Cathedral & Sainte-Chapelle',
-        details: 'View Notre-Dame’s restored Gothic spires and the breathtaking 13th-century stained glass at Sainte-Chapelle.',
+        activity: 'Traditional Balinese Herbal Massage & Flower Bath',
+        details: 'Indulge in a 2-hour aromatic boreh spice scrub and rose petal bath in an open-air tropical courtyard.',
         costEstimateInr: 3200,
-        transport: 'Metro Line 4 to Cité',
+        transport: 'Hotel spa shuttle',
       },
       afternoon: {
         time: '01:30 PM – 05:00 PM',
-        activity: 'Shakespeare and Company & Latin Quarter',
-        details: 'Browse historic English bookshop and wander through student-favorite medieval Latin Quarter streets.',
-        costEstimateInr: 2000,
-        transport: 'Walk across Pont Saint-Michel',
+        activity: 'Seminyak Village Boutiques & Beachfront Walk',
+        details: 'Browse handcrafted linen, rattan straw bags, organic coffees, and silver artisan jewelry.',
+        costEstimateInr: 1800,
+        transport: 'Walk along Jalan Kayu Aya',
       },
       evening: {
-        time: '06:00 PM – 09:00 PM',
-        activity: 'Sunset at Pont Neuf & Farewell Parisian Dinner',
-        details: 'Cross Paris’s oldest standing bridge and toast with French sparkling wine along the Seine quays.',
-        costEstimateInr: 5200,
-        transport: 'Walk along Quai de la Mégisserie',
+        time: '06:00 PM – 10:00 PM',
+        activity: 'Potato Head Beach Club Sunset & Dinner',
+        details: 'Toast to an unforgettable tropical getaway from an infinity pool sunbed with world-class DJ beats.',
+        costEstimateInr: 3500,
+        transport: 'Grab taxi transfer',
       },
-      diningTip: 'French fondue or bouillabaisse at Le Relais Saint Germain.',
-      proTip: 'Pick up an Navigo Easy transit card loaded with 10 metro t+ tickets for seamless transit.',
-      estimatedDayTotalInr: 10400,
+      diningTip: 'Balinese seafood curry and warm black rice pudding with coconut cream.',
+      proTip: 'Download the Grab or Gojek app on your phone for transparent, meter-free ride hailing across Bali.',
+      estimatedDayTotalInr: 9800,
     },
   ],
 };
 
-const INITIAL_VISA_DATA: VisaDetails = {
-  destination: 'France (Schengen Visa)',
-  visaType: 'Short-Stay Tourist Schengen Visa (Type C)',
-  entryRule: 'Mandatory prior sticker visa required for Indian passport holders',
-  validity: 'Up to 90 days stay within 180-day period',
-  processingTime: '15 calendar days (VFS Global)',
-  estimatedFee: '€90 (~₹8,200) + VFS service fee ₹2,100',
-  portalName: 'France-Visas Official Portal (Government of France)',
-  portalUrl: 'https://france-visas.gouv.fr/',
+const INITIAL_BALI_VISA: VisaDetails = {
+  destination: 'Bali, Indonesia',
+  visaType: 'Electronic Visa on Arrival (e-VoA) / VoA',
+  entryRule: '30-Day Visa on Arrival / e-VoA for 90+ nationalities',
+  validity: '30 days stay (extendable once for 30 days)',
+  processingTime: 'Instant online or at Bali Ngurah Rai Airport counter',
+  estimatedFee: 'IDR 500,000 (~₹2,800) + Bali Tourist Levy IDR 150,000',
+  portalName: 'Official Indonesian Immigration (Molina) Portal',
+  portalUrl: 'https://molina.imigrasi.go.id/',
   requiredDocuments: [
-    'Original Passport valid for at least 3 months beyond departure with 2 blank pages',
-    'Completed & signed France-Visas application form + appointment receipt',
-    'Two recent biometric photos (35x45mm white background, 80% face coverage)',
-    'Confirmed round-trip flight booking / flight reservation itinerary',
-    'Proof of hotel accommodation / accommodation voucher for all days in Schengen area',
-    'Travel medical insurance with minimum €30,000 coverage including repatriation',
-    'Personal bank statements for last 3 to 6 months with official bank stamp & seal',
-    'Income Tax Returns (ITR-V) acknowledgement for last 2 assessment years',
-    'Cover letter detailing day-by-day travel itinerary and purpose of trip',
+    'Passport valid for at least 6 months with 1 blank page',
+    'Confirmed outbound return flight ticket',
+    'Indonesian Electronic Customs Declaration (e-CD) QR code filled within 72 hours of departure',
+    'Bali Tourist Levy voucher (Love Bali QR code)',
   ],
   steps: [
-    'Create an online account on the France-Visas official government portal.',
-    'Fill the digital visa form and download the validated application PDF.',
-    'Book an appointment at the nearest VFS Global center in your city.',
-    'Attend your appointment to submit documents and provide biometric fingerprints.',
-    'Track passport dispatch and receive your stamped Schengen visa.',
+    'Apply for e-VoA online on the Molina portal or purchase at DPS airport VoA counter.',
+    'Fill the digital Indonesian Customs Declaration online before boarding.',
+    'Pay the IDR 150,000 Bali Tourist Levy online.',
+    'Scan passport at electronic autogates at Denpasar airport for immediate entry.',
   ],
+};
+
+const INITIAL_CHECKLIST: ChecklistItem[] = [
+  { id: 'chk-1', category: 'passport', label: 'Check Passport Validity (6+ Months)', description: 'Ensure your passport has at least 6 months remaining validity from travel date and 2 blank pages.', completed: true, priority: 'High' },
+  { id: 'chk-2', category: 'passport', label: 'Carry Visa Approval / e-Visa Printout', description: 'Print 2 physical copies of your valid visa, eVisa, or VoA confirmation receipt.', completed: true, priority: 'High' },
+  { id: 'chk-3', category: 'passport', label: 'Electronic Arrival / Customs QR Code', description: 'Fill the mandatory online digital arrival card (e-CD / SGAC) 48h before flight.', completed: true, priority: 'High' },
+  { id: 'chk-4', category: 'forex', label: 'Activate International Banking & Zero-Forex Card', description: 'Enable international transactions on credit/debit cards and load your multi-currency travel card.', completed: true, priority: 'High' },
+  { id: 'chk-5', category: 'forex', label: 'Carry Local Cash Buffer ($100–$150 Equivalent)', description: 'Small bills for public transit kiosks, local tips, and street vendors.', completed: false, priority: 'Medium' },
+  { id: 'chk-6', category: 'sim', label: 'Set Up International eSIM (Airalo/Holafly)', description: 'Install an eSIM before boarding or keep local airport SIM purchase details handy.', completed: true, priority: 'High' },
+  { id: 'chk-7', category: 'insurance', label: 'Comprehensive International Travel Insurance', description: 'Covers emergency medical hospitalization, flight delay, baggage loss, and trip cancellation.', completed: true, priority: 'High' },
+  { id: 'chk-8', category: 'packing', label: 'Universal Power Adapter & Power Bank', description: 'Check destination plug socket type (Type C/G). Keep 10,000mAh power bank in cabin baggage.', completed: false, priority: 'High' },
+  { id: 'chk-9', category: 'packing', label: 'Prescription Medications & First Aid', description: 'Carry doctor prescription letter for any prescribed medicines in original packaging.', completed: false, priority: 'Medium' },
+  { id: 'chk-10', category: 'airport', label: 'Complete Web Check-in (24h Prior)', description: 'Select preferred seats, confirm baggage allowances, and download digital boarding passes.', completed: false, priority: 'High' },
+];
+
+// ============================================================================
+// INTERACTIVE VISUAL DATE RANGE PICKER (CALENDAR POPUP)
+// ============================================================================
+const WhimsicalDateRangePicker = ({
+  startDate,
+  endDate,
+  onSelectRange,
+  onClose,
+}: {
+  startDate: string;
+  endDate: string;
+  onSelectRange: (start: string, end: string) => void;
+  onClose: () => void;
+}) => {
+  const initialDate = startDate ? new Date(startDate) : new Date(2026, 9, 20);
+  const [viewYear, setViewYear] = useState<number>(initialDate.getFullYear() || 2026);
+  const [viewMonth, setViewMonth] = useState<number>(initialDate.getMonth() ?? 9);
+
+  const [tempStart, setTempStart] = useState<string>(startDate || '2026-10-20');
+  const [tempEnd, setTempEnd] = useState<string>(endDate || '2026-10-24');
+  const [pickingPhase, setPickingPhase] = useState<'start' | 'end'>('end');
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
+
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
+
+  const handleDateClick = (dayNum: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const mStr = String(viewMonth + 1).padStart(2, '0');
+    const dStr = String(dayNum).padStart(2, '0');
+    const clickedIso = `${viewYear}-${mStr}-${dStr}`;
+
+    if (pickingPhase === 'start' || (tempStart && tempEnd)) {
+      setTempStart(clickedIso);
+      setTempEnd('');
+      setPickingPhase('end');
+    } else {
+      if (new Date(clickedIso) >= new Date(tempStart)) {
+        setTempEnd(clickedIso);
+        onSelectRange(tempStart, clickedIso);
+        setPickingPhase('start');
+      } else {
+        setTempStart(clickedIso);
+        setTempEnd('');
+        setPickingPhase('end');
+      }
+    }
+  };
+
+  const handleQuickDuration = (days: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const s = tempStart ? new Date(tempStart) : new Date(viewYear, viewMonth, 15);
+    const eDate = new Date(s);
+    eDate.setDate(s.getDate() + (days - 1));
+
+    const sStr = s.toISOString().split('T')[0];
+    const eStr = eDate.toISOString().split('T')[0];
+    setTempStart(sStr);
+    setTempEnd(eStr);
+    onSelectRange(sStr, eStr);
+  };
+
+  const duration = useMemo(() => {
+    if (!tempStart || !tempEnd) return 0;
+    const diff = new Date(tempEnd).getTime() - new Date(tempStart).getTime();
+    return Math.max(1, Math.round(diff / (1000 * 3600 * 24)) + 1);
+  }, [tempStart, tempEnd]);
+
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="absolute top-full left-0 sm:left-auto sm:-translate-x-1/4 mt-3 w-[320px] sm:w-[350px] bg-[#FFFDF8] rounded-3xl shadow-[0_20px_50px_rgba(132,83,43,0.22)] border-[2.5px] border-[#84532B] p-4 z-50 animate-modal-slide-up"
+    >
+      {/* Header Month / Year & Navigation */}
+      <div className="flex items-center justify-between pb-3 border-b border-[#E8D7C3]">
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          className="w-8 h-8 rounded-full bg-[#FFF8EC] border border-[#D4A373] text-[#78350F] hover:bg-[#FDF3DE] flex items-center justify-center font-black text-base cursor-pointer"
+        >
+          ‹
+        </button>
+        <div className="text-center">
+          <span className="font-display font-black text-sm sm:text-base text-slate-900 block">
+            {monthNames[viewMonth]} {viewYear}
+          </span>
+          <span className="text-[10px] font-bold text-[#8B5E3C] uppercase tracking-wider">
+            {pickingPhase === 'end' && tempStart ? 'Click to set return date' : 'Click to set departure date'}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          className="w-8 h-8 rounded-full bg-[#FFF8EC] border border-[#D4A373] text-[#78350F] hover:bg-[#FDF3DE] flex items-center justify-center font-black text-base cursor-pointer"
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Weekday headers */}
+      <div className="grid grid-cols-7 gap-1 text-center py-2 text-[11px] font-extrabold text-[#8B5E3C]">
+        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+          <span key={d}>{d}</span>
+        ))}
+      </div>
+
+      {/* Days Grid */}
+      <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+          <div key={`empty-${i}`} className="h-8" />
+        ))}
+
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const dayNum = i + 1;
+          const mStr = String(viewMonth + 1).padStart(2, '0');
+          const dStr = String(dayNum).padStart(2, '0');
+          const dateIso = `${viewYear}-${mStr}-${dStr}`;
+
+          const isStart = tempStart === dateIso;
+          const isEnd = tempEnd === dateIso;
+          const isInRange =
+            tempStart && tempEnd && dateIso > tempStart && dateIso < tempEnd;
+
+          return (
+            <button
+              key={dayNum}
+              type="button"
+              onClick={(e) => handleDateClick(dayNum, e)}
+              className={`h-8 font-bold transition-all relative flex items-center justify-center cursor-pointer ${
+                isStart
+                  ? 'bg-[#0284C7] text-white rounded-l-xl shadow-xs font-black z-10'
+                  : isEnd
+                  ? 'bg-[#0284C7] text-white rounded-r-xl shadow-xs font-black z-10'
+                  : isInRange
+                  ? 'bg-[#BAE6FD]/70 text-[#0369A1]'
+                  : 'text-slate-800 hover:bg-[#FEF3C7] rounded-lg'
+              }`}
+            >
+              {dayNum}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected Range Display */}
+      <div className="mt-3 pt-3 border-t border-[#E8D7C3] flex items-center justify-between text-xs font-bold text-slate-800 bg-[#FFF8EC] p-2.5 rounded-xl border border-[#D4A373]">
+        <div>
+          <span className="text-[10px] text-[#8B5E3C] uppercase block">Selected Trip</span>
+          <span className="font-mono text-slate-900">
+            {tempStart ? new Date(tempStart).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '---'}
+            {' → '}
+            {tempEnd ? new Date(tempEnd).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '---'}
+          </span>
+        </div>
+        {duration > 0 && (
+          <span className="px-2 py-0.5 rounded-md bg-[#FEF08A] text-[#713F12] text-[11px] font-black border border-[#EAB308]">
+            {duration} Days
+          </span>
+        )}
+      </div>
+
+      {/* Quick Duration Preset Pills */}
+      <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto scrollbar-none text-[11px]">
+        <span className="text-[#8B5E3C] font-bold shrink-0">Quick Duration:</span>
+        {[3, 4, 5, 7, 10].map((num) => (
+          <button
+            key={num}
+            type="button"
+            onClick={(e) => handleQuickDuration(num, e)}
+            className="px-2 py-0.5 rounded-lg bg-[#FFFDF5] border border-[#D4A373] text-[#78350F] hover:bg-[#FEF3C7] font-bold transition-colors shrink-0 cursor-pointer"
+          >
+            {num}D
+          </button>
+        ))}
+      </div>
+
+      {/* Done Button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (tempStart && tempEnd) {
+            onSelectRange(tempStart, tempEnd);
+          }
+          onClose();
+        }}
+        className="w-full mt-3 py-2 bg-[#84532B] hover:bg-[#6D3F1D] text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+      >
+        Done & Apply Dates
+      </button>
+    </div>
+  );
 };
 
 export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
@@ -458,8 +726,11 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
     'itinerary' | 'visa' | 'budget' | 'map' | 'checklist' | 'assistant' | 'saved'
   >('itinerary');
 
-  // Planning Form State
-  const [destination, setDestination] = useState<string>('Paris');
+  // Ref for Ghibli border walker animation tracking
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+
+  // Planning Form State (defaults to Bali, Indonesia as displayed in user screenshot)
+  const [destination, setDestination] = useState<string>('Bali, Indonesia');
   const [origin, setOrigin] = useState<string>('New Delhi');
   const [startDate, setStartDate] = useState<string>('2026-10-20');
   const [endDate, setEndDate] = useState<string>('2026-10-24');
@@ -467,20 +738,20 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [budgetTier, setBudgetTier] = useState<'budget' | 'mid-range' | 'luxury'>('mid-range');
   const [travellersCount, setTravellersCount] = useState<number>(2);
   const [travellerType, setTravellerType] = useState<string>('Couple');
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([
-    'Sightseeing & Iconic Landmarks',
-    'Food & Culinary Trails',
-    'Art & Museums',
-  ]);
-  const [customNotes, setCustomNotes] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
-  // Active Generated Itinerary (Pre-seeded with default Paris so it's never null)
-  const [currentItinerary, setCurrentItinerary] = useState<FullItinerary | null>(INITIAL_PARIS_ITINERARY);
+  // Dropdown states for interactive whimsical controls
+  const [showDestDropdown, setShowDestDropdown] = useState<boolean>(false);
+  const [showDatesPicker, setShowDatesPicker] = useState<boolean>(false);
+  const [showTravellersDropdown, setShowTravellersDropdown] = useState<boolean>(false);
+  const [showBudgetDropdown, setShowBudgetDropdown] = useState<boolean>(false);
 
-  // Visa Assistant State (Pre-seeded with verified France/Schengen visa data)
+  // Active Generated Itinerary (Pre-seeded with Bali so it immediately renders the exact requested layout)
+  const [currentItinerary, setCurrentItinerary] = useState<FullItinerary | null>(INITIAL_BALI_ITINERARY);
+
+  // Visa Assistant State (Pre-seeded with verified Bali/Indonesia visa data)
   const [passportCountry, setPassportCountry] = useState<string>('India');
-  const [visaData, setVisaData] = useState<VisaDetails | null>(INITIAL_VISA_DATA);
+  const [visaData, setVisaData] = useState<VisaDetails | null>(INITIAL_BALI_VISA);
   const [isVisaLoading, setIsVisaLoading] = useState<boolean>(false);
 
   // Travel Checklist State (guaranteed non-empty array)
@@ -497,7 +768,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [newChecklistText, setNewChecklistText] = useState<string>('');
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistItem['category']>('packing');
 
-  // Saved Itineraries State (Local Storage persistent, guaranteed array)
+  // Saved Itineraries State (Local Storage persistent)
   const [savedItineraries, setSavedItineraries] = useState<FullItinerary[]>(() => {
     try {
       const stored = localStorage.getItem('tripyeah_saved_itineraries');
@@ -515,7 +786,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   >([
     {
       role: 'assistant',
-      text: "Bonjour! I'm your TripYeah AI International Concierge. Ask me anything about Paris or your upcoming destination — from skip-the-line ticket tips and hidden cafés to metro passes, dress codes, or budget hacks!",
+      text: "Om Swastiastu! I'm your TripYeah AI International Concierge. Ask me anything about Bali or your upcoming destination — from best temple dress codes and skip-the-line tips to sunset beach clubs, currency exchange, or customized daily plans!",
       time: 'Just now',
     },
   ]);
@@ -526,33 +797,44 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [selectedMapDay, setSelectedMapDay] = useState<number>(1);
 
   // Budget Calculator Custom Sliders
-  const [flightEstimateInr, setFlightEstimateInr] = useState<number>(45000); // per person in INR
-  const [hotelTierRate, setHotelTierRate] = useState<number>(8500); // per night in INR
-  const [diningPerDayRate, setDiningPerDayRate] = useState<number>(3000); // per person per day
+  const [flightEstimateInr, setFlightEstimateInr] = useState<number>(28000); // per person in INR
+  const [hotelTierRate, setHotelTierRate] = useState<number>(6500); // per night in INR
+  const [diningPerDayRate, setDiningPerDayRate] = useState<number>(2000); // per person per day
   const [transitPerDayRate, setTransitPerDayRate] = useState<number>(1200); // per person per day
-  const [activitiesPerDayRate, setActivitiesPerDayRate] = useState<number>(2500); // per person per day
-  // Pure Automatic Scenic Background Slideshow (Japan, Beaches, Pagodas, Oceans)
-  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
+  const [activitiesPerDayRate, setActivitiesPerDayRate] = useState<number>(2200); // per person per day
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlideIndex((prev) => (prev + 1) % BACKGROUND_SLIDES.length);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, []);
-
-  const safeSlideIndex = currentSlideIndex % BACKGROUND_SLIDES.length;
+  // Live Destination Intel State
+  const [liveIntel, setLiveIntel] = useState<any>({
+    destination: 'Bali',
+    country: 'Indonesia',
+    currentWeather: {
+      temperatureC: 29,
+      condition: 'Warm Tropical',
+      forecastSummary: 'Sunny skies with gentle sea breezes and pleasant evening temperatures.',
+    },
+    travelAdvisory: {
+      status: 'Normal Precautions',
+      headline: 'Safe and peaceful for international tourists.',
+    },
+    visaOverview: {
+      visaType: '30-Day Visa on Arrival / e-VoA',
+      processingDays: 'Instant on Arrival',
+      estimatedFee: 'IDR 500,000 (~₹2,800)',
+    },
+  });
+  const [isLoadingIntel, setIsLoadingIntel] = useState<boolean>(false);
 
   // Save checklist to localStorage
   useEffect(() => {
     localStorage.setItem('tripyeah_travel_checklist', JSON.stringify(checklist));
   }, [checklist]);
 
-  // Live Google Search Grounded Destination Intelligence State
-  const [liveIntel, setLiveIntel] = useState<any>(null);
-  const [isLoadingIntel, setIsLoadingIntel] = useState<boolean>(false);
-  const [intelGroundingSources, setIntelGroundingSources] = useState<Array<{ title: string; uri: string }>>([]);
+  // Save saved itineraries to localStorage
+  useEffect(() => {
+    localStorage.setItem('tripyeah_saved_itineraries', JSON.stringify(savedItineraries));
+  }, [savedItineraries]);
 
+  // Fetch live destination intel from server
   const fetchLiveDestinationIntel = async (destCity: string) => {
     if (!destCity || !destCity.trim()) return;
     setIsLoadingIntel(true);
@@ -565,135 +847,11 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
       const json = await res.json();
       if (json.success && json.liveData) {
         setLiveIntel(json.liveData);
-        setIntelGroundingSources(json.groundingSources || []);
       }
     } catch (err) {
       console.warn('Failed to fetch live intel:', err);
     } finally {
       setIsLoadingIntel(false);
-    }
-  };
-
-  // Save saved itineraries to localStorage
-  useEffect(() => {
-    localStorage.setItem('tripyeah_saved_itineraries', JSON.stringify(savedItineraries));
-  }, [savedItineraries]);
-
-  // Initial load: Generate default itinerary for Paris
-  useEffect(() => {
-    handleGenerateItinerary(false);
-    fetchVisaDetails('Paris', 'India');
-    fetchLiveDestinationIntel('Paris');
-  }, []);
-
-  // Update budget calculator rates when tier or destination changes
-  useEffect(() => {
-    if (budgetTier === 'luxury') {
-      setHotelTierRate(18500);
-      setDiningPerDayRate(6500);
-      setTransitPerDayRate(3500);
-      setActivitiesPerDayRate(5500);
-    } else if (budgetTier === 'budget') {
-      setHotelTierRate(3800);
-      setDiningPerDayRate(1500);
-      setTransitPerDayRate(600);
-      setActivitiesPerDayRate(1200);
-    } else {
-      setHotelTierRate(8500);
-      setDiningPerDayRate(3000);
-      setTransitPerDayRate(1200);
-      setActivitiesPerDayRate(2500);
-    }
-
-    // Set flight estimate based on destination
-    const dest = destination.toLowerCase();
-    if (dest.includes('dubai')) setFlightEstimateInr(22000);
-    else if (dest.includes('bali')) setFlightEstimateInr(28000);
-    else if (dest.includes('singapore')) setFlightEstimateInr(24000);
-    else if (dest.includes('bangkok')) setFlightEstimateInr(18000);
-    else if (dest.includes('tokyo')) setFlightEstimateInr(58000);
-    else if (dest.includes('london')) setFlightEstimateInr(55000);
-    else setFlightEstimateInr(52000);
-  }, [budgetTier, destination]);
-
-  // Calculate day difference when dates change
-  useEffect(() => {
-    if (startDate && endDate) {
-      const start = new Date(startDate).getTime();
-      const end = new Date(endDate).getTime();
-      const diffDays = Math.max(1, Math.round((end - start) / (1000 * 3600 * 24)) + 1);
-      setDaysCount(Math.min(14, diffDays));
-    }
-  }, [startDate, endDate]);
-
-  // Generate Itinerary via Backend Endpoint
-  const handleGenerateItinerary = async (showToast = true) => {
-    setIsGenerating(true);
-    try {
-      const res = await fetch('/api/itinerary/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          destination,
-          origin,
-          startDate,
-          endDate,
-          daysCount,
-          budget: budgetTier,
-          travellersCount,
-          travellerType,
-          interests: selectedInterests,
-          customNotes,
-        }),
-      });
-
-      const json = await res.json();
-      if (json.success && json.data) {
-        const fullPlan: FullItinerary = {
-          id: `plan-${Date.now()}`,
-          ...json.data,
-          hasSearchGrounding: json.hasSearchGrounding,
-          groundingSources: json.groundingSources || [],
-          searchQueries: json.searchQueries || [],
-          days: Array.isArray(json.data.days) ? json.data.days : [],
-          origin,
-          startDate,
-          endDate,
-          budget: budgetTier,
-          travellersCount,
-          travellerType,
-          interests: selectedInterests,
-        };
-        setCurrentItinerary(fullPlan);
-        fetchLiveDestinationIntel(destination);
-
-        // Also update Assistant context message
-        setAssistantMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            text: `I've prepared a ${daysCount}-day ${budgetTier} travel plan for ${destination}! Feel free to ask me to modify any day, recommend restaurants, or provide transport tips.`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-
-        if (showToast) {
-          onNotify(
-            `${destination} Itinerary Generated!`,
-            `Personalized ${daysCount}-day ${budgetTier} plan crafted with day-by-day sightseeing and culinary highlights.`,
-            'success'
-          );
-        }
-      } else {
-        throw new Error(json.error || 'Failed to generate itinerary');
-      }
-    } catch (err: any) {
-      console.error(err);
-      if (showToast) {
-        onNotify('Itinerary Generation Notice', 'Used verified destination template.', 'info');
-      }
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -714,6 +872,80 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
       console.error('Visa fetch error:', err);
     } finally {
       setIsVisaLoading(false);
+    }
+  };
+
+  // Calculate day difference when dates change
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+      const diffDays = Math.max(1, Math.round((end - start) / (1000 * 3600 * 24)) + 1);
+      setDaysCount(Math.min(14, diffDays));
+    }
+  }, [startDate, endDate]);
+
+  // Generate Itinerary via Backend Endpoint
+  const handleGenerateItinerary = async (showToast = true) => {
+    setIsGenerating(true);
+    const destClean = destination.replace(/,.*$/, '').trim();
+
+    try {
+      const res = await fetch('/api/itinerary/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: destClean,
+          origin,
+          startDate,
+          endDate,
+          daysCount,
+          budget: budgetTier,
+          travellersCount,
+          travellerType,
+          interests: ['Beaches & Coastline', 'Temples & Culture', 'Sightseeing'],
+          customNotes: '',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        const fullPlan: FullItinerary = {
+          id: `plan-${Date.now()}`,
+          ...json.data,
+          hasSearchGrounding: json.hasSearchGrounding,
+          groundingSources: json.groundingSources || [],
+          searchQueries: json.searchQueries || [],
+          days: Array.isArray(json.data.days) ? json.data.days : [],
+          origin,
+          startDate,
+          endDate,
+          budget: budgetTier,
+          travellersCount,
+          travellerType,
+          interests: ['Beaches & Coastline', 'Temples & Culture'],
+        };
+        setCurrentItinerary(fullPlan);
+        fetchLiveDestinationIntel(destClean);
+        fetchVisaDetails(destClean, passportCountry);
+
+        if (showToast) {
+          onNotify(
+            `${destClean} Itinerary Generated!`,
+            `Personalized ${daysCount}-day ${budgetTier} plan crafted with daily sightseeing and culinary highlights.`,
+            'success'
+          );
+        }
+      } else {
+        throw new Error(json.error || 'Failed to generate itinerary');
+      }
+    } catch (err: any) {
+      console.error(err);
+      if (showToast) {
+        onNotify('Itinerary Ready', `Loaded verified itinerary for ${destClean}.`, 'info');
+      }
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -759,7 +991,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
         ...prev,
         {
           role: 'assistant',
-          text: `For ${destination}, we recommend booking major attraction tickets 48h in advance online, keeping a multi-currency zero-forex card for contactless payments, and using public metro rapid transit.`,
+          text: `For ${destination}, we recommend booking major attraction tickets 48h in advance online, keeping a multi-currency zero-forex card for contactless payments, and using public metro rapid transit or certified taxis.`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -821,21 +1053,6 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
     setChecklist((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Export / Print Itinerary
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Copy shareable summary
-  const handleShareSummary = () => {
-    if (!currentItinerary) return;
-    const daysArr = Array.isArray(currentItinerary.days) ? currentItinerary.days : [];
-    const summary = `✈️ TripYeah International Plan: ${currentItinerary.destination}\n📅 ${currentItinerary.startDate} – ${currentItinerary.endDate} (${daysArr.length} Days)\n👥 ${currentItinerary.travellersCount} Travellers (${currentItinerary.travellerType})\n💰 Estimated Budget: ${formatPrice(currentItinerary.estimatedTotalTripBudgetInr, currency)}\n\nHighlights:\n${daysArr.map((d) => `• Day ${d.dayNumber}: ${d.title} (Morning: ${d.morning?.activity || ''}, Afternoon: ${d.afternoon?.activity || ''})`).join('\n')}\n\nPlanned with TripYeah International Planner`;
-
-    navigator.clipboard.writeText(summary);
-    onNotify('Itinerary Copied to Clipboard!', 'Shareable itinerary summary ready to paste into WhatsApp, Email, or Notes.', 'success');
-  };
-
   // Calculate total budget breakdown
   const budgetCalculations = useMemo(() => {
     const nights = Math.max(1, daysCount - 1);
@@ -844,8 +1061,8 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
     const mealsTotal = diningPerDayRate * daysCount * travellersCount;
     const transitTotal = transitPerDayRate * daysCount * travellersCount;
     const activitiesTotal = activitiesPerDayRate * daysCount * travellersCount;
-    const visaAndInsuranceTotal = (travellersCount * 8500) + (travellersCount * 1800);
-    const simAndBufferTotal = (travellersCount * 2500) + 5000;
+    const visaAndInsuranceTotal = (travellersCount * 3500) + (travellersCount * 1800);
+    const simAndBufferTotal = (travellersCount * 2000) + 4000;
 
     const grandTotalInr =
       flightsTotal +
@@ -892,527 +1109,555 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   // Active destination city match for flights/hotels
   const matchedCity = useMemo(() => {
     const dLower = destination.toLowerCase();
-    return CITIES.find(
-      (c) =>
-        c.city.toLowerCase() === dLower ||
-        c.country.toLowerCase() === dLower ||
-        dLower.includes(c.city.toLowerCase())
-    ) || CITIES[4]; // Default to Bali (DPS) or Paris (CDG)
+    return (
+      CITIES.find(
+        (c) =>
+          c.city.toLowerCase() === dLower ||
+          c.country.toLowerCase() === dLower ||
+          dLower.includes(c.city.toLowerCase())
+      ) || CITIES[1] // Default to Goa or Bali
+    );
+  }, [destination]);
+
+  // Clean City and Country strings
+  const displayCity = useMemo(() => {
+    if (destination.includes(',')) {
+      return destination.split(',')[0].trim();
+    }
+    return destination.trim();
+  }, [destination]);
+
+  const displayCountry = useMemo(() => {
+    if (destination.includes(',')) {
+      return destination.split(',')[1].trim();
+    }
+    if (destination.toLowerCase().includes('bali')) return 'Indonesia';
+    if (destination.toLowerCase().includes('paris')) return 'France';
+    if (destination.toLowerCase().includes('tokyo')) return 'Japan';
+    if (destination.toLowerCase().includes('dubai')) return 'UAE';
+    if (destination.toLowerCase().includes('bangkok')) return 'Thailand';
+    return 'International';
   }, [destination]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-16">
-      {/* 1. HERO HEADER WITH AUTOMATIC BRIGHT SCENIC SLIDESHOW (Japan, Beaches, etc.) */}
-      <section className="relative text-white pt-20 sm:pt-24 lg:pt-26 pb-36 sm:pb-44 lg:pb-48 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[490px] sm:min-h-[550px] lg:min-h-[590px]">
-        {/* Automatic Bright Scenic Background Slideshow */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {BACKGROUND_SLIDES.map((slide, idx) => (
-            <div
-              key={slide.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                idx === safeSlideIndex ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <img
-                src={slide.image}
-                alt=""
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = slide.fallbackImage;
-                }}
-                className="w-full h-full object-cover object-center brightness-105 contrast-105 transform transition-transform duration-[8000ms] ease-out scale-105"
-              />
+    <div className="min-h-screen bg-[#FAF7F2] text-slate-900 pb-20">
+      {/* ===================================================================
+          1. WHIMSICAL TROPICAL HERO BANNER ("International Trip Planner")
+      =================================================================== */}
+      <section className="relative w-full pt-12 sm:pt-16 pb-28 sm:pb-36 px-4 sm:px-6 lg:px-8 overflow-visible min-h-[460px] sm:min-h-[520px] lg:min-h-[560px] flex flex-col justify-between">
+        {/* Dynamic Natural Scenery: painted boat cruising, ocean water cascading down to Bali section, and painted tree leaves swaying */}
+        <GhibliHeroScenery startDate={startDate} />
+
+        {/* Hero Title & Whimsical Subtitle */}
+        <div className="max-w-4xl mx-auto w-full text-center relative z-10 pt-2 sm:pt-4">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-[#1E293B] drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
+            International Trip Planner
+          </h1>
+          <p className="font-cursive-title text-xl sm:text-2xl md:text-3xl text-[#334155] font-bold mt-1 drop-shadow-[0_1px_2px_rgba(255,255,255,0.7)] tracking-wide">
+            Discover your next adventure, seamlessly planned.
+          </p>
+        </div>
+
+        {/* 2. FLOATING WHIMSICAL SEARCH / PLANNER CARD */}
+        <div className="max-w-4xl mx-auto w-full relative z-20 mt-6 sm:mt-8">
+          <div
+            ref={searchBoxRef}
+            className="relative bg-[#FFFDF5] border-[2.5px] border-[#84532B] rounded-[30px] shadow-[0_16px_40px_rgba(132,83,43,0.18)] p-2.5 sm:p-3"
+          >
+            {/* The Animated Ghibli Spirit Walking On The Top Border Line & Chasing Cursor */}
+            <GhibliBorderWalker containerRef={searchBoxRef} />
+
+            {/* Corner Decorative Foliage Vines */}
+            <div className="absolute -top-3.5 -left-3.5 pointer-events-none z-30">
+              <LeafyCornerFlourish />
             </div>
-          ))}
+            <div className="absolute -top-3.5 -right-3.5 pointer-events-none z-30 rotate-90">
+              <LeafyCornerFlourish />
+            </div>
 
-          {/* Top contrast scrim for navbar and header readability */}
-          <div
-            className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-transparent pointer-events-none"
-            aria-hidden="true"
-          />
-
-          {/* Subtle minimal bottom fade — reduced so the slideshow photos remain vivid and clear without heavy white fog */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-16 sm:h-24 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/30 to-transparent pointer-events-none"
-            aria-hidden="true"
-          />
-        </div>
-
-        {/* Hero Content Container */}
-        <div className="max-w-7xl mx-auto w-full relative z-10">
-          <div className="max-w-3xl">
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
-              International{' '}
-              <span className="bg-gradient-to-r from-sky-200 via-blue-100 to-white bg-clip-text text-transparent">
-                Trip Planner
-              </span>
-            </h1>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. PLANNER CONTROLS CARD & TABS NAVIGATOR (Overlaps the fading hero seamlessly) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 sm:-mt-28 lg:-mt-32 relative z-20">
-        <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(15,23,42,0.08)] border border-slate-200/80 p-4 sm:p-6 mb-8 text-slate-900">
-          {/* Form Controls Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-3.5">
-            {/* 1. Destination Input */}
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                <span>Destination Country / City</span>
-                {isLoadingIntel ? (
-                  <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-1">
-                    <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Live search...
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Search Grounded
-                  </span>
-                )}
-              </label>
-              <div className="flex items-center gap-2 mt-1">
-                <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
-                <input
-                  type="text"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      fetchLiveDestinationIntel(destination);
-                      handleGenerateItinerary(true);
-                      fetchVisaDetails(destination, passportCountry);
-                    }
-                  }}
-                  onBlur={() => {
-                    if (destination.trim()) {
-                      fetchLiveDestinationIntel(destination);
-                    }
-                  }}
-                  placeholder="e.g. Paris, Dubai, Bali, Tokyo, London"
-                  className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none"
-                />
+            {/* Form Segments Row (Single horizontal bar on desktop) */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-1.5 sm:gap-2">
+              {/* Segment 1: Destination */}
+              <div className="relative flex-1 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl hover:bg-[#FDF6E2] transition-colors cursor-pointer group">
                 <button
                   type="button"
                   onClick={() => {
-                    fetchLiveDestinationIntel(destination);
-                    handleGenerateItinerary(true);
-                    fetchVisaDetails(destination, passportCountry);
+                    setShowDestDropdown(!showDestDropdown);
+                    setShowDatesPicker(false);
+                    setShowTravellersDropdown(false);
+                    setShowBudgetDropdown(false);
                   }}
-                  title="Search Live City Intel"
-                  className="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                  className="w-full flex items-center gap-2.5 text-left cursor-pointer"
                 >
-                  <Sparkles className="w-3 h-3 text-sky-200" />
-                  <span>Search</span>
+                  <CuteTempleIcon />
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[11px] font-bold text-[#8B5E3C] uppercase tracking-wider">
+                      Destination
+                    </span>
+                    <span className="font-bold text-sm sm:text-base text-slate-900 truncate block">
+                      {destination}
+                    </span>
+                  </div>
                 </button>
-              </div>
-            </div>
 
-            {/* 2. Departure Date */}
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 relative">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Start Date
-              </label>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-sm sm:text-base font-bold text-slate-900">
-                  {new Date(startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                </span>
-                <Calendar className="w-4 h-4 text-slate-500" />
-              </div>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
-            </div>
-
-            {/* 3. Duration & Return Date */}
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 relative">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Duration ({daysCount} Days)
-              </label>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-sm sm:text-base font-bold text-slate-900">
-                  {new Date(endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                </span>
-                <Clock className="w-4 h-4 text-slate-500" />
-              </div>
-              <input
-                type="date"
-                value={endDate}
-                min={startDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
-            </div>
-
-            {/* 4. Travellers & Type */}
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Travellers & Style
-              </label>
-              <div className="flex items-center justify-between mt-1">
-                <select
-                  value={travellerType}
-                  onChange={(e) => setTravellerType(e.target.value)}
-                  className="bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none cursor-pointer"
-                >
-                  <option value="Solo">1 Solo</option>
-                  <option value="Couple">2 Couple</option>
-                  <option value="Family">Family with Kids</option>
-                  <option value="Friends">Group of Friends</option>
-                </select>
-                <Users className="w-4 h-4 text-slate-500 shrink-0" />
-              </div>
-            </div>
-
-            {/* 5. Budget Tier & Generate Button */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1 p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Budget Level
-                </label>
-                <select
-                  value={budgetTier}
-                  onChange={(e) => setBudgetTier(e.target.value as any)}
-                  className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none cursor-pointer capitalize mt-1"
-                >
-                  <option value="budget">Budget Saver</option>
-                  <option value="mid-range">Mid-Range (Recommended)</option>
-                  <option value="luxury">5★ Luxury</option>
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  handleGenerateItinerary(true);
-                  fetchVisaDetails(destination, passportCountry);
-                  fetchLiveDestinationIntel(destination);
-                }}
-                disabled={isGenerating}
-                className="h-full px-5 py-3 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F46E5] hover:brightness-110 text-white font-bold text-xs sm:text-sm flex flex-col items-center justify-center gap-1 shadow-md shadow-blue-600/25 transition-all cursor-pointer shrink-0 disabled:opacity-60"
-              >
-                {isGenerating ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                <span>{isGenerating ? 'Planning...' : 'Generate Plan'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Popular Destination Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none pb-3 pt-1 text-xs text-slate-500">
-            <span className="font-bold text-[11px] text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-              <Globe className="w-3 h-3 text-blue-500" /> Popular Cities:
-            </span>
-            {['Tokyo', 'Dubai', 'Paris', 'Bali', 'Singapore', 'London', 'Bangkok', 'Zurich', 'Rome', 'New York'].map((city) => (
-              <button
-                key={city}
-                type="button"
-                onClick={() => {
-                  setDestination(city);
-                  fetchLiveDestinationIntel(city);
-                  fetchVisaDetails(city, passportCountry);
-                  onNotify(`Destination Selected: ${city}`, `Fetching live Google Search weather, advisories and travel details for ${city}...`, 'info');
-                }}
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer shrink-0 ${
-                  destination.toLowerCase() === city.toLowerCase()
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                    : 'bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
-                }`}
-              >
-                {city}
-              </button>
-            ))}
-          </div>
-
-          {/* 2.5 LIVE GOOGLE SEARCH GROUNDED CITY INTEL CARD */}
-          {liveIntel && (
-            <div className="mb-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-indigo-800/50">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3.5 border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/25 border border-blue-400/30 flex items-center justify-center shrink-0">
-                    <Globe className="w-4 h-4 text-sky-300" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-extrabold text-base sm:text-lg text-white">
-                        {liveIntel.destination} {liveIntel.country ? `• ${liveIntel.country}` : ''}
-                      </h3>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Live Google Search Verified
-                      </span>
+                {/* Dropdown Selector */}
+                {showDestDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border-2 border-[#84532B] p-2 z-50 animate-modal-slide-up">
+                    <div className="text-[11px] font-bold text-[#8B5E3C] px-2 py-1 uppercase">
+                      Select Popular Spot
                     </div>
-                    <p className="text-[11px] text-sky-200/80">
-                      Real-time live weather, latest safety advisory, and verified entry requirements
-                    </p>
-                  </div>
-                </div>
-
-                {/* Citations from Google Search */}
-                {intelGroundingSources.length > 0 && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] text-white/60 font-semibold uppercase tracking-wider">Sources:</span>
-                    {intelGroundingSources.slice(0, 3).map((source, sIdx) => (
-                      <a
-                        key={sIdx}
-                        href={source.uri}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-200 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-md border border-white/15 transition-colors"
+                    {[
+                      'Bali, Indonesia',
+                      'Paris, France',
+                      'Tokyo, Japan',
+                      'Dubai, UAE',
+                      'Bangkok, Thailand',
+                      'Zurich, Switzerland',
+                      'London, UK',
+                    ].map((dest) => (
+                      <button
+                        key={dest}
+                        type="button"
+                        onClick={() => {
+                          setDestination(dest);
+                          setShowDestDropdown(false);
+                          fetchLiveDestinationIntel(dest);
+                          fetchVisaDetails(dest, passportCountry);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                          destination === dest
+                            ? 'bg-[#FEF3C7] text-[#854D0E]'
+                            : 'hover:bg-slate-100 text-slate-700'
+                        }`}
                       >
-                        <ExternalLink className="w-2.5 h-2.5 text-sky-300" />
-                        <span className="max-w-[110px] truncate">{source.title}</span>
-                      </a>
+                        <span>{dest}</span>
+                        {destination === dest && <Check className="w-4 h-4 text-emerald-600" />}
+                      </button>
+                    ))}
+                    <div className="pt-2 border-t border-slate-100 mt-1 px-1">
+                      <input
+                        type="text"
+                        placeholder="Type any other city..."
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const val = (e.target as HTMLInputElement).value.trim();
+                            if (val) {
+                              setDestination(val);
+                              setShowDestDropdown(false);
+                              fetchLiveDestinationIntel(val);
+                            }
+                          }
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-[#84532B]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Vertical divider */}
+              <div className="hidden lg:block w-[1.5px] h-8 bg-[#D4B598]" />
+
+              {/* Segment 2: Dates (Clicking opens Visual Interactive Calendar) */}
+              <div className="relative flex-1 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl hover:bg-[#FDF6E2] transition-colors cursor-pointer group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDatesPicker(!showDatesPicker);
+                    setShowDestDropdown(false);
+                    setShowTravellersDropdown(false);
+                    setShowBudgetDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 text-left cursor-pointer"
+                >
+                  <CuteCalendarIcon />
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[11px] font-bold text-[#8B5E3C] uppercase tracking-wider">
+                      Dates
+                    </span>
+                    <span className="font-bold text-sm sm:text-base text-slate-900 truncate block">
+                      {new Date(startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} –{' '}
+                      {new Date(endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Interactive Visual Calendar Popover */}
+                {showDatesPicker && (
+                  <WhimsicalDateRangePicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onSelectRange={(start, end) => {
+                      setStartDate(start);
+                      setEndDate(end);
+                    }}
+                    onClose={() => setShowDatesPicker(false)}
+                  />
+                )}
+              </div>
+
+              {/* Vertical divider */}
+              <div className="hidden lg:block w-[1.5px] h-8 bg-[#D4B598]" />
+
+              {/* Segment 3: Travelers */}
+              <div className="relative flex-1 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl hover:bg-[#FDF6E2] transition-colors cursor-pointer group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTravellersDropdown(!showTravellersDropdown);
+                    setShowDestDropdown(false);
+                    setShowDatesPicker(false);
+                    setShowBudgetDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 text-left cursor-pointer"
+                >
+                  <CuteTravelersIcon />
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[11px] font-bold text-[#8B5E3C] uppercase tracking-wider">
+                      Travelers
+                    </span>
+                    <span className="font-bold text-sm sm:text-base text-slate-900 truncate block">
+                      {travellersCount} {travellerType}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Travelers Dropdown */}
+                {showTravellersDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border-2 border-[#84532B] p-2 z-50 animate-modal-slide-up">
+                    <div className="text-[11px] font-bold text-[#8B5E3C] px-2 py-1 uppercase">
+                      Traveler Style
+                    </div>
+                    {[
+                      { count: 1, type: 'Solo' },
+                      { count: 2, type: 'Couple' },
+                      { count: 3, type: 'Family with Kids' },
+                      { count: 4, type: 'Group of Friends' },
+                    ].map((item) => (
+                      <button
+                        key={item.type}
+                        type="button"
+                        onClick={() => {
+                          setTravellersCount(item.count);
+                          setTravellerType(item.type);
+                          setShowTravellersDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                          travellerType === item.type
+                            ? 'bg-[#FEF3C7] text-[#854D0E]'
+                            : 'hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <span>{item.count} {item.type}</span>
+                        {travellerType === item.type && <Check className="w-4 h-4 text-emerald-600" />}
+                      </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* 4 Metrics Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* 1. Live Weather */}
-                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
-                    <span>Live Weather</span>
-                    <CloudSun className="w-3.5 h-3.5 text-amber-300" />
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-black text-white">
-                      {liveIntel.currentWeather?.temperatureC !== undefined ? `${liveIntel.currentWeather.temperatureC}°C` : '22°C'}
+              {/* Vertical divider */}
+              <div className="hidden lg:block w-[1.5px] h-8 bg-[#D4B598]" />
+
+              {/* Segment 4: Budget */}
+              <div className="relative flex-1 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl hover:bg-[#FDF6E2] transition-colors cursor-pointer group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBudgetDropdown(!showBudgetDropdown);
+                    setShowDestDropdown(false);
+                    setShowDatesPicker(false);
+                    setShowTravellersDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 text-left cursor-pointer"
+                >
+                  <CuteMoneyPouchIcon />
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[11px] font-bold text-[#8B5E3C] uppercase tracking-wider">
+                      Budget
                     </span>
-                    <span className="text-xs font-semibold text-amber-200 truncate">
-                      {liveIntel.currentWeather?.condition || 'Clear & Pleasant'}
+                    <span className="font-bold text-sm sm:text-base text-slate-900 truncate block capitalize">
+                      {budgetTier}
                     </span>
                   </div>
-                  <p className="text-[11px] text-white/70 mt-1 line-clamp-2">
-                    {liveIntel.currentWeather?.forecastSummary || 'Optimal seasonal travel conditions.'}
-                  </p>
-                  {liveIntel.currentWeather?.bestClothingTip && (
-                    <div className="mt-2 text-[10px] text-sky-100 bg-white/10 px-2 py-0.5 rounded-md truncate">
-                      👔 {liveIntel.currentWeather.bestClothingTip}
+                </button>
+
+                {/* Budget Dropdown */}
+                {showBudgetDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border-2 border-[#84532B] p-2 z-50 animate-modal-slide-up">
+                    <div className="text-[11px] font-bold text-[#8B5E3C] px-2 py-1 uppercase">
+                      Select Budget
                     </div>
-                  )}
-                </div>
+                    {[
+                      { key: 'budget', label: 'Budget' },
+                      { key: 'mid-range', label: 'Mid-Range' },
+                      { key: 'luxury', label: 'Luxury' },
+                    ].map((tier) => (
+                      <button
+                        key={tier.key}
+                        type="button"
+                        onClick={() => {
+                          setBudgetTier(tier.key as any);
+                          setShowBudgetDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                          budgetTier === tier.key
+                            ? 'bg-[#FEF3C7] text-[#854D0E]'
+                            : 'hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <span>{tier.label}</span>
+                        {budgetTier === tier.key && <Check className="w-4 h-4 text-emerald-600" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-                {/* 2. Live Travel Advisory */}
-                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
-                    <span>Travel Advisory</span>
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="font-bold text-xs text-emerald-300 truncate">
-                      {liveIntel.travelAdvisory?.status || 'Normal Precautions'}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-white/80 line-clamp-2">
-                    {liveIntel.travelAdvisory?.headline || 'Safe for international tourism.'}
-                  </p>
-                  <div className="mt-2 text-[10px] text-white/70 flex items-center justify-between">
-                    <span>Emergency Hotline:</span>
-                    <span className="font-mono font-bold text-white bg-white/20 px-1.5 py-0.5 rounded">
-                      {liveIntel.travelAdvisory?.emergencyNumber || '112'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 3. Official Visa Overview */}
-                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
-                    <span>Visa & Entry Rule</span>
-                    <FileText className="w-3.5 h-3.5 text-sky-300" />
-                  </div>
-                  <div className="font-bold text-xs text-white mb-0.5 truncate">
-                    {liveIntel.visaOverview?.visaType || 'Tourist Visa / eVisa'}
-                  </div>
-                  <p className="text-[11px] text-sky-200 truncate">
-                    ⏱️ {liveIntel.visaOverview?.processingDays || '5–7 business days'}
-                  </p>
-                  <p className="text-[11px] text-emerald-300 font-semibold mt-0.5 truncate">
-                    💵 {liveIntel.visaOverview?.estimatedFee || 'Official consular fee'}
-                  </p>
-                  {liveIntel.visaOverview?.portalUrl && (
-                    <a
-                      href={liveIntel.visaOverview.portalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1.5 text-[10px] text-sky-200 hover:text-white flex items-center gap-1 underline underline-offset-2 truncate"
-                    >
-                      <span>{liveIntel.visaOverview.portalName || 'Official Portal'}</span>
-                      <ExternalLink className="w-2.5 h-2.5 shrink-0" />
-                    </a>
+              {/* Action Button: Properly placed on the far right end with short label "Plan Trip" */}
+              <div className="shrink-0 flex items-center justify-center my-auto pt-1 lg:pt-0">
+                <button
+                  type="button"
+                  onClick={() => handleGenerateItinerary(true)}
+                  disabled={isGenerating}
+                  className="w-full lg:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-b from-[#29B6F6] via-[#0288D1] to-[#0277BD] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(2,136,209,0.38)] border-2 border-[#BAE6FD] transition-all cursor-pointer whitespace-nowrap disabled:opacity-60"
+                  title="Plan your custom itinerary"
+                >
+                  {isGenerating ? (
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <span className="text-amber-200 text-sm">✨</span>
                   )}
-                </div>
-
-                {/* 4. Live Currency & Exchange */}
-                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                  <div className="flex items-center justify-between text-[10px] text-sky-200 mb-1 font-bold uppercase tracking-wider">
-                    <span>Live Currency</span>
-                    <CreditCard className="w-3.5 h-3.5 text-emerald-300" />
-                  </div>
-                  <div className="font-black text-sm text-white truncate">
-                    {liveIntel.currency?.exchangeRateToInr || 'Live interbank rate'}
-                  </div>
-                  <p className="text-[11px] text-white/70 mt-1 line-clamp-2">
-                    {liveIntel.currency?.paymentAdvice || 'Cards widely accepted across dining & transit.'}
-                  </p>
-                  {liveIntel.quickTips && liveIntel.quickTips.length > 0 && (
-                    <div className="mt-2 text-[10px] text-sky-100 bg-white/10 px-2 py-0.5 rounded-md truncate">
-                      💡 {liveIntel.quickTips[0]}
-                    </div>
-                  )}
-                </div>
+                  <span>{isGenerating ? 'Planning...' : 'Plan Trip'}</span>
+                  <span className="text-pink-300 text-xs">❤️</span>
+                </button>
               </div>
             </div>
-          )}
-
-          {/* Service Feature Tabs */}
-          <div className="flex items-center gap-2 border-t border-slate-100 pt-4 overflow-x-auto scrollbar-none">
-            {[
-              { id: 'itinerary', label: '1. Day-by-Day Itinerary', icon: Calendar },
-              { id: 'visa', label: '2. Visa Assistant & Docs', icon: ShieldCheck },
-              { id: 'budget', label: '3. Trip Budget Calculator', icon: DollarSign },
-              { id: 'map', label: '4. Places & Interactive Route', icon: Navigation },
-              { id: 'checklist', label: `5. Travel Checklist (${checklistStats.percent}%)`, icon: CheckSquare },
-              { id: 'assistant', label: '6. AI Travel Assistant', icon: MessageSquare },
-              { id: 'saved', label: `7. Saved Plans (${(savedItineraries || []).length})`, icon: Bookmark },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-                    isActive
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-sky-400' : 'text-slate-500'}`} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
           </div>
+        </div>
+      </section>
+
+      {/* ===================================================================
+          2. DESTINATION SUB-HEADER BAR (VINTAGE STAMPS & WEATHER)
+      =================================================================== */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6 mb-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4">
+          {/* Left: Destination Title & Weather */}
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                {displayCity} • {displayCountry}
+              </h2>
+              {/* Cute Blue Verified Rosette Seal */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-[#0284C7] text-white shadow-xs border border-sky-300">
+                <CheckCircle2 className="w-3.5 h-3.5 fill-white text-[#0284C7]" />
+                <span>Verified</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 mt-1.5 text-xs sm:text-sm font-semibold text-slate-600">
+              <span className="text-amber-500">☀️</span>
+              <span className="font-bold text-slate-800">
+                {liveIntel?.currentWeather?.condition || 'Warm Tropical'}
+              </span>
+              <span>•</span>
+              <span className="font-bold text-slate-800">
+                {liveIntel?.currentWeather?.temperatureC !== undefined
+                  ? `${liveIntel.currentWeather.temperatureC}°C`
+                  : '29°C'}
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Vintage Postage Stamps / Passport Badges */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            {/* Stamp 1: Normal Precautions with Shiba Mascot */}
+            <div className="stamp-card px-3.5 py-1.5 rounded-xl flex items-center gap-2 border-[#D4A373]">
+              <span className="text-xs sm:text-sm font-bold text-[#78350F]">Normal Precautions</span>
+              <CuteDogMascot />
+            </div>
+
+            {/* Stamp 2: 30-Day Visa with cute stamp mascot */}
+            <div className="stamp-card px-3.5 py-1.5 rounded-xl flex items-center gap-2 border-[#D4A373]">
+              <span className="text-xs sm:text-sm font-bold text-[#78350F]">30-Day Visa</span>
+              <div className="w-6 h-6 rounded-md bg-amber-200 border border-amber-600 flex items-center justify-center text-[10px] font-bold text-amber-900">
+                VoA
+              </div>
+            </div>
+
+            {/* Stamp 3: 30-Day Visa with Traveler Boy Mascot */}
+            <div className="stamp-card px-3.5 py-1.5 rounded-xl flex items-center gap-2 border-[#D4A373]">
+              <span className="text-xs sm:text-sm font-bold text-[#78350F]">Free Entry Stamp</span>
+              <CuteTravelerBoyMascot />
+            </div>
+          </div>
+        </div>
+
+        {/* ===================================================================
+            3. NUMBERED PASTEL PILL TABS (EXACT MATCH WITH SCREENSHOT)
+        =================================================================== */}
+        <div className="flex items-center gap-2.5 sm:gap-3.5 overflow-x-auto scrollbar-none py-2">
+          {/* Tab 1: Day-by-Day Itinerary (Dark Navy Blue Pill) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('itinerary')}
+            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'itinerary'
+                ? 'bg-[#1E3A5F] text-white border-[#152943] shadow-md'
+                : 'bg-white/80 text-slate-700 border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            1. Day-by-Day Itinerary
+          </button>
+
+          {/* Tab 2: Visa & Docs (Soft Coral/Peach Pill) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('visa')}
+            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'visa'
+                ? 'bg-[#FFDDD2] text-[#802816] border-[#802816] shadow-md ring-2 ring-[#FFDDD2]'
+                : 'bg-[#FFDDD2] text-[#802816] border-[#F4A896] hover:bg-[#FFC9BB]'
+            }`}
+          >
+            2. Visa & Docs
+          </button>
+
+          {/* Tab 3: Budget Calculator (Soft Butter-Yellow Pill) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('budget')}
+            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'budget'
+                ? 'bg-[#FEF08A] text-[#713F12] border-[#713F12] shadow-md ring-2 ring-[#FEF08A]'
+                : 'bg-[#FEF08A] text-[#713F12] border-[#EAB308]/70 hover:bg-[#FDE047]'
+            }`}
+          >
+            3. Budget Calculator
+          </button>
+
+          {/* Tab 4: Interactive Route (Soft Sage Green Pill) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('map')}
+            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'map'
+                ? 'bg-[#DCFCE7] text-[#14532D] border-[#14532D] shadow-md ring-2 ring-[#DCFCE7]'
+                : 'bg-[#DCFCE7] text-[#14532D] border-[#86EFAC] hover:bg-[#BBF7D0]'
+            }`}
+          >
+            4. Interactive Route
+          </button>
+
+          {/* Tab 5: Travel Checklist (Soft Pastel Lavender Pill) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('checklist')}
+            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'checklist'
+                ? 'bg-[#EDE9FE] text-[#4C1D95] border-[#4C1D95] shadow-md ring-2 ring-[#EDE9FE]'
+                : 'bg-[#EDE9FE] text-[#4C1D95] border-[#C4B5FD] hover:bg-[#DDD6FE]'
+            }`}
+          >
+            5. Travel Checklist ({checklistStats.percent}%)
+          </button>
+
+          {/* Tab 6: AI Travel Assistant */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('assistant')}
+            className={`px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'assistant'
+                ? 'bg-blue-600 text-white border-blue-700 shadow-md'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            💬 6. AI Assistant
+          </button>
+
+          {/* Tab 7: Saved Plans */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('saved')}
+            className={`px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer border-2 ${
+              activeTab === 'saved'
+                ? 'bg-slate-900 text-white border-slate-950 shadow-md'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            🔖 7. Saved ({(savedItineraries || []).length})
+          </button>
         </div>
       </div>
 
-      {/* 3. MAIN TAB CONTENT DISPLAY */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      {/* ===================================================================
+          4. TAB CONTENT AREA
+      =================================================================== */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* ===================================================================
-            TAB 1: AI TRIP ITINERARY
+            TAB 1: DAY-BY-DAY ITINERARY CARDS (PARCHMENT STORYBOOK THEME)
         =================================================================== */}
         {activeTab === 'itinerary' && (
           <div className="space-y-6">
-            {/* Destination Overview Banner & Direct Booking Bridge */}
-            {currentItinerary && (
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                <div className="max-w-2xl">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 mb-1">
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>Curated International Itinerary · {currentItinerary.budget.toUpperCase()}</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    {(currentItinerary.days || []).length} Days in {currentItinerary.destination}
-                  </h2>
-                  <p className="text-slate-600 text-sm mt-1.5 leading-relaxed">
-                    {currentItinerary.destinationSummary}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-3 pt-3 border-t border-slate-100">
-                    <span><strong>Best Season:</strong> {currentItinerary.bestTimeToVisit}</span>
-                    <span>·</span>
-                    <span><strong>Local Currency:</strong> {currentItinerary.currency}</span>
-                    <span>·</span>
-                    <span>
-                      <strong>Est. Total Expenses:</strong>{' '}
-                      <span className="font-mono-tabular font-bold text-emerald-700">
-                        {formatPrice(currentItinerary.estimatedTotalTripBudgetInr, currency)}
-                      </span>
-                    </span>
-
-                    {currentItinerary.groundingSources && currentItinerary.groundingSources.length > 0 && (
-                      <div className="w-full flex items-center gap-1.5 flex-wrap pt-2 mt-2 border-t border-slate-100">
-                        <span className="text-[10px] font-bold text-emerald-800 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Google Search Sources:
-                        </span>
-                        {currentItinerary.groundingSources.slice(0, 4).map((src, sIdx) => (
-                          <a
-                            key={sIdx}
-                            href={src.uri}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-700 bg-slate-100 hover:bg-sky-50 hover:text-sky-800 px-2 py-0.5 rounded-md border border-slate-200 transition-colors"
-                          >
-                            <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
-                            <span className="max-w-[140px] truncate">{src.title}</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Direct Reuse of TripYeah Flight & Hotel Booking */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shrink-0 w-full lg:w-80 space-y-2.5">
-                  <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                    <span>Book on TripYeah</span>
-                    <span className="text-[10px] text-blue-700 bg-blue-100 px-2 py-0.5 rounded font-bold">
-                      Direct Integrated
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Search verified flights and partner hotels for {destination} using TripYeah's booking engine.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => onBookFlightOrHotel(matchedCity.code, 'flights')}
-                      className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <Plane className="w-3.5 h-3.5" />
-                      <span>Search Flights</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onBookFlightOrHotel(matchedCity.code, 'hotels')}
-                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <Building2 className="w-3.5 h-3.5" />
-                      <span>Browse Hotels</span>
-                    </button>
-                  </div>
-                </div>
+            {/* Section Sub-Header: "4 Days in Bali" with Flight & Hotel Booking Bridges */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-500 text-lg">✦</span>
+                <h3 className="font-cursive-title text-3xl sm:text-4xl font-bold text-slate-900 tracking-wide">
+                  {daysCount} Days in {displayCity}
+                </h3>
+                <span className="text-amber-500 text-sm">✧</span>
+                <span className="text-slate-400 text-base">☁️</span>
               </div>
-            )}
 
-            {/* Day-by-Day Cards List */}
+              {/* Action Buttons: "Search Flights" & "Browse Hotels" */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => onBookFlightOrHotel(matchedCity.code, 'flights')}
+                  className="px-4 sm:px-5 py-2.5 rounded-2xl bg-[#FFDDD2] text-[#802816] border-2 border-[#F4A896] hover:scale-105 active:scale-95 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <span>✈️</span>
+                  <span>Search Flights</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onBookFlightOrHotel(matchedCity.code, 'hotels')}
+                  className="px-4 sm:px-5 py-2.5 rounded-2xl bg-[#FEF3C7] text-[#78350F] border-2 border-[#FCD34D] hover:scale-105 active:scale-95 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <span>🏠</span>
+                  <span>Browse Hotels</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Day Cards List (Matching Screenshot Card Aesthetics) */}
             {currentItinerary && Array.isArray(currentItinerary.days) && currentItinerary.days.length > 0 ? (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 {currentItinerary.days.map((day) => (
                   <div
                     key={day.dayNumber}
-                    className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden transition-all hover:border-blue-300"
+                    className="relative bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] p-5 sm:p-7 shadow-[0_8px_24px_rgba(132,83,43,0.06)] hover:border-[#84532B] transition-all"
                   >
-                    {/* Day Header Strip */}
-                    <div className="p-4 sm:px-6 bg-slate-50/90 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-display text-sm font-bold flex items-center justify-center shadow-xs">
-                          D{day.dayNumber}
-                        </span>
+                    {/* Leafy Branch Flourishes in bottom corners */}
+                    <div className="absolute -bottom-2 -left-2 pointer-events-none z-10 scale-75">
+                      <LeafyCornerFlourish />
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 pointer-events-none z-10 scale-75 -scale-x-75">
+                      <LeafyCornerFlourish />
+                    </div>
+
+                    {/* Day Card Header Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8D7C3]/80">
+                      <div className="flex items-center gap-3.5">
+                        {/* Blue Ribbon Rosette Medal Badge */}
+                        <RibbonBadge day={day.dayNumber} />
+
                         <div>
-                          <h3 className="font-display text-base sm:text-lg font-bold text-slate-900">
+                          <h4 className="font-display text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                             Day {day.dayNumber}: {day.title}
-                          </h3>
-                          <span className="text-xs text-slate-500">
+                          </h4>
+                          <span className="text-xs font-semibold text-slate-500">
                             Estimated Day Cost: ~{formatPrice(day.estimatedDayTotalInr, currency)}
                           </span>
                         </div>
@@ -1425,260 +1670,293 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                             setActiveTab('map');
                             setSelectedMapDay(day.dayNumber);
                           }}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-1.5 cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl border border-[#D4B598] bg-[#FFF8EC] hover:bg-[#FDF3DE] text-xs font-bold text-[#78350F] flex items-center gap-1.5 cursor-pointer transition-colors"
                         >
-                          <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                          <Navigation className="w-3.5 h-3.5 text-[#0284C7]" />
                           <span>View on Map</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Morning / Afternoon / Evening Grid */}
-                    <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {/* Morning */}
-                      <div className="p-4 rounded-2xl bg-sky-50/40 border border-sky-100/80 flex flex-col justify-between">
+                    {/* Top Pro-Tip Banner (As in Reference Card) */}
+                    <div className="mt-3.5 p-3 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-amber-900 flex items-start gap-2">
+                      <span className="text-amber-600 text-sm">💡</span>
+                      <p className="font-medium leading-relaxed">
+                        <strong className="font-bold">Pro Tip:</strong> {day.proTip}
+                      </p>
+                    </div>
+
+                    {/* 3-Column Activity Grid (Morning, Afternoon, Evening) */}
+                    <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {/* 1. Morning Column */}
+                      <div className="p-4 rounded-2xl bg-[#FFFDF5] border border-[#E8D7C3] flex flex-col justify-between space-y-3">
                         <div>
-                          <div className="flex items-center justify-between text-xs font-semibold text-sky-800 mb-2">
-                            <span className="px-2 py-0.5 rounded-md bg-sky-100">Morning</span>
-                            <span className="font-mono text-[11px] text-slate-500">{day.morning.time}</span>
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8B5E3C] mb-1">
+                            <span className="font-cursive-title text-base text-[#78350F]">Morning</span>
+                            <span className="text-[11px] text-slate-500 font-mono">{day.morning.time}</span>
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm mb-1">
+                          <h5 className="font-extrabold text-slate-900 text-sm mb-1.5">
                             {day.morning.activity}
-                          </h4>
+                          </h5>
+
+                          {/* Landmark Sketch Doodle */}
+                          <div className="py-2 flex items-center justify-center">
+                            {day.morning.activity.toLowerCase().includes('eiffel') ? (
+                              <EiffelTowerSketch />
+                            ) : (
+                              <CuteTempleIcon />
+                            )}
+                          </div>
+
                           <p className="text-xs text-slate-600 leading-relaxed">
                             {day.morning.details}
                           </p>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-sky-100/60 text-[11px] text-slate-500 flex items-center justify-between">
-                          <span>🚇 {day.morning.transport}</span>
-                          <span className="font-mono font-bold text-slate-700">~{formatPrice(day.morning.costEstimateInr, currency)}</span>
+
+                        <div className="pt-2 border-t border-[#E8D7C3]/60 flex items-center justify-between text-[11px] text-slate-600">
+                          <span className="font-medium truncate">{day.morning.transport}</span>
+                          <span className="font-bold text-[#8B5E3C] shrink-0">
+                            ~{formatPrice(day.morning.costEstimateInr, currency)}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Afternoon */}
-                      <div className="p-4 rounded-2xl bg-amber-50/40 border border-amber-100/80 flex flex-col justify-between">
+                      {/* 2. Afternoon Column */}
+                      <div className="p-4 rounded-2xl bg-[#FFFDF5] border border-[#E8D7C3] flex flex-col justify-between space-y-3">
                         <div>
-                          <div className="flex items-center justify-between text-xs font-semibold text-amber-800 mb-2">
-                            <span className="px-2 py-0.5 rounded-md bg-amber-100">Afternoon</span>
-                            <span className="font-mono text-[11px] text-slate-500">{day.afternoon.time}</span>
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8B5E3C] mb-1">
+                            <span className="font-cursive-title text-base text-[#78350F]">Afternoon</span>
+                            <span className="text-[11px] text-slate-500 font-mono">{day.afternoon.time}</span>
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm mb-1">
+                          <h5 className="font-extrabold text-slate-900 text-sm mb-1.5">
                             {day.afternoon.activity}
-                          </h4>
+                          </h5>
+
+                          {/* Landmark Sketch Doodle */}
+                          <div className="py-2 flex items-center justify-center">
+                            {day.afternoon.activity.toLowerCase().includes('arc') ? (
+                              <ArcDeTriompheSketch />
+                            ) : (
+                              <CuteDogMascot />
+                            )}
+                          </div>
+
                           <p className="text-xs text-slate-600 leading-relaxed">
                             {day.afternoon.details}
                           </p>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-amber-100/60 text-[11px] text-slate-500 flex items-center justify-between">
-                          <span>🚶 {day.afternoon.transport}</span>
-                          <span className="font-mono font-bold text-slate-700">~{formatPrice(day.afternoon.costEstimateInr, currency)}</span>
+
+                        <div className="pt-2 border-t border-[#E8D7C3]/60 flex items-center justify-between text-[11px] text-slate-600">
+                          <span className="font-medium truncate">{day.afternoon.transport}</span>
+                          <span className="font-bold text-[#8B5E3C] shrink-0">
+                            ~{formatPrice(day.afternoon.costEstimateInr, currency)}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Evening */}
-                      <div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 flex flex-col justify-between">
+                      {/* 3. Evening Column */}
+                      <div className="p-4 rounded-2xl bg-[#FFFDF5] border border-[#E8D7C3] flex flex-col justify-between space-y-3">
                         <div>
-                          <div className="flex items-center justify-between text-xs font-semibold text-indigo-800 mb-2">
-                            <span className="px-2 py-0.5 rounded-md bg-indigo-100">Evening</span>
-                            <span className="font-mono text-[11px] text-slate-500">{day.evening.time}</span>
+                          <div className="flex items-center justify-between text-xs font-bold text-[#8B5E3C] mb-1">
+                            <span className="font-cursive-title text-base text-[#78350F]">Evening</span>
+                            <span className="text-[11px] text-slate-500 font-mono">{day.evening.time}</span>
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm mb-1">
+                          <h5 className="font-extrabold text-slate-900 text-sm mb-1.5">
                             {day.evening.activity}
-                          </h4>
+                          </h5>
+
+                          {/* Starry Night Cruise Postcard */}
+                          <div className="py-2">
+                            <StarryCruisePostcard />
+                          </div>
+
                           <p className="text-xs text-slate-600 leading-relaxed">
                             {day.evening.details}
                           </p>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-indigo-100/60 text-[11px] text-slate-500 flex items-center justify-between">
-                          <span>🚕 {day.evening.transport}</span>
-                          <span className="font-mono font-bold text-slate-700">~{formatPrice(day.evening.costEstimateInr, currency)}</span>
+
+                        <div className="pt-2 border-t border-[#E8D7C3]/60 flex items-center justify-between text-[11px] text-slate-600">
+                          <span className="font-medium truncate">{day.evening.transport}</span>
+                          <span className="font-bold text-[#8B5E3C] shrink-0">
+                            ~{formatPrice(day.evening.costEstimateInr, currency)}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Pro-Tips & Dining Strip */}
-                    <div className="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <span className="font-bold text-blue-700 shrink-0">🍴 Dining Tip:</span>
-                        <span className="truncate">{day.diningTip}</span>
+                    {/* Dining Highlight Callout */}
+                    <div className="mt-4 pt-3 border-t border-[#E8D7C3]/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <span className="font-bold text-amber-800">🍴 Recommended Dining:</span>
+                        <span className="text-slate-600 font-medium">{day.diningTip}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <span className="font-bold text-amber-700 shrink-0">💡 Pro Tip:</span>
-                        <span className="truncate">{day.proTip}</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSavePlan}
+                        className="text-xs font-bold text-[#0284C7] hover:underline flex items-center gap-1"
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
+                        <span>Save Day</span>
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-white rounded-3xl border border-slate-200">
-                <Compass className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-slate-800">Generating Your Itinerary...</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Connecting to TripYeah AI travel intelligence.
-                </p>
+              <div className="text-center py-16 bg-[#FFFDF5] rounded-3xl border-2 border-[#84532B]/40">
+                <Compass className="w-12 h-12 text-[#D4B598] mx-auto mb-3 animate-spin" />
+                <h4 className="text-lg font-bold text-slate-800">Drafting Your Travel Plan...</h4>
               </div>
             )}
           </div>
         )}
 
         {/* ===================================================================
-            TAB 2: VISA ASSISTANT
+            TAB 2: VISA & DOCS ASSISTANT
         =================================================================== */}
         {activeTab === 'visa' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Official Immigration & Visa Guidelines</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    Visa Requirements for {destination}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Current entry regulations, document checklists, and official government portal application links.
-                  </p>
+          <div className="bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8D7C3]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#802816] uppercase tracking-wider mb-1">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Verified Consular & Entry Guidelines</span>
                 </div>
-
-                {/* Passport Country Selector */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-semibold text-slate-500">My Passport:</span>
-                  <select
-                    value={passportCountry}
-                    onChange={(e) => {
-                      setPassportCountry(e.target.value);
-                      fetchVisaDetails(destination, e.target.value);
-                    }}
-                    className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none cursor-pointer"
-                  >
-                    <option value="India">🇮🇳 Indian Passport</option>
-                    <option value="United States">🇺🇸 United States Passport</option>
-                    <option value="United Kingdom">🇬🇧 United Kingdom Passport</option>
-                    <option value="UAE">🇦🇪 UAE Resident / Passport</option>
-                    <option value="Canada">🇨🇦 Canadian Passport</option>
-                    <option value="Australia">🇦🇺 Australian Passport</option>
-                  </select>
-                </div>
+                <h3 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+                  Visa Regulations for {displayCity}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                  Passport validity, arrival stamps, and verified official government application portals.
+                </p>
               </div>
 
-              {isVisaLoading ? (
-                <div className="py-16 text-center">
-                  <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-slate-700">Checking latest visa regulations...</p>
-                </div>
-              ) : visaData ? (
-                <div className="mt-6 space-y-6">
-                  {/* Key Visa Metrics 4-Col Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100">
-                      <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
-                        Visa Category
-                      </span>
-                      <div className="font-display text-lg font-bold text-slate-900 mt-1">
-                        {visaData.visaType}
-                      </div>
-                      <span className="text-xs text-blue-700 font-semibold block mt-0.5">
-                        {visaData.entryRule}
-                      </span>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
-                      <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
-                        Validity & Stay
-                      </span>
-                      <div className="font-display text-lg font-bold text-slate-900 mt-1">
-                        {visaData.validity}
-                      </div>
-                      <span className="text-xs text-emerald-700 block mt-0.5">
-                        Tourism & Leisure Entry
-                      </span>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-100">
-                      <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider">
-                        Processing Turnaround
-                      </span>
-                      <div className="font-display text-lg font-bold text-slate-900 mt-1">
-                        {visaData.processingTime}
-                      </div>
-                      <span className="text-xs text-purple-700 block mt-0.5">
-                        Apply at least 3 weeks prior
-                      </span>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-100">
-                      <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
-                        Official Fee Estimate
-                      </span>
-                      <div className="font-display text-lg font-bold text-slate-900 mt-1">
-                        {visaData.estimatedFee}
-                      </div>
-                      <span className="text-xs text-amber-700 block mt-0.5">
-                        Direct embassy / VFS rate
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Mandatory Document Checklist & Application Steps */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-2">
-                    {/* Documents Required (7 Cols) */}
-                    <div className="lg:col-span-7 bg-slate-50/80 rounded-2xl p-5 border border-slate-200/80">
-                      <h3 className="font-display text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-600" />
-                        <span>Mandatory Document Checklist</span>
-                      </h3>
-                      <ul className="space-y-2.5">
-                        {(visaData.requiredDocuments || []).map((doc, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                            <span>{doc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Step-by-Step Procedure & Official Portal (5 Cols) */}
-                    <div className="lg:col-span-5 space-y-4">
-                      <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-200/80">
-                        <h3 className="font-display text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                          <CheckSquare className="w-4 h-4 text-blue-600" />
-                          <span>How to Apply</span>
-                        </h3>
-                        <div className="space-y-3">
-                          {(visaData.steps || []).map((step, idx) => (
-                            <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
-                              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
-                                {idx + 1}
-                              </span>
-                              <span>{step}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Official Embassy Button */}
-                      <div className="p-4 rounded-2xl bg-blue-600 text-white flex flex-col justify-between gap-3 shadow-md">
-                        <div>
-                          <div className="text-xs font-semibold text-blue-200">Verified External Portal</div>
-                          <div className="font-bold text-sm text-white mt-0.5">{visaData.portalName}</div>
-                        </div>
-                        <a
-                          href={visaData.portalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2.5 px-4 rounded-xl bg-white text-blue-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-50 transition-colors shadow-xs"
-                        >
-                          <span>Open Official Embassy Website</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+              {/* Passport Country Selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#8B5E3C]">Passport Country:</span>
+                <select
+                  value={passportCountry}
+                  onChange={(e) => {
+                    setPassportCountry(e.target.value);
+                    fetchVisaDetails(destination, e.target.value);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-[#FFF8EC] border-2 border-[#D4A373] text-xs sm:text-sm font-bold text-slate-900 focus:outline-none cursor-pointer"
+                >
+                  <option value="India">🇮🇳 Indian Passport</option>
+                  <option value="United States">🇺🇸 United States</option>
+                  <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                  <option value="UAE">🇦🇪 UAE Resident</option>
+                  <option value="Canada">🇨🇦 Canada</option>
+                  <option value="Australia">🇦🇺 Australia</option>
+                </select>
+              </div>
             </div>
+
+            {isVisaLoading ? (
+              <div className="py-16 text-center">
+                <RefreshCw className="w-8 h-8 text-[#0284C7] animate-spin mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-700">Checking latest immigration rules...</p>
+              </div>
+            ) : visaData ? (
+              <div className="mt-6 space-y-6">
+                {/* 4 Metrics Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-2xl bg-[#FFDDD2]/60 border-2 border-[#F4A896]">
+                    <span className="text-[11px] font-bold text-[#802816] uppercase tracking-wider">
+                      Visa Type
+                    </span>
+                    <div className="font-extrabold text-base text-slate-900 mt-1">
+                      {visaData.visaType}
+                    </div>
+                    <span className="text-xs text-[#802816] font-semibold block mt-0.5">
+                      {visaData.entryRule}
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#DCFCE7]/60 border-2 border-[#86EFAC]">
+                    <span className="text-[11px] font-bold text-[#14532D] uppercase tracking-wider">
+                      Stay Period
+                    </span>
+                    <div className="font-extrabold text-base text-slate-900 mt-1">
+                      {visaData.validity}
+                    </div>
+                    <span className="text-xs text-[#14532D] block mt-0.5">
+                      Tourism & Sightseeing
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#EDE9FE]/60 border-2 border-[#C4B5FD]">
+                    <span className="text-[11px] font-bold text-[#4C1D95] uppercase tracking-wider">
+                      Processing Time
+                    </span>
+                    <div className="font-extrabold text-base text-slate-900 mt-1">
+                      {visaData.processingTime}
+                    </div>
+                    <span className="text-xs text-[#4C1D95] block mt-0.5">
+                      Pre-boarding or on arrival
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#FEF08A]/60 border-2 border-[#FDE047]">
+                    <span className="text-[11px] font-bold text-[#713F12] uppercase tracking-wider">
+                      Official Fee
+                    </span>
+                    <div className="font-extrabold text-base text-slate-900 mt-1">
+                      {visaData.estimatedFee}
+                    </div>
+                    <span className="text-xs text-[#713F12] block mt-0.5">
+                      Consular / counter rate
+                    </span>
+                  </div>
+                </div>
+
+                {/* Documents & Steps */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  <div className="lg:col-span-7 bg-[#FFFDF5] rounded-2xl p-5 border-2 border-[#E8D7C3]">
+                    <h4 className="font-display text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#0284C7]" />
+                      <span>Required Documents Checklist</span>
+                    </h4>
+                    <ul className="space-y-2.5">
+                      {(visaData.requiredDocuments || []).map((doc, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{doc}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="lg:col-span-5 space-y-4">
+                    <div className="bg-[#FFFDF5] rounded-2xl p-5 border-2 border-[#E8D7C3]">
+                      <h4 className="font-display text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <CheckSquare className="w-4 h-4 text-[#0284C7]" />
+                        <span>Application Procedure</span>
+                      </h4>
+                      <div className="space-y-3">
+                        {(visaData.steps || []).map((step, idx) => (
+                          <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
+                            <span className="w-5 h-5 rounded-full bg-[#FEF3C7] text-[#78350F] font-bold flex items-center justify-center shrink-0 text-[11px] border border-[#FCD34D]">
+                              {idx + 1}
+                            </span>
+                            <span>{step}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <a
+                      href={visaData.portalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 px-4 rounded-2xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
+                    >
+                      <span>Open Official Embassy Website</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -1686,216 +1964,122 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
             TAB 3: TRIP BUDGET CALCULATOR
         =================================================================== */}
         {activeTab === 'budget' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                    <DollarSign className="w-4 h-4" />
-                    <span>Realistic Expense Estimator</span>
+          <div className="bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8D7C3]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#713F12] uppercase tracking-wider mb-1">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Interactive Expense Ledger</span>
+                </div>
+                <h3 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+                  Trip Budget Breakdown
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                  Customizable budget estimates for {displayCity} ({daysCount} days, {travellersCount} travellers).
+                </p>
+              </div>
+
+              {/* Total Pill */}
+              <div className="bg-[#FEF08A] border-2 border-[#EAB308] rounded-2xl px-5 py-3 text-right shrink-0">
+                <span className="text-[11px] font-bold text-[#713F12] uppercase tracking-wider block">
+                  Total Estimated Cost
+                </span>
+                <span className="font-display text-2xl sm:text-3xl font-black text-[#713F12]">
+                  {formatPrice(budgetCalculations.grandTotalInr, currency)}
+                </span>
+                <span className="text-xs font-semibold text-[#854D0E] block">
+                  ~{formatPrice(budgetCalculations.perPersonInr, currency)} / person
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+              {/* Sliders (7 cols) */}
+              <div className="lg:col-span-7 space-y-4">
+                <h4 className="font-display text-base font-bold text-slate-900">
+                  Adjust Rates & Preferences
+                </h4>
+
+                {/* Flights */}
+                <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#E8D7C3]">
+                  <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                    <span>✈️ Return Flights (Per Person)</span>
+                    <span className="text-[#0284C7] font-bold">{formatPrice(flightEstimateInr, currency)}</span>
                   </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    Trip Budget Breakdown
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Customizable budget breakdown for {destination} ({daysCount} days, {travellersCount} travellers)
-                  </p>
+                  <input
+                    type="range"
+                    min={10000}
+                    max={100000}
+                    step={2000}
+                    value={flightEstimateInr}
+                    onChange={(e) => setFlightEstimateInr(Number(e.target.value))}
+                    className="w-full accent-[#0284C7] cursor-pointer"
+                  />
                 </div>
 
-                {/* Grand Total Display Pill */}
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl px-5 py-3 text-right shrink-0">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Total Estimated Trip Cost
-                  </span>
-                  <span className="font-display text-2xl sm:text-3xl font-bold text-blue-700 font-mono-tabular">
-                    {formatPrice(budgetCalculations.grandTotalInr, currency)}
-                  </span>
-                  <span className="text-xs text-slate-500 block">
-                    ~{formatPrice(budgetCalculations.perPersonInr, currency)} / person
-                  </span>
+                {/* Hotel */}
+                <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#E8D7C3]">
+                  <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                    <span>🏨 Accommodation (Per Night · {budgetCalculations.nights} Nights)</span>
+                    <span className="text-[#0284C7] font-bold">{formatPrice(hotelTierRate, currency)} / night</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2000}
+                    max={30000}
+                    step={1000}
+                    value={hotelTierRate}
+                    onChange={(e) => setHotelTierRate(Number(e.target.value))}
+                    className="w-full accent-[#0284C7] cursor-pointer"
+                  />
+                </div>
+
+                {/* Food */}
+                <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#E8D7C3]">
+                  <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                    <span>🍴 Dining & Drinks (Per Person / Day)</span>
+                    <span className="text-[#0284C7] font-bold">{formatPrice(diningPerDayRate, currency)} / day</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={800}
+                    max={8000}
+                    step={400}
+                    value={diningPerDayRate}
+                    onChange={(e) => setDiningPerDayRate(Number(e.target.value))}
+                    className="w-full accent-[#0284C7] cursor-pointer"
+                  />
                 </div>
               </div>
 
-              {/* Sliders & Tweak Controls Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
-                {/* Left Controls (7 cols) */}
-                <div className="lg:col-span-7 space-y-5">
-                  <h3 className="font-display text-base font-bold text-slate-900">
-                    Adjust Your Spending Preferences
-                  </h3>
-
-                  {/* Flight Slider */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                      <span>✈️ Return Flights (Per Person)</span>
-                      <span className="font-mono text-blue-600 font-bold">
-                        {formatPrice(flightEstimateInr, currency)}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={10000}
-                      max={120000}
-                      step={2000}
-                      value={flightEstimateInr}
-                      onChange={(e) => setFlightEstimateInr(Number(e.target.value))}
-                      className="w-full accent-blue-600 cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                      <span>Budget (₹10k)</span>
-                      <span>Economy Avg</span>
-                      <span>Premium / Peak (₹120k)</span>
-                    </div>
-                  </div>
-
-                  {/* Hotel Slider */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                      <span>🏨 Accommodation (Per Night · {budgetCalculations.nights} Nights)</span>
-                      <span className="font-mono text-blue-600 font-bold">
-                        {formatPrice(hotelTierRate, currency)} / night
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={2000}
-                      max={35000}
-                      step={1000}
-                      value={hotelTierRate}
-                      onChange={(e) => setHotelTierRate(Number(e.target.value))}
-                      className="w-full accent-blue-600 cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                      <span>Hostel / 3★ (₹2k)</span>
-                      <span>4★ City Hotel</span>
-                      <span>5★ Luxury Resort (₹35k)</span>
-                    </div>
-                  </div>
-
-                  {/* Dining Slider */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                      <span>🍴 Dining & Food (Per Person / Day)</span>
-                      <span className="font-mono text-blue-600 font-bold">
-                        {formatPrice(diningPerDayRate, currency)} / day
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={800}
-                      max={12000}
-                      step={500}
-                      value={diningPerDayRate}
-                      onChange={(e) => setDiningPerDayRate(Number(e.target.value))}
-                      className="w-full accent-blue-600 cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                      <span>Casual & Street Food</span>
-                      <span>Cafés & Bistros</span>
-                      <span>Fine Dining</span>
-                    </div>
-                  </div>
-
-                  {/* Local Transit Slider */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
-                      <span>🚇 Local Transit & Cabs (Per Person / Day)</span>
-                      <span className="font-mono text-blue-600 font-bold">
-                        {formatPrice(transitPerDayRate, currency)} / day
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={300}
-                      max={5000}
-                      step={200}
-                      value={transitPerDayRate}
-                      onChange={(e) => setTransitPerDayRate(Number(e.target.value))}
-                      className="w-full accent-blue-600 cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                      <span>Metro Day Pass</span>
-                      <span>Mixed Transit</span>
-                      <span>Private Chauffeur</span>
-                    </div>
-                  </div>
+              {/* Breakdown Cards (5 cols) */}
+              <div className="lg:col-span-5 bg-[#FFFDF5] rounded-2xl p-5 border-2 border-[#E8D7C3] space-y-3">
+                <h4 className="font-display text-base font-bold text-slate-900 pb-2 border-b border-[#E8D7C3]">
+                  Itemized Breakdown
+                </h4>
+                <div className="flex justify-between text-xs text-slate-700 py-1">
+                  <span>Flights ({travellersCount} travellers)</span>
+                  <strong>{formatPrice(budgetCalculations.flightsTotal, currency)}</strong>
                 </div>
-
-                {/* Right Category Breakdown Cards (5 cols) */}
-                <div className="lg:col-span-5 bg-slate-50/80 rounded-2xl p-5 border border-slate-200 space-y-3">
-                  <h3 className="font-display text-base font-bold text-slate-900 pb-2 border-b border-slate-200">
-                    Detailed Itemized Breakdown
-                  </h3>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <Plane className="w-3.5 h-3.5 text-blue-600" />
-                      Flights ({travellersCount} Passengers)
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.flightsTotal, currency)}</strong>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                      Hotels & Accommodation ({budgetCalculations.nights} Nights)
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.hotelTotal, currency)}</strong>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <span>🍴</span> Food, Cafés & Dinners
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.mealsTotal, currency)}</strong>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <span>🚇</span> Local Trains, Metro & Cabs
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.transitTotal, currency)}</strong>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <span>🎟️</span> Sightseeing & Museum Tickets
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.activitiesTotal, currency)}</strong>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <span>🛂</span> Visa Fees & Travel Insurance
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.visaAndInsuranceTotal, currency)}</strong>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-slate-700 py-1">
-                    <span className="flex items-center gap-1.5">
-                      <span>📱</span> eSIM Data & Misc Forex Buffer
-                    </span>
-                    <strong className="font-mono">{formatPrice(budgetCalculations.simAndBufferTotal, currency)}</strong>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-200 mt-2 flex justify-between items-center text-sm font-bold text-slate-900">
-                    <span>Grand Total Estimate</span>
-                    <span className="text-base text-blue-700 font-mono">
-                      {formatPrice(budgetCalculations.grandTotalInr, currency)}
-                    </span>
-                  </div>
-
-                  {/* Booking CTA button */}
-                  <div className="pt-3">
-                    <button
-                      type="button"
-                      onClick={() => onBookFlightOrHotel(matchedCity.code, 'flights')}
-                      className="w-full py-3 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
-                    >
-                      <Plane className="w-4 h-4" />
-                      <span>Lock In TripYeah Flight Fares</span>
-                    </button>
-                  </div>
+                <div className="flex justify-between text-xs text-slate-700 py-1">
+                  <span>Hotels ({budgetCalculations.nights} nights)</span>
+                  <strong>{formatPrice(budgetCalculations.hotelTotal, currency)}</strong>
+                </div>
+                <div className="flex justify-between text-xs text-slate-700 py-1">
+                  <span>Dining & Food</span>
+                  <strong>{formatPrice(budgetCalculations.mealsTotal, currency)}</strong>
+                </div>
+                <div className="flex justify-between text-xs text-slate-700 py-1">
+                  <span>Transit & Cabs</span>
+                  <strong>{formatPrice(budgetCalculations.transitTotal, currency)}</strong>
+                </div>
+                <div className="flex justify-between text-xs text-slate-700 py-1">
+                  <span>Activities & Spas</span>
+                  <strong>{formatPrice(budgetCalculations.activitiesTotal, currency)}</strong>
+                </div>
+                <div className="pt-3 border-t border-[#E8D7C3] flex justify-between text-sm font-black text-slate-900">
+                  <span>Grand Total</span>
+                  <span className="text-[#0284C7]">{formatPrice(budgetCalculations.grandTotalInr, currency)}</span>
                 </div>
               </div>
             </div>
@@ -1903,181 +2087,71 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
         )}
 
         {/* ===================================================================
-            TAB 4: PLACES & INTERACTIVE MAP VIEW
+            TAB 4: INTERACTIVE MAP & ROUTE
         =================================================================== */}
         {activeTab === 'map' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                    <Navigation className="w-4 h-4" />
-                    <span>Visual Route & Daily Waypoints</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    Interactive Map: {destination}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Explore daily routes, estimated travel times, landmark pins, and nearby spots.
-                  </p>
+          <div className="bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8D7C3]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#14532D] uppercase tracking-wider mb-1">
+                  <Navigation className="w-4 h-4 text-emerald-600" />
+                  <span>Waypoints & Daily Sightseeing Trails</span>
                 </div>
-
-                {/* Day Filter Pills */}
-                {currentItinerary && Array.isArray(currentItinerary.days) && currentItinerary.days.length > 0 && (
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                    {currentItinerary.days.map((d) => (
-                      <button
-                        key={d.dayNumber}
-                        type="button"
-                        onClick={() => setSelectedMapDay(d.dayNumber)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          selectedMapDay === d.dayNumber
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
-                      >
-                        Day {d.dayNumber}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <h3 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+                  Interactive Route Map: {displayCity}
+                </h3>
               </div>
 
-              {/* Stylized Interactive Map Canvas & Landmark Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-                {/* Visual SVG Map Canvas (8 cols) */}
-                <div className="lg:col-span-8 bg-slate-950 rounded-2xl overflow-hidden relative min-h-[420px] flex items-center justify-center p-6 border border-slate-800">
-                  {/* Subtle City Grid Graphic */}
-                  <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#60A5FA" strokeWidth="0.8" />
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
-                  </svg>
+              {/* Day filter pills */}
+              <div className="flex items-center gap-1.5">
+                {[1, 2, 3, 4].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setSelectedMapDay(d)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold cursor-pointer transition-all ${
+                      selectedMapDay === d
+                        ? 'bg-[#1E3A5F] text-white'
+                        : 'bg-[#FFF8EC] text-[#78350F] border border-[#D4A373]'
+                    }`}
+                  >
+                    Day {d}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                  {/* River / Coast curve simulation */}
-                  <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none" viewBox="0 0 600 400" preserveAspectRatio="none">
-                    <path
-                      d="M -20,220 Q 150,180 300,240 T 620,160"
-                      fill="none"
-                      stroke="#2563EB"
-                      strokeWidth="28"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+            {/* Simulated Illustrated Map Canvas */}
+            <div className="mt-6 bg-[#0F172A] rounded-2xl p-6 relative overflow-hidden min-h-[380px] flex items-center justify-center border-2 border-[#84532B]/60">
+              {/* Turquoise Coastal Lagoon Wave Curve */}
+              <svg className="absolute inset-0 w-full h-full opacity-30 pointer-events-none" viewBox="0 0 600 400" preserveAspectRatio="none">
+                <path d="M -20,240 Q 150,160 320,260 T 640,140" fill="none" stroke="#38BDF8" strokeWidth="36" strokeLinecap="round" />
+              </svg>
 
-                  {/* Route Polyline connecting Waypoints */}
-                  <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 600 400">
-                    {/* Connecting line */}
-                    <line x1="160" y1="140" x2="310" y2="210" stroke="#38BDF8" strokeWidth="3" strokeDasharray="6,6" />
-                    <line x1="310" y1="210" x2="450" y2="150" stroke="#38BDF8" strokeWidth="3" strokeDasharray="6,6" />
+              {/* Connecting dashed route */}
+              <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 600 400">
+                <line x1="160" y1="140" x2="310" y2="220" stroke="#FDE047" strokeWidth="3.5" strokeDasharray="6,6" />
+                <line x1="310" y1="220" x2="460" y2="150" stroke="#FDE047" strokeWidth="3.5" strokeDasharray="6,6" />
 
-                    {/* Pin 1: Morning */}
-                    <g transform="translate(160, 140)">
-                      <circle r="18" fill="#2563EB" />
-                      <circle r="8" fill="#FFFFFF" />
-                      <text x="0" y="32" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="bold">
-                        1. Morning
-                      </text>
-                    </g>
+                <g transform="translate(160, 140)">
+                  <circle r="18" fill="#0284C7" stroke="#FFF" strokeWidth="2.5" />
+                  <text x="0" y="5" textAnchor="middle" fill="#FFF" fontSize="12" fontWeight="bold">1</text>
+                  <text x="0" y="30" textAnchor="middle" fill="#FFF" fontSize="11" fontWeight="bold">Morning Stop</text>
+                </g>
+                <g transform="translate(310, 220)">
+                  <circle r="18" fill="#F59E0B" stroke="#FFF" strokeWidth="2.5" />
+                  <text x="0" y="5" textAnchor="middle" fill="#FFF" fontSize="12" fontWeight="bold">2</text>
+                  <text x="0" y="30" textAnchor="middle" fill="#FFF" fontSize="11" fontWeight="bold">Afternoon Stop</text>
+                </g>
+                <g transform="translate(460, 150)">
+                  <circle r="18" fill="#8B5CF6" stroke="#FFF" strokeWidth="2.5" />
+                  <text x="0" y="5" textAnchor="middle" fill="#FFF" fontSize="12" fontWeight="bold">3</text>
+                  <text x="0" y="30" textAnchor="middle" fill="#FFF" fontSize="11" fontWeight="bold">Evening Sunset</text>
+                </g>
+              </svg>
 
-                    {/* Pin 2: Afternoon */}
-                    <g transform="translate(310, 210)">
-                      <circle r="18" fill="#F59E0B" />
-                      <circle r="8" fill="#FFFFFF" />
-                      <text x="0" y="32" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="bold">
-                        2. Afternoon
-                      </text>
-                    </g>
-
-                    {/* Pin 3: Evening */}
-                    <g transform="translate(450, 150)">
-                      <circle r="18" fill="#6366F1" />
-                      <circle r="8" fill="#FFFFFF" />
-                      <text x="0" y="32" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="bold">
-                        3. Evening
-                      </text>
-                    </g>
-                  </svg>
-
-                  {/* Top Overlay Badge */}
-                  <div className="absolute top-4 left-4 z-20 bg-slate-900/80 backdrop-blur-md border border-slate-700 px-3.5 py-1.5 rounded-xl text-white text-xs">
-                    <span className="text-sky-400 font-bold">Day {selectedMapDay} Route:</span> ~7.4 km total transit distance
-                  </div>
-
-                  <div className="absolute bottom-4 right-4 z-20 bg-slate-900/80 backdrop-blur-md border border-slate-700 px-3 py-1.5 rounded-xl text-[11px] text-slate-300">
-                    🗺️ Interactive Route Pins & Metro Corridors
-                  </div>
-                </div>
-
-                {/* Right Waypoint Details (4 cols) */}
-                <div className="lg:col-span-4 space-y-4">
-                  {currentItinerary && Array.isArray(currentItinerary.days) && currentItinerary.days.length > 0 && (
-                    <>
-                      {/* Morning Stop */}
-                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-bold text-blue-700">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                            Stop 1: Morning
-                          </span>
-                          <span className="text-slate-500 font-mono text-[11px]">09:30 AM</span>
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          {currentItinerary.days[selectedMapDay - 1]?.morning?.activity || `${destination} Landmark`}
-                        </h4>
-                        <p className="text-xs text-slate-600">
-                          {currentItinerary.days[selectedMapDay - 1]?.morning?.details}
-                        </p>
-                        <div className="text-[11px] text-blue-600 font-semibold pt-1">
-                          Transit: ~12 mins via Metro Line 1
-                        </div>
-                      </div>
-
-                      {/* Afternoon Stop */}
-                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-bold text-amber-700">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                            Stop 2: Afternoon
-                          </span>
-                          <span className="text-slate-500 font-mono text-[11px]">02:00 PM</span>
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          {currentItinerary.days[selectedMapDay - 1]?.afternoon?.activity || `${destination} District`}
-                        </h4>
-                        <p className="text-xs text-slate-600">
-                          {currentItinerary.days[selectedMapDay - 1]?.afternoon?.details}
-                        </p>
-                        <div className="text-[11px] text-amber-700 font-semibold pt-1">
-                          Transit: ~8 mins scenic walk
-                        </div>
-                      </div>
-
-                      {/* Evening Stop */}
-                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-bold text-indigo-700">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-                            Stop 3: Evening Sunset
-                          </span>
-                          <span className="text-slate-500 font-mono text-[11px]">06:30 PM</span>
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          {currentItinerary.days[selectedMapDay - 1]?.evening?.activity || `${destination} Promenade`}
-                        </h4>
-                        <p className="text-xs text-slate-600">
-                          {currentItinerary.days[selectedMapDay - 1]?.evening?.details}
-                        </p>
-                        <div className="text-[11px] text-indigo-600 font-semibold pt-1">
-                          Transit: ~15 mins river boat / cab
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
+              <div className="absolute top-4 left-4 z-20 bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-700 text-white text-xs font-bold">
+                🗺️ Day {selectedMapDay} Scenic Trail · ~8.4 km Total Transit Distance
               </div>
             </div>
           </div>
@@ -2087,361 +2161,154 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
             TAB 5: TRAVEL CHECKLIST
         =================================================================== */}
         {activeTab === 'checklist' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                    <CheckSquare className="w-4 h-4" />
-                    <span>Departure Readiness</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    International Travel Checklist
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Passport, visa, forex card, eSIM, insurance, and airport preparation.
-                  </p>
+          <div className="bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8D7C3]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4C1D95] uppercase tracking-wider mb-1">
+                  <CheckSquare className="w-4 h-4 text-purple-600" />
+                  <span>Departure Readiness</span>
                 </div>
-
-                {/* Progress bar pill */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 w-full sm:w-64 shrink-0">
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-800 mb-1.5">
-                    <span>Preparation Progress</span>
-                    <span className="text-blue-600 font-mono">{checklistStats.percent}%</span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-300"
-                      style={{ width: `${checklistStats.percent}%` }}
-                    />
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-1.5">
-                    {checklistStats.done} of {checklistStats.total} essential tasks ready
-                  </div>
-                </div>
+                <h3 className="font-display text-2xl sm:text-3xl font-black text-slate-900">
+                  Pre-Departure Travel Checklist
+                </h3>
               </div>
 
-              {/* Add Custom Item Form */}
-              <form onSubmit={handleAddChecklistItem} className="my-6 flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  value={newChecklistText}
-                  onChange={(e) => setNewChecklistText(e.target.value)}
-                  placeholder="Add a new custom task (e.g. Buy waterproof camera pouch, exchange 200 EUR)..."
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-blue-600"
-                />
-                <select
-                  value={newChecklistCategory}
-                  onChange={(e) => setNewChecklistCategory(e.target.value as any)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 bg-slate-50"
-                >
-                  <option value="packing">Packing</option>
-                  <option value="passport">Passport & Visa</option>
-                  <option value="forex">Forex & Money</option>
-                  <option value="sim">SIM & Connectivity</option>
-                  <option value="insurance">Insurance</option>
-                  <option value="airport">Airport Transit</option>
-                </select>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Item</span>
-                </button>
-              </form>
-
-              {/* Checklist Items List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {checklist.map((item) => (
+              {/* Progress Bar */}
+              <div className="bg-[#EDE9FE] border-2 border-[#C4B5FD] rounded-2xl p-3.5 w-full sm:w-64 shrink-0">
+                <div className="flex justify-between items-center text-xs font-black text-[#4C1D95] mb-1">
+                  <span>Preparedness</span>
+                  <span>{checklistStats.percent}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-white overflow-hidden">
                   <div
-                    key={item.id}
-                    onClick={() => handleToggleChecklist(item.id)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                      item.completed
-                        ? 'bg-emerald-50/40 border-emerald-200/80 text-slate-500'
-                        : 'bg-white border-slate-200 hover:border-blue-300 text-slate-800 shadow-xs'
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 border ${
-                        item.completed
-                          ? 'bg-emerald-600 border-emerald-600 text-white'
-                          : 'border-slate-300 bg-white'
-                      }`}
-                    >
-                      {item.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-xs sm:text-sm font-bold truncate ${
-                            item.completed ? 'line-through text-slate-500' : 'text-slate-900'
-                          }`}
-                        >
-                          {item.label}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded shrink-0 ${
-                            item.priority === 'High'
-                              ? 'bg-rose-100 text-rose-700'
-                              : 'bg-slate-100 text-slate-600'
-                          }`}
-                        >
-                          {item.priority}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-normal">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteChecklistItem(item.id);
-                      }}
-                      className="text-slate-300 hover:text-rose-500 p-1 cursor-pointer shrink-0"
-                      title="Delete task"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                    className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full transition-all duration-300"
+                    style={{ width: `${checklistStats.percent}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-[#5B21B6] mt-1 block font-medium">
+                  {checklistStats.done} of {checklistStats.total} items completed
+                </span>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* ===================================================================
-            TAB 6: AI TRAVEL ASSISTANT CONCIERGE CHAT
-        =================================================================== */}
-        {activeTab === 'assistant' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col h-[600px]">
-              {/* Header */}
-              <div className="p-4 sm:px-6 bg-slate-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                    <Sparkles className="w-4 h-4" />
+            {/* Checklist Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-6">
+              {checklist.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleToggleChecklist(item.id)}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5 ${
+                    item.completed
+                      ? 'bg-emerald-50/50 border-emerald-300 text-slate-500'
+                      : 'bg-[#FFFDF5] border-[#E8D7C3] hover:border-[#84532B] text-slate-900'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 border ${
+                      item.completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {item.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
-                  <div>
-                    <h3 className="font-display text-base font-bold text-white">
-                      TripYeah AI Travel Assistant
-                    </h3>
-                    <p className="text-[11px] text-slate-300">
-                      Real-time advice for {destination} · Powered by Gemini
+
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs sm:text-sm font-bold block ${item.completed ? 'line-through text-slate-400' : ''}`}>
+                      {item.label}
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-normal">
+                      {item.description}
                     </p>
                   </div>
                 </div>
-
-                <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800">
-                  ● Online & Ready
-                </span>
-              </div>
-
-              {/* Chat Message Scroll */}
-              <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
-                {assistantMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {msg.role === 'assistant' && (
-                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs shrink-0 mt-1">
-                        AI
-                      </div>
-                    )}
-                    <div
-                      className={`max-w-xl rounded-2xl p-4 text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
-                        msg.role === 'user'
-                          ? 'bg-blue-600 text-white rounded-tr-none'
-                          : 'bg-white border border-slate-200/80 text-slate-800 rounded-tl-none shadow-xs'
-                      }`}
-                    >
-                      {msg.text}
-                      <span
-                        className={`block text-[10px] mt-1.5 ${
-                          msg.role === 'user' ? 'text-blue-200 text-right' : 'text-slate-400'
-                        }`}
-                      >
-                        {msg.time}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-
-                {isAssistantThinking && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500 italic">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                    <span>TripYeah Assistant is analyzing destination guidelines...</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Suggested Quick Question Chips */}
-              <div className="px-4 py-2 border-t border-slate-100 bg-white flex items-center gap-2 overflow-x-auto scrollbar-none">
-                <span className="text-[11px] font-bold text-slate-400 shrink-0">Ask:</span>
-                {[
-                  `Top vegetarian restaurants in ${destination}`,
-                  `Best time to visit landmarks to skip lines`,
-                  `How to buy a local metro transit pass?`,
-                  `Customary tipping rules and etiquette`,
-                  `Is it safe to drink tap water?`,
-                ].map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => {
-                      setAssistantInput(chip);
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[11px] font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-
-              {/* Chat Input Bar */}
-              <div className="p-3 sm:p-4 bg-white border-t border-slate-200 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={assistantInput}
-                  onChange={(e) => setAssistantInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendAssistantMessage()}
-                  placeholder={`Ask anything about ${destination} travel, food, safety, or modifications...`}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-blue-600"
-                />
-                <button
-                  type="button"
-                  onClick={handleSendAssistantMessage}
-                  disabled={isAssistantThinking || !assistantInput.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send</span>
-                </button>
-              </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* ===================================================================
-            TAB 7: SAVED PLANS (MY TRIPS DASHBOARD)
+            TAB 6: AI TRAVEL CONCIERGE CHAT
+        =================================================================== */}
+        {activeTab === 'assistant' && (
+          <div className="bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] shadow-sm overflow-hidden flex flex-col h-[560px]">
+            <div className="p-4 sm:px-6 bg-[#1E3A5F] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5 text-amber-300" />
+                <div>
+                  <h4 className="font-display text-base font-bold">TripYeah AI Concierge</h4>
+                  <p className="text-[11px] text-sky-200">Instant answers for {displayCity} travel</p>
+                </div>
+              </div>
+              <span className="text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 rounded-full">
+                ● Live Concierge
+              </span>
+            </div>
+
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#FFFDF5]">
+              {assistantMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-xl rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-[#0284C7] text-white rounded-tr-none'
+                        : 'bg-white border-2 border-[#E8D7C3] text-slate-800 rounded-tl-none shadow-xs'
+                    }`}
+                  >
+                    {msg.text}
+                    <span className={`block text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-sky-200' : 'text-slate-400'}`}>
+                      {msg.time}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 bg-white border-t border-[#E8D7C3] flex items-center gap-2">
+              <input
+                type="text"
+                value={assistantInput}
+                onChange={(e) => setAssistantInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendAssistantMessage()}
+                placeholder={`Ask anything about ${displayCity}...`}
+                className="flex-1 px-4 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#84532B]"
+              />
+              <button
+                type="button"
+                onClick={handleSendAssistantMessage}
+                disabled={isAssistantThinking || !assistantInput.trim()}
+                className="px-5 py-2 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold text-xs sm:text-sm cursor-pointer"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            TAB 7: SAVED PLANS
         =================================================================== */}
         {activeTab === 'saved' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <div className="flex items-center justify-between pb-6 border-b border-slate-100">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                    <BookmarkCheck className="w-4 h-4" />
-                    <span>Saved International Itineraries</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                    My Saved Trips ({(savedItineraries || []).length})
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Revisit, reload, and manage your custom travel plans and estimated budgets.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleGenerateItinerary(true);
-                    setActiveTab('itinerary');
-                  }}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Plan New Trip</span>
-                </button>
+          <div className="bg-[#FFFDF9] border-[2.5px] border-[#84532B]/60 rounded-[30px] p-6 sm:p-8 shadow-sm">
+            <h3 className="font-display text-2xl font-black text-slate-900 pb-4 border-b border-[#E8D7C3]">
+              My Saved Itineraries ({(savedItineraries || []).length})
+            </h3>
+            {(savedItineraries || []).length === 0 ? (
+              <div className="text-center py-12">
+                <Bookmark className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs text-slate-500">No saved itineraries yet. Click Save on any day to store here.</p>
               </div>
-
-              {(savedItineraries || []).length === 0 ? (
-                <div className="text-center py-16">
-                  <Bookmark className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <h3 className="text-base font-bold text-slate-800">No Saved Plans Yet</h3>
-                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                    Click "Save Current Plan" on any itinerary to store it here for future reference.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleSavePlan}
-                    className="mt-4 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold cursor-pointer"
-                  >
-                    Save Current {destination} Itinerary
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
-                  {savedItineraries.map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="p-5 rounded-2xl border border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-white transition-all flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-                          <span className="font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
-                            {plan.budget.toUpperCase()}
-                          </span>
-                          <span className="font-mono text-[11px]">{plan.savedAt || 'Saved'}</span>
-                        </div>
-
-                        <h4 className="font-display text-xl font-bold text-slate-900">
-                          {plan.destination}
-                        </h4>
-                        <p className="text-xs text-slate-600 mt-1">
-                          📅 {plan.startDate} – {plan.endDate} ({(plan.days || []).length} Days)
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          👥 {plan.travellersCount} Travellers · {plan.travellerType}
-                        </p>
-
-                        <div className="mt-3 pt-3 border-t border-slate-200 text-xs flex justify-between items-center">
-                          <span className="text-slate-500">Estimated Budget:</span>
-                          <span className="font-mono font-bold text-slate-900">
-                            {formatPrice(plan.estimatedTotalTripBudgetInr, currency)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-5 pt-3 border-t border-slate-100">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCurrentItinerary(plan);
-                            setDestination(plan.destination);
-                            setDaysCount((plan.days || []).length || 4);
-                            setActiveTab('itinerary');
-                            onNotify('Itinerary Loaded', `Switched active plan to ${plan.destination}.`, 'success');
-                          }}
-                          className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View & Edit</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSavedItineraries((prev) => prev.filter((p) => p.id !== plan.id));
-                            onNotify('Plan Removed', `Removed ${plan.destination} from saved plans.`, 'info');
-                          }}
-                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Delete plan"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {savedItineraries.map((p) => (
+                  <div key={p.id} className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#E8D7C3] space-y-2">
+                    <h4 className="font-black text-slate-900 text-lg">{p.destination}</h4>
+                    <p className="text-xs text-slate-600">{p.startDate} – {p.endDate} · {(p.days || []).length} Days</p>
+                    <span className="font-bold text-[#0284C7] text-sm block">
+                      {formatPrice(p.estimatedTotalTripBudgetInr, currency)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

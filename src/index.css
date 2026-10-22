@@ -160,3 +160,175 @@ button::-webkit-scrollbar {
   will-change: transform, opacity;
 }
 
+/* ============================================================================
+   WHIMSICAL STORYBOOK / GHIBLI-STYLE PLANNER THEME
+============================================================================ */
+.font-handwriting {
+  font-family: 'Patrick Hand', 'Caveat', cursive, sans-serif;
+}
+
+.font-cursive-title {
+  font-family: 'Caveat', cursive, sans-serif;
+}
+
+/* Postage stamp scalloped border */
+.stamp-card {
+  position: relative;
+  background-color: #fff9f0;
+  border: 2px dashed #d4a373;
+  box-shadow: 0 4px 12px rgba(180, 130, 80, 0.12);
+  transition: all 0.25s ease;
+}
+
+.stamp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(180, 130, 80, 0.18);
+}
+
+/* Whimsical hand-drawn border effect */
+.hand-drawn-border {
+  border: 2.5px solid #84532B;
+  border-radius: 28px;
+}
+
+/* Rosette Medal Ribbon tails */
+.ribbon-tail-left {
+  position: absolute;
+  bottom: -9px;
+  left: 6px;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 14px solid #1d4ed8;
+  transform: rotate(15deg);
+}
+
+.ribbon-tail-right {
+  position: absolute;
+  bottom: -9px;
+  right: 6px;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 14px solid #1d4ed8;
+  transform: rotate(-15deg);
+}
+
+/* ============================================================================
+   NATURAL BACKGROUND SCENERY ANIMATIONS (Painted Boat Motion, Cascading Water, Tree Leaf Wind Sway)
+============================================================================ */
+/* The boat painted in the background gently cruising and bobbing on the water */
+@keyframes bgSailBoatSway {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  20% {
+    transform: translate(8px, -3.5px) rotate(2deg);
+  }
+  40% {
+    transform: translate(18px, 1.5px) rotate(-1.5deg);
+  }
+  65% {
+    transform: translate(26px, -2.5px) rotate(1.8deg);
+  }
+  85% {
+    transform: translate(12px, 3px) rotate(-1.2deg);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+}
+
+/* Subtle wake ripple under the painted boat */
+@keyframes bgBoatWakePulse {
+  0%, 100% {
+    transform: scaleX(0.85) scaleY(0.9);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleX(1.2) scaleY(1.15);
+    opacity: 0.75;
+  }
+}
+
+/* Cascading water streams pouring down from the ocean to the Bali section */
+@keyframes waterfallFlowDown {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0.2;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0.15;
+  }
+}
+
+/* Water droplets and soft splash mist at the waterfall base near Bali header */
+@keyframes waterMistRipple {
+  0% {
+    transform: scale(0.85) translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.15) translateY(-3px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.95) translateY(2px);
+    opacity: 0.3;
+  }
+}
+
+/* Left palm tree cluster wind sway (animating the leaves painted on left) */
+@keyframes palmLeavesWindSwayLeft {
+  0% {
+    transform: rotate(0deg) skewX(0deg);
+  }
+  30% {
+    transform: rotate(1.8deg) skewX(0.8deg);
+  }
+  70% {
+    transform: rotate(-1.4deg) skewX(-0.6deg);
+  }
+  100% {
+    transform: rotate(0deg) skewX(0deg);
+  }
+}
+
+/* Right palm tree cluster wind sway (animating the leaves painted on right) */
+@keyframes palmLeavesWindSwayRight {
+  0% {
+    transform: rotate(0deg) skewX(0deg);
+  }
+  35% {
+    transform: rotate(-2deg) skewX(-1deg);
+  }
+  65% {
+    transform: rotate(1.5deg) skewX(0.7deg);
+  }
+  100% {
+    transform: rotate(0deg) skewX(0deg);
+  }
+}
+
+/* Shimmer on the painted water surface */
+@keyframes paintedWaterShimmer {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scaleX(0.92);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scaleX(1.08);
+  }
+}
+
+
