@@ -6939,18 +6939,53 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           type="button"
                           onClick={() =>
                             setFlightForFareModal({
-                              id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                              airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
-                              flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                              depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                              arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                              duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                              priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                              badgeBg: selectedOutboundFlight.badgeBg,
-                              badgeCode: selectedOutboundFlight.badgeCode,
-                              aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
-                              fromCode: currentFromCity.code,
-                              toCode: currentToCity.code,
+                              isRoundTrip: true,
+                              outboundFlight: {
+                                id: selectedOutboundFlight.id,
+                                airline: selectedOutboundFlight.airline,
+                                flightNo: selectedOutboundFlight.flightNo,
+                                depTime: selectedOutboundFlight.depTime,
+                                arrTime: selectedOutboundFlight.arrTime,
+                                depTerminal: selectedOutboundFlight.depTerminal,
+                                arrTerminal: selectedOutboundFlight.arrTerminal,
+                                duration: selectedOutboundFlight.duration,
+                                priceInr: selectedOutboundFlight.priceInr,
+                                badgeBg: selectedOutboundFlight.badgeBg,
+                                badgeCode: selectedOutboundFlight.badgeCode,
+                                aircraft: selectedOutboundFlight.aircraft,
+                                fromCode: currentFromCity.code,
+                                toCode: currentToCity.code,
+                              },
+                              returnFlight: {
+                                id: selectedReturnFlight.id,
+                                airline: selectedReturnFlight.airline,
+                                flightNo: selectedReturnFlight.flightNo,
+                                depTime: selectedReturnFlight.depTime,
+                                arrTime: selectedReturnFlight.arrTime,
+                                depTerminal: selectedReturnFlight.depTerminal,
+                                arrTerminal: selectedReturnFlight.arrTerminal,
+                                duration: selectedReturnFlight.duration,
+                                priceInr: selectedReturnFlight.priceInr,
+                                badgeBg: selectedReturnFlight.badgeBg,
+                                badgeCode: selectedReturnFlight.badgeCode,
+                                aircraft: selectedReturnFlight.aircraft,
+                                fromCode: currentToCity.code,
+                                toCode: currentFromCity.code,
+                              },
+                              flight: {
+                                id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                                airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                                flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                                depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                                arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                                duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                                priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                                badgeBg: selectedOutboundFlight.badgeBg,
+                                badgeCode: selectedOutboundFlight.badgeCode,
+                                aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
+                                fromCode: currentFromCity.code,
+                                toCode: currentToCity.code,
+                              },
                             })
                           }
                           className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 active:scale-95 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-500/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl"
@@ -8626,18 +8661,53 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 type="button"
                 onClick={() =>
                   setFlightForFareModal({
-                    id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                    airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
-                    flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                    depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                    arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                    duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                    priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                    badgeBg: selectedOutboundFlight.badgeBg,
-                    badgeCode: selectedOutboundFlight.badgeCode,
-                    aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
-                    fromCode: currentFromCity.code,
-                    toCode: currentToCity.code,
+                    isRoundTrip: true,
+                    outboundFlight: {
+                      id: selectedOutboundFlight.id,
+                      airline: selectedOutboundFlight.airline,
+                      flightNo: selectedOutboundFlight.flightNo,
+                      depTime: selectedOutboundFlight.depTime,
+                      arrTime: selectedOutboundFlight.arrTime,
+                      depTerminal: selectedOutboundFlight.depTerminal,
+                      arrTerminal: selectedOutboundFlight.arrTerminal,
+                      duration: selectedOutboundFlight.duration,
+                      priceInr: selectedOutboundFlight.priceInr,
+                      badgeBg: selectedOutboundFlight.badgeBg,
+                      badgeCode: selectedOutboundFlight.badgeCode,
+                      aircraft: selectedOutboundFlight.aircraft,
+                      fromCode: currentFromCity.code,
+                      toCode: currentToCity.code,
+                    },
+                    returnFlight: {
+                      id: selectedReturnFlight.id,
+                      airline: selectedReturnFlight.airline,
+                      flightNo: selectedReturnFlight.flightNo,
+                      depTime: selectedReturnFlight.depTime,
+                      arrTime: selectedReturnFlight.arrTime,
+                      depTerminal: selectedReturnFlight.depTerminal,
+                      arrTerminal: selectedReturnFlight.arrTerminal,
+                      duration: selectedReturnFlight.duration,
+                      priceInr: selectedReturnFlight.priceInr,
+                      badgeBg: selectedReturnFlight.badgeBg,
+                      badgeCode: selectedReturnFlight.badgeCode,
+                      aircraft: selectedReturnFlight.aircraft,
+                      fromCode: currentToCity.code,
+                      toCode: currentFromCity.code,
+                    },
+                    flight: {
+                      id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                      airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                      flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                      depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                      arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                      duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                      priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                      badgeBg: selectedOutboundFlight.badgeBg,
+                      badgeCode: selectedOutboundFlight.badgeCode,
+                      aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
+                      fromCode: currentFromCity.code,
+                      toCode: currentToCity.code,
+                    },
                   })
                 }
                 className="px-6 sm:px-9 py-2.5 sm:py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-black text-xs sm:text-base shadow-lg shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl group"
@@ -8653,25 +8723,52 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       {/* Flight Fare Options (Saver, Flexi Plus, Corporate, SpiceMax) Modal */}
       {flightForFareModal && (
         <FlightFareOptionsModal
-          flight={flightForFareModal}
+          flight={flightForFareModal.outboundFlight || flightForFareModal.flight || flightForFareModal}
+          returnFlight={flightForFareModal.returnFlight}
+          isRoundTrip={Boolean(flightForFareModal.isRoundTrip && flightForFareModal.returnFlight)}
           currency={currency}
-          onSelectFareAndProceed={(fareTier, finalPriceInr) => {
-            onSelectFlightOrStayForCheckout({
-              title: `${flightForFareModal.airline} ${flightForFareModal.flightNo} (${fareTier.name})`,
-              code: flightForFareModal.id,
-              depTime: flightForFareModal.depTime,
-              arrTime: flightForFareModal.arrTime,
-              duration: flightForFareModal.duration,
-              priceInr: finalPriceInr,
-              category: 'flights',
-              airline: flightForFareModal.airline,
-              flightNo: flightForFareModal.flightNo,
-              cabinClass: currentCabinClass || 'Economy',
-              roomType: fareTier.name,
-              fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
-              toCity: `${currentToCity.city} (${currentToCity.code})`,
-              travellers: currentTravellers,
-            });
+          travellers={currentTravellers}
+          onSelectFareAndProceed={(fareTier, finalPriceInr, roundTripFares) => {
+            const isRT = Boolean(flightForFareModal.isRoundTrip && flightForFareModal.returnFlight && roundTripFares);
+            const outFlight = flightForFareModal.outboundFlight || flightForFareModal.flight || flightForFareModal;
+            const retFlight = flightForFareModal.returnFlight;
+
+            if (isRT && retFlight && roundTripFares) {
+              onSelectFlightOrStayForCheckout({
+                title: `${outFlight.airline} (${roundTripFares.outboundTier.name.split('/')[0].trim()}) + ${retFlight.airline} (${roundTripFares.returnTier.name.split('/')[0].trim()})`,
+                code: `${outFlight.id}-${retFlight.id}`,
+                depTime: `${outFlight.depTime} (Out) / ${retFlight.depTime} (Ret)`,
+                arrTime: `${outFlight.arrTime} / ${retFlight.arrTime}`,
+                duration: `Out: ${outFlight.duration} · Ret: ${retFlight.duration}`,
+                priceInr: finalPriceInr,
+                category: 'flights',
+                airline: `${outFlight.airline} + ${retFlight.airline}`,
+                flightNo: `${outFlight.flightNo} + ${retFlight.flightNo}`,
+                cabinClass: currentCabinClass || 'Economy',
+                roomType: `Out: ${roundTripFares.outboundTier.name.split('/')[0].trim()} · Ret: ${roundTripFares.returnTier.name.split('/')[0].trim()}`,
+                fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
+                toCity: `${currentToCity.city} (${currentToCity.code})`,
+                travellers: currentTravellers,
+              });
+            } else {
+              const singleFlight = flightForFareModal.flight || flightForFareModal;
+              onSelectFlightOrStayForCheckout({
+                title: `${singleFlight.airline} ${singleFlight.flightNo} (${fareTier.name})`,
+                code: singleFlight.id,
+                depTime: singleFlight.depTime,
+                arrTime: singleFlight.arrTime,
+                duration: singleFlight.duration,
+                priceInr: finalPriceInr,
+                category: 'flights',
+                airline: singleFlight.airline,
+                flightNo: singleFlight.flightNo,
+                cabinClass: currentCabinClass || 'Economy',
+                roomType: fareTier.name,
+                fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
+                toCity: `${currentToCity.city} (${currentToCity.code})`,
+                travellers: currentTravellers,
+              });
+            }
             setFlightForFareModal(null);
           }}
           onClose={() => setFlightForFareModal(null)}
