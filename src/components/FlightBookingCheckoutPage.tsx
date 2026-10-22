@@ -164,18 +164,44 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
   onNotify,
   onGoToTrips,
 }) => {
-  // Flight Info
-  const airline = item.airline || 'IndiGo';
-  const flightNo = item.flightNo || item.code || '6E-2134';
+  // Flight Info & Roundtrip Detection
+  const isRoundTripFlight = Boolean(
+    item.isRoundTrip ||
+    item.returnFlight ||
+    item.returnDate ||
+    item.flightNo?.includes('+') ||
+    item.title?.includes('+') ||
+    item.depTime?.includes('/')
+  );
+
+  const outboundAirline = item.outboundFlight?.airline || (item.airline?.includes('+') ? item.airline.split('+')[0].trim() : (item.airline || 'IndiGo'));
+  const outboundFlightNo = item.outboundFlight?.flightNo || (item.flightNo?.includes('+') ? item.flightNo.split('+')[0].trim() : (item.flightNo || item.code || '6E-2134'));
+  const outboundDepTime = item.outboundFlight?.depTime || (item.depTime?.includes('/') ? item.depTime.split('/')[0].replace('(Out)', '').trim() : (item.depTime || '06:15'));
+  const outboundArrTime = item.outboundFlight?.arrTime || (item.arrTime?.includes('/') ? item.arrTime.split('/')[0].trim() : (item.arrTime || '08:30'));
+  const outboundDuration = item.outboundFlight?.duration || (item.duration?.includes('·') ? item.duration.split('·')[0].replace('Out:', '').trim() : (item.duration || '2h 15m'));
+  const outboundDate = item.travelDate || '18 Oct 2026';
+  const outboundTier = item.outboundTierName || (item.roomType?.includes('·') ? item.roomType.split('·')[0].replace('Out:', '').trim() : (item.roomType || 'Flexi Plus'));
+
+  const returnAirline = item.returnFlight?.airline || (item.airline?.includes('+') ? item.airline.split('+')[1].trim() : 'SpiceJet');
+  const returnFlightNo = item.returnFlight?.flightNo || (item.flightNo?.includes('+') ? item.flightNo.split('+')[1].trim() : 'SG-8169');
+  const returnDepTime = item.returnFlight?.depTime || (item.depTime?.includes('/') ? item.depTime.split('/')[1].replace('(Ret)', '').trim() : '19:40');
+  const returnArrTime = item.returnFlight?.arrTime || (item.arrTime?.includes('/') ? item.arrTime.split('/')[1].trim() : '21:55');
+  const returnDuration = item.returnFlight?.duration || (item.duration?.includes('·') ? item.duration.split('·')[1].replace('Ret:', '').trim() : (item.duration || '2h 15m'));
+  const returnDate = item.returnDate || '22 Oct 2026';
+  const returnTier = item.returnTierName || (item.roomType?.includes('·') ? item.roomType.split('·')[1].replace('Ret:', '').trim() : 'Saver');
+
+  // One-way fallbacks
+  const airline = item.airline || outboundAirline;
+  const flightNo = item.flightNo || outboundFlightNo;
   const fromCity = item.fromCity || 'New Delhi (DEL)';
   const toCity = item.toCity || 'Goa (GOI)';
-  const depTime = item.depTime?.split(' ')[0] || '06:15';
-  const arrTime = item.arrTime?.split(' ')[0] || '08:30';
-  const duration = item.duration || '2h 15m';
-  const travelDate = item.travelDate || '18 Oct 2026';
+  const depTime = item.depTime?.split(' ')[0] || outboundDepTime;
+  const arrTime = item.arrTime?.split(' ')[0] || outboundArrTime;
+  const duration = item.duration || outboundDuration;
+  const travelDate = item.travelDate || outboundDate;
   const pricePerPax = item.priceInr || 4850;
   const cabinClass = item.cabinClass || 'Economy';
-  const fareCategory = item.roomType || 'Flexi Plus (SpiceFlex)'; // borrowed field or default
+  const fareCategory = item.roomType || outboundTier;
 
   // 1. Dynamic Passengers (Starts with item.travellers or 1)
   const initialPaxCount = Math.max(1, item.travellers || 1);
@@ -207,18 +233,20 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
     return list;
   });
 
-  // 2. Extra Baggage Selection
+  // 2. Extra Baggage Selection (Separate for Outbound and Return when Round-Trip)
   const [extraBaggageKg, setExtraBaggageKg] = useState<number>(0);
+  const [extraBaggageOutboundKg, setExtraBaggageOutboundKg] = useState<number>(0);
+  const [extraBaggageReturnKg, setExtraBaggageReturnKg] = useState<number>(0);
 
-  // 3. Travel Protection & Flexible Booking
-  const [freeDateChangeProtect, setFreeDateChangeProtect] = useState<boolean>(true);
-  const [tripInsurance, setTripInsurance] = useState<boolean>(true);
+  // 3. Travel Protection & Flexible Booking (Removed as per user request)
+  const freeDateChangeProtect = false;
+  const tripInsurance = false;
 
   // 4. In-Flight Seat Selection (Rows 1-15)
   const [selectedSeats, setSelectedSeats] = useState<string[]>(['12A']);
 
-  // 5. In-Flight Meals Add-on
-  const [selectedMeals, setSelectedMeals] = useState<string[]>(['Veg Junglee Sandwich (+₹250)']);
+  // 5. In-Flight Meals Add-on (Removed as per user request)
+  const mealCost = 0;
 
   // 6. Airport Cab Transfer Add-on
   const [airportCabType, setAirportCabType] = useState<'none' | 'sedan' | 'suv'>('none');
@@ -293,17 +321,16 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
     10: 3750,
     15: 5400,
   };
-  const extraBaggageCost = (extraBaggagePriceMap[extraBaggageKg] || 0) * paxCount;
+  const extraBaggageCost = isRoundTripFlight
+    ? ((extraBaggagePriceMap[extraBaggageOutboundKg] || 0) + (extraBaggagePriceMap[extraBaggageReturnKg] || 0)) * paxCount
+    : (extraBaggagePriceMap[extraBaggageKg] || 0) * paxCount;
 
   // Seat Selection Cost (0 as allocated seats block is removed)
   const seatCost = 0;
 
-  // Meals Cost
-  const mealCost = selectedMeals.length * 250;
-
-  // Travel Protection & Flexible Date Change
-  const dateChangeProtectCost = freeDateChangeProtect ? 399 * paxCount : 0;
-  const tripInsuranceCost = tripInsurance ? 249 * paxCount : 0;
+  // Travel Protection & Flexible Date Change (Removed as per user request)
+  const dateChangeProtectCost = 0;
+  const tripInsuranceCost = 0;
 
   // Cab Cost
   const cabCost = airportCabType === 'sedan' ? 850 : airportCabType === 'suv' ? 1400 : 0;
@@ -474,96 +501,288 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
               LEFT COLUMN (8 COLS): Flight Info, Baggage, Add-ons, Passengers
           =============================================================== */}
           <div className="lg:col-span-8 space-y-6">
-            {/* 1. FLIGHT DETAILS & SCHEDULE CARD */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs">
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md">
-                    <Plane className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="font-display text-lg sm:text-xl font-black text-slate-900">
-                        {airline} {flightNo}
-                      </h2>
-                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        {fareCategory}
-                      </span>
+            {/* 1. FLIGHT DETAILS & SCHEDULE CARDS */}
+            {isRoundTripFlight ? (
+              <div className="space-y-4">
+                {/* 1A. DEPARTURE FLIGHT CARD */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md shrink-0">
+                        <Plane className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                            🛫 Departure Flight
+                          </span>
+                          <h2 className="font-display text-lg sm:text-xl font-black text-slate-900">
+                            {outboundAirline} {outboundFlightNo}
+                          </h2>
+                          <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            {outboundTier}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
+                          <span>Airbus A321neo</span>
+                          <span>·</span>
+                          <span className="text-emerald-700 font-bold">Non-Stop</span>
+                          <span>·</span>
+                          <span>{cabinClass} Class</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
-                      <span>Airbus A321neo</span>
+
+                    <div className="text-right">
+                      <span className="text-[11px] text-slate-400 font-medium block">Departure Date</span>
+                      <span className="font-mono text-sm font-bold text-slate-900">{flightTravelDate || outboundDate}</span>
+                    </div>
+                  </div>
+
+                  {/* Departure, Duration & Arrival Timeline */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
+                    <div className="sm:col-span-4 text-left">
+                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                        {outboundDepTime}
+                      </div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">
+                        {fromCity}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        Gate Opens 45m Prior
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-4 flex flex-col items-center justify-center px-2">
+                      <span className="text-xs font-bold text-slate-500 mb-1">{outboundDuration}</span>
+                      <div className="w-full h-1 bg-slate-200 rounded-full relative flex items-center justify-center">
+                        <Plane className="w-4 h-4 text-blue-600 absolute bg-white px-0.5" />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-4 text-left sm:text-right">
+                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                        {outboundArrTime}
+                      </div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">
+                        {toCity}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        Terminal 1 · Baggage Belt 3
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Baggage Summary Strip */}
+                  <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50/70 -mx-5 -mb-5 sm:-mx-7 sm:-mb-7 px-5 sm:px-7 py-3 rounded-b-3xl">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Luggage className="w-4 h-4 text-blue-600" />
+                        <span>Included Cabin Bag: <strong>7 kg / pax</strong></span>
+                      </div>
                       <span>·</span>
-                      <span className="text-emerald-700 font-bold">Non-Stop Flight</span>
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Luggage className="w-4 h-4 text-blue-600" />
+                        <span>Included Check-in Bag: <strong>15 kg / pax</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFareRulesModal(true)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs hover:scale-102"
+                      title="Click to view cancellation charges and date change policies"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-blue-600" />
+                      <span>View Fare Rules</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 1B. RETURN FLIGHT CARD */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-md shrink-0">
+                        <Plane className="w-6 h-6 rotate-180" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                            🛬 Return Flight
+                          </span>
+                          <h2 className="font-display text-lg sm:text-xl font-black text-slate-900">
+                            {returnAirline} {returnFlightNo}
+                          </h2>
+                          <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                            {returnTier}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
+                          <span>Boeing 737-800</span>
+                          <span>·</span>
+                          <span className="text-emerald-700 font-bold">Non-Stop</span>
+                          <span>·</span>
+                          <span>{cabinClass} Class</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[11px] text-slate-400 font-medium block">Return Date</span>
+                      <span className="font-mono text-sm font-bold text-slate-900">{returnDate}</span>
+                    </div>
+                  </div>
+
+                  {/* Return Departure, Duration & Arrival Timeline */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
+                    <div className="sm:col-span-4 text-left">
+                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                        {returnDepTime}
+                      </div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">
+                        {toCity}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        Gate Opens 45m Prior
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-4 flex flex-col items-center justify-center px-2">
+                      <span className="text-xs font-bold text-slate-500 mb-1">{returnDuration}</span>
+                      <div className="w-full h-1 bg-slate-200 rounded-full relative flex items-center justify-center">
+                        <Plane className="w-4 h-4 text-indigo-600 absolute bg-white px-0.5 rotate-180" />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-4 text-left sm:text-right">
+                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                        {returnArrTime}
+                      </div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">
+                        {fromCity}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        Terminal 2 · Baggage Belt 1
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Baggage Summary Strip */}
+                  <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50/70 -mx-5 -mb-5 sm:-mx-7 sm:-mb-7 px-5 sm:px-7 py-3 rounded-b-3xl">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Luggage className="w-4 h-4 text-indigo-600" />
+                        <span>Included Cabin Bag: <strong>7 kg / pax</strong></span>
+                      </div>
                       <span>·</span>
-                      <span>{cabinClass} Class</span>
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Luggage className="w-4 h-4 text-indigo-600" />
+                        <span>Included Check-in Bag: <strong>15 kg / pax</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFareRulesModal(true)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs hover:scale-102"
+                      title="Click to view cancellation charges and date change policies"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>View Fare Rules</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md">
+                      <Plane className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-display text-lg sm:text-xl font-black text-slate-900">
+                          {airline} {flightNo}
+                        </h2>
+                        <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          {fareCategory}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
+                        <span>Airbus A321neo</span>
+                        <span>·</span>
+                        <span className="text-emerald-700 font-bold">Non-Stop Flight</span>
+                        <span>·</span>
+                        <span>{cabinClass} Class</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[11px] text-slate-400 font-medium block">Travel Date</span>
+                    <span className="font-mono text-sm font-bold text-slate-900">{flightTravelDate}</span>
+                  </div>
+                </div>
+
+                {/* Departure, Duration & Arrival Timeline */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
+                  <div className="sm:col-span-4 text-left">
+                    <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                      {depTime}
+                    </div>
+                    <div className="text-sm font-bold text-slate-900 mt-1">
+                      {fromCity}
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium">
+                      Gate Opens 45m Prior
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-4 flex flex-col items-center justify-center px-2">
+                    <span className="text-xs font-bold text-slate-500 mb-1">{duration}</span>
+                    <div className="w-full h-1 bg-slate-200 rounded-full relative flex items-center justify-center">
+                      <Plane className="w-4 h-4 text-blue-600 absolute bg-white px-0.5" />
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-4 text-left sm:text-right">
+                    <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                      {arrTime}
+                    </div>
+                    <div className="text-sm font-bold text-slate-900 mt-1">
+                      {toCity}
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium">
+                      Terminal 1 · Baggage Belt 3
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-[11px] text-slate-400 font-medium block">Travel Date</span>
-                  <span className="font-mono text-sm font-bold text-slate-900">{flightTravelDate}</span>
+                {/* Baggage Summary Strip */}
+                <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50/70 -mx-5 -mb-5 sm:-mx-7 sm:-mb-7 px-5 sm:px-7 py-3 rounded-b-3xl">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-slate-700">
+                      <Luggage className="w-4 h-4 text-blue-600" />
+                      <span>Included Cabin Bag: <strong>7 kg / pax</strong></span>
+                    </div>
+                    <span>·</span>
+                    <div className="flex items-center gap-1.5 text-slate-700">
+                      <Luggage className="w-4 h-4 text-blue-600" />
+                      <span>Included Check-in Bag: <strong>15 kg / pax</strong></span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFareRulesModal(true)}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs hover:scale-102"
+                    title="Click to view cancellation charges and date change policies"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                    <span>View Fare Rules</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Departure, Duration & Arrival Timeline */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
-                <div className="sm:col-span-4 text-left">
-                  <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
-                    {depTime}
-                  </div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">
-                    {fromCity}
-                  </div>
-                  <div className="text-xs text-slate-500 font-medium">
-                    Gate Opens 45m Prior
-                  </div>
-                </div>
-
-                <div className="sm:col-span-4 flex flex-col items-center justify-center px-2">
-                  <span className="text-xs font-bold text-slate-500 mb-1">{duration}</span>
-                  <div className="w-full h-1 bg-slate-200 rounded-full relative flex items-center justify-center">
-                    <Plane className="w-4 h-4 text-blue-600 absolute bg-white px-0.5" />
-                  </div>
-                </div>
-
-                <div className="sm:col-span-4 text-left sm:text-right">
-                  <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
-                    {arrTime}
-                  </div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">
-                    {toCity}
-                  </div>
-                  <div className="text-xs text-slate-500 font-medium">
-                    Terminal 1 · Baggage Belt 3
-                  </div>
-                </div>
-              </div>
-
-              {/* Baggage Summary Strip */}
-              <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50/70 -mx-5 -mb-5 sm:-mx-7 sm:-mb-7 px-5 sm:px-7 py-3 rounded-b-3xl">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-slate-700">
-                    <Luggage className="w-4 h-4 text-blue-600" />
-                    <span>Included Cabin Bag: <strong>7 kg / pax</strong></span>
-                  </div>
-                  <span>·</span>
-                  <div className="flex items-center gap-1.5 text-slate-700">
-                    <Luggage className="w-4 h-4 text-blue-600" />
-                    <span>Included Check-in Bag: <strong>15 kg / pax</strong></span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowFareRulesModal(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs hover:scale-102"
-                  title="Click to view cancellation charges and date change policies"
-                >
-                  <FileText className="w-3.5 h-3.5 text-blue-600" />
-                  <span>View Fare Rules</span>
-                </button>
-              </div>
-            </div>
+            )}
 
             {/* 2. EXTRA BAGGAGE ADD-ON */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-4">
@@ -576,91 +795,128 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {[
-                  { kg: 0, label: 'Standard 15 kg', price: 0 },
-                  { kg: 3, label: '+3 kg Extra', price: 1350 },
-                  { kg: 5, label: '+5 kg Extra', price: 1950 },
-                  { kg: 10, label: '+10 kg Extra', price: 3750 },
-                  { kg: 15, label: '+15 kg Extra', price: 5400 },
-                ].map((bg) => {
-                  const isSelected = extraBaggageKg === bg.kg;
-                  return (
-                    <button
-                      key={bg.kg}
-                      type="button"
-                      onClick={() => setExtraBaggageKg(bg.kg)}
-                      className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-xs'
-                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-extrabold">{bg.label}</div>
-                      <div className="text-xs font-mono font-bold mt-1 text-slate-900">
-                        {bg.price === 0 ? 'Included' : `+₹${bg.price}`}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+              {isRoundTripFlight ? (
+                <div className="space-y-4">
+                  {/* Outbound Flight Baggage */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-blue-800 flex items-center gap-1.5">
+                        <span>🛫 Departure Flight Baggage:</span>
+                        <span className="text-slate-600 font-semibold lowercase">
+                          ({fromCity.split(' ')[0]} → {toCity.split(' ')[0]})
+                        </span>
+                      </span>
+                      {extraBaggageOutboundKg > 0 && (
+                        <span className="text-xs font-bold text-blue-700">
+                          +{extraBaggageOutboundKg} kg Added
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                      {[
+                        { kg: 0, label: 'Standard 15 kg', price: 0 },
+                        { kg: 3, label: '+3 kg Extra', price: 1350 },
+                        { kg: 5, label: '+5 kg Extra', price: 1950 },
+                        { kg: 10, label: '+10 kg Extra', price: 3750 },
+                        { kg: 15, label: '+15 kg Extra', price: 5400 },
+                      ].map((bg) => {
+                        const isSelected = extraBaggageOutboundKg === bg.kg;
+                        return (
+                          <button
+                            key={bg.kg}
+                            type="button"
+                            onClick={() => setExtraBaggageOutboundKg(bg.kg)}
+                            className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-xs'
+                                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                            }`}
+                          >
+                            <div className="text-xs font-extrabold">{bg.label}</div>
+                            <div className="text-xs font-mono font-bold mt-1 text-slate-900">
+                              {bg.price === 0 ? 'Included' : `+₹${bg.price}`}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-            {/* 3. IN-FLIGHT MEALS */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-display font-bold text-base text-slate-900">
-                    In-Flight Meals &amp; Refreshments
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Pre-book fresh chef meals and hot beverage selection
-                  </p>
+                  {/* Return Flight Baggage */}
+                  <div className="space-y-2 pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-indigo-800 flex items-center gap-1.5">
+                        <span>🛬 Return Flight Baggage:</span>
+                        <span className="text-slate-600 font-semibold lowercase">
+                          ({toCity.split(' ')[0]} → {fromCity.split(' ')[0]})
+                        </span>
+                      </span>
+                      {extraBaggageReturnKg > 0 && (
+                        <span className="text-xs font-bold text-indigo-700">
+                          +{extraBaggageReturnKg} kg Added
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                      {[
+                        { kg: 0, label: 'Standard 15 kg', price: 0 },
+                        { kg: 3, label: '+3 kg Extra', price: 1350 },
+                        { kg: 5, label: '+5 kg Extra', price: 1950 },
+                        { kg: 10, label: '+10 kg Extra', price: 3750 },
+                        { kg: 15, label: '+15 kg Extra', price: 5400 },
+                      ].map((bg) => {
+                        const isSelected = extraBaggageReturnKg === bg.kg;
+                        return (
+                          <button
+                            key={bg.kg}
+                            type="button"
+                            onClick={() => setExtraBaggageReturnKg(bg.kg)}
+                            className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-indigo-50 border-indigo-600 text-indigo-900 font-bold shadow-xs'
+                                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                            }`}
+                          >
+                            <div className="text-xs font-extrabold">{bg.label}</div>
+                            <div className="text-xs font-mono font-bold mt-1 text-slate-900">
+                              {bg.price === 0 ? 'Included' : `+₹${bg.price}`}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Meals Multi-Select */}
-              <div className="space-y-2">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 block">
-                  Select In-Flight Meal / Beverage:
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                   {[
-                    'Veg Junglee Sandwich (+₹250)',
-                    'Paneer Tikka Kathi Roll (+₹350)',
-                    'Chicken Club Sandwich (+₹350)',
-                    'South Indian Upma & Coffee (+₹250)',
-                    'Jain Special Meal Box (+₹250)',
-                    'Fresh Fruit Bowl (+₹200)',
-                  ].map((mealItem) => {
-                    const isSelected = selectedMeals.includes(mealItem);
+                    { kg: 0, label: 'Standard 15 kg', price: 0 },
+                    { kg: 3, label: '+3 kg Extra', price: 1350 },
+                    { kg: 5, label: '+5 kg Extra', price: 1950 },
+                    { kg: 10, label: '+10 kg Extra', price: 3750 },
+                    { kg: 15, label: '+15 kg Extra', price: 5400 },
+                  ].map((bg) => {
+                    const isSelected = extraBaggageKg === bg.kg;
                     return (
                       <button
-                        key={mealItem}
+                        key={bg.kg}
                         type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedMeals(selectedMeals.filter((m) => m !== mealItem));
-                          } else {
-                            setSelectedMeals([...selectedMeals, mealItem]);
-                          }
-                        }}
-                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between text-xs ${
+                        onClick={() => setExtraBaggageKg(bg.kg)}
+                        className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-emerald-50/80 border-emerald-500 text-emerald-950 font-bold shadow-2xs'
+                            ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-xs'
                             : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
                         }`}
                       >
-                        <div className="flex items-center gap-2">
-                          <Utensils className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>{mealItem}</span>
+                        <div className="text-xs font-extrabold">{bg.label}</div>
+                        <div className="text-xs font-mono font-bold mt-1 text-slate-900">
+                          {bg.price === 0 ? 'Included' : `+₹${bg.price}`}
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />}
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* 4. PASSENGER DETAILS & DYNAMIC ADD TRAVELLER */}
@@ -967,83 +1223,6 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
               </label>
             </div>
 
-            {/* 6. FLEXIBLE BOOKING & TRAVEL PROTECTION (TripProtect 360) */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-display font-bold text-base text-slate-900">
-                  Flexible Booking &amp; Travel Protection
-                </h3>
-              </div>
-
-              <div
-                onClick={() => setFreeDateChangeProtect(!freeDateChangeProtect)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  freeDateChangeProtect
-                    ? 'bg-indigo-50/70 border-indigo-200 shadow-xs'
-                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={freeDateChangeProtect}
-                    onChange={() => {}}
-                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 mt-0.5 focus:ring-indigo-500"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-indigo-950">
-                        Zero Cancellation / Free Date Change Guarantee
-                      </span>
-                    </div>
-                    <p className="text-xs text-indigo-700 mt-0.5">
-                      Reschedule your flight anytime up to 2 hours before departure with zero airline change penalty.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <div className="font-mono text-sm font-bold text-slate-900">
-                    +₹{399 * paxCount}
-                  </div>
-                  <div className="text-[10px] text-slate-400">₹399 per traveller</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setTripInsurance(!tripInsurance)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                  tripInsurance
-                    ? 'bg-emerald-50/70 border-emerald-200 shadow-xs'
-                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={tripInsurance}
-                    onChange={() => {}}
-                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 mt-0.5 focus:ring-emerald-500"
-                  />
-                  <div>
-                    <span className="text-xs font-extrabold text-emerald-950 block">
-                      TripProtect 360 Comprehensive Flight Insurance
-                    </span>
-                    <span className="text-xs text-emerald-700">
-                      Emergency medical cover up to ₹15 Lakhs, baggage loss compensation ₹25,000 &amp; trip delay payout.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <div className="font-mono text-sm font-bold text-slate-900">
-                    +₹{249 * paxCount}
-                  </div>
-                  <div className="text-[10px] text-slate-400">₹249 per traveller</div>
-                </div>
-              </div>
-            </div>
 
             {/* 7. AIRPORT CAB GROUND TRANSFER */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs space-y-4">
@@ -1247,54 +1426,24 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                 </div>
 
                 {/* Extra Baggage */}
-                {extraBaggageKg > 0 && (
+                {extraBaggageCost > 0 && (
                   <div className="flex items-center justify-between text-slate-700">
-                    <span>Pre-booked Baggage (+{extraBaggageKg} kg)</span>
+                    <span>
+                      {isRoundTripFlight
+                        ? `Pre-booked Baggage (${[
+                            extraBaggageOutboundKg > 0 ? `Dep +${extraBaggageOutboundKg}kg` : '',
+                            extraBaggageReturnKg > 0 ? `Ret +${extraBaggageReturnKg}kg` : '',
+                          ]
+                            .filter(Boolean)
+                            .join(', ')})`
+                        : `Pre-booked Baggage (+${extraBaggageKg} kg)`}
+                    </span>
                     <span className="font-mono text-slate-900">
                       +{formatPrice(extraBaggageCost, currency)}
                     </span>
                   </div>
                 )}
 
-                {/* Seat Selection */}
-                {seatCost > 0 && (
-                  <div className="flex items-center justify-between text-slate-700">
-                    <span>Preferred Seat Selection ({selectedSeats.length} seats)</span>
-                    <span className="font-mono text-slate-900">
-                      +{formatPrice(seatCost, currency)}
-                    </span>
-                  </div>
-                )}
-
-                {/* In-Flight Meals */}
-                {mealCost > 0 && (
-                  <div className="flex items-center justify-between text-slate-700">
-                    <span>In-Flight Meals ({selectedMeals.length} items)</span>
-                    <span className="font-mono text-slate-900">
-                      +{formatPrice(mealCost, currency)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Flexible Booking Protect */}
-                {freeDateChangeProtect && (
-                  <div className="flex items-center justify-between text-indigo-700">
-                    <span>Free Date Change Protection ({paxCount} pax)</span>
-                    <span className="font-mono font-bold">
-                      +{formatPrice(dateChangeProtectCost, currency)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Travel Insurance */}
-                {tripInsurance && (
-                  <div className="flex items-center justify-between text-emerald-700">
-                    <span>TripProtect 360 Insurance ({paxCount} pax)</span>
-                    <span className="font-mono font-bold">
-                      +{formatPrice(tripInsuranceCost, currency)}
-                    </span>
-                  </div>
-                )}
 
                 {/* Airport Cab */}
                 {cabCost > 0 && (

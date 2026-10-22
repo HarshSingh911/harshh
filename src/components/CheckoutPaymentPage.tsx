@@ -85,6 +85,11 @@ export interface CheckoutItem {
   holidayTheme?: string;
   busBoardingPoint?: string;
   busDroppingPoint?: string;
+  isRoundTrip?: boolean;
+  outboundFlight?: any;
+  returnFlight?: any;
+  outboundTierName?: string;
+  returnTierName?: string;
 }
 
 interface CheckoutPaymentPageProps {
