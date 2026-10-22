@@ -24,6 +24,7 @@ import {
   ExternalLink,
   QrCode,
   Share2,
+  ArrowUpDown,
 } from 'lucide-react';
 import {
   BookingCategory,
@@ -36,6 +37,7 @@ import {
   CITIES,
 } from '../data/travelData';
 import { SafeImage } from './SafeImage';
+import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 
 // Slideshow images showcasing varied waterparks, theme parks, rollercoasters & activities
 const SLIDESHOW_ITEMS = [
@@ -90,15 +92,7 @@ interface ExperiencesSearchResultsPageProps {
   onChangeDestination: (city: CityOption) => void;
   onChangeDate: (date: string) => void;
   onModifySearch: () => void;
-  onSelectExperienceForCheckout: (bookingSummary: {
-    title: string;
-    code: string;
-    depTime: string;
-    arrTime: string;
-    duration: string;
-    priceInr: number;
-    category: BookingCategory;
-  }) => void;
+  onSelectExperienceForCheckout: (experience: ExperienceItem) => void;
   onNotify: (title: string, detail: string, type?: 'success' | 'info') => void;
 }
 
@@ -134,6 +128,35 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
 
   // Background visual slideshow state
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
+
+  // Modify search bar dropdown states
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+
+  // Sort Options
+  const sortOptions: { id: 'recommended' | 'price-asc' | 'price-desc' | 'rating' | 'reviews'; label: string }[] = [
+    { id: 'recommended', label: 'Recommended & Popular' },
+    { id: 'price-asc', label: 'Price: Low to High' },
+    { id: 'price-desc', label: 'Price: High to Low' },
+    { id: 'rating', label: 'Highest Rated (★)' },
+    { id: 'reviews', label: 'Most Reviewed' },
+  ];
+
+  // Format date helper for clean display
+  const formatDisplayDate = (dStr: string) => {
+    if (!dStr) return 'Select Date';
+    try {
+      const parts = dStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    } catch {
+      // fallback
+    }
+    return dStr;
+  };
 
   // Auto-cycle through waterparks & activity slides every 4.5 seconds
   React.useEffect(() => {
@@ -281,26 +304,8 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
   };
 
   const handleConfirmToCheckout = () => {
-    if (!bookingExperience || !selectedTier) return;
-    const totalFare = calculateBookingTotal();
-    const guestLabel = `${adultCount} Adult${adultCount > 1 ? 's' : ''}${childCount > 0 ? `, ${childCount} Child` : ''}`;
-
-    onSelectExperienceForCheckout({
-      title: `${bookingExperience.title} (${selectedTier.name})`,
-      code: bookingExperience.id,
-      depTime: `${ticketDate} @ ${selectedTimeSlot}`,
-      arrTime: `${bookingExperience.duration} (${bookingExperience.city})`,
-      duration: `${bookingExperience.duration} · ${guestLabel}`,
-      priceInr: totalFare,
-      category: 'experiences',
-    });
-
-    onNotify(
-      `Tickets Added: ${bookingExperience.title}`,
-      `${guestLabel} on ${ticketDate} (${selectedTimeSlot}). Total: ${formatPrice(totalFare, currency)}.`,
-      'success'
-    );
-
+    if (!bookingExperience) return;
+    onSelectExperienceForCheckout(bookingExperience);
     setBookingExperience(null);
   };
 
@@ -358,11 +363,11 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
             </div>
           ))}
 
-          {/* Transparent-friendly scrim: subtle dark top gradient so waterparks & coasters background remains vividly visible */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/65 via-slate-950/30 to-transparent pointer-events-none" />
+          {/* Subtle top scrim: clear view so waterparks, coasters & safari background photos remain vivid */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none" />
 
-          {/* Gentle white fade at bottom: soft gradient dissolve into the page background */}
-          <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent via-[#F8FAFC]/60 to-[#F8FAFC] pointer-events-none" />
+          {/* Light, subtle bottom fade so the photos remain clearly visible without thick white haze */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[#F8FAFC]/40 pointer-events-none" />
         </div>
 
         {/* Hero Content (Breadcrumb, Title, Destination Modifier & Category Tabs) */}
@@ -386,53 +391,134 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
               </h1>
             </div>
 
-            {/* Quick Search & Modify Strip */}
-            <div className="flex flex-wrap items-center gap-2.5 bg-slate-950/60 backdrop-blur-md p-2.5 rounded-2xl border border-white/20 shadow-lg">
-              {/* Destination Pill */}
-              <div className="relative">
-                <select
-                  value={selectedCityFilter}
-                  onChange={(e) => {
-                    const city = e.target.value;
-                    setSelectedCityFilter(city);
-                    const matched = CITIES.find((c) => c.city.toLowerCase() === city.toLowerCase());
-                    if (matched) onChangeDestination(matched);
+            {/* Quick Search & Modify Strip with transparent glass styling and smooth scroll */}
+            <div className="relative flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/25 backdrop-blur-xs p-1.5 rounded-2xl shadow-lg max-w-full overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {(showCityDropdown || showCalendarDropdown) && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => {
+                    setShowCityDropdown(false);
+                    setShowCalendarDropdown(false);
                   }}
-                  className="bg-slate-900/90 text-white text-xs font-bold px-3 py-2 rounded-xl border border-white/20 focus:outline-hidden cursor-pointer"
+                />
+              )}
+
+              {/* Destination Dropdown */}
+              <div className="relative z-50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCityDropdown(!showCityDropdown);
+                    setShowCalendarDropdown(false);
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl border border-white/25 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
                 >
-                  <option value="all">🌍 All Destinations (Worldwide)</option>
-                  {availableCities.map((c) => (
-                    <option key={c} value={c}>
-                      📍 {c}
-                    </option>
-                  ))}
-                </select>
+                  <MapPin className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>
+                    {selectedCityFilter === 'all'
+                      ? '🌍 All Destinations'
+                      : `📍 ${selectedCityFilter}`}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-white/70 ml-1" />
+                </button>
+
+                {showCityDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 z-50 animate-in fade-in zoom-in-95">
+                    <div className="text-[10px] font-bold text-slate-400 px-3 py-1 uppercase tracking-wider">
+                      Select Destination
+                    </div>
+                    <div className="max-h-56 overflow-y-auto space-y-0.5 text-slate-800 scroll-smooth [scrollbar-width:thin]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCityFilter('all');
+                          setShowCityDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                          selectedCityFilter === 'all'
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <span>🌍 All Destinations (Worldwide)</span>
+                        {selectedCityFilter === 'all' && (
+                          <Check className="w-3.5 h-3.5 text-indigo-600" />
+                        )}
+                      </button>
+                      {availableCities.map((c) => {
+                        const isSel = selectedCityFilter.toLowerCase() === c.toLowerCase();
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCityFilter(c);
+                              const matched = CITIES.find(
+                                (ct) => ct.city.toLowerCase() === c.toLowerCase()
+                              );
+                              if (matched) onChangeDestination(matched);
+                              setShowCityDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                              isSel
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <span>📍 {c}</span>
+                            {isSel && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Date Input */}
-              <div className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-white/20 text-xs">
-                <Calendar className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
-                <input
-                  type="date"
-                  value={selectedDate || '2026-10-24'}
-                  onChange={(e) => onChangeDate(e.target.value)}
-                  className="bg-transparent text-white text-xs font-semibold focus:outline-hidden cursor-pointer"
-                />
+              {/* Date Input with interactive Calendar Dropdown */}
+              <div className="relative z-50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCalendarDropdown(!showCalendarDropdown);
+                    setShowCityDropdown(false);
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl border border-white/25 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>{formatDisplayDate(selectedDate || '2026-10-24')}</span>
+                  <ChevronDown className="w-3 h-3 text-white/70 ml-1" />
+                </button>
+
+                {showCalendarDropdown && (
+                  <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 animate-in fade-in zoom-in-95 shadow-2xl">
+                    <NormalCalendarDropdown
+                      selectedDate={selectedDate || '2026-10-24'}
+                      minDate="2026-10-15"
+                      onSelectDate={(iso) => {
+                        onChangeDate(iso);
+                        setShowCalendarDropdown(false);
+                      }}
+                      onClose={() => setShowCalendarDropdown(false)}
+                      alignRight={true}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Modify Search Action */}
               <button
                 type="button"
                 onClick={onModifySearch}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-xs shadow-md transition-all cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
               >
                 Modify Search
               </button>
             </div>
           </div>
 
-          {/* Quick Category Tabs Bar */}
-          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {/* Quick Category Tabs Bar: Clean transparent buttons without dark/black fill */}
+          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {[
               { id: 'all', label: '🌟 All Experiences', count: EXPERIENCES_DATA.length },
               {
@@ -469,12 +555,18 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
                   onClick={() => setSelectedCategoryTab(tab.id)}
                   className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 ${
                     active
-                      ? 'bg-white text-indigo-950 shadow-md font-extrabold'
-                      : 'bg-slate-950/50 text-white hover:bg-slate-900/75 border border-white/20 backdrop-blur-md shadow-xs'
+                      ? 'bg-white/30 text-white border-2 border-white shadow-xs font-extrabold backdrop-blur-xs'
+                      : 'bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/25 shadow-2xs backdrop-blur-xs'
                   }`}
                 >
                   <span>{tab.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-indigo-100 text-indigo-900' : 'bg-white/20 text-indigo-100'}`}>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      active
+                        ? 'bg-white text-indigo-950'
+                        : 'bg-white/20 text-white'
+                    }`}
+                  >
                     {tab.count}
                   </span>
                 </button>
@@ -682,10 +774,6 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
                   {filteredExperiences.length}{' '}
                   {filteredExperiences.length === 1 ? 'Activity & Park Pass' : 'Activities & Park Passes'} Found
                 </h2>
-                <p className="text-xs text-slate-500 font-medium">
-                  {selectedCityFilter !== 'all' ? `Showing activities in ${selectedCityFilter}` : 'Worldwide curated top experiences'}
-                  {selectedDate ? ` · Visit Date: ${selectedDate}` : ''}
-                </p>
               </div>
 
               {/* Mobile Filter Button */}
@@ -698,20 +786,61 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
                 <span>{showMobileFilters ? 'Hide Filters' : 'Filters'}</span>
               </button>
 
-              {/* Sort By Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-hidden cursor-pointer"
+              {/* Sort By Custom Dropdown: original dropdown behavior with an upgraded modern interface */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 hover:border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 transition-all cursor-pointer shadow-2xs group"
                 >
-                  <option value="recommended">Recommended & Popular</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="rating">Highest Rated (★)</option>
-                  <option value="reviews">Most Reviewed</option>
-                </select>
+                  <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-slate-500 font-semibold">Sort by:</span>
+                  <span className="text-slate-900 font-extrabold">
+                    {sortOptions.find((s) => s.id === sortBy)?.label || 'Recommended & Popular'}
+                  </span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                      showSortDropdown ? 'rotate-180 text-indigo-600' : ''
+                    }`}
+                  />
+                </button>
+
+                {showSortDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowSortDropdown(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 z-50 animate-in fade-in zoom-in-95">
+                      <div className="text-[10px] font-bold text-slate-400 px-3 py-1.5 uppercase tracking-wider">
+                        Sort By
+                      </div>
+                      <div className="space-y-0.5">
+                        {sortOptions.map((opt) => {
+                          const active = sortBy === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                setSortBy(opt.id);
+                                setShowSortDropdown(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                                active
+                                  ? 'bg-indigo-50 text-indigo-700 font-extrabold'
+                                  : 'text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {active && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -872,7 +1001,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
 
                             <button
                               type="button"
-                              onClick={() => handleOpenBooking(exp)}
+                              onClick={() => onSelectExperienceForCheckout(exp)}
                               className="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600 hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center gap-1.5 cursor-pointer transition-all"
                             >
                               <Ticket className="w-4 h-4" />
@@ -1210,8 +1339,9 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
               <button
                 type="button"
                 onClick={() => {
+                  const toBook = detailExperience;
                   setDetailExperience(null);
-                  handleOpenBooking(detailExperience);
+                  onSelectExperienceForCheckout(toBook);
                 }}
                 className="px-6 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
               >

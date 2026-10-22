@@ -115,6 +115,7 @@ interface FlightSearchResultsPageProps {
     busDroppingPoint?: string;
     travellers?: number;
   }) => void;
+  onSelectHolidayForCheckout?: (pkg: any) => void;
   onSelectHotelForDetails?: (hotel: any) => void;
   onOpenHostelsPage?: () => void;
   hotelMode?: 'overnight' | 'hourly' | 'villas' | 'hostels';
@@ -1809,6 +1810,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   onChangeCategory,
   onModifySearch,
   onSelectFlightOrStayForCheckout,
+  onSelectHolidayForCheckout,
   onSelectHotelForDetails,
   onOpenHostelsPage,
   onNotify,
@@ -1911,7 +1913,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [openTrainDropdown, setOpenTrainDropdown] = useState<'from' | 'to' | 'class' | 'quota' | null>(null);
   const [openBusDropdown, setOpenBusDropdown] = useState<'from' | 'to' | 'type' | null>(null);
   const [openCabDropdown, setOpenCabDropdown] = useState<'from' | 'to' | 'time' | 'type' | null>(null);
-  const [openHolidayDropdown, setOpenHolidayDropdown] = useState<'from' | 'to' | 'duration' | 'theme' | null>(null);
+  const [openHolidayDropdown, setOpenHolidayDropdown] = useState<'from' | 'to' | 'duration' | 'theme' | 'rooms' | null>(null);
 
   // Close calendar, travellers and custom popovers on outside click
   useEffect(() => {
@@ -2808,12 +2810,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     {currentCategory !== 'holidays' && (
                       <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
                         {currentCategory === 'trains' ? currentToCity.stationCode : currentToCity.code}
-                      </span>
-                    )}
-
-                    {currentCategory === 'holidays' && (
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                        Holiday Packages
                       </span>
                     )}
 
@@ -4583,7 +4579,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
               {/* 6. HOLIDAYS MODIFY CONTROLS */}
               {modCategory === 'holidays' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {/* From City Custom Dropdown */}
                   <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
@@ -4752,124 +4748,112 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     )}
                   </div>
 
-                  {/* Duration Custom Dropdown */}
+                  {/* Rooms & Guests Custom Dropdown (Replaced Duration) */}
                   <div className="relative dropdown-field-container">
                     <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      Duration
+                      Rooms &amp; Guests
                     </label>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenHolidayDropdown(openHolidayDropdown === 'duration' ? null : 'duration');
+                        setOpenHolidayDropdown(openHolidayDropdown === 'rooms' ? null : 'rooms');
                         setOpenCalendarDropdown(null);
                       }}
                       className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
-                        openHolidayDropdown === 'duration' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
+                        openHolidayDropdown === 'rooms' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
                       }`}
                     >
-                      <div className="truncate">
-                        <div className="text-slate-900 font-bold">{modHolidayDuration}</div>
-                        <div className="text-[10px] text-slate-500 truncate">Tour Length</div>
+                      <div className="flex items-center gap-2 truncate">
+                        <Users className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="truncate">
+                          {modHotelRooms} {modHotelRooms === 1 ? 'Room' : 'Rooms'}, {modHotelGuests} {modHotelGuests === 1 ? 'Guest' : 'Guests'}
+                        </span>
                       </div>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'duration' ? 'rotate-180 text-blue-600' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'rooms' ? 'rotate-180 text-blue-600' : ''}`} />
                     </button>
 
-                    {openHolidayDropdown === 'duration' && (
+                    {openHolidayDropdown === 'rooms' && (
                       <div
                         data-dropdown-container="true"
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute right-0 top-full mt-1.5 w-56 max-h-60 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
+                        className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 max-h-80 overflow-y-auto overscroll-contain custom-scrollbar space-y-3 select-none animate-in fade-in zoom-in-95 duration-100"
                       >
-                        {[
-                          { val: '3N / 4D', label: '3 Nights / 4 Days', desc: 'Weekend Getaway' },
-                          { val: '4N / 5D', label: '4 Nights / 5 Days', desc: 'Short Break' },
-                          { val: '5N / 6D', label: '5 Nights / 6 Days', desc: 'Standard Tour' },
-                          { val: '6N / 7D', label: '6 Nights / 7 Days', desc: 'Extended Vacation' },
-                        ].map((item) => (
-                          <button
-                            key={item.val}
-                            type="button"
-                            onClick={() => {
-                              setModHolidayDuration(item.val);
-                              setOpenHolidayDropdown(null);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
-                              modHolidayDuration === item.val
-                                ? 'bg-blue-50 text-blue-700 font-bold'
-                                : 'hover:bg-slate-100 text-slate-700'
-                            }`}
-                          >
-                            <div>
-                              <div className="font-semibold text-slate-900">{item.label}</div>
-                              <div className="text-slate-400 text-[10px]">{item.desc}</div>
-                            </div>
-                            {modHolidayDuration === item.val && (
-                              <Check className="w-4 h-4 text-blue-600 stroke-[2.5]" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        {/* Option 1: Rooms Counter */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-semibold text-slate-700 block">Rooms</span>
+                            <span className="text-[10px] text-slate-400">Up to 4 rooms</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setModHotelRooms(Math.max(1, modHotelRooms - 1))}
+                              disabled={modHotelRooms <= 1}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                              {modHotelRooms}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setModHotelRooms(Math.min(4, modHotelRooms + 1))}
+                              disabled={modHotelRooms >= 4}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
 
-                  {/* Theme Custom Dropdown */}
-                  <div className="relative dropdown-field-container">
-                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      Theme
-                    </label>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenHolidayDropdown(openHolidayDropdown === 'theme' ? null : 'theme');
-                        setOpenCalendarDropdown(null);
-                      }}
-                      className={`w-full text-left bg-white border rounded-xl p-2.5 text-xs font-bold text-slate-900 shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between transition-colors ${
-                        openHolidayDropdown === 'theme' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-300'
-                      }`}
-                    >
-                      <div className="truncate">
-                        <div className="text-slate-900 font-bold">{modHolidayTheme}</div>
-                        <div className="text-[10px] text-slate-500 truncate">Holiday Style</div>
-                      </div>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'theme' ? 'rotate-180 text-blue-600' : ''}`} />
-                    </button>
+                        {/* Option 2: Guests Counter */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-semibold text-slate-700 block">Guests (Adults &amp; Children)</span>
+                            <span className="text-[10px] text-slate-400">Up to 10 guests</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newG = Math.max(1, modHotelGuests - 1);
+                                setModHotelGuests(newG);
+                                setModTravellers(newG);
+                              }}
+                              disabled={modHotelGuests <= 1}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                              {modHotelGuests}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newG = Math.min(10, modHotelGuests + 1);
+                                setModHotelGuests(newG);
+                                setModTravellers(newG);
+                              }}
+                              disabled={modHotelGuests >= 10}
+                              className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
 
-                    {openHolidayDropdown === 'theme' && (
-                      <div
-                        data-dropdown-container="true"
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute right-0 top-full mt-1.5 w-60 max-h-60 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 select-none animate-in fade-in zoom-in-95 duration-100"
-                      >
-                        {[
-                          { val: 'All Packages', label: 'All Packages', desc: 'Any Theme' },
-                          { val: 'Beach', label: 'Beach Getaway', desc: 'Sun, Sand & Sea' },
-                          { val: 'Honeymoon', label: 'Romantic Honeymoon', desc: 'Couples Special' },
-                          { val: 'Luxury', label: '5-Star Luxury', desc: 'Premium Resorts' },
-                        ].map((item) => (
+                        <div className="pt-2 border-t border-slate-100 flex justify-end">
                           <button
-                            key={item.val}
                             type="button"
-                            onClick={() => {
-                              setModHolidayTheme(item.val);
-                              setOpenHolidayDropdown(null);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
-                              modHolidayTheme === item.val
-                                ? 'bg-blue-50 text-blue-700 font-bold'
-                                : 'hover:bg-slate-100 text-slate-700'
-                            }`}
+                            onClick={() => setOpenHolidayDropdown(null)}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                           >
-                            <div>
-                              <div className="font-semibold text-slate-900">{item.label}</div>
-                              <div className="text-slate-400 text-[10px]">{item.desc}</div>
-                            </div>
-                            {modHolidayTheme === item.val && (
-                              <Check className="w-4 h-4 text-blue-600 stroke-[2.5]" />
-                            )}
+                            Done
                           </button>
-                        ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -6352,71 +6336,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 </div>
 
-                {/* 6. Cities / Destination (MMT Photo 1) */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Cities</span>
-                  <div className="space-y-1.5">
-                    {[
-                      { id: 'Goa', label: 'Goa', count: HOLIDAY_RESULTS.filter((p) => p.city === 'Goa').length },
-                      { id: 'Bali', label: 'Bali', count: HOLIDAY_RESULTS.filter((p) => p.city === 'Bali').length },
-                      { id: 'Dubai', label: 'Dubai', count: HOLIDAY_RESULTS.filter((p) => p.city === 'Dubai').length },
-                      { id: 'Kerala', label: 'Kerala', count: HOLIDAY_RESULTS.filter((p) => p.city === 'Kerala').length },
-                    ].map((cityItem) => {
-                      const checked = holidaySelectedCities.includes(cityItem.id);
-                      return (
-                        <label
-                          key={cityItem.id}
-                          className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() =>
-                                setHolidaySelectedCities((prev) =>
-                                  checked ? prev.filter((c) => c !== cityItem.id) : [...prev, cityItem.id]
-                                )
-                              }
-                              className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                            />
-                            <span className="text-[11px] font-medium">{cityItem.label}</span>
-                          </div>
-                          <span className="text-[11px] text-slate-400 font-mono">({cityItem.count})</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 7. Buy Now, Pay Later - MMT Photo 2 */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Buy Now, Pay Later</span>
-                  <label
-                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
-                      holidayBookAtOneRupeeOnly
-                        ? 'bg-blue-50 border-blue-400 text-blue-950'
-                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={holidayBookAtOneRupeeOnly}
-                        onChange={() => setHolidayBookAtOneRupeeOnly(!holidayBookAtOneRupeeOnly)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                      />
-                      <div>
-                        <span className="font-bold text-xs text-blue-950 block">Book @ ₹1</span>
-                        <span className="text-[10px] text-slate-500">Pay remaining balance 7 days before trip</span>
-                      </div>
-                    </div>
-                    <span className="text-[11px] text-blue-700 font-mono font-bold">
-                      ({HOLIDAY_RESULTS.filter((p) => p.bookAtOneRupee).length})
-                    </span>
-                  </label>
-                </div>
-
-                {/* 8. Themes - MMT Photo 2 */}
+                {/* 6. Themes - MMT Photo 2 */}
                 <div className="pt-2 border-t border-slate-100">
                   <span className="font-bold text-slate-800 block mb-2">Themes</span>
                   <div className="space-y-1.5">
@@ -6593,52 +6513,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
 
                 {/* Foreground Content */}
-                <div className="relative z-10 py-3.5 space-y-3">
-                  {/* Top Row: Destination City (Goa) + Packages Found (no green dot) + Sort in Scroll */}
-                  <div className="px-3.5 sm:px-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2 drop-shadow-md">
-                        <span>{currentToCity.city}</span>
-                        <span className="text-xs font-bold text-blue-100 bg-blue-600/60 border border-blue-400/40 px-2.5 py-0.5 rounded-full ml-0.5 shadow-xs">
-                          Holiday Packages
-                        </span>
-                      </h2>
-                      <span className="text-xs font-bold text-white bg-white/15 backdrop-blur-md border border-white/25 px-2.5 py-1 rounded-full shadow-xs">
-                        <span>{processedHolidays.length} Packages Found</span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5 max-w-full">
-                      <span className="text-xs font-bold text-white/90 hidden md:inline-flex items-center gap-1 shrink-0 mr-1 drop-shadow-xs">
-                        <SlidersHorizontal className="w-3.5 h-3.5 text-white/80" />
-                        <span>Sort:</span>
-                      </span>
-                      {[
-                        { id: 'cheapest', label: 'Cheapest First' },
-                        { id: 'fastest', label: 'Best Value' },
-                        { id: 'rating', label: 'Highest Rated' },
-                        { id: 'departure', label: 'Popular' },
-                      ].map((s) => {
-                        const isSelected = sortBy === s.id;
-                        return (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => setSortBy(s.id as any)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                              isSelected
-                                ? 'bg-blue-600 text-white shadow-md border border-blue-400'
-                                : 'bg-white/15 hover:bg-white/25 text-white hover:text-white border border-white/25 backdrop-blur-xs shadow-2xs'
-                            }`}
-                          >
-                            {s.label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                <div className="relative z-10 py-3 space-y-2.5">
+                  {/* Top Row: Destination City */}
+                  <div className="px-3.5 sm:px-4 flex items-center">
+                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">
+                      {currentToCity.city}
+                    </h2>
                   </div>
 
-                  {/* Bottom Row: Theme / Category Filter Scroll extending edge-to-edge with no arrow buttons and no black fill */}
+                  {/* Bottom Row: Theme / Category Filter Scroll (No background blur, sharp slideshow visibility, soft shadow on active) */}
                   <div
                     ref={holidayThemeStripRef}
                     className="flex items-center gap-2 overflow-x-auto overflow-y-hidden scroll-smooth py-1 px-3 sm:px-4 max-w-full [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
@@ -6669,16 +6552,16 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           }}
                           className={`flex items-center gap-1.5 py-2 px-3 sm:px-3.5 rounded-xl border text-xs whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                             isSelected
-                              ? 'bg-blue-600 border-blue-400 text-white font-bold shadow-md ring-2 ring-blue-400/30'
-                              : 'bg-white/15 hover:bg-white/25 border-white/25 hover:border-white/40 text-white font-semibold backdrop-blur-xs shadow-2xs'
+                              ? 'bg-white/30 border-white text-white font-bold ring-1 ring-inset ring-white/60'
+                              : 'bg-black/20 hover:bg-black/30 border-white/20 hover:border-white/35 text-white/90 hover:text-white font-medium'
                           }`}
                         >
-                          <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-blue-200'}`} />
+                          <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-300' : 'text-white/80'}`} />
                           <span className="drop-shadow-xs">{item.label}</span>
                           {count > 0 && (
                             <span
                               className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5 ${
-                                isSelected ? 'bg-blue-700 text-white' : 'bg-white/20 text-white'
+                                isSelected ? 'bg-white/30 text-white' : 'bg-white/15 text-white/85'
                               }`}
                             >
                               {count}
@@ -8259,6 +8142,40 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'holidays' && (
               <div className="space-y-4">
+                {/* Dedicated Slim Sort Bar for Holiday Packages */}
+                <div className="bg-white rounded-xl border border-slate-200/80 px-3 py-1.5 sm:px-4 sm:py-2 shadow-2xs flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Sort By:</span>
+                  </div>
+
+                  <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5 max-w-full">
+                    {[
+                      { id: 'cheapest', label: 'Cheapest First' },
+                      { id: 'fastest', label: 'Best Value' },
+                      { id: 'rating', label: 'Highest Rated' },
+                      { id: 'departure', label: 'Popular' },
+                    ].map((s) => {
+                      const isSelected = sortBy === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setSortBy(s.id as any)}
+                          className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1 ${
+                            isSelected
+                              ? 'bg-blue-600 text-white font-bold shadow-2xs'
+                              : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                          <span>{s.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Active Holiday Filter Chips (Only shown when filters are active) */}
                 {(holidaySearchQuery ||
                   holidayFlightOption !== 'all' ||
@@ -8266,8 +8183,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   holidayMaxNights < 7 ||
                   holidayBudgetBrackets.length > 0 ||
                   holidayHotelCategories.length > 0 ||
-                  holidaySelectedCities.length > 0 ||
-                  holidayBookAtOneRupeeOnly ||
                   holidaySelectedThemes.length > 0 ||
                   holidayCustomizableOnly ||
                   holidayPremiumOnly) && (
@@ -8358,37 +8273,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           </button>
                         </span>
                       ))}
-
-                      {holidaySelectedCities.map((city) => (
-                        <span
-                          key={city}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200"
-                        >
-                          {city}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setHolidaySelectedCities((prev) => prev.filter((c) => c !== city))
-                            }
-                            className="hover:text-blue-900 cursor-pointer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-
-                      {holidayBookAtOneRupeeOnly && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-900 border border-blue-300">
-                          Book @ ₹1
-                          <button
-                            type="button"
-                            onClick={() => setHolidayBookAtOneRupeeOnly(false)}
-                            className="hover:text-blue-950 cursor-pointer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      )}
 
                       {holidaySelectedThemes.map((th) => (
                         <span
@@ -8590,18 +8474,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    onSelectFlightOrStayForCheckout({
-                                      title: pkg.title,
-                                      code: pkg.id,
-                                      depTime: pkg.flightsIncluded ? 'Return Flights + Hotel' : 'Hotel + Sightseeing',
-                                      arrTime: `${pkg.durationNights} (${pkg.destination})`,
-                                      duration: pkg.durationNights,
-                                      priceInr: pkg.startingPricePerPersonInr,
-                                      category: 'holidays',
-                                      holidayTheme: pkg.theme,
-                                    })
-                                  }
+                                  onClick={() => {
+                                    if (onSelectHolidayForCheckout) {
+                                      onSelectHolidayForCheckout(pkg);
+                                    } else {
+                                      onSelectFlightOrStayForCheckout({
+                                        title: pkg.title,
+                                        code: pkg.id,
+                                        depTime: pkg.flightsIncluded ? 'Return Flights + Hotel' : 'Hotel + Sightseeing',
+                                        arrTime: `${pkg.durationNights} (${pkg.destination})`,
+                                        duration: pkg.durationNights,
+                                        priceInr: pkg.startingPricePerPersonInr,
+                                        category: 'holidays',
+                                        holidayTheme: pkg.theme,
+                                      });
+                                    }
+                                  }}
                                   className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
                                 >
                                   Book Package

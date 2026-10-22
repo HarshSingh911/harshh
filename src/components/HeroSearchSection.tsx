@@ -262,6 +262,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   const [holidayTheme, setHolidayTheme] = useState<string>('All Packages');
   const [holidayDuration, setHolidayDuration] = useState<string>('4N / 5D');
   const [withFlights, setWithFlights] = useState<boolean>(true);
+  const [holidayRooms, setHolidayRooms] = useState<number>(1);
+  const [holidayGuests, setHolidayGuests] = useState<number>(2);
 
   // 6. Tours & Experiences state
   const [experienceTheme, setExperienceTheme] = useState<string>('All Experiences');
@@ -1917,41 +1919,10 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           )}
 
           {/* ===================================================================
-              6. HOLIDAYS INTERFACE (All Packages | Honeymoon | Family | Adventure + With Flights Toggle)
+              6. HOLIDAYS INTERFACE (Rooms & Guests, From, To, Date, Search)
           =================================================================== */}
           {activeCategory === 'holidays' && (
             <>
-              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  {['All Packages', 'Honeymoon', 'Family Vacation', 'Adventure'].map(
-                    (th) => (
-                      <button
-                        key={th}
-                        type="button"
-                        onClick={() => setHolidayTheme(th)}
-                        className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                          holidayTheme === th
-                            ? 'bg-[#2563EB] text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                        }`}
-                      >
-                        {th}
-                      </button>
-                    )
-                  )}
-                </div>
-
-                <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer select-none whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={withFlights}
-                    onChange={() => setWithFlights((prev) => !prev)}
-                    className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer"
-                  />
-                  <span>Include Return Flights</span>
-                </label>
-              </div>
-
               <div className="flex items-stretch gap-2 w-full">
                 {/* Departure City ⇄ Holiday Destination */}
                 <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
@@ -1971,11 +1942,22 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         {fromCity.city}
                       </span>
                       <span className="block text-[11px] text-slate-500 truncate">
-                        {withFlights ? 'With Return Flights' : 'Land Package Only'}
+                        Departure City
                       </span>
                     </button>
                     {renderCityDropdown('from', fromCity, onChangeFromCity)}
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSwap}
+                    aria-label="Swap departure and destination cities"
+                    className={`flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-md items-center justify-center text-slate-700 hover:text-indigo-600 hover:border-indigo-300 transition-transform duration-200 cursor-pointer ${
+                      swapRotated ? 'rotate-180' : ''
+                    }`}
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </button>
 
                   <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
                     <button
@@ -1993,7 +1975,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         {toCity.city}
                       </span>
                       <span className="block text-[11px] text-slate-500 truncate">
-                        {holidayTheme}
+                        Holiday Destination
                       </span>
                     </button>
                     {renderCityDropdown('to', toCity, onChangeToCity)}
@@ -2041,50 +2023,105 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   )}
                 </div>
 
-                {/* Duration & Guests */}
+                {/* Rooms & Guests Option (Replaced Duration) */}
                 <div className="flex-1 min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setOpenDropdown(
-                        openDropdown === 'holiday-dur' ? null : 'holiday-dur'
+                        openDropdown === 'holiday-guests' ? null : 'holiday-guests'
                       );
                     }}
-                    className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
+                    className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 flex items-center justify-between gap-1 cursor-pointer"
                   >
                     <div className="min-w-0">
                       <span className="block text-[11px] text-slate-500 font-medium">
-                        Duration
+                        Rooms &amp; Guests
                       </span>
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
-                        {holidayDuration}
+                        {holidayRooms} {holidayRooms === 1 ? 'Room' : 'Rooms'}, {holidayGuests} {holidayGuests === 1 ? 'Guest' : 'Guests'}
                       </span>
                       <span className="block text-[11px] text-slate-400 truncate">
-                        5★ Stays + Transfers
+                        Curated Packages
                       </span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   </button>
-                  {openDropdown === 'holiday-dur' && (
+
+                  {openDropdown === 'holiday-guests' && (
                     <div
                       data-dropdown-container="true"
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 max-h-60 overflow-y-auto custom-scrollbar"
+                      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-40 max-h-80 overflow-y-auto custom-scrollbar space-y-3"
                     >
-                      {['3N / 4D', '4N / 5D', '6N / 7D', '8N / 9D'].map((d) => (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-700">Rooms</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setHolidayRooms(Math.max(1, holidayRooms - 1))}
+                            disabled={holidayRooms <= 1}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                            {holidayRooms}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setHolidayRooms(Math.min(4, holidayRooms + 1))}
+                            disabled={holidayRooms >= 4}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-700">Guests</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.max(1, holidayGuests - 1);
+                              setHolidayGuests(next);
+                              onChangeTravellers(next, `${holidayRooms} Room`);
+                            }}
+                            disabled={holidayGuests <= 1}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="w-5 text-center text-xs font-bold font-mono-tabular">
+                            {holidayGuests}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.min(10, holidayGuests + 1);
+                              setHolidayGuests(next);
+                              onChangeTravellers(next, `${holidayRooms} Room`);
+                            }}
+                            disabled={holidayGuests >= 10}
+                            className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex justify-end">
                         <button
-                          key={d}
                           type="button"
-                          onClick={() => {
-                            setHolidayDuration(d);
-                            setOpenDropdown(null);
-                          }}
-                          className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium hover:bg-slate-100 cursor-pointer"
+                          onClick={() => setOpenDropdown(null)}
+                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                         >
-                          {d}
+                          Done
                         </button>
-                      ))}
+                      </div>
                     </div>
                   )}
                 </div>

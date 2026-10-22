@@ -19,7 +19,9 @@ export type AppPageView =
   | 'support'
   | 'terms-of-service'
   | 'about-us'
-  | 'hostels';
+  | 'hostels'
+  | 'experience-checkout'
+  | 'holiday-checkout';
 
 interface NavbarProps {
   activePage: AppPageView;

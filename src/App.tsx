@@ -15,6 +15,8 @@ import {
   formatPrice,
   PromoOffer,
   TripType,
+  EXPERIENCES_DATA,
+  ExperienceItem,
 } from './data/travelData';
 import { AppPageView, Navbar } from './components/Navbar';
 import { HeroSearchSection } from './components/HeroSearchSection';
@@ -22,6 +24,9 @@ import { ShowcaseSections } from './components/ShowcaseSections';
 import { InteractiveModals } from './components/InteractiveModals';
 import { FlightSearchResultsPage } from './components/FlightSearchResultsPage';
 import { ExperiencesSearchResultsPage } from './components/ExperiencesSearchResultsPage';
+import { AttractionCheckoutPage } from './components/AttractionCheckoutPage';
+import { HolidayCheckoutPage } from './components/HolidayCheckoutPage';
+import { HolidayPackageDetails, HOLIDAY_PACKAGES_DATA } from './data/holidayPackagesData';
 import { CheckoutItem, CheckoutPaymentPage } from './components/CheckoutPaymentPage';
 import { TripsDashboardPage } from './components/TripsDashboardPage';
 import { AccountSettingsPage } from './components/AccountSettingsPage';
@@ -47,9 +52,11 @@ import { HostelsPage } from './components/HostelsPage';
 import { SmileAIAssistant, SmileSuggestedSearch } from './components/SmileAIAssistant';
 
 export default function App() {
-  // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account')
+  // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account' | 'experience-checkout')
   const [activePage, setActivePage] = useState<AppPageView>('home');
   const [selectedHotelForDetails, setSelectedHotelForDetails] = useState<any>(null);
+  const [selectedExperienceForCheckout, setSelectedExperienceForCheckout] = useState<ExperienceItem | null>(null);
+  const [selectedHolidayPackageForCheckout, setSelectedHolidayPackageForCheckout] = useState<HolidayPackageDetails | null>(null);
 
   // Primary Search State (initialized to New Delhi -> Goa)
   const [activeCategory, setActiveCategory] = useState<BookingCategory>('flights');
@@ -504,15 +511,9 @@ export default function App() {
             onChangeDestination={setToCity}
             onChangeDate={setDepartureDate}
             onModifySearch={() => navigateTo('home')}
-            onSelectExperienceForCheckout={(item) => {
-              setCheckoutItem({
-                ...item,
-                fromCity: fromCity.city,
-                toCity: toCity.city,
-                travelDate: departureDate,
-                travellers: 1,
-              });
-              navigateTo('checkout');
+            onSelectExperienceForCheckout={(experience) => {
+              setSelectedExperienceForCheckout(experience);
+              navigateTo('experience-checkout');
             }}
             onNotify={handleNotify}
           />
@@ -546,7 +547,22 @@ export default function App() {
             onChangeHotelMode={setHotelMode}
             onModifySearch={() => navigateTo('home')}
             onOpenHostelsPage={() => navigateTo('hostels')}
+            onSelectHolidayForCheckout={(pkg) => {
+              const matched = HOLIDAY_PACKAGES_DATA.find(
+                (p) => p.id === pkg.id || p.title.toLowerCase().includes(pkg.title.toLowerCase())
+              ) || HOLIDAY_PACKAGES_DATA[0];
+              setSelectedHolidayPackageForCheckout(matched);
+              navigateTo('holiday-checkout');
+            }}
             onSelectFlightOrStayForCheckout={(item) => {
+              if (item.category === 'holidays') {
+                const matched = HOLIDAY_PACKAGES_DATA.find(
+                  (p) => p.id === item.code || p.title.toLowerCase().includes(item.title.toLowerCase())
+                ) || HOLIDAY_PACKAGES_DATA[0];
+                setSelectedHolidayPackageForCheckout(matched);
+                navigateTo('holiday-checkout');
+                return;
+              }
               setCheckoutItem({
                 ...item,
                 fromCity: item.fromCity || `${fromCity.city} (${fromCity.code})`,
@@ -598,6 +614,36 @@ export default function App() {
               navigateTo('checkout');
             }}
             onNotify={handleNotify}
+          />
+        )}
+
+        {/* HOLIDAY CHECKOUT PAGE WITH IMAGES, DAY-WISE ITINERARY, TRANSFERS, STAY, FOOD, POLICIES & PAN DETAILS */}
+        {activePage === 'holiday-checkout' && (
+          <HolidayCheckoutPage
+            holidayPackage={selectedHolidayPackageForCheckout || HOLIDAY_PACKAGES_DATA[0]}
+            currency={currency}
+            selectedDate={departureDate}
+            onBack={() => navigateTo('search-results')}
+            onCompleteBooking={(newTrip) => {
+              setBookedTrips((prev) => [newTrip, ...prev]);
+            }}
+            onNotify={handleNotify}
+            onNavigateTrips={() => navigateTo('trips')}
+          />
+        )}
+
+        {/* ATTRACTION CHECKOUT PAGE WITH IMAGES, HIGHLIGHTS, ACTIVITY OPTIONS & INFO */}
+        {activePage === 'experience-checkout' && (
+          <AttractionCheckoutPage
+            experience={selectedExperienceForCheckout || EXPERIENCES_DATA[0]}
+            currency={currency}
+            selectedDate={departureDate}
+            onBack={() => navigateTo('search-results')}
+            onCompleteBooking={(newTrip) => {
+              setBookedTrips((prev) => [newTrip, ...prev]);
+            }}
+            onNotify={handleNotify}
+            onNavigateTrips={() => navigateTo('trips')}
           />
         )}
 
