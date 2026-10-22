@@ -115,6 +115,52 @@ const TRAIN_QUOTAS = ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'];
 // --- A. FLIGHT RESULTS ---
 const FLIGHT_RESULTS = [
   {
+    id: '6E-502',
+    airline: 'IndiGo',
+    flightNo: '6E-502',
+    badgeCode: '6E',
+    badgeBg: 'bg-[#1D4ED8]',
+    aircraft: 'Airbus A320neo · Early Bird Express',
+    depTime: '04:30',
+    depTerminal: 'T2',
+    duration: '2h 20m',
+    durationMins: 140,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '06:50',
+    arrTerminal: 'Dabolim',
+    priceInr: 4190,
+    rating: 4.8,
+    tags: ['Early Morning Saver', 'Dawn Departure'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'early-morning',
+    refundable: true,
+  },
+  {
+    id: 'AI-409',
+    airline: 'Air India',
+    flightNo: 'AI-409',
+    badgeCode: 'AI',
+    badgeBg: 'bg-[#DC2626]',
+    aircraft: 'Airbus A321 · Dawn Special',
+    depTime: '05:15',
+    depTerminal: 'T3',
+    duration: '2h 25m',
+    durationMins: 145,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '07:40',
+    arrTerminal: 'Dabolim',
+    priceInr: 4780,
+    rating: 4.6,
+    tags: ['Dawn Flight', 'Hot Tea & Breakfast'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'early-morning',
+    refundable: true,
+  },
+  {
     id: '6E-2134',
     airline: 'IndiGo',
     flightNo: '6E-2134',
@@ -126,12 +172,14 @@ const FLIGHT_RESULTS = [
     duration: '2h 15m',
     durationMins: 135,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '08:30',
     arrTerminal: 'Dabolim',
     priceInr: 4450,
     rating: 4.8,
     tags: ['Cheapest Fare', 'Free Meal'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'morning',
     refundable: true,
   },
@@ -147,14 +195,39 @@ const FLIGHT_RESULTS = [
     duration: '2h 30m',
     durationMins: 150,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '12:10',
     arrTerminal: 'Dabolim',
     priceInr: 5120,
     rating: 4.6,
     tags: ['Hot Indian Meal Included'],
-    baggage: 'Cabin: 7kg · Check-in: 15kg',
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'morning',
     refundable: true,
+  },
+  {
+    id: 'QP-702',
+    airline: 'Akasa Air',
+    flightNo: 'QP-702',
+    badgeCode: 'QP',
+    badgeBg: 'bg-[#2563EB]',
+    aircraft: 'Boeing 737 MAX · Hand Baggage Saver',
+    depTime: '11:15',
+    depTerminal: 'T2',
+    duration: '4h 50m',
+    durationMins: 290,
+    stops: '1 Stop (BOM)',
+    stopsCount: 1,
+    arrTime: '16:05',
+    arrTerminal: 'Dabolim',
+    priceInr: 3990,
+    rating: 4.5,
+    tags: ['Hand Baggage Only Saver', 'Via Mumbai (1h Layover)'],
+    baggage: 'Cabin: 7kg only (No Check-in)',
+    hasCheckInBaggage: false,
+    period: 'morning',
+    refundable: false,
   },
   {
     id: 'UK-851',
@@ -168,12 +241,37 @@ const FLIGHT_RESULTS = [
     duration: '2h 30m',
     durationMins: 150,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '16:50',
     arrTerminal: 'Dabolim',
     priceInr: 5680,
     rating: 4.9,
     tags: ['Complimentary Gourmet Snack'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'afternoon',
+    refundable: true,
+  },
+  {
+    id: 'AI-548',
+    airline: 'Air India',
+    flightNo: 'AI-548',
+    badgeCode: 'AI',
+    badgeBg: 'bg-[#DC2626]',
+    aircraft: 'Airbus A320 · Via BOM',
+    depTime: '15:45',
+    depTerminal: 'T3',
+    duration: '5h 15m',
+    durationMins: 315,
+    stops: '1 Stop (BOM)',
+    stopsCount: 1,
+    arrTime: '21:00',
+    arrTerminal: 'Dabolim',
+    priceInr: 4890,
+    rating: 4.6,
+    tags: ['1 Stop via Mumbai', 'Hot Snack on both legs'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'afternoon',
     refundable: true,
   },
@@ -189,14 +287,39 @@ const FLIGHT_RESULTS = [
     duration: '2h 25m',
     durationMins: 145,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '20:25',
     arrTerminal: 'Dabolim',
     priceInr: 4650,
     rating: 4.7,
     tags: ['98% On-Time Guarantee'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'night',
     refundable: false,
+  },
+  {
+    id: 'UK-918',
+    airline: 'Vistara',
+    flightNo: 'UK-918',
+    badgeCode: 'UK',
+    badgeBg: 'bg-[#5B21B6]',
+    aircraft: 'Airbus A320neo · Multi-City Connector',
+    depTime: '19:10',
+    depTerminal: 'T3',
+    duration: '7h 10m',
+    durationMins: 430,
+    stops: '2+ Stops (BOM, BLR)',
+    stopsCount: 2,
+    arrTime: '02:20',
+    arrTerminal: 'Dabolim',
+    priceInr: 6150,
+    rating: 4.6,
+    tags: ['2 Stops via Mumbai & Bengaluru', 'Free Meals'],
+    baggage: 'Check-in: 20kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'night',
+    refundable: true,
   },
   {
     id: '6E-678',
@@ -210,12 +333,37 @@ const FLIGHT_RESULTS = [
     duration: '2h 35m',
     durationMins: 155,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '00:05',
     arrTerminal: 'Dabolim',
     priceInr: 4290,
     rating: 4.75,
     tags: ['Late Night Saver'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'night',
+    refundable: false,
+  },
+  {
+    id: '6E-904',
+    airline: 'IndiGo',
+    flightNo: '6E-904',
+    badgeCode: '6E',
+    badgeBg: 'bg-[#1D4ED8]',
+    aircraft: 'Airbus A320 · Super Saver Fare',
+    depTime: '23:45',
+    depTerminal: 'T2',
+    duration: '7h 45m',
+    durationMins: 465,
+    stops: '2+ Stops (HYD, BLR)',
+    stopsCount: 2,
+    arrTime: '07:30',
+    arrTerminal: 'Dabolim',
+    priceInr: 3820,
+    rating: 4.4,
+    tags: ['2+ Stops Overnight', 'Lite Fare'],
+    baggage: 'Cabin: 7kg only (No Check-in)',
+    hasCheckInBaggage: false,
     period: 'night',
     refundable: false,
   },
@@ -223,6 +371,121 @@ const FLIGHT_RESULTS = [
 
 // --- A2. RETURN FLIGHT RESULTS (For Round Trips) ---
 const RETURN_FLIGHT_RESULTS = [
+  {
+    id: '6E-591',
+    airline: 'IndiGo',
+    flightNo: '6E-591',
+    badgeCode: '6E',
+    badgeBg: 'bg-[#1D4ED8]',
+    aircraft: 'Airbus A320neo · Early Dawn Return',
+    depTime: '04:45',
+    depTerminal: 'Dabolim',
+    duration: '2h 25m',
+    durationMins: 145,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '07:10',
+    arrTerminal: 'T2',
+    priceInr: 4250,
+    rating: 4.8,
+    tags: ['Early Dawn Saver', 'Quick Return'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'early-morning',
+    refundable: true,
+  },
+  {
+    id: 'AI-482',
+    airline: 'Air India',
+    flightNo: 'AI-482',
+    badgeCode: 'AI',
+    badgeBg: 'bg-[#DC2626]',
+    aircraft: 'Airbus A320 · Morning Breakfast Flight',
+    depTime: '05:30',
+    depTerminal: 'Dabolim',
+    duration: '2h 30m',
+    durationMins: 150,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '08:00',
+    arrTerminal: 'T3',
+    priceInr: 4890,
+    rating: 4.7,
+    tags: ['Early Morning Flight', 'Breakfast Included'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'early-morning',
+    refundable: true,
+  },
+  {
+    id: 'AI-622',
+    airline: 'Air India',
+    flightNo: 'AI-622',
+    badgeCode: 'AI',
+    badgeBg: 'bg-[#DC2626]',
+    aircraft: 'Boeing 737 · Via Mumbai',
+    depTime: '10:30',
+    depTerminal: 'Dabolim',
+    duration: '5h 10m',
+    durationMins: 310,
+    stops: '1 Stop (BOM)',
+    stopsCount: 1,
+    arrTime: '15:40',
+    arrTerminal: 'T3',
+    priceInr: 4420,
+    rating: 4.5,
+    tags: ['1 Stop via Mumbai', 'Hot Meals Included'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'morning',
+    refundable: true,
+  },
+  {
+    id: 'UK-942',
+    airline: 'Vistara',
+    flightNo: 'UK-942',
+    badgeCode: 'UK',
+    badgeBg: 'bg-[#5B21B6]',
+    aircraft: 'Airbus A320 · Multi-Stop Connecting',
+    depTime: '12:15',
+    depTerminal: 'Dabolim',
+    duration: '7h 35m',
+    durationMins: 455,
+    stops: '2+ Stops (HYD, BOM)',
+    stopsCount: 2,
+    arrTime: '19:50',
+    arrTerminal: 'T3',
+    priceInr: 5350,
+    rating: 4.5,
+    tags: ['2+ Stops via Hyderabad & Mumbai'],
+    baggage: 'Cabin: 7kg only (No Check-in)',
+    hasCheckInBaggage: false,
+    period: 'afternoon',
+    refundable: false,
+  },
+  {
+    id: 'QP-1356',
+    airline: 'Akasa Air',
+    flightNo: 'QP-1356',
+    badgeCode: 'QP',
+    badgeBg: 'bg-[#2563EB]',
+    aircraft: 'Boeing 737 MAX · Café Akasa',
+    depTime: '15:10',
+    depTerminal: 'Dabolim',
+    duration: '2h 20m',
+    durationMins: 140,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '17:30',
+    arrTerminal: 'T2',
+    priceInr: 4720,
+    rating: 4.7,
+    tags: ['Fastest Return Flight'],
+    baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
+    period: 'afternoon',
+    refundable: false,
+  },
   {
     id: '6E-2401',
     airline: 'IndiGo',
@@ -235,12 +498,14 @@ const RETURN_FLIGHT_RESULTS = [
     duration: '2h 20m',
     durationMins: 140,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '19:50',
     arrTerminal: 'T2',
     priceInr: 4590,
     rating: 4.8,
     tags: ['Cheapest Return', 'Free Snack'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'afternoon',
     refundable: true,
   },
@@ -256,12 +521,14 @@ const RETURN_FLIGHT_RESULTS = [
     duration: '2h 30m',
     durationMins: 150,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '21:45',
     arrTerminal: 'T3',
     priceInr: 5240,
     rating: 4.6,
     tags: ['Hot Dinner Included'],
     baggage: 'Cabin: 7kg · Check-in: 15kg',
+    hasCheckInBaggage: true,
     period: 'night',
     refundable: true,
   },
@@ -277,35 +544,16 @@ const RETURN_FLIGHT_RESULTS = [
     duration: '2h 25m',
     durationMins: 145,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '23:10',
     arrTerminal: 'T3',
     priceInr: 5850,
     rating: 4.9,
     tags: ['Complimentary Dinner & Drinks'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'night',
     refundable: true,
-  },
-  {
-    id: 'QP-1356',
-    airline: 'Akasa Air',
-    flightNo: 'QP-1356',
-    badgeCode: 'QP',
-    badgeBg: 'bg-[#2563EB]',
-    aircraft: 'Boeing 737 MAX · Café Akasa',
-    depTime: '15:10',
-    depTerminal: 'Dabolim',
-    duration: '2h 20m',
-    durationMins: 140,
-    stops: 'Non-stop',
-    arrTime: '17:30',
-    arrTerminal: 'T2',
-    priceInr: 4720,
-    rating: 4.7,
-    tags: ['Fastest Return Flight'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    period: 'afternoon',
-    refundable: false,
   },
   {
     id: '6E-789',
@@ -319,12 +567,14 @@ const RETURN_FLIGHT_RESULTS = [
     duration: '2h 30m',
     durationMins: 150,
     stops: 'Non-stop',
+    stopsCount: 0,
     arrTime: '00:45',
     arrTerminal: 'T2',
     priceInr: 4380,
     rating: 4.75,
     tags: ['Late Evening Saver'],
     baggage: 'Check-in: 15kg · Cabin: 7kg',
+    hasCheckInBaggage: true,
     period: 'night',
     refundable: false,
   },
@@ -2054,6 +2304,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [flightMaxPrice, setFlightMaxPrice] = useState<number>(10000);
   const [flightSelectedAirlines, setFlightSelectedAirlines] = useState<string[]>(['IndiGo', 'Air India', 'Vistara', 'Akasa Air']);
   const [flightNonStopOnly, setFlightNonStopOnly] = useState<boolean>(false);
+  const [flightSelectedStops, setFlightSelectedStops] = useState<string[]>([]);
+  const [flightIncludeCheckInBaggage, setFlightIncludeCheckInBaggage] = useState<boolean>(false);
   const [flightRefundableOnly, setFlightRefundableOnly] = useState<boolean>(false);
   const [flightDepSlot, setFlightDepSlot] = useState<string | null>(null);
 
@@ -2243,6 +2495,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setFlightMaxPrice(10000);
     setFlightSelectedAirlines(['IndiGo', 'Air India', 'Vistara', 'Akasa Air']);
     setFlightNonStopOnly(false);
+    setFlightSelectedStops([]);
+    setFlightIncludeCheckInBaggage(false);
     setFlightRefundableOnly(false);
     setFlightDepSlot(null);
 
@@ -2317,7 +2571,36 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       if (!flightSelectedAirlines.includes(fl.airline)) return false;
       if (flightNonStopOnly && fl.stops !== 'Non-stop') return false;
       if (flightRefundableOnly && !fl.refundable) return false;
-      if (flightDepSlot && fl.period !== flightDepSlot) return false;
+
+      // Departure Time filter: Early Morning (12am-6am), Morning (6am-12pm), Afternoon (12pm-6pm), Night (6pm-12am)
+      if (flightDepSlot) {
+        const hour = parseInt(fl.depTime.split(':')[0], 10);
+        if (flightDepSlot === 'early-morning') {
+          if (hour >= 6) return false;
+        } else if (flightDepSlot === 'morning') {
+          if (hour < 6 || hour >= 12) return false;
+        } else if (flightDepSlot === 'afternoon') {
+          if (hour < 12 || hour >= 18) return false;
+        } else if (flightDepSlot === 'night') {
+          if (hour < 18) return false;
+        }
+      }
+
+      // Stops filter: Non-stop, 1 Stop, 2 and more
+      if (flightSelectedStops.length > 0) {
+        const stopsCount = (fl as any).stopsCount ?? (fl.stops.toLowerCase().includes('non-stop') ? 0 : fl.stops.includes('1') ? 1 : 2);
+        const matchesNonStop = flightSelectedStops.includes('non-stop') && stopsCount === 0;
+        const matches1Stop = flightSelectedStops.includes('1-stop') && stopsCount === 1;
+        const matches2Plus = flightSelectedStops.includes('2-plus-stops') && stopsCount >= 2;
+        if (!matchesNonStop && !matches1Stop && !matches2Plus) return false;
+      }
+
+      // Baggage filter: Include Check-in Baggage
+      if (flightIncludeCheckInBaggage) {
+        const hasCheckIn = (fl as any).hasCheckInBaggage ?? (fl.baggage.toLowerCase().includes('check-in') && !fl.baggage.toLowerCase().includes('no check-in'));
+        if (!hasCheckIn) return false;
+      }
+
       return true;
     });
 
@@ -2328,7 +2611,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       if (sortBy === 'departure') return a.depTime.localeCompare(b.depTime);
       return a.priceInr - b.priceInr;
     });
-  }, [flightMaxPrice, flightSelectedAirlines, flightNonStopOnly, flightRefundableOnly, flightDepSlot, sortBy]);
+  }, [flightMaxPrice, flightSelectedAirlines, flightNonStopOnly, flightRefundableOnly, flightDepSlot, flightSelectedStops, flightIncludeCheckInBaggage, sortBy]);
 
   // 1b. Filtered Return Flights (for Round Trip)
   const processedReturnFlights = useMemo(() => {
@@ -2337,7 +2620,36 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       if (!flightSelectedAirlines.includes(fl.airline)) return false;
       if (flightNonStopOnly && fl.stops !== 'Non-stop') return false;
       if (flightRefundableOnly && !fl.refundable) return false;
-      if (flightDepSlot && fl.period !== flightDepSlot) return false;
+
+      // Departure Time filter: Early Morning (12am-6am), Morning (6am-12pm), Afternoon (12pm-6pm), Night (6pm-12am)
+      if (flightDepSlot) {
+        const hour = parseInt(fl.depTime.split(':')[0], 10);
+        if (flightDepSlot === 'early-morning') {
+          if (hour >= 6) return false;
+        } else if (flightDepSlot === 'morning') {
+          if (hour < 6 || hour >= 12) return false;
+        } else if (flightDepSlot === 'afternoon') {
+          if (hour < 12 || hour >= 18) return false;
+        } else if (flightDepSlot === 'night') {
+          if (hour < 18) return false;
+        }
+      }
+
+      // Stops filter: Non-stop, 1 Stop, 2 and more
+      if (flightSelectedStops.length > 0) {
+        const stopsCount = (fl as any).stopsCount ?? (fl.stops.toLowerCase().includes('non-stop') ? 0 : fl.stops.includes('1') ? 1 : 2);
+        const matchesNonStop = flightSelectedStops.includes('non-stop') && stopsCount === 0;
+        const matches1Stop = flightSelectedStops.includes('1-stop') && stopsCount === 1;
+        const matches2Plus = flightSelectedStops.includes('2-plus-stops') && stopsCount >= 2;
+        if (!matchesNonStop && !matches1Stop && !matches2Plus) return false;
+      }
+
+      // Baggage filter: Include Check-in Baggage
+      if (flightIncludeCheckInBaggage) {
+        const hasCheckIn = (fl as any).hasCheckInBaggage ?? (fl.baggage.toLowerCase().includes('check-in') && !fl.baggage.toLowerCase().includes('no check-in'));
+        if (!hasCheckIn) return false;
+      }
+
       return true;
     });
 
@@ -2348,7 +2660,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       if (returnSortBy === 'departure') return a.depTime.localeCompare(b.depTime);
       return a.priceInr - b.priceInr;
     });
-  }, [flightMaxPrice, flightSelectedAirlines, flightNonStopOnly, flightRefundableOnly, flightDepSlot, returnSortBy]);
+  }, [flightMaxPrice, flightSelectedAirlines, flightNonStopOnly, flightRefundableOnly, flightDepSlot, flightSelectedStops, flightIncludeCheckInBaggage, returnSortBy]);
 
   const selectedOutboundFlight = useMemo(() => {
     return FLIGHT_RESULTS.find((f) => f.id === selectedOutboundId) || FLIGHT_RESULTS[0];
@@ -4978,11 +5290,23 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                 {/* Departure Time Slots */}
                 <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Departure Time</span>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-slate-800">Departure Time</span>
+                    {flightDepSlot && (
+                      <button
+                        type="button"
+                        onClick={() => setFlightDepSlot(null)}
+                        className="text-[10px] text-blue-600 hover:underline font-semibold cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
                     {[
+                      { id: 'early-morning', label: 'Early Morning', sub: '12am - 6am', icon: Sunrise },
                       { id: 'morning', label: 'Morning', sub: '6am - 12pm', icon: Sun },
-                      { id: 'afternoon', label: 'Afternoon', sub: '12pm - 6pm', icon: Sunrise },
+                      { id: 'afternoon', label: 'Afternoon', sub: '12pm - 6pm', icon: Sunset },
                       { id: 'night', label: 'Night', sub: '6pm - 12am', icon: Moon },
                     ].map((slot) => {
                       const Icon = slot.icon;
@@ -4992,19 +5316,97 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           key={slot.id}
                           type="button"
                           onClick={() => setFlightDepSlot(active ? null : slot.id)}
-                          className={`p-2 rounded-xl text-center border transition-all cursor-pointer ${
+                          className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                             active
-                              ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold'
-                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                              ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-2xs font-semibold'
+                              : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-600'
                           }`}
                         >
-                          <Icon className="w-3.5 h-3.5 mx-auto mb-1 text-slate-500" />
-                          <span className="block text-[11px] font-semibold">{slot.label}</span>
-                          <span className="block text-[9px] text-slate-400">{slot.sub}</span>
+                          <div className="flex items-center justify-between mb-1">
+                            <Icon className={`w-3.5 h-3.5 ${active ? 'text-blue-600' : 'text-slate-400'}`} />
+                            <span className="text-[10px] text-slate-400 font-mono">{slot.sub}</span>
+                          </div>
+                          <div className="text-[11px] font-bold">{slot.label}</div>
                         </button>
                       );
                     })}
                   </div>
+                </div>
+
+                {/* Stops Filter */}
+                <div className="pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-slate-800">Stops</span>
+                    {flightSelectedStops.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setFlightSelectedStops([])}
+                        className="text-[10px] text-blue-600 hover:underline font-semibold cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { id: 'non-stop', label: 'Non-stop', sub: 'Direct' },
+                      { id: '1-stop', label: '1 Stop', sub: '1 Layover' },
+                      { id: '2-plus-stops', label: '2 and more', sub: 'Multi-stop' },
+                    ].map((item) => {
+                      const checked = flightSelectedStops.includes(item.id);
+                      return (
+                        <label
+                          key={item.id}
+                          className="flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 cursor-pointer select-none transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                setFlightSelectedStops((prev) =>
+                                  checked ? prev.filter((s) => s !== item.id) : [...prev, item.id]
+                                )
+                              }
+                              className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
+                            />
+                            <span className={`text-xs ${checked ? 'font-bold text-blue-700' : 'font-semibold text-slate-800'}`}>
+                              {item.label}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-medium text-slate-400">
+                            {item.sub}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Baggage Filter */}
+                <div className="pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Luggage className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="font-bold text-slate-800">Baggage</span>
+                    </div>
+                  </div>
+                  <label className="flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 cursor-pointer select-none transition-colors">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={flightIncludeCheckInBaggage}
+                        onChange={() => setFlightIncludeCheckInBaggage(!flightIncludeCheckInBaggage)}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
+                      />
+                      <span className={`text-xs ${flightIncludeCheckInBaggage ? 'font-bold text-blue-700' : 'font-semibold text-slate-800'}`}>
+                        Include Check-in Baggage
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                      15kg Included
+                    </span>
+                  </label>
                 </div>
 
                 {/* Airlines Checkbox List */}
@@ -5026,7 +5428,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 checked ? prev.filter((a) => a !== airline) : [...prev, airline]
                               )
                             }
-                            className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer"
+                            className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                           />
                           <span>{airline}</span>
                         </label>
@@ -5035,23 +5437,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 </div>
 
-                {/* Stops & Refundable */}
+                {/* Refundable Fares */}
                 <div className="pt-2 border-t border-slate-100 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={flightNonStopOnly}
-                      onChange={() => setFlightNonStopOnly(!flightNonStopOnly)}
-                      className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer"
-                    />
-                    <span>Non-stop flights only</span>
-                  </label>
                   <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
                     <input
                       type="checkbox"
                       checked={flightRefundableOnly}
                       onChange={() => setFlightRefundableOnly(!flightRefundableOnly)}
-                      className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer"
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
                     />
                     <span>Refundable fares only</span>
                   </label>
@@ -6770,7 +7163,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </div>
 
                                   <div className="text-right">
-                                    <div className="font-black text-sm sm:text-base text-slate-900 font-mono">
+                                    <div className="font-medium text-sm sm:text-base text-slate-900 font-mono">
                                       {formatPrice(fl.priceInr, currency)}
                                     </div>
                                     <div className="text-[10px] text-emerald-600 font-medium">per adult</div>
@@ -6780,7 +7173,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 {/* Timings & Stops */}
                                 <div className="pt-2.5 flex items-center justify-between gap-2">
                                   <div className="text-left">
-                                    <div className="font-extrabold text-slate-900 text-sm sm:text-base font-mono">
+                                    <div className="font-medium text-slate-900 text-sm sm:text-base font-mono">
                                       {fl.depTime}
                                     </div>
                                     <div className="text-[10px] font-semibold text-slate-600">
@@ -6795,7 +7188,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </div>
 
                                   <div className="text-right">
-                                    <div className="font-extrabold text-slate-900 text-sm sm:text-base font-mono">
+                                    <div className="font-medium text-slate-900 text-sm sm:text-base font-mono">
                                       {fl.arrTime}
                                     </div>
                                     <div className="text-[10px] font-semibold text-slate-600">
@@ -6804,12 +7197,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </div>
                                 </div>
 
-                                {isSelected && (
-                                  <div className="mt-2 pt-1.5 border-t border-blue-100 flex items-center justify-between text-[10px] text-blue-700 font-semibold">
-                                    <span>Selected Outbound Flight</span>
-                                    <span className="text-emerald-600">Free In-flight Meal</span>
-                                  </div>
-                                )}
+                                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                                  <span className="flex items-center gap-1">
+                                    <Luggage className="w-3 h-3 text-slate-400" />
+                                    <span>{fl.baggage}</span>
+                                  </span>
+                                  {isSelected ? (
+                                    <span className="text-blue-700 font-bold">Selected Outbound</span>
+                                  ) : (
+                                    <span className="text-emerald-600 font-medium">Free Meal</span>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -6932,7 +7330,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </div>
 
                                   <div className="text-right">
-                                    <div className="font-black text-sm sm:text-base text-slate-900 font-mono">
+                                    <div className="font-medium text-sm sm:text-base text-slate-900 font-mono">
                                       {formatPrice(fl.priceInr, currency)}
                                     </div>
                                     <div className="text-[10px] text-emerald-600 font-medium">per adult</div>
@@ -6942,7 +7340,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 {/* Timings & Stops */}
                                 <div className="pt-2.5 flex items-center justify-between gap-2">
                                   <div className="text-left">
-                                    <div className="font-extrabold text-slate-900 text-sm sm:text-base font-mono">
+                                    <div className="font-medium text-slate-900 text-sm sm:text-base font-mono">
                                       {fl.depTime}
                                     </div>
                                     <div className="text-[10px] font-semibold text-slate-600">
@@ -6957,7 +7355,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </div>
 
                                   <div className="text-right">
-                                    <div className="font-extrabold text-slate-900 text-sm sm:text-base font-mono">
+                                    <div className="font-medium text-slate-900 text-sm sm:text-base font-mono">
                                       {fl.arrTime}
                                     </div>
                                     <div className="text-[10px] font-semibold text-slate-600">
@@ -6966,12 +7364,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                   </div>
                                 </div>
 
-                                {isSelected && (
-                                  <div className="mt-2 pt-1.5 border-t border-blue-100 flex items-center justify-between text-[10px] text-blue-700 font-semibold">
-                                    <span>Selected Return Flight</span>
-                                    <span className="text-emerald-600">Complimentary Snack</span>
-                                  </div>
-                                )}
+                                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                                  <span className="flex items-center gap-1">
+                                    <Luggage className="w-3 h-3 text-slate-400" />
+                                    <span>{fl.baggage}</span>
+                                  </span>
+                                  {isSelected ? (
+                                    <span className="text-indigo-700 font-bold">Selected Return</span>
+                                  ) : (
+                                    <span className="text-emerald-600 font-medium">Free Snack</span>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -6998,7 +7401,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
                         <div className="text-center sm:text-right">
                           <div className="text-[11px] text-blue-200 font-medium">Total Round-Trip Fare</div>
-                          <div className="text-2xl font-black text-amber-300 font-mono">
+                          <div className="text-2xl font-medium text-amber-300 font-mono">
                             {formatPrice(totalRoundTripFare, currency)}
                           </div>
                         </div>
@@ -7100,7 +7503,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                             <div className="flex items-center gap-6 sm:gap-8 flex-1 justify-center">
                               <div className="text-left">
-                                <div className="font-extrabold text-slate-900 text-lg sm:text-xl font-mono">
+                                <div className="font-medium text-slate-900 text-lg sm:text-xl font-mono">
                                   {fl.depTime}
                                 </div>
                                 <div className="text-xs font-semibold text-slate-700">{currentFromCity.code}</div>
@@ -7114,7 +7517,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               </div>
 
                               <div className="text-right">
-                                <div className="font-extrabold text-slate-900 text-lg sm:text-xl font-mono">
+                                <div className="font-medium text-slate-900 text-lg sm:text-xl font-mono">
                                   {fl.arrTime}
                                 </div>
                                 <div className="text-xs font-semibold text-slate-700">{currentToCity.code}</div>
@@ -7124,10 +7527,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                             <div className="flex items-center justify-between lg:justify-end gap-4 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                               <div className="text-right">
-                                <div className="text-xl sm:text-2xl font-black text-slate-900">
+                                <div className="text-xl sm:text-2xl font-medium text-slate-900 font-mono">
                                   {formatPrice(fl.priceInr, currency)}
                                 </div>
                                 <div className="text-[11px] text-emerald-600 font-medium">Free Meal Included</div>
+                                <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 mt-0.5">
+                                  <Luggage className="w-3 h-3 text-slate-400" />
+                                  <span>{fl.baggage}</span>
+                                </div>
                               </div>
 
                               <button
@@ -8706,7 +9113,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Total Round-Trip Fare'}
                 </div>
-                <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono leading-tight">
+                <div className="text-xl sm:text-2xl font-medium text-slate-900 font-mono leading-tight">
                   {formatPrice(totalRoundTripFare, currency)}
                 </div>
                 <div className="text-[10px] text-emerald-600 font-semibold hidden sm:block">
@@ -8829,6 +9236,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
                 toCity: `${currentToCity.city} (${currentToCity.code})`,
                 travellers: currentTravellers,
+                isRoundTrip: false,
               });
             }
             setFlightForFareModal(null);

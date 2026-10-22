@@ -552,7 +552,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                 {/* Timeline Strip */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
                   <div className="sm:col-span-4">
-                    <div className="text-2xl font-black text-slate-900 font-mono-tabular">
+                    <div className="text-2xl font-medium text-slate-900 font-mono-tabular">
                       {item.depTime || '06:15'}
                     </div>
                     <div className="text-sm font-bold text-slate-800">
@@ -573,7 +573,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                   </div>
 
                   <div className="sm:col-span-4 text-left sm:text-right">
-                    <div className="text-2xl font-black text-slate-900 font-mono-tabular">
+                    <div className="text-2xl font-medium text-slate-900 font-mono-tabular">
                       {item.arrTime || '08:30'}
                     </div>
                     <div className="text-sm font-bold text-slate-800">
@@ -679,7 +679,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
                   <div className="sm:col-span-4">
-                    <div className="text-2xl font-black text-slate-900 font-mono-tabular">
+                    <div className="text-2xl font-medium text-slate-900 font-mono-tabular">
                       {item.depTime?.split(' ')[0] || '06:00'}
                     </div>
                     <div className="text-sm font-bold text-slate-800">
@@ -700,7 +700,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                   </div>
 
                   <div className="sm:col-span-4 text-left sm:text-right">
-                    <div className="text-2xl font-black text-slate-900 font-mono-tabular">
+                    <div className="text-2xl font-medium text-slate-900 font-mono-tabular">
                       {item.arrTime?.split(' ')[0] || '12:30'}
                     </div>
                     <div className="text-sm font-bold text-slate-800">
@@ -1396,7 +1396,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                   <div className="text-sm font-bold text-slate-900">Total Payable</div>
                   <div className="text-[10px] text-emerald-600 font-semibold">Incl. of all taxes &amp; charges</div>
                 </div>
-                <div className="text-2xl font-black text-blue-700 font-mono-tabular">
+                <div className="text-2xl font-medium text-blue-700 font-mono-tabular">
                   {formatPrice(totalPayableInr, currency)}
                 </div>
               </div>
@@ -1507,7 +1507,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                 <span className="text-slate-500">Booking Reference / PNR:</span>
-                <span className="font-mono font-black text-sm text-blue-700">
+                <span className="font-mono font-medium text-sm text-blue-700">
                   {confirmedBookingData.bookingId}
                 </span>
               </div>

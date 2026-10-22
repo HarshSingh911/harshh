@@ -166,12 +166,13 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
 }) => {
   // Flight Info & Roundtrip Detection
   const isRoundTripFlight = Boolean(
-    item.isRoundTrip ||
-    item.returnFlight ||
-    item.returnDate ||
-    item.flightNo?.includes('+') ||
-    item.title?.includes('+') ||
-    item.depTime?.includes('/')
+    item.isRoundTrip === true ||
+    (item.isRoundTrip !== false &&
+      Boolean(
+        item.returnFlight ||
+        (item.flightNo?.includes('+') && item.airline?.includes('+')) ||
+        (item.title?.includes('+') && item.depTime?.includes('/'))
+      ))
   );
 
   const outboundAirline = item.outboundFlight?.airline || (item.airline?.includes('+') ? item.airline.split('+')[0].trim() : (item.airline || 'IndiGo'));
@@ -460,9 +461,15 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
         bookingId: `TRIP-FLIGHT-${Date.now()}`,
         bookingReference: generatedPnr,
         category: 'flights',
-        title: `${airline} ${flightNo} · ${fromCity.split(' ')[0]} → ${toCity.split(' ')[0]}`,
-        routeSummary: `${fromCity} → ${toCity}`,
-        dateSummary: travelDate,
+        title: isRoundTripFlight
+          ? `${outboundAirline} (${outboundFlightNo}) + ${returnAirline} (${returnFlightNo}) · Round-Trip`
+          : `${airline} ${flightNo} · ${fromCity.split(' ')[0]} → ${toCity.split(' ')[0]}`,
+        routeSummary: isRoundTripFlight
+          ? `${fromCity} ⇄ ${toCity} (Round-Trip)`
+          : `${fromCity} → ${toCity}`,
+        dateSummary: isRoundTripFlight
+          ? `${flightTravelDate || outboundDate} - ${returnDate}`
+          : (flightTravelDate || travelDate),
         travellers: paxCount,
         cabinOrRoom: `${cabinClass} (${fareCategory.split(' ')[0]}) · Seats ${selectedSeats.join(', ')}`,
         totalPaidInr: totalPayableInr,
@@ -542,7 +549,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   {/* Departure, Duration & Arrival Timeline */}
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
                     <div className="sm:col-span-4 text-left">
-                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                      <div className="font-mono text-2xl sm:text-3xl font-medium text-slate-900 leading-none">
                         {outboundDepTime}
                       </div>
                       <div className="text-sm font-bold text-slate-900 mt-1">
@@ -561,7 +568,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     </div>
 
                     <div className="sm:col-span-4 text-left sm:text-right">
-                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                      <div className="font-mono text-2xl sm:text-3xl font-medium text-slate-900 leading-none">
                         {outboundArrTime}
                       </div>
                       <div className="text-sm font-bold text-slate-900 mt-1">
@@ -636,7 +643,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   {/* Return Departure, Duration & Arrival Timeline */}
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
                     <div className="sm:col-span-4 text-left">
-                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                      <div className="font-mono text-2xl sm:text-3xl font-medium text-slate-900 leading-none">
                         {returnDepTime}
                       </div>
                       <div className="text-sm font-bold text-slate-900 mt-1">
@@ -655,7 +662,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                     </div>
 
                     <div className="sm:col-span-4 text-left sm:text-right">
-                      <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                      <div className="font-mono text-2xl sm:text-3xl font-medium text-slate-900 leading-none">
                         {returnArrTime}
                       </div>
                       <div className="text-sm font-bold text-slate-900 mt-1">
@@ -727,7 +734,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                 {/* Departure, Duration & Arrival Timeline */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center py-5">
                   <div className="sm:col-span-4 text-left">
-                    <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                    <div className="font-mono text-2xl sm:text-3xl font-medium text-slate-900 leading-none">
                       {depTime}
                     </div>
                     <div className="text-sm font-bold text-slate-900 mt-1">
@@ -746,7 +753,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   </div>
 
                   <div className="sm:col-span-4 text-left sm:text-right">
-                    <div className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                    <div className="font-mono text-2xl sm:text-3xl font-medium text-slate-900 leading-none">
                       {arrTime}
                     </div>
                     <div className="text-sm font-bold text-slate-900 mt-1">
@@ -1480,7 +1487,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                   <div className="font-display text-sm font-bold text-slate-900">Total Payable</div>
                   <div className="text-[10px] text-slate-400">All airline taxes &amp; fees included</div>
                 </div>
-                <div className="font-display text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+                <div className="text-2xl sm:text-3xl font-medium text-slate-900 font-mono tracking-tight">
                   {formatPrice(totalPayableInr, currency)}
                 </div>
               </div>
@@ -1751,7 +1758,7 @@ export const FlightBookingCheckoutPage: React.FC<FlightBookingCheckoutPageProps>
                 <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">
                   Airline PNR Code
                 </span>
-                <span className="font-mono text-base font-black text-blue-900">
+                <span className="font-mono text-base font-medium text-blue-900">
                   {confirmedBooking.bookingReference}
                 </span>
               </div>

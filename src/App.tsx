@@ -105,6 +105,7 @@ export default function App() {
     cabinClass: 'Economy',
     airline: 'IndiGo',
     flightNo: '6E-2134',
+    isRoundTrip: false,
   });
 
   // Modals State (Images 4, 5, 6 + Destination/Offer Modals on Home)
@@ -563,14 +564,19 @@ export default function App() {
                 navigateTo('holiday-checkout');
                 return;
               }
+              const isRT = Boolean(
+                item.isRoundTrip ??
+                (tripType === 'round-trip' || (tripType === 'dummy-flights' && dummyTripType === 'round-trip'))
+              );
               setCheckoutItem({
                 ...item,
                 fromCity: item.fromCity || `${fromCity.city} (${fromCity.code})`,
                 toCity: item.toCity || `${toCity.city} (${toCity.code})`,
-                travelDate: departureDate,
-                returnDate: returnDate,
+                travelDate: item.travelDate || departureDate,
+                returnDate: isRT ? (item.returnDate || returnDate) : undefined,
+                isRoundTrip: isRT,
                 travellers: item.travellers || travellers,
-                cabinClass: cabinClass,
+                cabinClass: item.cabinClass || cabinClass,
               });
               navigateTo('checkout');
             }}

@@ -1,10 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --font-mono: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display: 'Outfit', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-mono: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   html {
@@ -17,9 +21,22 @@
     text-wrap: balance;
   }
 
+  .font-mono,
   .font-mono-tabular {
-    font-family: var(--font-mono);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "zero" 0;
+    font-weight: 500;
+  }
+
+  /* Keep numbers in clean medium weight (not overly bold) across search and checkout */
+  .font-mono.font-black,
+  .font-mono.font-extrabold,
+  .font-mono.font-bold,
+  .font-mono-tabular.font-black,
+  .font-mono-tabular.font-extrabold,
+  .font-mono-tabular.font-bold {
+    font-weight: 500 !important;
   }
 }
 
