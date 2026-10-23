@@ -860,10 +860,27 @@ Respond ONLY with a valid JSON object matching this schema:
   "destinationSummary": "Engaging 2-sentence description of ${destClean}",
   "bestTimeToVisit": "Best months and seasons to visit ${destClean}",
   "estimatedTotalTripBudgetInr": number (total budget for all ${travellersCount} travellers in INR),
+  "advisory": {
+    "status": "Normal Precautions / Exercise Normal Caution",
+    "headline": "Safe for international tourists with standard metropolitan precautions.",
+    "details": "Specific local safety notes and emergency numbers for ${destClean}",
+    "emergencyNumber": "Local emergency number (e.g. 112, 911, 110)"
+  },
+  "weather": {
+    "temperatureC": number (current average temperature in Celsius for ${destClean}),
+    "condition": "e.g. Mild & Pleasant / Warm & Tropical / Crisp & Sunny",
+    "forecastSummary": "General weather forecast for this season",
+    "bestClothingTip": "Specific clothing advice for ${destClean}"
+  },
+  "customs": {
+    "arrivalName": "Name of electronic customs declaration / entry form for ${destClean}",
+    "details": "QR code or digital arrival card process",
+    "qrRequirement": "e.g. Free e-Customs QR / Online Arrival Card / No formal declaration needed"
+  },
   "visa": {
     "destination": "${destClean}",
     "visaType": "Official visa name for ${passportCountry} citizens",
-    "entryRule": "Short summary e.g. eVisa Required / Visa Exemption (60 Days) / Sticker Visa",
+    "entryRule": "Short summary e.g. eVisa Required / Visa Exemption (60 Days) / Visa on Arrival",
     "validity": "e.g. 90 days / 30 days",
     "processingTime": "e.g. 5-7 business days / Instant on arrival",
     "estimatedFee": "Fee in local currency and approx INR e.g. ¥3,000 (~₹1,750)",
@@ -887,8 +904,48 @@ Respond ONLY with a valid JSON object matching this schema:
     {
       "id": "chk-1",
       "category": "Docs",
-      "label": "Specific checklist item for ${destClean}",
-      "description": "Practical details, e.g. specific plug adapter type or cash amount in local currency",
+      "label": "Passport Validity & Visa / Entry Stamp",
+      "description": "Specific passport rule (6 months validity) and visa for ${destClean}",
+      "completed": false,
+      "priority": "High"
+    },
+    {
+      "id": "chk-2",
+      "category": "Forex",
+      "label": "Zero-Forex Multi-Currency Card",
+      "description": "Save on currency conversion fee when paying in local currency of ${destClean}",
+      "completed": false,
+      "priority": "High"
+    },
+    {
+      "id": "chk-3",
+      "category": "Connectivity",
+      "label": "International Tourist 5G eSIM / Roaming",
+      "description": "Activate seamless mobile data profile for navigation and transport in ${destClean}",
+      "completed": false,
+      "priority": "High"
+    },
+    {
+      "id": "chk-4",
+      "category": "Packing",
+      "label": "Plug Adapter & Climate Gear",
+      "description": "Specific wall plug type used in ${destClean} and seasonal attire",
+      "completed": false,
+      "priority": "High"
+    },
+    {
+      "id": "chk-5",
+      "category": "Transit",
+      "label": "Local Transit Smart Card / Mobile App",
+      "description": "Specific metro/rail pass or local ride-hailing app for ${destClean}",
+      "completed": false,
+      "priority": "Medium"
+    },
+    {
+      "id": "chk-6",
+      "category": "Docs",
+      "label": "Travel Medical Insurance with Repatriation",
+      "description": "Coverage for medical emergencies and hospital care in ${destClean}",
       "completed": false,
       "priority": "High"
     }
@@ -914,29 +971,62 @@ Respond ONLY with a valid JSON object matching this schema:
     {
       "dayNumber": 1,
       "title": "Day Theme in ${destClean}",
+      "theme": "Theme description e.g. Heritage Temples & Panoramic City Views",
+      "landmarkTitle": "Iconic Landmark Name in ${destClean}",
+      "landmarkSubtitle": "Historical or architectural significance of this landmark",
       "morning": {
         "time": "09:00 AM – 12:30 PM",
-        "activity": "Real attraction in ${destClean}",
+        "activity": "Real prominent attraction in ${destClean}",
+        "landmark": "Specific landmark name",
         "details": "Engaging description with practical tips",
+        "steps": [
+          "Exact step 1: which metro/bus to board and which station to exit",
+          "Exact step 2: how to enter and best queue-skipping entrance",
+          "Exact step 3: what must-see highlight to view inside",
+          "Exact step 4: best photo angle or adjacent viewpoint"
+        ],
         "costEstimateInr": number,
-        "transport": "Specific metro line or transit in ${destClean}"
+        "transport": "Specific metro line or transit in ${destClean}",
+        "duration": "3h 30m"
       },
       "afternoon": {
         "time": "01:30 PM – 05:00 PM",
         "activity": "Real afternoon spot in ${destClean}",
-        "details": "Description",
+        "landmark": "Specific afternoon landmark name",
+        "details": "Description of the afternoon exploration",
+        "steps": [
+          "Step 1: transit or walk from lunch",
+          "Step 2: experience or gallery to explore",
+          "Step 3: scenic path or tea/coffee break"
+        ],
         "costEstimateInr": number,
-        "transport": "Transit mode"
+        "transport": "Transit mode (e.g. Walking / Metro Line X / Cable car)",
+        "duration": "3 hours",
+        "pathwayName": "Foot-path or scenic promenade name in ${destClean}",
+        "pathwayDescription": "Atmospheric description of the walking path"
       },
       "evening": {
         "time": "06:30 PM – 09:30 PM",
-        "activity": "Evening experience/dinner in ${destClean}",
-        "details": "Atmosphere and what to do",
+        "activity": "Evening experience, sunset cruise, or night market in ${destClean}",
+        "details": "Atmosphere and how to spend twilight",
+        "steps": [
+          "Step 1: viewpoint or river cruise pier arrival",
+          "Step 2: sunset panoramic views",
+          "Step 3: evening dinner or night walk"
+        ],
+        "cruiseTitle": "Evening Scenic Experience Title (e.g. Sunset River Cruise / Twilight Skyline Deck)",
+        "cruiseSubtitle": "Vessel or observation deck details / night lights",
         "costEstimateInr": number,
-        "transport": "Transit mode"
+        "transport": "City return transit or short taxi",
+        "duration": "3 hours"
       },
-      "diningTip": "Specific local culinary specialty or restaurant in ${destClean}",
-      "proTip": "Insider secret or time-saver for ${destClean}",
+      "diningTip": {
+        "place": "Recommended authentic restaurant or local food market",
+        "recommendation": "Why this spot is celebrated",
+        "mustOrder": "Specific must-try signature dish",
+        "estimatedCost": "Approx cost in local currency and INR"
+      },
+      "proTip": "Insider local secret or queue-skip advice specifically for this day in ${destClean}",
       "estimatedDayTotalInr": number
     }
   ]
