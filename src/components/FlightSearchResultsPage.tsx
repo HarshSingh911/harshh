@@ -66,6 +66,7 @@ import { BusSeatLayoutSelector } from './BusSeatLayoutSelector';
 import { FlightFareOptionsModal } from './FlightFareOptionsModal';
 import { TripDatePickerModal } from './TripDatePickerModal';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
+import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
 import { CheckoutItem } from './CheckoutPaymentPage';
 
 interface FlightSearchResultsPageProps {
@@ -3599,26 +3600,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </button>
 
-                      {openCityPicker === 'from' && (
-                        <div className="absolute left-0 top-full mt-1.5 w-64 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 z-50">
-                          {CITIES.map((c) => (
-                            <button
-                              key={c.code}
-                              type="button"
-                              onClick={() => {
-                                setModFromCity(c);
-                                setOpenCityPicker(null);
-                              }}
-                              className={`w-full text-left p-2 rounded-lg text-xs cursor-pointer flex items-center justify-between ${
-                                modFromCity.code === c.code ? 'bg-blue-50 text-blue-700 font-bold' : 'hover:bg-slate-50 text-slate-800'
-                              }`}
-                            >
-                              <span>{c.city}</span>
-                              <span className="font-mono text-[10px] text-slate-500">{c.code}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <AirportAutocompleteDropdown
+                        label="From"
+                        selectedCity={modFromCity}
+                        onSelectCity={(c) => {
+                          setModFromCity(c);
+                          setOpenCityPicker(null);
+                        }}
+                        isOpen={openCityPicker === 'from'}
+                        onClose={() => setOpenCityPicker(null)}
+                        align="left"
+                      />
                     </div>
 
                     {/* To City with Swap */}
@@ -3647,26 +3639,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </button>
 
-                      {openCityPicker === 'to' && (
-                        <div className="absolute right-0 top-full mt-1.5 w-64 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 z-50">
-                          {CITIES.map((c) => (
-                            <button
-                              key={c.code}
-                              type="button"
-                              onClick={() => {
-                                setModToCity(c);
-                                setOpenCityPicker(null);
-                              }}
-                              className={`w-full text-left p-2 rounded-lg text-xs cursor-pointer flex items-center justify-between ${
-                                modToCity.code === c.code ? 'bg-blue-50 text-blue-700 font-bold' : 'hover:bg-slate-50 text-slate-800'
-                              }`}
-                            >
-                              <span>{c.city}</span>
-                              <span className="font-mono text-[10px] text-slate-500">{c.code}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <AirportAutocompleteDropdown
+                        label="To"
+                        selectedCity={modToCity}
+                        onSelectCity={(c) => {
+                          setModToCity(c);
+                          setOpenCityPicker(null);
+                        }}
+                        isOpen={openCityPicker === 'to'}
+                        onClose={() => setOpenCityPicker(null)}
+                        align="right"
+                      />
                     </div>
 
                     {/* Departure Date */}

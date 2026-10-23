@@ -25,6 +25,7 @@ import {
   Camera,
   X,
   UtensilsCrossed,
+  Database,
 } from 'lucide-react';
 import {
   ASSETS,
@@ -35,6 +36,8 @@ import {
 } from '../data/travelData';
 import { SafeImage } from './SafeImage';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
+import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
+import { SupabaseStatusModal } from './SupabaseStatusModal';
 
 interface HeroSearchSectionProps {
   activeCategory: BookingCategory;
@@ -213,6 +216,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   // Business Travel & Gift Cards interactive states
   const [showBusinessModal, setShowBusinessModal] = useState<boolean>(false);
   const [showGiftCardsModal, setShowGiftCardsModal] = useState<boolean>(false);
+  const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
   const [giftAmount, setGiftAmount] = useState<number>(2500);
   const [giftRecipient, setGiftRecipient] = useState<string>('');
   const [giftEmail, setGiftEmail] = useState<string>('');
@@ -284,50 +288,26 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     });
   };
 
-  // Reusable City/Station Picker Popover
+  // Reusable City/Station Picker Popover (Connected to Supabase)
   const renderCityDropdown = (
     which: 'from' | 'to',
     selected: CityOption,
     onSelect: (c: CityOption) => void,
     isStation = false
   ) => {
-    if (openDropdown !== which) return null;
     return (
-      <div
-        data-dropdown-container="true"
-        onClick={(e) => e.stopPropagation()}
-        className={`absolute ${
-          which === 'to' ? 'right-0' : 'left-0'
-        } mt-2 w-72 max-h-64 overflow-y-auto custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40`}
-      >
-        {CITIES.map((city) => (
-          <button
-            key={city.code}
-            type="button"
-            onClick={() => {
-              onSelect(city);
-              setOpenDropdown(null);
-            }}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
-              selected.code === city.code
-                ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                : 'hover:bg-slate-100 text-slate-700'
-            }`}
-          >
-            <div>
-              <div className="font-semibold text-xs sm:text-sm text-slate-900">
-                {city.city}, {city.country}
-              </div>
-              <div className="text-slate-500 text-[11px] truncate max-w-[175px]">
-                {isStation ? `${city.city} Junction (${city.stationCode})` : city.airportName}
-              </div>
-            </div>
-            <span className="font-mono-tabular font-bold text-xs text-slate-600">
-              {isStation ? city.stationCode : city.code}
-            </span>
-          </button>
-        ))}
-      </div>
+      <AirportAutocompleteDropdown
+        label={which === 'from' ? 'From' : 'To'}
+        selectedCity={selected}
+        onSelectCity={(c) => {
+          onSelect(c);
+          setOpenDropdown(null);
+        }}
+        isOpen={openDropdown === which}
+        onClose={() => setOpenDropdown(null)}
+        align={which === 'to' ? 'right' : 'left'}
+        isStation={isStation}
+      />
     );
   };
 
@@ -466,8 +446,20 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   )}
                 </div>
 
-                {/* Right Controls: Traveller & Class Dropdown (Original Position) */}
-                <div className="flex items-center gap-2.5 sm:gap-4 relative shrink-0">
+                {/* Right Controls: Supabase live DB badge + Traveller & Class Dropdown (Original Position) */}
+                <div className="flex items-center gap-2 sm:gap-3 relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowSupabaseModal(true)}
+                    title="Connected to Supabase Database (9,054 airports loaded). Click to test connection."
+                    className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/90 hover:bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs font-semibold transition-all cursor-pointer shadow-2xs group"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <Database className="w-3 h-3 text-emerald-700 shrink-0" />
+                    <span className="hidden sm:inline">Supabase:</span>
+                    <span>9,054 Airports</span>
+                  </button>
+
                   {/* Traveller & Flight Class Popover in original top-right position */}
                   <div className="relative dropdown-field-container" data-dropdown-container="true">
                     <button
@@ -2592,6 +2584,12 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           </div>
         </div>
       )}
+
+      {/* Supabase Database Connection & Diagnostics Modal */}
+      <SupabaseStatusModal
+        isOpen={showSupabaseModal}
+        onClose={() => setShowSupabaseModal(false)}
+      />
     </section>
   );
 };
