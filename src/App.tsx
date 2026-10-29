@@ -131,45 +131,12 @@ export default function App() {
       const stored = localStorage.getItem('tripyeah_booked_trips');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
     } catch {}
-    return [
-      {
-        bookingId: 'TY-8841-GOA',
-        bookingReference: 'TY-GOA-9021',
-        category: 'holidays',
-        title: 'Goa Beachfront Escape & Flights',
-        routeSummary: 'New Delhi (DEL) → Goa (GOI)',
-        dateSummary: '16 Oct – 19 Oct 2026',
-        departureDate: '2026-10-16',
-        returnDate: '2026-10-19',
-        destinationCity: 'Goa',
-        travellers: 2,
-        cabinOrRoom: 'Premium Beachfront Suite + IndiGo 6E-2134',
-        totalPaidInr: 34845,
-        studentFareApplied: false,
-        status: 'Confirmed',
-        bookedAt: '2026-10-14',
-        passengers: [
-          { name: 'Rahul Sharma', age: 31, gender: 'Male', seatOrBerth: '12B (Extra Legroom)' },
-          { name: 'Pooja Sharma', age: 29, gender: 'Female', seatOrBerth: '12C (Aisle)' },
-        ],
-        carrierOrHotel: 'The Grand Azure Beachfront Resort & IndiGo Airlines',
-        pnr: 'TY-6E-8841',
-        paymentMode: 'UPI / HDFC Net Banking',
-        hasInsurance: true,
-        policyNumber: 'TP-99214-DELGOI',
-        hotelCheckInTime: '02:00 PM',
-        hotelCheckOutTime: '11:00 AM',
-        flightDepTime: '06:15 AM (DEL)',
-        flightArrTime: '08:30 AM (GOI)',
-        flightDuration: '2h 15m (Non-stop)',
-        flightCode: 'IndiGo 6E-2134',
-      },
-    ];
+    return [];
   });
 
   useEffect(() => {

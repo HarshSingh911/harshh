@@ -58,7 +58,6 @@ import {
   BookingCategory,
   CurrencyCode,
   formatPrice,
-  SAMPLE_DEMO_TRIPS,
 } from '../data/travelData';
 import { ActiveCredentialModal } from './CredentialModals';
 import { SafeImage } from './SafeImage';
@@ -140,15 +139,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<BookingCategory | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortType>('date-asc');
 
-  // Demo Mode Switch (persisted in session)
-  const [demoMode, setDemoMode] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem('tripyeah_trips_demo_mode');
-      return stored !== null ? stored === 'true' : true;
-    } catch {
-      return true;
-    }
-  });
+
 
   // Top Background Slideshow Index
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
@@ -182,31 +173,10 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Save demo mode state
-  const handleToggleDemoMode = (enabled: boolean) => {
-    setDemoMode(enabled);
-    try {
-      localStorage.setItem('tripyeah_trips_demo_mode', String(enabled));
-    } catch {}
-    onNotify(
-      enabled ? 'Demo Mode Enabled' : 'Demo Mode Disabled',
-      enabled
-        ? 'Showing sample demonstration bookings alongside your real records.'
-        : 'Displaying only your actual booked trips.',
-      'info'
-    );
-  };
-
-  // Combine real user bookings with demo sample bookings if demoMode is ON
+  // Use actual verified customer bookings exclusively
   const allAvailableTrips = useMemo<BookedTrip[]>(() => {
-    if (!demoMode) {
-      return bookedTrips;
-    }
-    // In demo mode, merge real trips with sample demo trips (avoiding duplicate bookingId)
-    const realIds = new Set(bookedTrips.map((t) => t.bookingId));
-    const demoToAdd = SAMPLE_DEMO_TRIPS.filter((d) => !realIds.has(d.bookingId));
-    return [...bookedTrips, ...demoToAdd];
-  }, [bookedTrips, demoMode]);
+    return bookedTrips;
+  }, [bookedTrips]);
 
   // Tab counts based on ACTUAL status
   const counts = useMemo(() => {
@@ -531,22 +501,6 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               <span className="text-cyan-400 font-bold">My Trips</span>
             </nav>
-
-            {/* Demo Mode Switch */}
-            <div className="flex items-center gap-2 bg-slate-900/70 border border-slate-700/80 px-3 py-1 rounded-full text-xs backdrop-blur-md">
-              <span className="text-[11px] font-semibold text-slate-200">Sample Demo:</span>
-              <button
-                type="button"
-                onClick={() => handleToggleDemoMode(!demoMode)}
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                  demoMode
-                    ? 'bg-cyan-400 text-slate-950 shadow-xs'
-                    : 'bg-slate-800 text-slate-300 hover:text-white'
-                }`}
-              >
-                {demoMode ? 'ON' : 'OFF'}
-              </button>
-            </div>
           </div>
 
           {/* Main Title */}
@@ -588,28 +542,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
           2. MAIN CONTENT AREA (Clean White / Light Slate Background)
       ========================================================================= */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-6">
-        {/* DEMO NOTICE BANNER (when Demo Mode is active) */}
-        {demoMode && (
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-cyan-200 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping shrink-0" />
-              <div className="text-slate-800">
-                <strong className="text-blue-900 font-bold">Sample Demo Mode is active: </strong>
-                Sample bookings are loaded across Upcoming, Cancelled & Completed for full demonstration.
-                Demo cards are labeled with a <span className="bg-cyan-100 text-cyan-800 font-mono-tabular font-bold px-1.5 py-0.5 rounded text-[10px]">DEMO</span> tag so they cannot be confused with real bookings.
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleToggleDemoMode(false)}
-                className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold cursor-pointer transition-colors"
-              >
-                Hide Sample Demo Data
-              </button>
-            </div>
-          </div>
-        )}
+
 
         {/* 3 CORE TABS (Upcoming, Cancelled, Completed) with Blue/Cyan Underline */}
         <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-2xs flex flex-wrap items-center justify-between gap-4">
@@ -865,15 +798,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
                 </>
               )}
 
-              {!demoMode && (
-                <button
-                  type="button"
-                  onClick={() => handleToggleDemoMode(true)}
-                  className="px-4 py-2.5 rounded-xl border border-cyan-300 bg-cyan-50 text-cyan-800 text-xs font-bold hover:bg-cyan-100 transition-colors cursor-pointer"
-                >
-                  ✨ Load Sample Demo Bookings
-                </button>
-              )}
+
             </div>
           </div>
         ) : (

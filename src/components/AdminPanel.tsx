@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
   ArrowUpRight,
   BadgePercent,
+  Building2,
   Calendar,
   Check,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Phone,
   Plane,
   Plus,
   RefreshCw,
@@ -43,6 +45,14 @@ import {
   PromoOffer,
   TOP_DESTINATIONS,
 } from '../data/travelData';
+import {
+  fetchAdminProperties,
+  approvePropertyListing,
+  rejectPropertyListing,
+  deletePropertyListing,
+  PropertyListing,
+  submitPropertyListing,
+} from '../services/propertyService';
 
 interface AdminPanelProps {
   currency: CurrencyCode;
@@ -52,7 +62,7 @@ interface AdminPanelProps {
   onNotify: (title: string, detail: string) => void;
 }
 
-type AdminTab = 'overview' | 'bookings' | 'fares' | 'coupons' | 'support';
+type AdminTab = 'overview' | 'properties' | 'bookings' | 'fares' | 'coupons' | 'support';
 
 interface SupportTicket {
   id: string;
@@ -79,6 +89,86 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+
+  // Real Property Approvals & Stays State
+  const [properties, setProperties] = useState<PropertyListing[]>([]);
+  const [propertyFilter, setPropertyFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [propertySearchQuery, setPropertySearchQuery] = useState<string>('');
+  const [isLoadingProperties, setIsLoadingProperties] = useState<boolean>(false);
+
+  const loadProperties = async () => {
+    setIsLoadingProperties(true);
+    try {
+      const data = await fetchAdminProperties();
+      setProperties(data);
+    } catch (e) {
+      console.warn('Failed to load admin properties:', e);
+    } finally {
+      setIsLoadingProperties(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const handleApproveProperty = async (id: string, name: string, city: string) => {
+    await approvePropertyListing(id);
+    await loadProperties();
+    onNotify('Property Approved', `${name} in ${city} is now live and bookable on TripYeah.`);
+  };
+
+  const handleRejectProperty = async (id: string, name: string) => {
+    await rejectPropertyListing(id);
+    await loadProperties();
+    onNotify('Property Listing Rejected', `${name} has been rejected.`);
+  };
+
+  const handleDeleteProperty = async (id: string, name: string) => {
+    await deletePropertyListing(id);
+    await loadProperties();
+    onNotify('Property Removed', `${name} deleted from database.`);
+  };
+
+  const handleSeedSampleVerifiedProperty = async () => {
+    await submitPropertyListing({
+      name: 'Taj Aguada Palms Beachfront Resort & Heritage Villas',
+      category: 'resort',
+      city: 'Goa',
+      country: 'India',
+      address: 'Candolim Beach Road, North Goa 403515',
+      description: 'Ultra-luxurious sea-facing 5-star beachfront resort with tropical lagoons, private balconies, infinity pools, and world-class Goan hospitality.',
+      photos: [
+        'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+      ],
+      roomType: 'Sea View Luxury Pavilion with King Bed',
+      basePriceInr: 8900,
+      availableRooms: 8,
+      checkInTime: '02:00 PM',
+      checkOutTime: '11:00 AM',
+      ownerName: 'Taj Hospitality Partner Desk',
+      ownerEmail: 'partner@tajresorts.com',
+      ownerPhone: '+91 98221 44556',
+      amenities: [
+        'Free High-Speed Wi-Fi',
+        'Air Conditioning',
+        'Free Breakfast',
+        'Swimming Pool',
+        'Balcony / Scenic View',
+        '24/7 Front Desk',
+        'Spa & Wellness',
+      ],
+    });
+    // Auto-approve the seeded partner property
+    const all = await fetchAdminProperties();
+    if (all.length > 0) {
+      await approvePropertyListing(all[0].id);
+    }
+    await loadProperties();
+    onNotify('Verified Property Added', 'Added and approved real partner listing in Goa.');
+  };
 
   // Bookings Filter & Search State
   const [bookingCategoryFilter, setBookingCategoryFilter] = useState<string>('all');
@@ -388,6 +478,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto scrollbar-none py-1.5 border-t border-slate-800/80">
           {[
             { id: 'overview', label: 'Operations Dashboard', icon: LayoutDashboard },
+            {
+              id: 'properties',
+              label: `Property Approvals (${properties.filter((p) => p.status === 'pending').length})`,
+              icon: Building2,
+            },
             { id: 'bookings', label: `Passenger Bookings (${bookedTrips.length})`, icon: Ticket },
             { id: 'fares', label: 'Fare & Inventory Manager', icon: Layers },
             { id: 'coupons', label: `Coupons & Offers (${coupons.length})`, icon: Tag },
@@ -395,12 +490,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           ].map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
+            const isPendingProperty = tab.id === 'properties' && properties.some((p) => p.status === 'pending');
             return (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as AdminTab)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer relative ${
                   active
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -408,6 +504,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
+                {isPendingProperty && !active && (
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                )}
               </button>
             );
           })}
@@ -452,31 +551,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
 
-              <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+              <div
+                onClick={() => setActiveTab('properties')}
+                className="bg-[#1E293B] border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden cursor-pointer hover:border-amber-500/50 transition-colors"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-400">Active Passengers</span>
-                  <span className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-                    <Users className="w-4 h-4" />
+                  <span className="text-xs font-medium text-slate-400">Pending Property Approvals</span>
+                  <span className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                    <Building2 className="w-4 h-4" />
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-white mt-2">{activePassengersCount}</div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-2">
-                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Traveling this weekend</span>
+                <div className="text-2xl font-bold text-white mt-2">
+                  {properties.filter((p) => p.status === 'pending').length}
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-amber-400 mt-2 font-medium">
+                  <span>Review partner listings →</span>
                 </div>
               </div>
 
-              <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+              <div
+                onClick={() => setActiveTab('properties')}
+                className="bg-[#1E293B] border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden cursor-pointer hover:border-emerald-500/50 transition-colors"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-400">Active Promo Codes</span>
-                  <span className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                    <BadgePercent className="w-4 h-4" />
+                  <span className="text-xs font-medium text-slate-400">Live Verified Stays</span>
+                  <span className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <ShieldCheck className="w-4 h-4" />
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-white mt-2">{coupons.length} Active</div>
-                <div className="flex items-center gap-1.5 text-[11px] text-amber-400 mt-2 font-medium">
-                  <Tag className="w-3.5 h-3.5" />
-                  <span>Avg 40% discount</span>
+                <div className="text-2xl font-bold text-white mt-2">
+                  {properties.filter((p) => p.status === 'approved').length} Active
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 mt-2 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Publicly bookable</span>
                 </div>
               </div>
             </div>
@@ -636,6 +744,284 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            TAB: REAL PROPERTY LISTINGS & ADMIN APPROVALS
+        =================================================================== */}
+        {activeTab === 'properties' && (
+          <div className="space-y-5">
+            {/* Action Bar */}
+            <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-[220px]">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={propertySearchQuery}
+                    onChange={(e) => setPropertySearchQuery(e.target.value)}
+                    placeholder="Search property, city or host..."
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  {(['all', 'pending', 'approved', 'rejected'] as const).map((filter) => {
+                    const count =
+                      filter === 'all'
+                        ? properties.length
+                        : properties.filter((p) => p.status === filter).length;
+                    return (
+                      <button
+                        key={filter}
+                        type="button"
+                        onClick={() => setPropertyFilter(filter)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
+                          propertyFilter === filter
+                            ? 'bg-blue-600 text-white'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {filter} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSeedSampleVerifiedProperty}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-300 text-xs font-semibold border border-slate-700 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>+ Seed Verified Partner Resort</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={loadProperties}
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer"
+                  title="Refresh from Database"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Properties List */}
+            {isLoadingProperties ? (
+              <div className="p-12 text-center text-slate-400 text-xs">
+                Loading properties from database...
+              </div>
+            ) : properties.filter((p) => {
+                if (propertyFilter !== 'all' && p.status !== propertyFilter) return false;
+                if (propertySearchQuery.trim()) {
+                  const q = propertySearchQuery.toLowerCase().trim();
+                  return (
+                    p.name.toLowerCase().includes(q) ||
+                    p.city.toLowerCase().includes(q) ||
+                    p.ownerName.toLowerCase().includes(q) ||
+                    p.address.toLowerCase().includes(q)
+                  );
+                }
+                return true;
+              }).length === 0 ? (
+              <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-12 text-center space-y-3">
+                <Building2 className="w-10 h-10 text-slate-500 mx-auto" />
+                <h4 className="font-bold text-white text-base">No Property Listings Found</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  {propertyFilter === 'pending'
+                    ? 'There are no pending partner property submissions at the moment.'
+                    : 'Property listings submitted via "List Your Property" on the website or added by partners will appear here.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSeedSampleVerifiedProperty}
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Add First Verified Property</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {properties
+                  .filter((p) => {
+                    if (propertyFilter !== 'all' && p.status !== propertyFilter) return false;
+                    if (propertySearchQuery.trim()) {
+                      const q = propertySearchQuery.toLowerCase().trim();
+                      return (
+                        p.name.toLowerCase().includes(q) ||
+                        p.city.toLowerCase().includes(q) ||
+                        p.ownerName.toLowerCase().includes(q) ||
+                        p.address.toLowerCase().includes(q)
+                      );
+                    }
+                    return true;
+                  })
+                  .map((prop) => {
+                    const isPending = prop.status === 'pending';
+                    const isApproved = prop.status === 'approved';
+                    const firstPhoto =
+                      prop.photos && prop.photos.length > 0
+                        ? prop.photos[0]
+                        : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
+
+                    return (
+                      <div
+                        key={prop.id}
+                        className="bg-[#1E293B] border border-slate-800 rounded-2xl overflow-hidden flex flex-col hover:border-slate-700 transition-colors shadow-xs"
+                      >
+                        {/* Photo Thumbnail */}
+                        <div className="relative aspect-video w-full bg-slate-900 overflow-hidden">
+                          <img
+                            src={firstPhoto}
+                            alt={prop.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-950/80 text-white backdrop-blur-xs border border-white/10">
+                              {prop.category}
+                            </span>
+                          </div>
+                          <div className="absolute top-2.5 right-2.5">
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                isApproved
+                                  ? 'bg-emerald-500/90 text-white'
+                                  : isPending
+                                  ? 'bg-amber-500/90 text-slate-950'
+                                  : 'bg-rose-500/90 text-white'
+                              }`}
+                            >
+                              {prop.status}
+                            </span>
+                          </div>
+                          <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-slate-950/80 text-white text-xs font-mono font-bold">
+                            ₹{prop.basePriceInr.toLocaleString('en-IN')} / night
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-bold text-white text-sm leading-snug line-clamp-1">
+                                {prop.name}
+                              </h4>
+                            </div>
+                            <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 truncate">
+                              <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
+                              <span>
+                                {prop.city}, {prop.country}
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                              {prop.description || prop.address}
+                            </p>
+                          </div>
+
+                          {/* Room & Availability Details */}
+                          <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] space-y-1">
+                            <div className="flex justify-between text-slate-300">
+                              <span className="text-slate-500">Room Type:</span>
+                              <span className="font-medium text-white truncate max-w-[150px]">
+                                {prop.roomType}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-slate-300">
+                              <span className="text-slate-500">Inventory:</span>
+                              <span>{prop.availableRooms} Units Available</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300">
+                              <span className="text-slate-500">Host Contact:</span>
+                              <span className="text-blue-300">
+                                {prop.ownerName} ({prop.ownerPhone})
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Approval Actions */}
+                          <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                            {isPending ? (
+                              <div className="flex items-center gap-2 w-full">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleApproveProperty(prop.id, prop.name, prop.city)
+                                  }
+                                  className="flex-1 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-xs"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Approve Listing</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRejectProperty(prop.id, prop.name)}
+                                  className="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-semibold cursor-pointer border border-rose-500/30"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            ) : isApproved ? (
+                              <div className="flex items-center justify-between w-full">
+                                <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Live in Search
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRejectProperty(prop.id, prop.name)}
+                                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs cursor-pointer"
+                                  >
+                                    Revoke
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteProperty(prop.id, prop.name)}
+                                    className="p-1 rounded-lg hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 cursor-pointer"
+                                    title="Delete property"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between w-full">
+                                <span className="text-xs text-rose-400 font-medium flex items-center gap-1">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  Rejected
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleApproveProperty(prop.id, prop.name, prop.city)
+                                    }
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold cursor-pointer"
+                                  >
+                                    Re-approve
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteProperty(prop.id, prop.name)}
+                                    className="p-1 rounded-lg hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         )}
 

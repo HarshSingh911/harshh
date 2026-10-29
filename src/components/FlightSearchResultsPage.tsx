@@ -68,6 +68,8 @@ import { TripDatePickerModal } from './TripDatePickerModal';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
 import { CheckoutItem } from './CheckoutPaymentPage';
+import { ListPropertyModal } from './ListPropertyModal';
+import { fetchApprovedProperties, PropertyListing } from '../services/propertyService';
 
 interface FlightSearchResultsPageProps {
   activeCategory: BookingCategory;
@@ -113,476 +115,36 @@ const TRAIN_CLASSES = [
 ];
 const TRAIN_QUOTAS = ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'];
 
-// --- A. FLIGHT RESULTS ---
-const FLIGHT_RESULTS = [
-  {
-    id: '6E-502',
-    airline: 'IndiGo',
-    flightNo: '6E-502',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A320neo · Early Bird Express',
-    depTime: '04:30',
-    depTerminal: 'T2',
-    duration: '2h 20m',
-    durationMins: 140,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '06:50',
-    arrTerminal: 'Dabolim',
-    priceInr: 4190,
-    rating: 4.8,
-    tags: ['Early Morning Saver', 'Dawn Departure'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'early-morning',
-    refundable: true,
-  },
-  {
-    id: 'AI-409',
-    airline: 'Air India',
-    flightNo: 'AI-409',
-    badgeCode: 'AI',
-    badgeBg: 'bg-[#DC2626]',
-    aircraft: 'Airbus A321 · Dawn Special',
-    depTime: '05:15',
-    depTerminal: 'T3',
-    duration: '2h 25m',
-    durationMins: 145,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '07:40',
-    arrTerminal: 'Dabolim',
-    priceInr: 4780,
-    rating: 4.6,
-    tags: ['Dawn Flight', 'Hot Tea & Breakfast'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'early-morning',
-    refundable: true,
-  },
-  {
-    id: '6E-2134',
-    airline: 'IndiGo',
-    flightNo: '6E-2134',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A320neo · Standard Seat',
-    depTime: '06:15',
-    depTerminal: 'T2',
-    duration: '2h 15m',
-    durationMins: 135,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '08:30',
-    arrTerminal: 'Dabolim',
-    priceInr: 4450,
-    rating: 4.8,
-    tags: ['Cheapest Fare', 'Free Meal'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'morning',
-    refundable: true,
-  },
-  {
-    id: 'AI-883',
-    airline: 'Air India',
-    flightNo: 'AI-883',
-    badgeCode: 'AI',
-    badgeBg: 'bg-[#DC2626]',
-    aircraft: 'Boeing 777-300ER · Complimentary Hot Meal',
-    depTime: '09:40',
-    depTerminal: 'T3',
-    duration: '2h 30m',
-    durationMins: 150,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '12:10',
-    arrTerminal: 'Dabolim',
-    priceInr: 5120,
-    rating: 4.6,
-    tags: ['Hot Indian Meal Included'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'morning',
-    refundable: true,
-  },
-  {
-    id: 'QP-702',
-    airline: 'Akasa Air',
-    flightNo: 'QP-702',
-    badgeCode: 'QP',
-    badgeBg: 'bg-[#2563EB]',
-    aircraft: 'Boeing 737 MAX · Hand Baggage Saver',
-    depTime: '11:15',
-    depTerminal: 'T2',
-    duration: '4h 50m',
-    durationMins: 290,
-    stops: '1 Stop (BOM)',
-    stopsCount: 1,
-    arrTime: '16:05',
-    arrTerminal: 'Dabolim',
-    priceInr: 3990,
-    rating: 4.5,
-    tags: ['Hand Baggage Only Saver', 'Via Mumbai (1h Layover)'],
-    baggage: 'Cabin: 7kg only (No Check-in)',
-    hasCheckInBaggage: false,
-    period: 'morning',
-    refundable: false,
-  },
-  {
-    id: 'UK-851',
-    airline: 'Vistara',
-    flightNo: 'UK-851',
-    badgeCode: 'UK',
-    badgeBg: 'bg-[#5B21B6]',
-    aircraft: 'Airbus A321 · Wireless In-flight Entertainment',
-    depTime: '14:20',
-    depTerminal: 'T3',
-    duration: '2h 30m',
-    durationMins: 150,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '16:50',
-    arrTerminal: 'Dabolim',
-    priceInr: 5680,
-    rating: 4.9,
-    tags: ['Complimentary Gourmet Snack'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'afternoon',
-    refundable: true,
-  },
-  {
-    id: 'AI-548',
-    airline: 'Air India',
-    flightNo: 'AI-548',
-    badgeCode: 'AI',
-    badgeBg: 'bg-[#DC2626]',
-    aircraft: 'Airbus A320 · Via BOM',
-    depTime: '15:45',
-    depTerminal: 'T3',
-    duration: '5h 15m',
-    durationMins: 315,
-    stops: '1 Stop (BOM)',
-    stopsCount: 1,
-    arrTime: '21:00',
-    arrTerminal: 'Dabolim',
-    priceInr: 4890,
-    rating: 4.6,
-    tags: ['1 Stop via Mumbai', 'Hot Snack on both legs'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'afternoon',
-    refundable: true,
-  },
-  {
-    id: 'QP-1355',
-    airline: 'Akasa Air',
-    flightNo: 'QP-1355',
-    badgeCode: 'QP',
-    badgeBg: 'bg-[#2563EB]',
-    aircraft: 'Boeing 737 MAX · Ultra-quiet Cabin',
-    depTime: '18:00',
-    depTerminal: 'T2',
-    duration: '2h 25m',
-    durationMins: 145,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '20:25',
-    arrTerminal: 'Dabolim',
-    priceInr: 4650,
-    rating: 4.7,
-    tags: ['98% On-Time Guarantee'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'night',
-    refundable: false,
-  },
-  {
-    id: 'UK-918',
-    airline: 'Vistara',
-    flightNo: 'UK-918',
-    badgeCode: 'UK',
-    badgeBg: 'bg-[#5B21B6]',
-    aircraft: 'Airbus A320neo · Multi-City Connector',
-    depTime: '19:10',
-    depTerminal: 'T3',
-    duration: '7h 10m',
-    durationMins: 430,
-    stops: '2+ Stops (BOM, BLR)',
-    stopsCount: 2,
-    arrTime: '02:20',
-    arrTerminal: 'Dabolim',
-    priceInr: 6150,
-    rating: 4.6,
-    tags: ['2 Stops via Mumbai & Bengaluru', 'Free Meals'],
-    baggage: 'Check-in: 20kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'night',
-    refundable: true,
-  },
-  {
-    id: '6E-678',
-    airline: 'IndiGo',
-    flightNo: '6E-678',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A321neo · Red-Eye Option',
-    depTime: '21:30',
-    depTerminal: 'T2',
-    duration: '2h 35m',
-    durationMins: 155,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '00:05',
-    arrTerminal: 'Dabolim',
-    priceInr: 4290,
-    rating: 4.75,
-    tags: ['Late Night Saver'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'night',
-    refundable: false,
-  },
-  {
-    id: '6E-904',
-    airline: 'IndiGo',
-    flightNo: '6E-904',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A320 · Super Saver Fare',
-    depTime: '23:45',
-    depTerminal: 'T2',
-    duration: '7h 45m',
-    durationMins: 465,
-    stops: '2+ Stops (HYD, BLR)',
-    stopsCount: 2,
-    arrTime: '07:30',
-    arrTerminal: 'Dabolim',
-    priceInr: 3820,
-    rating: 4.4,
-    tags: ['2+ Stops Overnight', 'Lite Fare'],
-    baggage: 'Cabin: 7kg only (No Check-in)',
-    hasCheckInBaggage: false,
-    period: 'night',
-    refundable: false,
-  },
-];
+// --- A. FLIGHT RESULTS (Awaiting live GDS / Airline Partner Gateway) ---
+export interface FlightResult {
+  id: string;
+  airline: string;
+  flightNo: string;
+  badgeCode: string;
+  badgeBg: string;
+  aircraft: string;
+  depTime: string;
+  depTerminal: string;
+  duration: string;
+  durationMins: number;
+  stops: string;
+  stopsCount: number;
+  arrTime: string;
+  arrTerminal: string;
+  priceInr: number;
+  rating: number;
+  tags: string[];
+  baggage: string;
+  hasCheckInBaggage: boolean;
+  period: string;
+  refundable: boolean;
+}
 
-// --- A2. RETURN FLIGHT RESULTS (For Round Trips) ---
-const RETURN_FLIGHT_RESULTS = [
-  {
-    id: '6E-591',
-    airline: 'IndiGo',
-    flightNo: '6E-591',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A320neo · Early Dawn Return',
-    depTime: '04:45',
-    depTerminal: 'Dabolim',
-    duration: '2h 25m',
-    durationMins: 145,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '07:10',
-    arrTerminal: 'T2',
-    priceInr: 4250,
-    rating: 4.8,
-    tags: ['Early Dawn Saver', 'Quick Return'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'early-morning',
-    refundable: true,
-  },
-  {
-    id: 'AI-482',
-    airline: 'Air India',
-    flightNo: 'AI-482',
-    badgeCode: 'AI',
-    badgeBg: 'bg-[#DC2626]',
-    aircraft: 'Airbus A320 · Morning Breakfast Flight',
-    depTime: '05:30',
-    depTerminal: 'Dabolim',
-    duration: '2h 30m',
-    durationMins: 150,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '08:00',
-    arrTerminal: 'T3',
-    priceInr: 4890,
-    rating: 4.7,
-    tags: ['Early Morning Flight', 'Breakfast Included'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'early-morning',
-    refundable: true,
-  },
-  {
-    id: 'AI-622',
-    airline: 'Air India',
-    flightNo: 'AI-622',
-    badgeCode: 'AI',
-    badgeBg: 'bg-[#DC2626]',
-    aircraft: 'Boeing 737 · Via Mumbai',
-    depTime: '10:30',
-    depTerminal: 'Dabolim',
-    duration: '5h 10m',
-    durationMins: 310,
-    stops: '1 Stop (BOM)',
-    stopsCount: 1,
-    arrTime: '15:40',
-    arrTerminal: 'T3',
-    priceInr: 4420,
-    rating: 4.5,
-    tags: ['1 Stop via Mumbai', 'Hot Meals Included'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'morning',
-    refundable: true,
-  },
-  {
-    id: 'UK-942',
-    airline: 'Vistara',
-    flightNo: 'UK-942',
-    badgeCode: 'UK',
-    badgeBg: 'bg-[#5B21B6]',
-    aircraft: 'Airbus A320 · Multi-Stop Connecting',
-    depTime: '12:15',
-    depTerminal: 'Dabolim',
-    duration: '7h 35m',
-    durationMins: 455,
-    stops: '2+ Stops (HYD, BOM)',
-    stopsCount: 2,
-    arrTime: '19:50',
-    arrTerminal: 'T3',
-    priceInr: 5350,
-    rating: 4.5,
-    tags: ['2+ Stops via Hyderabad & Mumbai'],
-    baggage: 'Cabin: 7kg only (No Check-in)',
-    hasCheckInBaggage: false,
-    period: 'afternoon',
-    refundable: false,
-  },
-  {
-    id: 'QP-1356',
-    airline: 'Akasa Air',
-    flightNo: 'QP-1356',
-    badgeCode: 'QP',
-    badgeBg: 'bg-[#2563EB]',
-    aircraft: 'Boeing 737 MAX · Café Akasa',
-    depTime: '15:10',
-    depTerminal: 'Dabolim',
-    duration: '2h 20m',
-    durationMins: 140,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '17:30',
-    arrTerminal: 'T2',
-    priceInr: 4720,
-    rating: 4.7,
-    tags: ['Fastest Return Flight'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'afternoon',
-    refundable: false,
-  },
-  {
-    id: '6E-2401',
-    airline: 'IndiGo',
-    flightNo: '6E-2401',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A320neo · Standard Seat',
-    depTime: '17:30',
-    depTerminal: 'Dabolim',
-    duration: '2h 20m',
-    durationMins: 140,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '19:50',
-    arrTerminal: 'T2',
-    priceInr: 4590,
-    rating: 4.8,
-    tags: ['Cheapest Return', 'Free Snack'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'afternoon',
-    refundable: true,
-  },
-  {
-    id: 'AI-884',
-    airline: 'Air India',
-    flightNo: 'AI-884',
-    badgeCode: 'AI',
-    badgeBg: 'bg-[#DC2626]',
-    aircraft: 'Boeing 777-300ER · Hot Dinner',
-    depTime: '19:15',
-    depTerminal: 'Dabolim',
-    duration: '2h 30m',
-    durationMins: 150,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '21:45',
-    arrTerminal: 'T3',
-    priceInr: 5240,
-    rating: 4.6,
-    tags: ['Hot Dinner Included'],
-    baggage: 'Cabin: 7kg · Check-in: 15kg',
-    hasCheckInBaggage: true,
-    period: 'night',
-    refundable: true,
-  },
-  {
-    id: 'UK-852',
-    airline: 'Vistara',
-    flightNo: 'UK-852',
-    badgeCode: 'UK',
-    badgeBg: 'bg-[#5B21B6]',
-    aircraft: 'Airbus A321 · Premium Leather',
-    depTime: '20:45',
-    depTerminal: 'Dabolim',
-    duration: '2h 25m',
-    durationMins: 145,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '23:10',
-    arrTerminal: 'T3',
-    priceInr: 5850,
-    rating: 4.9,
-    tags: ['Complimentary Dinner & Drinks'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'night',
-    refundable: true,
-  },
-  {
-    id: '6E-789',
-    airline: 'IndiGo',
-    flightNo: '6E-789',
-    badgeCode: '6E',
-    badgeBg: 'bg-[#1D4ED8]',
-    aircraft: 'Airbus A321neo · Late Return',
-    depTime: '22:15',
-    depTerminal: 'Dabolim',
-    duration: '2h 30m',
-    durationMins: 150,
-    stops: 'Non-stop',
-    stopsCount: 0,
-    arrTime: '00:45',
-    arrTerminal: 'T2',
-    priceInr: 4380,
-    rating: 4.75,
-    tags: ['Late Evening Saver'],
-    baggage: 'Check-in: 15kg · Cabin: 7kg',
-    hasCheckInBaggage: true,
-    period: 'night',
-    refundable: false,
-  },
-];
+const FLIGHT_RESULTS: FlightResult[] = [];
+const RETURN_FLIGHT_RESULTS: FlightResult[] = [];
 
-// --- B. TRAIN RESULTS (IRCTC Authorized Partner) ---
-interface TrainClassQuota {
+// --- B. TRAIN RESULTS (IRCTC Rail Gateway Integration Pending) ---
+export interface TrainClassQuota {
   classCode: string;
   className: string;
   priceInr: number;
@@ -592,7 +154,7 @@ interface TrainClassQuota {
   isAC: boolean;
 }
 
-interface TrainResult {
+export interface TrainResult {
   id: string;
   trainNo: string;
   trainName: string;
@@ -617,263 +179,10 @@ interface TrainResult {
   classes: TrainClassQuota[];
 }
 
-const TRAIN_RESULTS: TrainResult[] = [
-  {
-    id: 'TR-20172',
-    trainNo: '20172',
-    trainName: 'VANDE BHARAT EXP',
-    depTime: '06:00',
-    depStation: 'New Delhi',
-    depCode: 'NDLS',
-    arrTime: '14:05',
-    arrStation: 'Varanasi Cantt / Goa Madgaon',
-    arrCode: 'MAO',
-    duration: '8h 05m',
-    durationMins: 485,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S'],
-    trainType: 'Vande Bharat',
-    pantryAvailable: true,
-    onTimePercent: 99,
-    minPriceInr: 1750,
-    depPeriod: '6am-12pm',
-    arrPeriod: '12pm-6pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: true,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'],
-    classes: [
-      { classCode: 'CC', className: 'AC Chair Car', priceInr: 1750, status: 'AVAILABLE', quotaLabel: 'AVL-42', isAC: true },
-      { classCode: 'EC', className: 'Exec Chair Car', priceInr: 3300, status: 'AVAILABLE', quotaLabel: 'AVL-14', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12952',
-    trainNo: '12952',
-    trainName: 'MMCT TEJAS RAJDHANI',
-    depTime: '16:55',
-    depStation: 'New Delhi',
-    depCode: 'NDLS',
-    arrTime: '08:35',
-    arrStation: 'Mumbai Central / Kalyan',
-    arrCode: 'MMCT',
-    duration: '15h 40m',
-    durationMins: 940,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    trainType: 'Tejas',
-    pantryAvailable: true,
-    onTimePercent: 98,
-    minPriceInr: 2420,
-    depPeriod: '12pm-6pm',
-    arrPeriod: '6am-12pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: true,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota'],
-    classes: [
-      { classCode: '3A', className: '3-Tier AC', priceInr: 2420, status: 'AVAILABLE', quotaLabel: 'AVL-38', isAC: true },
-      { classCode: '2A', className: '2-Tier AC', priceInr: 3560, status: 'AVAILABLE', quotaLabel: 'AVL-15', isAC: true },
-      { classCode: '1A', className: 'First AC', priceInr: 5820, status: 'RAC', quotaLabel: 'RAC 04', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12954',
-    trainNo: '12954',
-    trainName: 'AK TEJAS RAJ EX',
-    depTime: '17:15',
-    depStation: 'Hazrat Nizamuddin',
-    depCode: 'NZM',
-    arrTime: '10:05',
-    arrStation: 'Mumbai Central',
-    arrCode: 'MMCT',
-    duration: '16h 50m',
-    durationMins: 1010,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    trainType: 'Rajdhani',
-    pantryAvailable: true,
-    onTimePercent: 97,
-    minPriceInr: 2380,
-    depPeriod: '12pm-6pm',
-    arrPeriod: '6am-12pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: true,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'],
-    classes: [
-      { classCode: '3A', className: '3-Tier AC', priceInr: 2380, status: 'AVAILABLE', quotaLabel: 'AVL-25', isAC: true },
-      { classCode: '2A', className: '2-Tier AC', priceInr: 3480, status: 'AVAILABLE', quotaLabel: 'AVL-11', isAC: true },
-      { classCode: '1A', className: 'First AC', priceInr: 5690, status: 'AVAILABLE', quotaLabel: 'AVL-02', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12910',
-    trainNo: '12910',
-    trainName: 'BDTS GARIBRATH',
-    depTime: '15:35',
-    depStation: 'Hazrat Nizamuddin',
-    depCode: 'NZM',
-    arrTime: '07:35',
-    arrStation: 'Bandra Terminus',
-    arrCode: 'BDTS',
-    duration: '16h 00m',
-    durationMins: 960,
-    runningDays: ['W', 'F', 'S'],
-    trainType: 'Garib Rath',
-    pantryAvailable: false,
-    onTimePercent: 93,
-    minPriceInr: 1020,
-    depPeriod: '12pm-6pm',
-    arrPeriod: '6am-12pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: false,
-    quotas: ['General Quota', 'Tatkal'],
-    classes: [
-      { classCode: '3E', className: '3 AC Economy', priceInr: 1020, status: 'AVAILABLE', quotaLabel: 'AVL-44', isAC: true },
-      { classCode: '3A', className: '3-Tier AC', priceInr: 1140, status: 'AVAILABLE', quotaLabel: 'AVL-62', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12432',
-    trainNo: '12432',
-    trainName: 'TRIVANDRUM RAJDHANI',
-    depTime: '06:15',
-    depStation: 'Hazrat Nizamuddin',
-    depCode: 'NZM',
-    arrTime: '07:20',
-    arrStation: 'Madgaon Junction (Goa)',
-    arrCode: 'MAO',
-    duration: '25h 05m',
-    durationMins: 1505,
-    runningDays: ['S', 'T', 'W'],
-    trainType: 'Rajdhani',
-    pantryAvailable: true,
-    onTimePercent: 96,
-    minPriceInr: 2190,
-    depPeriod: '6am-12pm',
-    arrPeriod: '6am-12pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: true,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'],
-    classes: [
-      { classCode: '3E', className: '3 AC Economy', priceInr: 2190, status: 'AVAILABLE', quotaLabel: 'AVL-35', isAC: true },
-      { classCode: '3A', className: '3-Tier AC', priceInr: 2420, status: 'AVAILABLE', quotaLabel: 'AVL-28', isAC: true },
-      { classCode: '2A', className: '2-Tier AC', priceInr: 3580, status: 'AVAILABLE', quotaLabel: 'AVL-12', isAC: true },
-      { classCode: '1A', className: 'First AC', priceInr: 5890, status: 'RAC', quotaLabel: 'RAC 04', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12004',
-    trainNo: '12004',
-    trainName: 'GOA SUPERFAST EXPRESS',
-    depTime: '15:05',
-    depStation: 'New Delhi',
-    depCode: 'NDLS',
-    arrTime: '20:10',
-    arrStation: 'Madgaon Junction',
-    arrCode: 'MAO',
-    duration: '29h 05m',
-    durationMins: 1745,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    trainType: 'Superfast',
-    pantryAvailable: true,
-    onTimePercent: 94,
-    minPriceInr: 790,
-    depPeriod: '12pm-6pm',
-    arrPeriod: '6pm-12am',
-    freeCancellation: true,
-    hasAlternateGuarantee: false,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'],
-    classes: [
-      { classCode: 'SL', className: 'Sleeper', priceInr: 790, status: 'AVAILABLE', quotaLabel: 'AVL-68', isAC: false },
-      { classCode: '3A', className: '3-Tier AC', priceInr: 2090, status: 'AVAILABLE', quotaLabel: 'AVL-45', isAC: true },
-      { classCode: '2A', className: '2-Tier AC', priceInr: 3040, status: 'AVAILABLE', quotaLabel: 'AVL-16', isAC: true },
-      { classCode: '1A', className: 'First AC', priceInr: 5210, status: 'AVAILABLE', quotaLabel: 'AVL-03', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12618',
-    trainNo: '12618',
-    trainName: 'MANGALA LAKSHADWEEP EXP',
-    depTime: '05:40',
-    depStation: 'Hazrat Nizamuddin',
-    depCode: 'NZM',
-    arrTime: '13:40',
-    arrStation: 'Madgaon Junction',
-    arrCode: 'MAO',
-    duration: '28h 25m',
-    durationMins: 1705,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    trainType: 'Superfast',
-    pantryAvailable: true,
-    onTimePercent: 92,
-    minPriceInr: 810,
-    depPeriod: '12am-6am',
-    arrPeriod: '12pm-6pm',
-    freeCancellation: false,
-    hasAlternateGuarantee: true,
-    quotas: ['General Quota', 'Ladies Quota'],
-    classes: [
-      { classCode: 'SL', className: 'Sleeper', priceInr: 810, status: 'WL', quotaLabel: 'WL 18', probability: '92% Confirmation', isAC: false },
-      { classCode: '3A', className: '3-Tier AC', priceInr: 2140, status: 'AVAILABLE', quotaLabel: 'AVL-19', isAC: true },
-      { classCode: '2A', className: '2-Tier AC', priceInr: 3120, status: 'AVAILABLE', quotaLabel: 'AVL-07', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12034',
-    trainNo: '12034',
-    trainName: 'NDLS CNB SHT / SHATABDI',
-    depTime: '06:10',
-    depStation: 'New Delhi',
-    depCode: 'NDLS',
-    arrTime: '11:20',
-    arrStation: 'Kanpur Central',
-    arrCode: 'CNB',
-    duration: '5h 10m',
-    durationMins: 310,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S'],
-    trainType: 'Vande Bharat',
-    pantryAvailable: true,
-    onTimePercent: 99,
-    minPriceInr: 890,
-    depPeriod: '6am-12pm',
-    arrPeriod: '6am-12pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: true,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota'],
-    classes: [
-      { classCode: 'CC', className: 'AC Chair Car', priceInr: 890, status: 'AVAILABLE', quotaLabel: 'AVL-80', isAC: true },
-      { classCode: 'EC', className: 'Exec Chair Car', priceInr: 1640, status: 'AVAILABLE', quotaLabel: 'AVL-19', isAC: true },
-    ],
-  },
-  {
-    id: 'TR-12138',
-    trainNo: '12138',
-    trainName: 'PUNJAB MAIL EXPRESS',
-    depTime: '21:40',
-    depStation: 'New Delhi',
-    depCode: 'NDLS',
-    arrTime: '06:45',
-    arrStation: 'Kalyan Jn / CSMT',
-    arrCode: 'KYN',
-    duration: '33h 05m',
-    durationMins: 1985,
-    runningDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    trainType: 'Mail',
-    pantryAvailable: true,
-    onTimePercent: 91,
-    minPriceInr: 340,
-    depPeriod: '6pm-12am',
-    arrPeriod: '6am-12pm',
-    freeCancellation: true,
-    hasAlternateGuarantee: false,
-    quotas: ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'],
-    classes: [
-      { classCode: '2S', className: 'Second Sitting', priceInr: 340, status: 'AVAILABLE', quotaLabel: 'AVL-110', isAC: false },
-      { classCode: 'SL', className: 'Sleeper', priceInr: 690, status: 'AVAILABLE', quotaLabel: 'AVL-52', isAC: false },
-      { classCode: '3A', className: '3-Tier AC', priceInr: 1850, status: 'AVAILABLE', quotaLabel: 'AVL-24', isAC: true },
-      { classCode: '2A', className: '2-Tier AC', priceInr: 2680, status: 'AVAILABLE', quotaLabel: 'AVL-08', isAC: true },
-    ],
-  },
-];
+const TRAIN_RESULTS: TrainResult[] = [];
 
-// --- C. HOTEL RESULTS (MakeMyTrip Style) ---
-interface HotelResult {
+// --- C. HOTEL RESULTS (Populated dynamically from Supabase database) ---
+export interface HotelResult {
   id: string;
   name: string;
   location: string;
@@ -901,332 +210,61 @@ interface HotelResult {
   tag: string;
 }
 
-const HOTEL_RESULTS: HotelResult[] = [
-  {
-    id: 'grand-azure-goa',
-    name: 'The Grand Azure Beachfront Resort & Spa, Goa',
-    location: 'Calangute Beachfront Road, North Goa · 120m from Beach',
-    locality: 'Calangute',
-    stars: 5,
-    rating: 4.9,
-    reviews: 842,
-    propertyType: 'Resort',
-    roomType: 'Premium Beachfront Suite with Private Jacuzzi',
-    perks: 'Free Breakfast Included · Free Airport Cab · Free Cancellation till Check-in',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: true,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: true,
-    hasAirportShuttle: true,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Beachfront / Sea View', 'Free Cancellation', 'Pay at Hotel', 'Spa & Wellness', 'Airport Shuttle'],
-    priceInr: 8499,
-    originalPriceInr: 14999,
-    image: ASSETS.bali,
-    tag: 'TripYeah Assured Luxury',
-  },
-  {
-    id: 'taj-fort-aguada',
-    name: 'Taj Fort Aguada Resort & Heritage Villas',
-    location: 'Sinquerim, Candolim, North Goa · Sea-Facing Ramparts',
-    locality: 'Candolim',
-    stars: 5,
-    rating: 4.95,
-    reviews: 1290,
-    propertyType: 'Heritage',
-    roomType: 'Sea View Luxury Cottage with Private Sit-Out',
-    perks: 'Complimentary Buffet Breakfast · Evening High Tea · Zero Prepayment',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: true,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: true,
-    hasAirportShuttle: true,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Beachfront / Sea View', 'Free Cancellation', 'Pay at Hotel', 'Spa & Wellness', 'Airport Shuttle'],
-    priceInr: 11200,
-    originalPriceInr: 18500,
-    image: ASSETS.singapore,
-    tag: 'Bestseller in Goa',
-  },
-  {
-    id: 'w-goa-vagator',
-    name: 'W Goa Coastal Retreat & RockPool',
-    location: 'Vagator Beach, Bardez, Goa · Cliffside Ocean View',
-    locality: 'Vagator',
-    stars: 5,
+const HOTEL_RESULTS: HotelResult[] = [];
+
+export function mapPropertyToHotelResult(p: PropertyListing): HotelResult {
+  const cat = (p.category || 'hotel').toLowerCase();
+  const starsMap: Record<string, number> = {
+    hotel: 4,
+    resort: 5,
+    villa: 5,
+    homestay: 3,
+    hostel: 2,
+    apartment: 4,
+  };
+  const propType =
+    cat === 'resort'
+      ? 'Resort'
+      : cat === 'villa'
+      ? 'Villa'
+      : 'Hotel';
+  const hasPool = p.amenities?.some((a) => a.toLowerCase().includes('pool')) || false;
+  const hasWifi = p.amenities?.some((a) => a.toLowerCase().includes('wi-fi') || a.toLowerCase().includes('wifi')) || true;
+  const hasBreakfast = p.amenities?.some((a) => a.toLowerCase().includes('breakfast')) || false;
+  const isBeachfront =
+    p.amenities?.some((a) => a.toLowerCase().includes('beach')) ||
+    p.address.toLowerCase().includes('beach') ||
+    p.city.toLowerCase().includes('goa') ||
+    false;
+
+  return {
+    id: p.id,
+    name: p.name,
+    location: `${p.address}, ${p.city}`,
+    locality: p.city,
+    stars: starsMap[p.category] || 4,
     rating: 4.85,
-    reviews: 615,
-    propertyType: 'Resort',
-    roomType: 'Wonderful Garden Access King Room',
-    perks: 'Breakfast + ₹2,000 Spa Credit · Late Check-out Eligible',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: true,
+    reviews: 32,
+    propertyType: propType as any,
+    roomType: p.roomType || 'Standard Deluxe Room',
+    perks: `Verified Partner Listing · ${p.availableRooms || 1} Room(s) Available · Check-in ${p.checkInTime || '02:00 PM'}`,
+    hasBreakfast,
+    hasPool,
+    hasWifi,
+    isBeachfront,
     isCoupleFriendly: true,
     freeCancellation: true,
-    payAtHotel: false,
-    hasSpa: true,
-    hasAirportShuttle: true,
+    payAtHotel: true,
+    hasSpa: p.amenities?.some((a) => a.toLowerCase().includes('spa')) || false,
+    hasAirportShuttle: p.amenities?.some((a) => a.toLowerCase().includes('cab') || a.toLowerCase().includes('shuttle') || a.toLowerCase().includes('airport')) || false,
     isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Beachfront / Sea View', 'Free Cancellation', 'Spa & Wellness', 'Airport Shuttle'],
-    priceInr: 14850,
-    originalPriceInr: 22000,
-    image: ASSETS.dubai,
-    tag: 'Couple Favorite',
-  },
-  {
-    id: 'alila-diwa-goa',
-    name: 'Alila Diwa Luxury Paddy Resort (Hyatt)',
-    location: 'Majorda, South Goa · Surrounded by Lush Greenery',
-    locality: 'Majorda',
-    stars: 5,
-    rating: 4.8,
-    reviews: 940,
-    propertyType: 'Resort',
-    roomType: 'Diwa Club Room with Private Balcony Bath',
-    perks: 'All Meals Included Option · Complimentary Beach Shuttle',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: true,
-    hasAirportShuttle: true,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Free Cancellation', 'Pay at Hotel', 'Spa & Wellness', 'Airport Shuttle'],
-    priceInr: 7990,
-    originalPriceInr: 13500,
-    image: ASSETS.paris,
-    tag: 'South Goa Bestseller',
-  },
-  {
-    id: 'lemon-tree-goa',
-    name: 'Lemon Tree Amarante Beach Resort, Goa',
-    location: 'Candolim, North Goa · 250m from Beach',
-    locality: 'Candolim',
-    stars: 4,
-    rating: 4.6,
-    reviews: 730,
-    propertyType: 'Resort',
-    roomType: 'Superior Pool View Room',
-    perks: 'Free Breakfast Included · Swimming Pool Access',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: false,
-    hasAirportShuttle: false,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Free Cancellation', 'Pay at Hotel'],
-    priceInr: 4990,
-    originalPriceInr: 8500,
-    image: ASSETS.bali,
-    tag: 'Top Value 4-Star',
-  },
-  {
-    id: 'bloom-suites-calangute',
-    name: 'Bloom Suites & Modern Residencies',
-    location: 'Calangute, North Goa · Near Tito’s Lane & Calangute Mall',
-    locality: 'Calangute',
-    stars: 4,
-    rating: 4.55,
-    reviews: 580,
-    propertyType: 'Hotel',
-    roomType: 'Deluxe Queen Room with Work Desk',
-    perks: 'Free High Speed WiFi · Free Breakfast · Zero Cancellation Fee',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: false,
-    hasAirportShuttle: false,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Free Cancellation', 'Pay at Hotel'],
-    priceInr: 3850,
-    originalPriceInr: 6500,
-    image: ASSETS.singapore,
-    tag: 'Great For Workcation',
-  },
-  {
-    id: 'villa-mar-panaji',
-    name: 'Casa De Panjim Heritage Boutique Villa',
-    location: 'Fontainhas Latin Quarter, Panaji · Heritage Walk Access',
-    locality: 'Panaji',
-    stars: 4,
-    rating: 4.7,
-    reviews: 410,
-    propertyType: 'Villa',
-    roomType: 'Portuguese Colonial Heritage Suite with Courtyard',
-    perks: 'Artisan Breakfast Included · Authentic Goan Experience',
-    hasBreakfast: true,
-    hasPool: false,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: false,
-    hasAirportShuttle: false,
-    isTripYeahAssured: false,
-    amenities: ['Free Breakfast', 'Free WiFi', 'Couple Friendly', 'Free Cancellation', 'Pay at Hotel'],
-    priceInr: 5400,
-    originalPriceInr: 8900,
-    image: ASSETS.paris,
-    tag: 'Heritage Charm',
-  },
-  {
-    id: 'ibisco-beach-cottages',
-    name: 'Ibisco Wooden Sea-Facing Cottages, Baga',
-    location: 'Baga Creek Road, Baga Beach · Steps to Beach & Shacks',
-    locality: 'Baga',
-    stars: 3,
-    rating: 4.3,
-    reviews: 320,
-    propertyType: 'Villa',
-    roomType: 'Eco Bamboo Cottage with Sea Breeze Balcony',
-    perks: 'Direct Beach Access · 24/7 Front Desk · Couple Friendly',
-    hasBreakfast: false,
-    hasPool: false,
-    hasWifi: true,
-    isBeachfront: true,
-    isCoupleFriendly: true,
-    freeCancellation: false,
-    payAtHotel: true,
-    hasSpa: false,
-    hasAirportShuttle: false,
-    isTripYeahAssured: false,
-    amenities: ['Free WiFi', 'Couple Friendly', 'Beachfront / Sea View', 'Pay at Hotel'],
-    priceInr: 2450,
-    originalPriceInr: 4200,
-    image: ASSETS.bali,
-    tag: 'Budget Beachfront',
-  },
-  {
-    id: 'ginger-goa-panjim',
-    name: 'Ginger Hotel Panjim City Centre',
-    location: 'Patto Plaza, Panaji · 5 Mins from Bus Terminal & Casinos',
-    locality: 'Panaji',
-    stars: 3,
-    rating: 4.15,
-    reviews: 690,
-    propertyType: 'Hotel',
-    roomType: 'Luxe Smart Queen Room',
-    perks: 'Fast Check-in · Free Breakfast · Business Amenities',
-    hasBreakfast: true,
-    hasPool: false,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: false,
-    hasAirportShuttle: false,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Free WiFi', 'Couple Friendly', 'Free Cancellation', 'Pay at Hotel'],
-    priceInr: 2890,
-    originalPriceInr: 4500,
-    image: ASSETS.dubai,
-    tag: 'Value Business Pick',
-  },
-  {
-    id: 'sol-de-goa-boutique',
-    name: 'Sol De Goa Luxury Riverfront Boutique Hotel',
-    location: 'Sinquerim Backwaters, Candolim · Near Nerul River',
-    locality: 'Candolim',
-    stars: 4,
-    rating: 4.75,
-    reviews: 340,
-    propertyType: 'Hotel',
-    roomType: 'Riverview Club Room with Open Terrace',
-    perks: 'Italian Breakfast · Sundowner Lounge Access · Pool Bar',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: false,
-    hasSpa: true,
-    hasAirportShuttle: false,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Free Cancellation', 'Spa & Wellness'],
-    priceInr: 6200,
-    originalPriceInr: 9800,
-    image: ASSETS.singapore,
-    tag: 'Romantic Boutique',
-  },
-  {
-    id: 'taj-exotica-benaulim',
-    name: 'Taj Exotica Resort & Mediterranean Spa',
-    location: 'Benaulim Beach, South Goa · 56-Acre Sprawling Estate',
-    locality: 'Majorda',
-    stars: 5,
-    rating: 4.96,
-    reviews: 1450,
-    propertyType: 'Resort',
-    roomType: 'Executive Plunge Pool Villa overlooking Ocean',
-    perks: 'Private Beach Cabana · Butler Service · Airport Mercedes Transfer',
-    hasBreakfast: true,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: true,
-    isCoupleFriendly: true,
-    freeCancellation: true,
-    payAtHotel: true,
-    hasSpa: true,
-    hasAirportShuttle: true,
-    isTripYeahAssured: true,
-    amenities: ['Free Breakfast', 'Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Beachfront / Sea View', 'Free Cancellation', 'Pay at Hotel', 'Spa & Wellness', 'Airport Shuttle'],
-    priceInr: 18500,
-    originalPriceInr: 28000,
-    image: ASSETS.paris,
-    tag: 'Ultimate 5-Star Luxury',
-  },
-  {
-    id: 'zostel-goa-vagator',
-    name: 'Zostel Plus Vagator Bohemian Stay',
-    location: 'Ozran Beach Road, Vagator · 500m from Little Vagator',
-    locality: 'Vagator',
-    stars: 3,
-    rating: 4.4,
-    reviews: 910,
-    propertyType: 'Villa',
-    roomType: 'Private Deluxe Bohemian Cottage',
-    perks: 'Infinity Pool · Co-Working Space · Community Events',
-    hasBreakfast: false,
-    hasPool: true,
-    hasWifi: true,
-    isBeachfront: false,
-    isCoupleFriendly: true,
-    freeCancellation: false,
-    payAtHotel: true,
-    hasSpa: false,
-    hasAirportShuttle: false,
-    isTripYeahAssured: false,
-    amenities: ['Swimming Pool', 'Free WiFi', 'Couple Friendly', 'Pay at Hotel'],
-    priceInr: 1850,
-    originalPriceInr: 3200,
-    image: ASSETS.bali,
-    tag: 'Youth & Social Vibe',
-  },
-];
+    amenities: p.amenities && p.amenities.length > 0 ? p.amenities : ['Free WiFi', 'Air Conditioning', 'Couple Friendly'],
+    priceInr: p.basePriceInr,
+    originalPriceInr: Math.round(p.basePriceInr * 1.3),
+    image: p.photos && p.photos.length > 0 ? p.photos[0] : ASSETS.bali,
+    tag: `${p.category} · Verified`,
+  };
+}
 
 // --- D. BUS RESULTS (redBus & MMT Style) ---
 export interface BusResult {
@@ -1255,236 +293,10 @@ export interface BusResult {
   badges: string[];
 }
 
-const BUS_RESULTS: BusResult[] = [
-  {
-    id: 'BUS-101',
-    operator: 'IntrCity SmartBus (Volvo 9600)',
-    busType: 'AC Sleeper Multi-Axle (2+1)',
-    busCategory: 'Volvo Multi-Axle',
-    depTime: '18:30',
-    depPoint: 'Kashmere Gate ISBT',
-    depPeriod: '6pm-12am',
-    arrTime: '08:45',
-    arrPoint: 'Mapusa Bus Stand',
-    arrPeriod: '6am-12pm',
-    duration: '14h 15m',
-    durationMins: 855,
-    rating: 4.85,
-    totalRatings: 1840,
-    priceInr: 1850,
-    originalPriceInr: 2400,
-    seatsLeft: 5,
-    isSingleLadyBerth: true,
-    isPrimo: true,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Blankets & Linen', 'USB Charging Port', 'Emergency SOS', 'Reading Light', 'Free Wi-Fi Hotspot'],
-    badges: ['Primo Certified', 'Top Rated Operator', 'Sanitized Cabins'],
-  },
-  {
-    id: 'BUS-102',
-    operator: 'Zingbus Plus Electric Luxury',
-    busType: 'AC Electric Sleeper (Whisper Quiet)',
-    busCategory: 'Electric',
-    depTime: '20:15',
-    depPoint: 'Dhaula Kuan',
-    depPeriod: '6pm-12am',
-    arrTime: '10:30',
-    arrPoint: 'Panjim Central Bus Stand',
-    arrPeriod: '6am-12pm',
-    duration: '14h 15m',
-    durationMins: 855,
-    rating: 4.9,
-    totalRatings: 920,
-    priceInr: 1980,
-    originalPriceInr: 2600,
-    seatsLeft: 3,
-    isSingleLadyBerth: true,
-    isPrimo: true,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Water Bottle', 'USB Charging Port', 'Blankets & Linen', 'Free Wi-Fi Hotspot', 'Emergency SOS'],
-    badges: ['Eco Electric', 'Zero Carbon', 'Prompt Departure'],
-  },
-  {
-    id: 'BUS-103',
-    operator: 'VRL Travels Executive',
-    busType: 'Irizar i6 AC Sleeper (2+1)',
-    busCategory: 'AC Sleeper',
-    depTime: '21:00',
-    depPoint: 'Anand Vihar',
-    depPeriod: '6pm-12am',
-    arrTime: '11:15',
-    arrPoint: 'Margao KTC Bus Terminal',
-    arrPeriod: '6am-12pm',
-    duration: '14h 15m',
-    durationMins: 855,
-    rating: 4.75,
-    totalRatings: 2650,
-    priceInr: 1690,
-    originalPriceInr: 2150,
-    seatsLeft: 8,
-    isSingleLadyBerth: false,
-    isPrimo: false,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Blankets & Linen', 'Water Bottle', 'USB Charging Port'],
-    badges: ['Punctual Operator', 'Highway Rest Stop'],
-  },
-  {
-    id: 'BUS-104',
-    operator: 'Kalyani Volvo Multi-Axle',
-    busType: 'Volvo B11R AC Semi-Sleeper',
-    busCategory: 'Semi-Sleeper',
-    depTime: '22:30',
-    depPoint: 'Kashmere Gate ISBT',
-    depPeriod: '6pm-12am',
-    arrTime: '12:45',
-    arrPoint: 'Panjim Central Bus Stand',
-    arrPeriod: '12pm-6pm',
-    duration: '14h 15m',
-    durationMins: 855,
-    rating: 4.65,
-    totalRatings: 1120,
-    priceInr: 1420,
-    originalPriceInr: 1800,
-    seatsLeft: 12,
-    isSingleLadyBerth: true,
-    isPrimo: false,
-    hasLiveTracking: false,
-    hasFreeCancellation: false,
-    amenities: ['USB Charging Port', 'Water Bottle', 'Reading Light'],
-    badges: ['Value for Money', 'Spacious Legroom'],
-  },
-  {
-    id: 'BUS-105',
-    operator: 'NueGo Electric Green Intercity',
-    busType: 'Pure Electric AC Seater / Recliner',
-    busCategory: 'Electric',
-    depTime: '06:30',
-    depPoint: 'IFFCO Chowk Gurgaon',
-    depPeriod: '6am-12pm',
-    arrTime: '20:15',
-    arrPoint: 'Calangute Beach Circle',
-    arrPeriod: '6pm-12am',
-    duration: '13h 45m',
-    durationMins: 825,
-    rating: 4.88,
-    totalRatings: 1420,
-    priceInr: 1550,
-    originalPriceInr: 2100,
-    seatsLeft: 7,
-    isSingleLadyBerth: true,
-    isPrimo: true,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Zero Carbon Ride', 'Water Bottle', 'USB Charging Port', 'Free Wi-Fi Hotspot', 'Emergency SOS'],
-    badges: ['Primo Certified', 'Silent Drive', 'Women Safe'],
-  },
-  {
-    id: 'BUS-106',
-    operator: 'Orange Tours & Travels Grand',
-    busType: 'Scania Metrolink Multi-Axle AC Sleeper',
-    busCategory: 'Volvo Multi-Axle',
-    depTime: '16:45',
-    depPoint: 'Majnu Ka Tilla',
-    depPeriod: '12pm-6pm',
-    arrTime: '07:30',
-    arrPoint: 'Porvorim',
-    arrPeriod: '6am-12pm',
-    duration: '14h 45m',
-    durationMins: 885,
-    rating: 4.8,
-    totalRatings: 2100,
-    priceInr: 2150,
-    originalPriceInr: 2800,
-    seatsLeft: 4,
-    isSingleLadyBerth: true,
-    isPrimo: true,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Blankets & Linen', 'Water Bottle', 'USB Charging Port', 'Emergency SOS', 'Reading Light'],
-    badges: ['Primo Certified', 'Luxury Suspensions'],
-  },
-  {
-    id: 'BUS-107',
-    operator: 'SRS Luxury Travels',
-    busType: 'Non-AC Hi-Tech Sleeper (2+1)',
-    busCategory: 'Non-AC Sleeper',
-    depTime: '19:15',
-    depPoint: 'Karol Bagh',
-    depPeriod: '6pm-12am',
-    arrTime: '10:00',
-    arrPoint: 'Mapusa Bus Stand',
-    arrPeriod: '6am-12pm',
-    duration: '14h 45m',
-    durationMins: 885,
-    rating: 4.3,
-    totalRatings: 840,
-    priceInr: 1190,
-    originalPriceInr: 1500,
-    seatsLeft: 14,
-    isSingleLadyBerth: false,
-    isPrimo: false,
-    hasLiveTracking: false,
-    hasFreeCancellation: false,
-    amenities: ['USB Charging Port', 'Reading Light'],
-    badges: [],
-  },
-  {
-    id: 'BUS-108',
-    operator: 'IntrCity SmartBus Premium',
-    busType: 'BharatBenz AC Sleeper Club Class',
-    busCategory: 'AC Sleeper',
-    depTime: '05:15',
-    depPoint: 'Kashmere Gate ISBT',
-    depPeriod: '12am-6am',
-    arrTime: '19:45',
-    arrPoint: 'Panjim Central Bus Stand',
-    arrPeriod: '6pm-12am',
-    duration: '14h 30m',
-    durationMins: 870,
-    rating: 4.82,
-    totalRatings: 1350,
-    priceInr: 1750,
-    originalPriceInr: 2300,
-    seatsLeft: 6,
-    isSingleLadyBerth: true,
-    isPrimo: true,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Blankets & Linen', 'Water Bottle', 'USB Charging Port', 'Emergency SOS'],
-    badges: ['Primo Certified', 'Early Arrival Guarantee'],
-  },
-  {
-    id: 'BUS-109',
-    operator: 'Zingbus Electric Express',
-    busType: 'AC Semi-Sleeper Luxury Electric',
-    busCategory: 'Electric',
-    depTime: '14:30',
-    depPoint: 'Dhaula Kuan',
-    depPeriod: '12pm-6pm',
-    arrTime: '05:00',
-    arrPoint: 'Calangute Beach Circle',
-    arrPeriod: '12am-6am',
-    duration: '14h 30m',
-    durationMins: 870,
-    rating: 4.78,
-    totalRatings: 670,
-    priceInr: 1390,
-    originalPriceInr: 1850,
-    seatsLeft: 9,
-    isSingleLadyBerth: true,
-    isPrimo: false,
-    hasLiveTracking: true,
-    hasFreeCancellation: true,
-    amenities: ['Live GPS Tracking', 'Zero Carbon Ride', 'Water Bottle', 'USB Charging Port'],
-    badges: ['Afternoon Boarding', 'Express Highway'],
-  },
-];
+const BUS_RESULTS: BusResult[] = [];
 
 // --- E. CABS RESULTS (MakeMyTrip Outstation & Intercity) ---
-interface CabResult {
+export interface CabResult {
   id: string;
   cabType: string;
   modelExamples: string;
@@ -1502,84 +314,21 @@ interface CabResult {
   tag: string;
 }
 
-const CAB_RESULTS: CabResult[] = [
-  {
-    id: 'CAB-SEDAN',
-    cabType: 'Comfort Sedan',
-    modelExamples: '',
-    cabCategory: 'Sedan',
-    seats: 4,
-    bags: 2,
-    acType: 'Air Conditioned',
-    priceInr: 3490,
-    perKmRate: 13,
-    includedKm: 350,
-    tollTaxesIncluded: false,
-    driverRating: 4.88,
-    driverTrips: 840,
-    perks: ['Doorstep Pickup & Drop', 'Sanitized Cab', 'Free Cancellation up to 6h before', 'Expert Highway Chauffeur'],
-    tag: 'Most Popular',
-  },
-  {
-    id: 'CAB-SUV-ERTIGA',
-    cabType: 'Spacious SUV',
-    modelExamples: '',
-    cabCategory: 'SUV',
-    seats: 6,
-    bags: 3,
-    acType: 'Dual Air Conditioning',
-    priceInr: 4890,
-    perKmRate: 16.5,
-    includedKm: 350,
-    tollTaxesIncluded: false,
-    driverRating: 4.92,
-    driverTrips: 1250,
-    perks: ['Extra Luggage Boot', 'Spacious Legroom for Families', 'Verified Highway Expert Driver', 'Clean & Sanitized Ride'],
-    tag: 'Best for Families',
-  },
-  {
-    id: 'CAB-PRIME-INNOVA',
-    cabType: 'Prime SUV',
-    modelExamples: '',
-    cabCategory: 'Prime Crysta',
-    seats: 7,
-    bags: 4,
-    acType: 'Tri-Zone Climate Control',
-    priceInr: 6450,
-    perKmRate: 19,
-    includedKm: 350,
-    tollTaxesIncluded: false,
-    driverRating: 4.98,
-    driverTrips: 1820,
-    perks: ['Plush Leather Captain Seats', 'Chauffeur in Uniform & Water Bottles', 'Silent Suspension Ride', 'Top Tier Highway Rating'],
-    tag: 'Ultimate Highway Luxury',
-  },
-  {
-    id: 'CAB-TEMPO',
-    cabType: 'Luxury Tempo Traveller',
-    modelExamples: '',
-    cabCategory: 'Tempo',
-    seats: 12,
-    bags: 8,
-    acType: 'Individual Roof AC Vents',
-    priceInr: 11800,
-    perKmRate: 26,
-    includedKm: 350,
-    tollTaxesIncluded: false,
-    driverRating: 4.85,
-    driverTrips: 410,
-    perks: ['Pushback Recliners', 'Dedicated Roof Luggage Carrier', 'Music & Mic System', 'Perfect for Group Outstation'],
-    tag: 'Large Group Special',
-  },
-];
+const CAB_RESULTS: CabResult[] = [];
 
-// --- F. HOLIDAYS RESULTS (MakeMyTrip Style) ---
-interface HolidayPackageResult {
+// --- F. HOLIDAY RESULTS (MakeMyTrip Style Packages) ---
+export interface HolidayPackageItineraryDay {
+  day: string;
+  title: string;
+  desc: string;
+}
+
+export interface HolidayPackageResult {
   id: string;
   title: string;
   destination: string;
   city: string;
-  durationNightsCount: number; // e.g. 3, 4, 5, 6
+  durationNightsCount: number;
   durationNights: string;
   durationDays: number;
   theme: 'Beach' | 'Honeymoon' | 'Luxury' | 'Adventure' | 'Culture' | 'Family' | 'Group Tours' | 'Pilgrimage' | 'Wildlife';
@@ -1589,7 +338,7 @@ interface HolidayPackageResult {
   reviewsCount: number;
   inclusions: string[];
   highlights: string[];
-  itinerary: { day: string; title: string; desc: string }[];
+  itinerary: HolidayPackageItineraryDay[];
   hotelStayTitle: string;
   startingPricePerPersonInr: number;
   originalPriceInr: number;
@@ -1602,398 +351,7 @@ interface HolidayPackageResult {
   dealTag?: string;
 }
 
-const HOLIDAY_RESULTS: HolidayPackageResult[] = [
-  {
-    id: 'HOL-GOA-SUPER-SAVER',
-    title: 'Super Saver Goa Beach Getaway with North & South Sightseeing',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 3,
-    durationNights: '3 Nights / 4 Days',
-    durationDays: 4,
-    theme: 'Beach',
-    hotelCategory: '3★',
-    hotelStars: 3,
-    rating: 4.65,
-    reviewsCount: 420,
-    inclusions: ['3★ Calangute Hotel Stay', 'Daily Buffet Breakfast', 'Shared AC Sightseeing Tour', 'Airport / Madgaon Station Transfers'],
-    highlights: ['Stay near Calangute & Baga Beach', 'North Goa Forts & Beach Tour', 'Mandovi River Evening Boat Ride'],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival in Goa', desc: 'Pickup from Goa airport/station and check-in to your 3-star hotel. Evening walk on Calangute beach.' },
-      { day: 'Day 2', title: 'North Goa Forts & Beaches', desc: 'Visit Fort Aguada, Chapora Fort, and Anjuna Beach flea market.' },
-      { day: 'Day 3', title: 'South Goa Churches & Cruise', desc: 'Explore Basilica of Bom Jesus, Se Cathedral, and enjoy evening boat cruise.' },
-      { day: 'Day 4', title: 'Check-out & Drop', desc: 'Enjoy breakfast, shop for local cashews and spices in Panjim, drop to airport.' },
-    ],
-    hotelStayTitle: 'Bloom Suites / Ginger City Center (3★ Selected Hotel)',
-    startingPricePerPersonInr: 12999,
-    originalPriceInr: 18500,
-    image: ASSETS.bali,
-    flightsIncluded: false,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Oct – May',
-    dealTag: 'Super Saver Deal',
-  },
-  {
-    id: 'HOL-GOA-5D',
-    title: '4N/5D Goa Coastal Bliss & Luxury 5★ Beachfront Resort Escape',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 4,
-    durationNights: '4 Nights / 5 Days',
-    durationDays: 5,
-    theme: 'Beach',
-    hotelCategory: '5★',
-    hotelStars: 5,
-    rating: 4.92,
-    reviewsCount: 684,
-    inclusions: ['Return Flights (Delhi ⇄ Goa)', '5★ Beachfront Resort Stay', 'Daily Buffet Breakfast & Dinner', 'Private AC Cab Transfers', 'South Goa Sunset Cruise'],
-    highlights: ['Stay in Calangute Beachfront Resort', 'Catamaran Sunset Cruise with Live DJ', 'Private Sightseeing of Old Goa Churches & Aguada Fort'],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival in Goa & Resort Check-in', desc: 'Complimentary private airport transfer to your luxury beachfront resort. Evening at leisure on Calangute beach.' },
-      { day: 'Day 2', title: 'North Goa Heritage & Beach Tour', desc: 'Visit Chapora Fort, Vagator Cliff, and Anjuna Beach flea market with a dedicated private chauffeur.' },
-      { day: 'Day 3', title: 'South Goa Heritage & Mandovi Sunset Cruise', desc: 'Explore Basilica of Bom Jesus, Mangueshi Temple and enjoy 2-hour Mandovi River Sunset Catamaran Cruise.' },
-      { day: 'Day 4', title: 'Watersports Adventure & Spa Day', desc: 'Complimentary Parasailing & Jet Ski session in the morning, followed by relaxing Ayurvedic massage at the resort.' },
-      { day: 'Day 5', title: 'Souvenir Shopping & Flight Back', desc: 'Enjoy leisurely breakfast, shop for cashew nuts & spices in Panjim, followed by private airport drop.' },
-    ],
-    hotelStayTitle: 'Grand Azure 5★ Beach Resort (Deluxe Sea View Suite)',
-    startingPricePerPersonInr: 24999,
-    originalPriceInr: 36000,
-    image: ASSETS.paris,
-    flightsIncluded: true,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: true,
-    bestSeason: 'Oct – Mar',
-    dealTag: 'Deal of the Day',
-  },
-  {
-    id: 'HOL-GOA-HONEYMOON-VILLA',
-    title: 'Goa Romantic Honeymoon Retreat with Private Plunge Pool Villa',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 4,
-    durationNights: '4 Nights / 5 Days',
-    durationDays: 5,
-    theme: 'Honeymoon',
-    hotelCategory: '5★',
-    hotelStars: 5,
-    rating: 4.96,
-    reviewsCount: 310,
-    inclusions: ['Return Flights Included', '5★ Private Plunge Pool Villa', 'Candlelight Beach Dinner with Wine', 'Couples Spa Therapy', 'Private Chauffeur Driven Sedan'],
-    highlights: ['Exclusive Private Plunge Pool Villa', 'Complimentary Honeymoon Bed Decoration & Cake', 'Sunset Yacht Cruise on Arabian Sea'],
-    itinerary: [
-      { day: 'Day 1', title: 'VIP Airport Welcome & Check-in', desc: 'Chauffeur pickup in luxury sedan with welcome champagne. Romantic check-in to your private villa.' },
-      { day: 'Day 2', title: 'South Goa Romance & Sunset Cruise', desc: 'Private yacht charter along Mandovi river with snacks and sunset views.' },
-      { day: 'Day 3', title: 'Couples Spa & Candlelight Beach Dinner', desc: 'Relaxing 90-minute Aromatherapy couples massage followed by candlelit dinner under the stars.' },
-      { day: 'Day 4', title: 'Vagator Cliffs & Beach Club Evening', desc: 'Scenic drive to Vagator cliff tops and reserved sunset lounge cabana at Ozran.' },
-      { day: 'Day 5', title: 'Floating Breakfast & Farewell', desc: 'Signature floating breakfast in your private pool before departure transfer.' },
-    ],
-    hotelStayTitle: 'Taj Exotica / W Goa Cliff Villa (5★ Luxury Villa)',
-    startingPricePerPersonInr: 34500,
-    originalPriceInr: 49000,
-    image: ASSETS.singapore,
-    flightsIncluded: true,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: true,
-    bestSeason: 'Year Round',
-    dealTag: 'Honeymoon Special',
-  },
-  {
-    id: 'HOL-GOA-ADVENTURE',
-    title: '3N/4D Goa Thrill Adventure with Scuba Diving & Grand Island Boat Trip',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 3,
-    durationNights: '3 Nights / 4 Days',
-    durationDays: 4,
-    theme: 'Adventure',
-    hotelCategory: '3★',
-    hotelStars: 3,
-    rating: 4.78,
-    reviewsCount: 540,
-    inclusions: ['Grand Island Boat Cruise with Dolphin Spotting', 'PADI Certified Scuba Diving with Video', '5-in-1 Watersports Combo (Parasailing, JetSki, Banana, Bumper, Speedboat)', '3★ Candolim Stay + Breakfast'],
-    highlights: ['Scuba diving with underwater photography', 'Bumper & Banana boat rides at Baga', 'Dolphin spotting catamaran cruise'],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival & Candolim Check-in', desc: 'Transfer from Goa airport or station. Evening watersports trial at Candolim beach.' },
-      { day: 'Day 2', title: 'Grand Island Scuba Expedition', desc: 'Full-day boat trip to Grand Island. Scuba diving with certified instructor and BBQ lunch on monkey beach.' },
-      { day: 'Day 3', title: 'Water Sports Extravaganza', desc: 'Parasailing, jet skiing, and bumper boat rides at Baga beach followed by beach shack party.' },
-      { day: 'Day 4', title: 'Check-out & Return', desc: 'Relaxed breakfast and airport transfer.' },
-    ],
-    hotelStayTitle: 'Lemon Tree / Candolim Boutique Hotel (3★/4★)',
-    startingPricePerPersonInr: 14200,
-    originalPriceInr: 21000,
-    image: ASSETS.dubai,
-    flightsIncluded: false,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Oct – May',
-    dealTag: 'Adventure Bestseller',
-  },
-  {
-    id: 'HOL-GOA-CULTURE',
-    title: '3N/4D Goa Fontainhas Latin Quarter & Portuguese Heritage Walk',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 3,
-    durationNights: '3 Nights / 4 Days',
-    durationDays: 4,
-    theme: 'Culture',
-    hotelCategory: '4★',
-    hotelStars: 4,
-    rating: 4.82,
-    reviewsCount: 290,
-    inclusions: ['Return Flights Included', '4★ Heritage Boutique Hotel in Fontainhas', 'Guided Latin Quarter Walking Tour', 'Portuguese Cooking Class & Fado Evening', 'Private AC Cab for 3 Days'],
-    highlights: ['Stay in 19th Century Indo-Portuguese Villa', 'Curated Spice Plantation Tour with Traditional Goan Feast', 'Sunset walk through Fontainhas cobblestone streets'],
-    itinerary: [
-      { day: 'Day 1', title: 'Check-in to Heritage Quarter', desc: 'Private transfer from Goa airport to Latin Quarter boutique hotel. Evening walk past colorful heritage houses.' },
-      { day: 'Day 2', title: 'Old Goa Churches & Spice Farm', desc: 'Visit Se Cathedral, Church of St. Francis of Assisi, and Sahakari Spice Farm for an organic lunch.' },
-      { day: 'Day 3', title: 'Goan Fado Music & Culinary Walk', desc: 'Explore historic bakeries in Panaji, taste fresh Poee bread and attend live Portuguese Fado acoustic music.' },
-      { day: 'Day 4', title: 'Shopping at 18th June Road & Departure', desc: 'Shop for handcrafted Azulejos tiles and transfer to airport.' },
-    ],
-    hotelStayTitle: 'Casa De Panjim Heritage Boutique Villa (4★)',
-    startingPricePerPersonInr: 18500,
-    originalPriceInr: 26000,
-    image: ASSETS.paris,
-    flightsIncluded: true,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Year Round',
-    dealTag: 'Heritage Special',
-  },
-  {
-    id: 'HOL-GOA-BUDGET',
-    title: '2N/3D Goa Weekend Backpackers & Party Special',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 2,
-    durationNights: '2 Nights / 3 Days',
-    durationDays: 3,
-    theme: 'Beach',
-    hotelCategory: '<3★',
-    hotelStars: 2,
-    rating: 4.4,
-    reviewsCount: 380,
-    inclusions: ['Cozy AC Hotel Stay near Tito’s Lane', 'Daily Breakfast', 'Scooter Rental for 2 Days (Fuel extra)', 'Club Entry Voucher'],
-    highlights: ['Stay in the heart of Baga party strip', 'Self-drive scooter included for exploring North Goa', 'Complimentary entry pass to top beach club'],
-    itinerary: [
-      { day: 'Day 1', title: 'Check-in & Sunset at Curlies', desc: 'Arrive in Goa, collect rental scooter, check-in and head to Anjuna for sunset trance vibes.' },
-      { day: 'Day 2', title: 'North Goa Beach Hop & Club Night', desc: 'Ride through Morjim, Ashwem, and Arambol sweet water lake. Night party at Tito’s lane.' },
-      { day: 'Day 3', title: 'Morning Swim & Checkout', desc: 'Enjoy English breakfast by the beach, return scooter, and head to station.' },
-    ],
-    hotelStayTitle: 'Zostel Plus / Baga Beach House (<3★ Standard)',
-    startingPricePerPersonInr: 7999,
-    originalPriceInr: 12500,
-    image: ASSETS.bali,
-    flightsIncluded: false,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Oct – Jun',
-    dealTag: 'Pocket Friendly',
-  },
-  {
-    id: 'HOL-BALI-6D',
-    title: '5N/6D Bali Island Dreams with Ubud Private Pool Villa & Seminyak',
-    destination: 'Bali, Indonesia',
-    city: 'Bali',
-    durationNightsCount: 5,
-    durationNights: '5 Nights / 6 Days',
-    durationDays: 6,
-    theme: 'Honeymoon',
-    hotelCategory: '5★',
-    hotelStars: 5,
-    rating: 4.95,
-    reviewsCount: 512,
-    inclusions: ['Return International Flights', '2N Ubud Private Pool Villa + 3N Seminyak Beachfront', 'Daily Floating Breakfast', 'Private Tour Escort', 'Nusa Penida Island Tour'],
-    highlights: ['Private Pool Villa in Ubud Jungle', 'Speedboat tour to Kelingking Secret Beach (Nusa Penida)', 'Tanah Lot Sunset Temple visit'],
-    itinerary: [
-      { day: 'Day 1', title: 'Welcome to Denpasar Bali', desc: 'Flower garland reception at DPS airport and private scenic drive to Ubud Jungle Private Pool Villa.' },
-      { day: 'Day 2', title: 'Tegalalang Rice Terraces & Jungle Swing', desc: 'Experience Bali giant swing, coffee tasting at Luwak plantation, and Tirta Empul water blessing.' },
-      { day: 'Day 3', title: 'Transfer to Seminyak & Sunset at Tanah Lot', desc: 'Scenic transfer to vibrant Seminyak beachfront. Evening sunset at iconic offshore Tanah Lot temple.' },
-      { day: 'Day 4', title: 'Nusa Penida Island Speedboat Day Tour', desc: 'Full day speedboat trip to Kelingking T-Rex cliff, Angel Billabong, and Broken Beach with lunch.' },
-      { day: 'Day 5', title: 'Water Sports & Beach Club Night', desc: 'Parasailing and banana boat in Benoa, followed by VIP daybed access at Potato Head Beach Club.' },
-      { day: 'Day 6', title: 'Seminyak Flea Markets & Departure', desc: 'Morning spa massage, souvenir shopping in Seminyak Square, and transfer to airport.' },
-    ],
-    hotelStayTitle: 'Ubud Hanging Villa + Seminyak Beach Resort (5★)',
-    startingPricePerPersonInr: 48999,
-    originalPriceInr: 68000,
-    image: ASSETS.singapore,
-    flightsIncluded: true,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: true,
-    bestSeason: 'Year Round',
-    dealTag: 'International Bestseller',
-  },
-  {
-    id: 'HOL-DUBAI-5D',
-    title: '4N/5D Dubai Extravaganza with Desert Safari & Burj Khalifa At The Top',
-    destination: 'Dubai, UAE',
-    city: 'Dubai',
-    durationNightsCount: 4,
-    durationNights: '4 Nights / 5 Days',
-    durationDays: 5,
-    theme: 'Luxury',
-    hotelCategory: '4★',
-    hotelStars: 4,
-    rating: 4.88,
-    reviewsCount: 890,
-    inclusions: ['Emirates / IndiGo Return Flights', '4★/5★ Downtown Hotel', 'Burj Khalifa 124th Floor Tickets', 'Desert Safari with BBQ & Belly Dance', 'Dubai Marina Dhow Cruise Dinner'],
-    highlights: ['Burj Khalifa Level 124 Observation Deck at Sunset', '4x4 Dune Bashing Desert Safari with BBQ Dinner', 'Dubai Mall Fountain Show & Aquarium'],
-    itinerary: [
-      { day: 'Day 1', title: 'Touchdown Dubai & Marina Dhow Cruise', desc: 'Private transfer from DXB airport. Evening luxury Dhow cruise dinner along Dubai Marina canal.' },
-      { day: 'Day 2', title: 'City Tour & Burj Khalifa At The Top', desc: 'Photo stop at Burj Al Arab, Palm Jumeirah monorail, and evening visit to Burj Khalifa 124th floor.' },
-      { day: 'Day 3', title: 'Thrilling 4x4 Desert Safari Experience', desc: 'Red dune bashing, camel riding, sandboarding, followed by live Tanoura dance and BBQ dinner.' },
-      { day: 'Day 4', title: 'Museum of the Future & Dubai Gold Souk', desc: 'Morning at architectural marvel Museum of the Future. Evening Abra boat ride across Gold & Spice Souk.' },
-      { day: 'Day 5', title: 'Last-minute Shopping & Departure', desc: 'Shop duty-free goods at Mall of the Emirates before comfortable airport drop.' },
-    ],
-    hotelStayTitle: 'Grand Millennium Downtown Dubai (4★/5★ Luxury)',
-    startingPricePerPersonInr: 42500,
-    originalPriceInr: 58000,
-    image: ASSETS.dubai,
-    flightsIncluded: true,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: true,
-    bestSeason: 'Oct – Apr',
-    dealTag: 'Luxury Favorite',
-  },
-  {
-    id: 'HOL-KERALA-FAMILY',
-    title: '5N/6D Kerala Serenity: Munnar Tea Hills & Alleppey Luxury Houseboat',
-    destination: 'Kerala, India',
-    city: 'Kerala',
-    durationNightsCount: 5,
-    durationNights: '5 Nights / 6 Days',
-    durationDays: 6,
-    theme: 'Family',
-    hotelCategory: '4★',
-    hotelStars: 4,
-    rating: 4.85,
-    reviewsCount: 460,
-    inclusions: ['Return Domestic Flights to Kochi', '2N Munnar Tea Resort + 1N Thekkady + 1N Alleppey Houseboat + 1N Marari Beach', 'All Meals on Houseboat', 'Private AC SUV for All 6 Days'],
-    highlights: ['Overnight stay on traditional wooden Kettuvallam houseboat', 'Tea tasting tour at Kolukkumalai Estate', 'Spice plantation walk in Thekkady'],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival in Cochin & Drive to Munnar', desc: 'Scenic uphill drive past Cheeyappara waterfalls to lush tea plantation resort.' },
-      { day: 'Day 2', title: 'Munnar Tea Hills & Eravikulam National Park', desc: 'Spot endangered Nilgiri Tahr at Rajamalai, visit Mattupetty Dam and Echo point.' },
-      { day: 'Day 3', title: 'Munnar to Thekkady Spice Hills', desc: 'Drive through misty cardamom hills. Visit Periyar tiger reserve and watch martial arts show.' },
-      { day: 'Day 4', title: 'Alleppey Backwaters Houseboat Cruise', desc: 'Board private luxury houseboat at noon. Glide past tranquil paddy fields, enjoy traditional Karimeen fish dinner.' },
-      { day: 'Day 5', title: 'Marari Beach Relaxation', desc: 'Disembark houseboat and transfer to peaceful white sand Marari beach resort.' },
-      { day: 'Day 6', title: 'Cochin Fort & Departure Flight', desc: 'See Chinese fishing nets in Fort Kochi before transfer to Cochin airport.' },
-    ],
-    hotelStayTitle: 'Blanket Hotel Munnar + Luxury AC Backwater Houseboat (4★)',
-    startingPricePerPersonInr: 22999,
-    originalPriceInr: 32000,
-    image: ASSETS.bali,
-    flightsIncluded: true,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Sep – Apr',
-    dealTag: 'Family Bestseller',
-  },
-  {
-    id: 'HOL-GOA-GROUP-TOURS',
-    title: '3N/4D Goa Fun Fiesta: Group Tours & Party Catamaran Cruise',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 3,
-    durationNights: '3 Nights / 4 Days',
-    durationDays: 4,
-    theme: 'Group Tours',
-    hotelCategory: '3★',
-    hotelStars: 3,
-    rating: 4.80,
-    reviewsCount: 360,
-    inclusions: ['3★ Calangute Group Hotel', 'Daily Buffet Breakfast', 'Exclusive Group Catamaran Party with DJ', 'North Goa Beach Bar Crawl', 'Group AC Bus Transfers'],
-    highlights: ['Private sunset catamaran charter with DJ sound system', 'Free entry & VIP drinks at top Baga club', 'Group beach volleyball & watersports combo'],
-    itinerary: [
-      { day: 'Day 1', title: 'Group Arrival & Welcome Party', desc: 'Transfer from Goa airport or station in group coach. Welcome cocktail and evening sunset walk on Calangute beach.' },
-      { day: 'Day 2', title: 'North Goa Beach Hop & Club Night', desc: 'Group tour of Anjuna flea market, Vagator cliff viewpoints, and night celebration at Tito’s lane.' },
-      { day: 'Day 3', title: 'Private Catamaran Cruise & Watersports', desc: '3-hour private catamaran sail on Arabian sea with DJ music, dance, and banana boat rides.' },
-      { day: 'Day 4', title: 'Souvenir Shopping & Group Farewell', desc: 'Breakfast, souvenir shopping in Panaji, and group drop to airport/railway station.' },
-    ],
-    hotelStayTitle: 'Bloom Beach Resort / Sea Breeze Village (3★)',
-    startingPricePerPersonInr: 10999,
-    originalPriceInr: 16500,
-    image: ASSETS.goa,
-    flightsIncluded: false,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Oct – May',
-    dealTag: 'Group Special',
-  },
-  {
-    id: 'HOL-GOA-PILGRIMAGE',
-    title: '3N/4D Holy Goa Pilgrimage & Ancient Temples Heritage Tour',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 3,
-    durationNights: '3 Nights / 4 Days',
-    durationDays: 4,
-    theme: 'Pilgrimage',
-    hotelCategory: '3★',
-    hotelStars: 3,
-    rating: 4.88,
-    reviewsCount: 275,
-    inclusions: ['3★ Heritage Hotel in Old Goa', 'Daily Pure Veg Breakfast & Dinner', 'VIP Darshan at Mangueshi & Shanta Durga Temples', 'Basilica of Bom Jesus & Se Cathedral Pilgrimage', 'Dedicated AC Chauffeur'],
-    highlights: ['Guided pilgrimage of sacred Basilica of Bom Jesus', 'VIP Darshan at Shree Mangueshi Temple', 'Ponda Spice Farm Satvik lunch'],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival & Old Goa Sacred Trail', desc: 'Chauffeur pickup from airport/station and check-in to peaceful heritage hotel. Evening prayer visit to Se Cathedral.' },
-      { day: 'Day 2', title: 'Sacred Temples of Ponda Darshan', desc: 'Full-day pilgrimage to Shree Mangueshi Temple, Mahalaxmi Temple, and Shanta Durga Temple with Satvik thali lunch.' },
-      { day: 'Day 3', title: 'Church of St. Francis & Tambdi Surla', desc: 'Visit ancient 12th-century Tambdi Surla Mahadev Temple nestled in Western Ghats foothills.' },
-      { day: 'Day 4', title: 'Morning Aarti & Departure Drop', desc: 'Morning darshan at Maruti Temple on Altinho hill and comfortable transfer to airport/station.' },
-    ],
-    hotelStayTitle: 'The Fern Kadamba / Heritage Govinda Resort (3★/4★)',
-    startingPricePerPersonInr: 11499,
-    originalPriceInr: 17000,
-    image: ASSETS.paris,
-    flightsIncluded: false,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: false,
-    bestSeason: 'Year Round',
-    dealTag: 'Devotional Tour',
-  },
-  {
-    id: 'HOL-GOA-WILDLIFE',
-    title: '3N/4D Goa Jungle Safari, Dudhsagar Falls & Wildlife Sanctuary Tour',
-    destination: 'Goa, India',
-    city: 'Goa',
-    durationNightsCount: 3,
-    durationNights: '3 Nights / 4 Days',
-    durationDays: 4,
-    theme: 'Wildlife',
-    hotelCategory: '4★',
-    hotelStars: 4,
-    rating: 4.84,
-    reviewsCount: 390,
-    inclusions: ['4★ Eco Resort near Mollem National Park', 'Daily Buffet Breakfast & Dinner', '4x4 Open Jeep Safari to Dudhsagar Waterfalls', 'Bhagwan Mahaveer Wildlife Sanctuary Birdwatching', 'Return AC Cab Transfers'],
-    highlights: ['Thrilling 4x4 Jeep Safari through dense Western Ghats', 'Swim in natural pools at Dudhsagar Waterfall', 'Spot leopards, flying squirrels, and hornbills at Mollem'],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival & Eco-Resort Check-in', desc: 'Pickup and drive inland towards Mollem rainforest. Check-in to luxury cottage and evening birdwatching walk.' },
-      { day: 'Day 2', title: 'Dudhsagar Waterfalls Jeep Expedition', desc: 'Early morning 4x4 jeep safari through jungle river crossings to majestic Dudhsagar four-tiered waterfall.' },
-      { day: 'Day 3', title: 'Bhagwan Mahaveer Wildlife Safari', desc: 'Guided forest trek with naturalist to spot wild deer, malabar giant squirrels, and endemic butterflies.' },
-      { day: 'Day 4', title: 'Nature Walk & Drop to Airport', desc: 'Organic breakfast, spice orchard walk, and private drop to Goa airport or Madgaon station.' },
-    ],
-    hotelStayTitle: 'Dudhsagar Spa & Nature Resort / Wildernest Nature (4★)',
-    startingPricePerPersonInr: 15999,
-    originalPriceInr: 23500,
-    image: ASSETS.mountainTraveler,
-    flightsIncluded: false,
-    bookAtOneRupee: true,
-    isCustomizable: true,
-    isPremiumPackage: true,
-    bestSeason: 'Oct – May',
-    dealTag: 'Eco & Wildlife',
-  },
-];
+const HOLIDAY_RESULTS: HolidayPackageResult[] = [];
 
 const HOLIDAY_THEME_OPTIONS = [
   { id: 'all', label: 'All Packages', icon: Sparkles },
@@ -2052,6 +410,32 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [currentCabinClass, setCurrentCabinClass] = useState<string>(cabinClass || 'Economy');
   const [currentHotelMode, setCurrentHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
   const [modHotelMode, setModHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
+  const [realHotels, setRealHotels] = useState<HotelResult[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState<boolean>(false);
+  const [showListPropertyModal, setShowListPropertyModal] = useState<boolean>(false);
+
+  // Fetch approved properties from Supabase / verified partner storage
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingProperties(true);
+    fetchApprovedProperties({ city: currentToCity.city, hotelMode: currentHotelMode })
+      .then((props) => {
+        if (isMounted) {
+          setRealHotels(props.map(mapPropertyToHotelResult));
+          setIsLoadingProperties(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load approved properties', err);
+        if (isMounted) {
+          setRealHotels([]);
+          setIsLoadingProperties(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentToCity.city, currentHotelMode]);
 
   useEffect(() => {
     if (initialHotelMode) {
@@ -2290,8 +674,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   };
 
   // --- ROUND-TRIP FLIGHT SELECTIONS (MakeMyTrip Style) ---
-  const [selectedOutboundId, setSelectedOutboundId] = useState<string>(FLIGHT_RESULTS[0].id);
-  const [selectedReturnId, setSelectedReturnId] = useState<string>(RETURN_FLIGHT_RESULTS[0].id);
+  const [selectedOutboundId, setSelectedOutboundId] = useState<string>(FLIGHT_RESULTS[0]?.id || '');
+  const [selectedReturnId, setSelectedReturnId] = useState<string>(RETURN_FLIGHT_RESULTS[0]?.id || '');
   const [returnSortBy, setReturnSortBy] = useState<'cheapest' | 'fastest' | 'rating' | 'departure'>('cheapest');
 
   // Common Sort state
@@ -2664,18 +1048,21 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   }, [flightMaxPrice, flightSelectedAirlines, flightNonStopOnly, flightRefundableOnly, flightDepSlot, flightSelectedStops, flightIncludeCheckInBaggage, returnSortBy]);
 
   const selectedOutboundFlight = useMemo(() => {
-    return FLIGHT_RESULTS.find((f) => f.id === selectedOutboundId) || FLIGHT_RESULTS[0];
+    if (FLIGHT_RESULTS.length === 0) return null;
+    return FLIGHT_RESULTS.find((f) => f.id === selectedOutboundId) || FLIGHT_RESULTS[0] || null;
   }, [selectedOutboundId]);
 
   const selectedReturnFlight = useMemo(() => {
-    return RETURN_FLIGHT_RESULTS.find((f) => f.id === selectedReturnId) || RETURN_FLIGHT_RESULTS[0];
+    if (RETURN_FLIGHT_RESULTS.length === 0) return null;
+    return RETURN_FLIGHT_RESULTS.find((f) => f.id === selectedReturnId) || RETURN_FLIGHT_RESULTS[0] || null;
   }, [selectedReturnId]);
 
   const totalRoundTripFare = useMemo(() => {
     if (currentTripType === 'dummy-flights') {
       return 890 * currentTravellers;
     }
-    return (selectedOutboundFlight.priceInr + selectedReturnFlight.priceInr) * currentTravellers;
+    if (!selectedOutboundFlight || !selectedReturnFlight) return 0;
+    return (((selectedOutboundFlight as any)?.priceInr || 0) + ((selectedReturnFlight as any)?.priceInr || 0)) * currentTravellers;
   }, [currentTripType, selectedOutboundFlight, selectedReturnFlight, currentTravellers]);
 
   const formatFriendlyDate = (dateStr: string) => {
@@ -2773,7 +1160,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
   // 3. Filtered Hotels
   const processedHotels = useMemo(() => {
-    let list = HOTEL_RESULTS.filter((h) => {
+    let list = realHotels.filter((h) => {
       // Search query filter (hotel name or location/locality)
       if (hotelSearchQuery.trim()) {
         const q = hotelSearchQuery.toLowerCase().trim();
@@ -2836,6 +1223,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       return a.priceInr - b.priceInr;
     });
   }, [
+    realHotels,
     currentHotelMode,
     hotelSearchQuery,
     hotelMaxPrice,
@@ -7007,6 +5395,46 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'flights' && (
               <div className="space-y-4">
+                {FLIGHT_RESULTS.length === 0 ? (
+                  <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center shadow-xs space-y-4">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-blue-600">
+                      <Plane className="w-8 h-8" />
+                    </div>
+                    <div className="max-w-xl mx-auto space-y-2">
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                        Live Carrier Inventory Gateway
+                      </span>
+                      <h3 className="font-display text-xl sm:text-2xl font-bold text-slate-900">
+                        No Live Flights Available for {currentFromCity.city} ({currentFromCity.code}) → {currentToCity.city} ({currentToCity.code})
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                        Live airline reservation and distribution partner feed is currently awaiting direct API connector integration. TripYeah strictly displays genuine airline inventory without mock or fabricated flights.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentCategory('hotels');
+                          onChangeCategory?.('hotels');
+                        }}
+                        className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer flex items-center gap-2"
+                      >
+                        <Hotel className="w-4 h-4" />
+                        <span>Explore Verified Stays in {currentToCity.city}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onNotify('Flight Alerts Enabled', `We will notify you when real flight schedules for ${currentFromCity.code} → ${currentToCity.code} go live.`)}
+                        className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Notify When Live
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
                 {/* Promo Code Banner */}
                 <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
                   <div className="flex items-center gap-3">
@@ -7366,89 +5794,91 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </div>
 
                     {/* Inline Round-Trip Summary & Book Now Card */}
-                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-500/30">
-                      <div className="space-y-1 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-2">
-                          <span className="text-xs font-bold text-amber-300 uppercase tracking-wider bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-                            {currentTripType === 'dummy-flights' ? 'Verifiable PNR Itinerary' : 'Combo Saver Deal'}
-                          </span>
-                          <span className="text-xs text-slate-300 font-semibold">
-                            {currentFromCity.code} ⇄ {currentToCity.code} ({currentTravellers} Traveller{currentTravellers > 1 ? 's' : ''})
-                          </span>
-                        </div>
-                        <div className="text-sm font-semibold text-slate-200">
-                          {selectedOutboundFlight.airline} ({selectedOutboundFlight.depTime}) + {selectedReturnFlight.airline} ({selectedReturnFlight.depTime})
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
-                        <div className="text-center sm:text-right">
-                          <div className="text-[11px] text-blue-200 font-medium">Total Round-Trip Fare</div>
-                          <div className="text-2xl font-medium text-amber-300 font-mono">
-                            {formatPrice(totalRoundTripFare, currency)}
+                    {selectedOutboundFlight && selectedReturnFlight && (
+                      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-500/30">
+                        <div className="space-y-1 text-center sm:text-left">
+                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                            <span className="text-xs font-bold text-amber-300 uppercase tracking-wider bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                              {currentTripType === 'dummy-flights' ? 'Verifiable PNR Itinerary' : 'Combo Saver Deal'}
+                            </span>
+                            <span className="text-xs text-slate-300 font-semibold">
+                              {currentFromCity.code} ⇄ {currentToCity.code} ({currentTravellers} Traveller{currentTravellers > 1 ? 's' : ''})
+                            </span>
+                          </div>
+                          <div className="text-sm font-semibold text-slate-200">
+                            {selectedOutboundFlight.airline} ({selectedOutboundFlight.depTime}) + {selectedReturnFlight.airline} ({selectedReturnFlight.depTime})
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFlightForFareModal({
-                              isRoundTrip: true,
-                              outboundFlight: {
-                                id: selectedOutboundFlight.id,
-                                airline: selectedOutboundFlight.airline,
-                                flightNo: selectedOutboundFlight.flightNo,
-                                depTime: selectedOutboundFlight.depTime,
-                                arrTime: selectedOutboundFlight.arrTime,
-                                depTerminal: selectedOutboundFlight.depTerminal,
-                                arrTerminal: selectedOutboundFlight.arrTerminal,
-                                duration: selectedOutboundFlight.duration,
-                                priceInr: selectedOutboundFlight.priceInr,
-                                badgeBg: selectedOutboundFlight.badgeBg,
-                                badgeCode: selectedOutboundFlight.badgeCode,
-                                aircraft: selectedOutboundFlight.aircraft,
-                                fromCode: currentFromCity.code,
-                                toCode: currentToCity.code,
-                              },
-                              returnFlight: {
-                                id: selectedReturnFlight.id,
-                                airline: selectedReturnFlight.airline,
-                                flightNo: selectedReturnFlight.flightNo,
-                                depTime: selectedReturnFlight.depTime,
-                                arrTime: selectedReturnFlight.arrTime,
-                                depTerminal: selectedReturnFlight.depTerminal,
-                                arrTerminal: selectedReturnFlight.arrTerminal,
-                                duration: selectedReturnFlight.duration,
-                                priceInr: selectedReturnFlight.priceInr,
-                                badgeBg: selectedReturnFlight.badgeBg,
-                                badgeCode: selectedReturnFlight.badgeCode,
-                                aircraft: selectedReturnFlight.aircraft,
-                                fromCode: currentToCity.code,
-                                toCode: currentFromCity.code,
-                              },
-                              flight: {
-                                id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                                airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
-                                flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                                depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                                arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                                duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                                priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                                badgeBg: selectedOutboundFlight.badgeBg,
-                                badgeCode: selectedOutboundFlight.badgeCode,
-                                aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
-                                fromCode: currentFromCity.code,
-                                toCode: currentToCity.code,
-                              },
-                            })
-                          }
-                          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 active:scale-95 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-500/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl"
-                        >
-                          <span>Prices</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
+                          <div className="text-center sm:text-right">
+                            <div className="text-[11px] text-blue-200 font-medium">Total Round-Trip Fare</div>
+                            <div className="text-2xl font-medium text-amber-300 font-mono">
+                              {formatPrice(totalRoundTripFare, currency)}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFlightForFareModal({
+                                isRoundTrip: true,
+                                outboundFlight: {
+                                  id: selectedOutboundFlight.id,
+                                  airline: selectedOutboundFlight.airline,
+                                  flightNo: selectedOutboundFlight.flightNo,
+                                  depTime: selectedOutboundFlight.depTime,
+                                  arrTime: selectedOutboundFlight.arrTime,
+                                  depTerminal: selectedOutboundFlight.depTerminal,
+                                  arrTerminal: selectedOutboundFlight.arrTerminal,
+                                  duration: selectedOutboundFlight.duration,
+                                  priceInr: selectedOutboundFlight.priceInr,
+                                  badgeBg: selectedOutboundFlight.badgeBg,
+                                  badgeCode: selectedOutboundFlight.badgeCode,
+                                  aircraft: selectedOutboundFlight.aircraft,
+                                  fromCode: currentFromCity.code,
+                                  toCode: currentToCity.code,
+                                },
+                                returnFlight: {
+                                  id: selectedReturnFlight.id,
+                                  airline: selectedReturnFlight.airline,
+                                  flightNo: selectedReturnFlight.flightNo,
+                                  depTime: selectedReturnFlight.depTime,
+                                  arrTime: selectedReturnFlight.arrTime,
+                                  depTerminal: selectedReturnFlight.depTerminal,
+                                  arrTerminal: selectedReturnFlight.arrTerminal,
+                                  duration: selectedReturnFlight.duration,
+                                  priceInr: selectedReturnFlight.priceInr,
+                                  badgeBg: selectedReturnFlight.badgeBg,
+                                  badgeCode: selectedReturnFlight.badgeCode,
+                                  aircraft: selectedReturnFlight.aircraft,
+                                  fromCode: currentToCity.code,
+                                  toCode: currentFromCity.code,
+                                },
+                                flight: {
+                                  id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                                  airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                                  flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                                  depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                                  arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                                  duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                                  priceInr: Math.round(totalRoundTripFare / currentTravellers),
+                                  badgeBg: selectedOutboundFlight.badgeBg,
+                                  badgeCode: selectedOutboundFlight.badgeCode,
+                                  aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
+                                  fromCode: currentFromCity.code,
+                                  toCode: currentToCity.code,
+                                },
+                              })
+                            }
+                            className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 active:scale-95 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-500/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl"
+                          >
+                            <span>Prices</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ) : (
                   /* --- B. ONE-WAY FLIGHT SELECTION LAYOUT --- */
@@ -7551,6 +5981,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       ))
                     )}
                   </div>
+                )}
+                  </>
                 )}
               </div>
             )}
@@ -8025,20 +6457,65 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
 
                 {/* Hotel Cards List */}
-                {processedHotels.length === 0 ? (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-3">
-                    <Hotel className="w-10 h-10 text-slate-400 mx-auto" />
-                    <h4 className="font-bold text-base text-slate-800">No hotels match your filters</h4>
-                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                      Try clearing some filters on the left panel or search with a different keyword.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleResetFilters}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      Reset All Filters
-                    </button>
+                {isLoadingProperties ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+                    <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <h4 className="font-bold text-base text-slate-800">Loading verified properties...</h4>
+                    <p className="text-xs text-slate-500">Querying live database for {currentToCity.city} accommodations.</p>
+                  </div>
+                ) : processedHotels.length === 0 ? (
+                  <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center shadow-xs space-y-4">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-amber-700">
+                      <Building2 className="w-8 h-8" />
+                    </div>
+                    <div className="max-w-xl mx-auto space-y-2">
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                        {realHotels.length > 0 ? 'Filtered Out' : 'Verified Listings Only'}
+                      </span>
+                      <h4 className="font-display text-xl sm:text-2xl font-bold text-slate-900">
+                        {realHotels.length > 0
+                          ? `No properties match your active filters (${realHotels.length} verified available)`
+                          : `No Verified Stays in ${currentToCity.city} Yet`}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                        {realHotels.length > 0
+                          ? 'Try resetting your price bracket, star rating, or locality filters to view verified inventory.'
+                          : `TripYeah only showcases 100% verified, owner-submitted and admin-approved properties in ${currentToCity.city}. No dummy or simulated listings are permitted.`}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                      {realHotels.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={handleResetFilters}
+                          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm"
+                        >
+                          Reset All Filters
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setShowListPropertyModal(true)}
+                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm flex items-center gap-2"
+                          >
+                            <Building2 className="w-4 h-4" />
+                            <span>+ List Your Property in {currentToCity.city}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentToCity(CITIES[1]);
+                              onNotify('Showing Goa Stays', 'Switched destination to Goa to view verified properties.');
+                            }}
+                            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            Explore Goa Verified Stays
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   processedHotels.map((hotel) => {
@@ -9024,7 +7501,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       </div>
 
       {/* Sticky Bottom Booking Bar for Round-Trip Flight Selection (MakeMyTrip Style) */}
-      {currentCategory === 'flights' && isFlightRoundTrip && (
+      {currentCategory === 'flights' && isFlightRoundTrip && selectedOutboundFlight && selectedReturnFlight && FLIGHT_RESULTS.length > 0 && (
         <aside
           aria-label="Selected Round-Trip Booking Summary"
           className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl py-3 px-3 sm:px-6 animate-in slide-in-from-bottom duration-300"
