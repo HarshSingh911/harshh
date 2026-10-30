@@ -1,0 +1,334 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered traveller profile and account settings",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Firebase Authentication User UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User full name or display handle",
+          "maxLength": 100
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar image URL",
+          "maxLength": 500
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Verified phone number in E.164 format",
+          "maxLength": 32
+        },
+        "role": {
+          "type": "string",
+          "description": "User permission role",
+          "enum": ["user", "admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account creation",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "role"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Designated administrator record for privileged access",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Admin UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Admin email address",
+          "maxLength": 128
+        },
+        "assignedBy": {
+          "type": "string",
+          "description": "UID or identifier of granting entity",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of assignment",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "email"]
+    },
+    "Trip": {
+      "title": "Trip",
+      "description": "Booked flight, hotel, train, bus, cab, holiday, or attraction itinerary",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique booking identifier",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner passenger UID",
+          "maxLength": 128
+        },
+        "pnr": {
+          "type": "string",
+          "description": "Passenger Name Record or booking reference code",
+          "maxLength": 64
+        },
+        "category": {
+          "type": "string",
+          "description": "Travel service category",
+          "enum": ["flights", "hotels", "trains", "buses", "cabs", "holidays", "experiences"]
+        },
+        "serviceTitle": {
+          "type": "string",
+          "description": "Flight name, hotel property, or tour title",
+          "maxLength": 200
+        },
+        "route": {
+          "type": "string",
+          "description": "Origin to destination route or city location",
+          "maxLength": 200
+        },
+        "travelDate": {
+          "type": "string",
+          "description": "Date or date range of scheduled travel",
+          "maxLength": 100
+        },
+        "fareInr": {
+          "type": "number",
+          "description": "Total booked price in Indian Rupees"
+        },
+        "status": {
+          "type": "string",
+          "description": "Booking lifecycle status",
+          "enum": ["Confirmed", "Pending Verification", "Cancelled"]
+        },
+        "bookingTime": {
+          "type": "string",
+          "description": "Time when booking was placed",
+          "maxLength": 100
+        },
+        "passengerName": {
+          "type": "string",
+          "description": "Primary traveller name",
+          "maxLength": 100
+        },
+        "passengerEmail": {
+          "type": "string",
+          "description": "Traveller email for tickets and updates",
+          "maxLength": 128
+        },
+        "passengerPhone": {
+          "type": "string",
+          "description": "Contact mobile number",
+          "maxLength": 32
+        },
+        "paymentMode": {
+          "type": "string",
+          "description": "Payment instrument used",
+          "maxLength": 64
+        },
+        "seatOrRoom": {
+          "type": "string",
+          "description": "Assigned seat, coach, or room type",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "userId", "pnr", "category", "serviceTitle", "route", "travelDate", "fareInr", "status"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Hotel, villa, homestay, or hostel listed on the platform",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique property listing ID",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the property owner/host",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "Property title",
+          "maxLength": 150
+        },
+        "category": {
+          "type": "string",
+          "description": "Property category",
+          "enum": ["hotel", "villa", "homestay", "resort", "hostel", "apartment"]
+        },
+        "city": {
+          "type": "string",
+          "description": "City where property is located",
+          "maxLength": 100
+        },
+        "country": {
+          "type": "string",
+          "description": "Country of location",
+          "maxLength": 100
+        },
+        "address": {
+          "type": "string",
+          "description": "Full street address",
+          "maxLength": 300
+        },
+        "description": {
+          "type": "string",
+          "description": "Property overview and features",
+          "maxLength": 2000
+        },
+        "roomType": {
+          "type": "string",
+          "description": "Primary room or accommodation tier",
+          "maxLength": 100
+        },
+        "basePriceInr": {
+          "type": "number",
+          "description": "Nightly base price in INR"
+        },
+        "ownerName": {
+          "type": "string",
+          "description": "Host name",
+          "maxLength": 100
+        },
+        "ownerEmail": {
+          "type": "string",
+          "description": "Host contact email",
+          "maxLength": 128
+        },
+        "ownerPhone": {
+          "type": "string",
+          "description": "Host contact phone",
+          "maxLength": 32
+        },
+        "status": {
+          "type": "string",
+          "description": "Review status of listing",
+          "enum": ["pending", "approved", "rejected"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Listing creation timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "ownerId", "name", "category", "city", "country", "basePriceInr", "status"]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "Customer support inquiry or ticket",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Inquiry identifier",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "User UID who submitted the inquiry",
+          "maxLength": 128
+        },
+        "passengerName": {
+          "type": "string",
+          "description": "Contact person name",
+          "maxLength": 100
+        },
+        "contact": {
+          "type": "string",
+          "description": "Email or phone number",
+          "maxLength": 128
+        },
+        "category": {
+          "type": "string",
+          "description": "Service category",
+          "maxLength": 50
+        },
+        "subject": {
+          "type": "string",
+          "description": "Inquiry subject line",
+          "maxLength": 200
+        },
+        "message": {
+          "type": "string",
+          "description": "Inquiry body text",
+          "maxLength": 2000
+        },
+        "status": {
+          "type": "string",
+          "description": "Ticket status",
+          "enum": ["Open", "In Progress", "Resolved"]
+        },
+        "priority": {
+          "type": "string",
+          "description": "Ticket priority",
+          "enum": ["High", "Medium", "Low"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "userId", "passengerName", "contact", "subject", "message", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and account settings"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Admin access authorization records"
+    },
+    "/trips/{tripId}": {
+      "schema": "Trip",
+      "description": "Booked trips, flights, hotels, trains, and packages"
+    },
+    "/properties/{propertyId}": {
+      "schema": "Property",
+      "description": "Registered hotels, villas, and homestay listings"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": "Inquiry",
+      "description": "Customer support inquiries and feedback"
+    }
+  }
+}

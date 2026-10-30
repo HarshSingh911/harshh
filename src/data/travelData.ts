@@ -73,8 +73,10 @@ export interface BookedTripPassenger {
 }
 
 export interface BookedTrip {
+  id?: string;
   bookingId: string;
   bookingReference?: string;
+  userId?: string;
   category: BookingCategory;
   title: string;
   routeSummary: string;

@@ -50,6 +50,10 @@ import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { AboutUsPage } from './components/AboutUsPage';
 import { HostelsPage } from './components/HostelsPage';
 import { SmileAIAssistant, SmileSuggestedSearch } from './components/SmileAIAssistant';
+import { auth, db, testFirestoreConnection } from './lib/firebase';
+import { onAuthStateChanged, signOut as fbSignOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { saveTripToFirestore, subscribeToUserTrips } from './services/tripService';
 
 export default function App() {
   // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account' | 'experience-checkout')
@@ -123,7 +127,14 @@ export default function App() {
   const [showInsuranceModal, setShowInsuranceModal] =
     useState<boolean>(false);
   // Open Login / Register modal automatically on website open as requested
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(true);
+  // Show auth modal on initial open unless user already has an active session
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(() => {
+    try {
+      return !localStorage.getItem('tripyeah_logged_user');
+    } catch {
+      return false;
+    }
+  });
 
   // Booked Trips State with localStorage persistence
   const [bookedTrips, setBookedTrips] = useState<BookedTrip[]>(() => {
@@ -144,6 +155,75 @@ export default function App() {
       localStorage.setItem('tripyeah_booked_trips', JSON.stringify(bookedTrips));
     } catch {}
   }, [bookedTrips]);
+
+  // Test Firestore connection on boot and listen for Firebase Auth state changes
+  useEffect(() => {
+    testFirestoreConnection();
+
+    let unsubTrips: (() => void) | null = null;
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setShowAuthModal(false);
+        let displayName = user.displayName;
+
+        // If phone auth user with no displayName yet, check Firestore or construct friendly name
+        if (!displayName && user.phoneNumber) {
+          displayName = `Traveller (${user.phoneNumber.slice(-4)})`;
+        } else if (!displayName && user.email) {
+          displayName = user.email.split('@')[0];
+        } else if (!displayName) {
+          displayName = 'Traveller';
+        }
+
+        // Check Firestore user doc for stored custom name
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+          if (userDocSnap.exists() && userDocSnap.data()?.displayName) {
+            displayName = userDocSnap.data()?.displayName;
+          }
+        } catch {}
+
+        const isBootstrappedAdmin = user.email?.toLowerCase() === 'meetsingh7416@gmail.com';
+        const finalDisplayName = displayName || 'Traveller';
+        setUserName(finalDisplayName);
+        if (isBootstrappedAdmin) {
+          setUserRole('admin');
+          try {
+            localStorage.setItem('tripyeah_user_role', 'admin');
+          } catch {}
+        }
+        try {
+          localStorage.setItem('tripyeah_logged_user', finalDisplayName);
+          if (user.phoneNumber) {
+            localStorage.setItem('tripyeah_user_phone', user.phoneNumber);
+          }
+        } catch {}
+
+        // Subscribe to user's trips stored in Firestore
+        unsubTrips = subscribeToUserTrips(user.uid, (remoteTrips) => {
+          if (remoteTrips && remoteTrips.length > 0) {
+            setBookedTrips((prev) => {
+              const remoteIds = new Set(remoteTrips.map((t) => t.bookingId || t.id || ''));
+              const localOnly = prev.filter((p) => !remoteIds.has(p.bookingId || p.id || ''));
+              return [...remoteTrips, ...localOnly];
+            });
+          }
+        });
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubTrips) unsubTrips();
+    };
+  }, []);
+
+  const handleAddNewTrip = (newTrip: BookedTrip) => {
+    setBookedTrips((prev) => [newTrip, ...prev]);
+    saveTripToFirestore(newTrip).catch((err) => {
+      console.warn('Trip Firestore sync notice:', err);
+    });
+  };
 
   // Contextual Toast Notification State
   const [bannerMessage, setBannerMessage] = useState<{
@@ -598,7 +678,7 @@ export default function App() {
             selectedDate={departureDate}
             onBack={() => navigateTo('search-results')}
             onCompleteBooking={(newTrip) => {
-              setBookedTrips((prev) => [newTrip, ...prev]);
+              handleAddNewTrip(newTrip);
             }}
             onNotify={handleNotify}
             onNavigateTrips={() => navigateTo('trips')}
@@ -613,7 +693,7 @@ export default function App() {
             selectedDate={departureDate}
             onBack={() => navigateTo('search-results')}
             onCompleteBooking={(newTrip) => {
-              setBookedTrips((prev) => [newTrip, ...prev]);
+              handleAddNewTrip(newTrip);
             }}
             onNotify={handleNotify}
             onNavigateTrips={() => navigateTo('trips')}
@@ -628,7 +708,7 @@ export default function App() {
             onBackToResults={() => navigateTo('search-results')}
             onConfirmPayment={(newBooking, leadName) => {
               setUserName(leadName);
-              setBookedTrips((prev) => [newBooking, ...prev]);
+              handleAddNewTrip(newBooking);
               setBannerMessage({
                 title: `Booking Confirmed! (Ref: ${newBooking.bookingReference || newBooking.bookingId || 'IRCTC-CONFIRMED'})`,
                 detail: `Payment of ${formatPrice(
@@ -677,10 +757,16 @@ export default function App() {
                 localStorage.setItem('tripyeah_logged_user', name);
               } catch {}
             }}
-            onLogout={() => {
+            onLogout={async () => {
+              try {
+                await fbSignOut(auth);
+              } catch {}
               setUserName(null);
+              setUserRole('user');
               try {
                 localStorage.removeItem('tripyeah_logged_user');
+                localStorage.removeItem('tripyeah_user_role');
+                localStorage.removeItem('tripyeah_user_email');
               } catch {}
               handleNotify('Signed Out', 'You have been signed out successfully.', 'info');
               navigateTo('home');

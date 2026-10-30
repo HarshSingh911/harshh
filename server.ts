@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
@@ -1901,6 +1902,8 @@ Search Google for live facts if the question involves real-time weather, travel 
 
 // START EXPRESS & MOUNT VITE MIDDLEWARES
 async function start() {
+  const server = http.createServer(app);
+
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, 'dist')));
     app.get('*', (req: Request, res: Response) => {
@@ -1912,14 +1915,22 @@ async function start() {
       server: {
         middlewareMode: true,
         allowedHosts: true,
-        hmr: process.env.DISABLE_HMR !== 'true',
+        hmr: false,
       },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[Server] Port ${PORT} already in use. Retrying or awaiting process release...`);
+    } else {
+      console.error('[Server] Unhandled server error:', err);
+    }
+  });
+
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`TripYeah Full-Stack server with International Planner AI Agent active on http://0.0.0.0:${PORT}`);
   });
 }

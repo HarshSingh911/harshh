@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny all unspecified paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Validation Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'meetsingh7416@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    // ------------------------------------------------------------------------
+    // Users Collection
+    // ------------------------------------------------------------------------
+    function isValidUser(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.email is string && data.email.size() <= 128 &&
+             data.role in ['user', 'admin'] &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                       isValidUser(incoming()) &&
+                       (incoming().role == 'user' || isAdmin());
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                       isValidUser(incoming()) &&
+                       incoming().id == existing().id &&
+                       (incoming().role == existing().role || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Admins Collection (Restricted)
+    // ------------------------------------------------------------------------
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if false; // Immutable from client SDK
+    }
+
+    // ------------------------------------------------------------------------
+    // Trips & Bookings Collection
+    // ------------------------------------------------------------------------
+    function isValidTrip(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.pnr is string && data.pnr.size() <= 64 &&
+             data.category in ['flights', 'hotels', 'trains', 'buses', 'cabs', 'holidays', 'experiences'] &&
+             data.serviceTitle is string && data.serviceTitle.size() <= 200 &&
+             data.route is string && data.route.size() <= 200 &&
+             data.travelDate is string && data.travelDate.size() <= 100 &&
+             data.fareInr is number && data.fareInr >= 0 &&
+             data.status in ['Confirmed', 'Pending Verification', 'Cancelled'] &&
+             (!('passengerName' in data) || (data.passengerName is string && data.passengerName.size() <= 100)) &&
+             (!('passengerEmail' in data) || (data.passengerEmail is string && data.passengerEmail.size() <= 128)) &&
+             (!('passengerPhone' in data) || (data.passengerPhone is string && data.passengerPhone.size() <= 32)) &&
+             (!('paymentMode' in data) || (data.paymentMode is string && data.paymentMode.size() <= 64)) &&
+             (!('seatOrRoom' in data) || (data.seatOrRoom is string && data.seatOrRoom.size() <= 100));
+    }
+
+    match /trips/{tripId} {
+      allow get: if isSignedIn() && isValidId(tripId) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(tripId) &&
+                       isValidTrip(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(tripId) &&
+                       isValidTrip(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       (resource.data.userId == request.auth.uid || isAdmin()) &&
+                       (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'passengerPhone', 'passengerEmail', 'updatedAt']) || isAdmin());
+      allow delete: if isSignedIn() && isValidId(tripId) &&
+                       (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // ------------------------------------------------------------------------
+    // Properties Collection (Hotels, Villas, Homestays)
+    // ------------------------------------------------------------------------
+    function isValidProperty(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.name is string && data.name.size() <= 150 &&
+             data.category in ['hotel', 'villa', 'homestay', 'resort', 'hostel', 'apartment'] &&
+             data.city is string && data.city.size() <= 100 &&
+             data.country is string && data.country.size() <= 100 &&
+             data.basePriceInr is number && data.basePriceInr >= 0 &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             (!('address' in data) || (data.address is string && data.address.size() <= 300)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+             (!('roomType' in data) || (data.roomType is string && data.roomType.size() <= 100)) &&
+             (!('ownerName' in data) || (data.ownerName is string && data.ownerName.size() <= 100)) &&
+             (!('ownerEmail' in data) || (data.ownerEmail is string && data.ownerEmail.size() <= 128)) &&
+             (!('ownerPhone' in data) || (data.ownerPhone is string && data.ownerPhone.size() <= 32));
+    }
+
+    match /properties/{propertyId} {
+      allow get: if isValidId(propertyId);
+      allow list: if true;
+      allow create: if isSignedIn() && isValidId(propertyId) &&
+                       isValidProperty(incoming()) &&
+                       incoming().ownerId == request.auth.uid &&
+                       (incoming().status == 'pending' || isAdmin());
+      allow update: if isSignedIn() && isValidId(propertyId) &&
+                       isValidProperty(incoming()) &&
+                       incoming().ownerId == existing().ownerId &&
+                       (
+                         (resource.data.ownerId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'basePriceInr', 'roomType', 'address', 'ownerPhone'])) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(propertyId) &&
+                       (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+
+    // ------------------------------------------------------------------------
+    // Customer Inquiries Collection
+    // ------------------------------------------------------------------------
+    function isValidInquiry(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.passengerName is string && data.passengerName.size() <= 100 &&
+             data.contact is string && data.contact.size() <= 128 &&
+             data.subject is string && data.subject.size() <= 200 &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.status in ['Open', 'In Progress', 'Resolved'] &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+             (!('priority' in data) || (data.priority in ['High', 'Medium', 'Low']));
+    }
+
+    match /inquiries/{inquiryId} {
+      allow get: if isSignedIn() && isValidId(inquiryId) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(inquiryId) &&
+                       isValidInquiry(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().status == 'Open';
+      allow update: if isSignedIn() && isValidId(inquiryId) &&
+                       isValidInquiry(incoming()) &&
+                       (isAdmin() ||
+                        (resource.data.userId == request.auth.uid &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['message', 'contact'])));
+      allow delete: if isAdmin();
+    }
+  }
+}
