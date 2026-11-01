@@ -780,7 +780,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Top Branding & Method Tabs */}
           <div>
             <div className="flex items-center justify-between mb-3 pr-8">
-              <TripYeahLogo className="h-6 sm:h-7 w-auto" />
+              <TripYeahLogo className="h-7.5 sm:h-8.5 w-auto" />
             </div>
 
             {step === 'otp-verify' && (

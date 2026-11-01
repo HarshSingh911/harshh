@@ -107,9 +107,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           : 'bg-white border-b border-slate-100 shadow-xs'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
-        {/* Zone 1: Brand Wordmark, Go Global & Explore */}
-        <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Left: Brand Logo Only - Perfectly leveled in one horizontal line with the header navigation */}
+        <div className="flex items-center shrink-0">
           <a
             href="#top"
             onClick={(e) => {
@@ -117,17 +117,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               onNavigatePage('home');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer group transition-transform active:scale-95 py-1"
-            title="TripYeah — Home"
-            aria-label="TripYeah Home"
+            className="flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer group transition-transform active:scale-95"
+            title="TripYehh — Home"
+            aria-label="TripYehh Home"
           >
             <TripYeahLogo
               isDarkHeader={isDarkHeader}
-              className="h-8 sm:h-9 md:h-10 w-auto"
+              className="h-8.5 sm:h-9 md:h-[35px] w-auto -translate-y-1.5 md:-translate-y-[7px]"
             />
           </a>
+        </div>
 
-          {/* Go Global Option (No box, no shadow) */}
+        {/* Right: All Header Options Grouped Together with Uniform Spacing */}
+        <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 lg:gap-6 shrink-0">
+          {/* 1. Go Global Option */}
           <button
             type="button"
             onClick={() => onNavigatePage('international-planner')}
@@ -143,11 +146,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Globe className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
             <span>Go Global</span>
           </button>
-        </div>
 
-        {/* Zone 2: Navigation (Clean links without category tabs) */}
-        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-
+          {/* 2. List Your Property */}
           <button
             type="button"
             onClick={onOpenListProperty}
@@ -161,11 +161,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>List Your Property</span>
           </button>
 
-          {/* Travel Insurance Option */}
+          {/* 3. Travel Insurance */}
           <button
             type="button"
             onClick={onOpenInsurance}
-            className={`hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
               isDarkHeader
                 ? 'text-white/85 hover:text-white'
                 : 'text-slate-700 hover:text-emerald-600'
@@ -174,11 +174,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
             <span>Travel Insurance</span>
           </button>
-        </div>
 
-        {/* Zone 3: Right Side Actions */}
-        <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 shrink-0">
-          {/* 1. My Trips (No background, no border, no hover box) */}
+          {/* 4. My Trips */}
           <button
             type="button"
             onClick={() => {
@@ -201,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">My Trips</span>
           </button>
 
-          {/* 2. Flag, Currency Code & Language Selector */}
+          {/* 5. Flag, Currency Code & Language Selector */}
           <button
             type="button"
             onClick={onOpenLanguageModal}
@@ -219,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <ChevronDown className={`w-3.5 h-3.5 ${isDarkHeader ? 'text-white/70' : 'text-slate-400'}`} />
           </button>
 
-          {/* Admin Company Management Portal button */}
+          {/* Admin Portal button (when admin is signed in) */}
           {userName && userRole === 'admin' && (
             <button
               type="button"
@@ -237,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Login or Account Button */}
+          {/* 6. Login or Account Button */}
           {userName ? (
             <button
               type="button"
@@ -280,8 +277,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`} />
             </button>
           )}
-          </div>
         </div>
+      </div>
     </header>
   );
 };

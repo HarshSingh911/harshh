@@ -65,7 +65,7 @@ export const Footer: React.FC<FooterProps> = ({
             >
               <TripYeahLogo
                 isDarkHeader={false}
-                className="h-8 w-auto"
+                className="h-8 sm:h-9 w-auto"
               />
             </a>
             <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
