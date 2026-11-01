@@ -34,7 +34,7 @@ interface NavbarProps {
   onOpenLanguageModal: () => void;
   onOpenListProperty: () => void;
   onOpenInsurance: () => void;
-  onOpenAuth: () => void;
+  onOpenAuth: (redirectTarget?: AppPageView) => void;
   onOpenOffers?: () => void;
   tripsCount: number;
   userName: string | null;
@@ -181,8 +181,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* 1. My Trips (No background, no border, no hover box) */}
           <button
             type="button"
-            onClick={() => onNavigatePage('trips')}
-            title="View My Booked Trips"
+            onClick={() => {
+              if (!userName) {
+                onOpenAuth('trips');
+              } else {
+                onNavigatePage('trips');
+              }
+            }}
+            title={userName ? "View My Booked Trips" : "Login to view your booked trips"}
             className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
               activePage === 'trips'
                 ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
@@ -251,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : (
             <button
               type="button"
-              onClick={onOpenAuth}
+              onClick={() => onOpenAuth()}
               title="Login or Create a TripYeah Account"
               className={`relative group overflow-hidden px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-tight shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
                 isDarkHeader

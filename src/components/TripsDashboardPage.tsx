@@ -71,6 +71,8 @@ import bgTripPoints from '../assets/images/bg_trip_points_1792245331552.jpg';
 interface TripsDashboardPageProps {
   currency: CurrencyCode;
   bookedTrips: BookedTrip[];
+  userName?: string | null;
+  onOpenAuth?: () => void;
   onUpdateBookedTrips?: (trips: BookedTrip[]) => void;
   onBookNewTrip: () => void;
   onOpenCredentialModal: (modal: ActiveCredentialModal) => void;
@@ -120,6 +122,8 @@ const SLIDESHOW_DESTINATIONS = [
 export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
   currency,
   bookedTrips,
+  userName,
+  onOpenAuth,
   onUpdateBookedTrips,
   onBookNewTrip,
   onOpenCredentialModal,
@@ -408,6 +412,36 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
         return 'Travel';
     }
   };
+
+  if (!userName) {
+    return (
+      <div className="bg-[#F8FAFC] min-h-[75vh] flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xl text-center space-y-6 animate-modal-slide-up">
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-inner">
+            <Luggage className="w-10 h-10 text-blue-600" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 tracking-tight">
+              Login to View Your Trips
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+              Your booked flights, hotels, trains, and holiday vouchers are securely linked to your personal account. Please log in to manage your bookings.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={onOpenAuth}
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-blue-500/25 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2.5"
+            >
+              <User className="w-4 h-4" />
+              <span>Login or Create Account</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen text-slate-900 pb-16">

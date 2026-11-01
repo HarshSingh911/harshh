@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { CheckCircle2, Info, X } from 'lucide-react';
 import {
   BookedTrip,
@@ -75,6 +75,16 @@ export default function App() {
   const [cabinClass, setCabinClass] = useState<string>('Economy');
   const [hotelMode, setHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>('overnight');
 
+  // Cab Specific Pickup & Drop Points (Google Maps Grounded)
+  const [cabPickupPoint, setCabPickupPoint] = useState<string>('Indira Gandhi International Airport (Terminal 3)');
+  const [cabDropPoint, setCabDropPoint] = useState<string>('Connaught Place (Inner & Outer Circle)');
+  const [cabPickupMapsUrl, setCabPickupMapsUrl] = useState<string>(
+    'https://www.google.com/maps/search/?api=1&query=Indira+Gandhi+International+Airport+Terminal+3+New+Delhi'
+  );
+  const [cabDropMapsUrl, setCabDropMapsUrl] = useState<string>(
+    'https://www.google.com/maps/search/?api=1&query=Connaught+Place+New+Delhi'
+  );
+
   // Display & User State
   const [currency, setCurrency] = useState<CurrencyCode>('INR');
   const [language, setLanguage] = useState<string>('English');
@@ -135,6 +145,10 @@ export default function App() {
       return false;
     }
   });
+
+  // Track pending page to open after user logs in (e.g. if unauthenticated user clicks 'My Trips')
+  const pendingRedirectRef = useRef<AppPageView | null>(null);
+  const [pendingRedirectAfterLogin, setPendingRedirectAfterLogin] = useState<AppPageView | null>(null);
 
   // Booked Trips State with localStorage persistence
   const [bookedTrips, setBookedTrips] = useState<BookedTrip[]>(() => {
@@ -209,6 +223,15 @@ export default function App() {
             });
           }
         });
+
+        // If user requested a protected page like 'trips', redirect once authenticated
+        const target = pendingRedirectRef.current;
+        if (target) {
+          pendingRedirectRef.current = null;
+          setPendingRedirectAfterLogin(null);
+          setActivePage(target);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     });
 
@@ -257,7 +280,42 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleOpenAuth = (redirectTarget?: AppPageView) => {
+    if (redirectTarget) {
+      pendingRedirectRef.current = redirectTarget;
+      setPendingRedirectAfterLogin(redirectTarget);
+      setBannerMessage({
+        title: 'Login Required',
+        detail: 'Please sign in or create an account to view and manage your booked trips.',
+        type: 'info',
+      });
+    }
+    setShowAuthModal(true);
+  };
+
   const navigateTo = (page: AppPageView) => {
+    if (page === 'trips' && !userName && !auth.currentUser) {
+      pendingRedirectRef.current = 'trips';
+      setPendingRedirectAfterLogin('trips');
+      setShowAuthModal(true);
+      setBannerMessage({
+        title: 'Login Required',
+        detail: 'Please sign in or create an account to view and manage your booked trips.',
+        type: 'info',
+      });
+      return;
+    }
+    if (page === 'account' && !userName && !auth.currentUser) {
+      pendingRedirectRef.current = 'account';
+      setPendingRedirectAfterLogin('account');
+      setShowAuthModal(true);
+      setBannerMessage({
+        title: 'Login Required',
+        detail: 'Please sign in to access your account profile and preferences.',
+        type: 'info',
+      });
+      return;
+    }
     setActivePage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -456,7 +514,7 @@ export default function App() {
         onOpenLanguageModal={() => setShowLanguageRegionModal(true)}
         onOpenListProperty={() => setShowListPropertyModal(true)}
         onOpenInsurance={() => setShowInsuranceModal(true)}
-        onOpenAuth={() => setShowAuthModal(true)}
+        onOpenAuth={handleOpenAuth}
         onOpenOffers={() => setShowOffersModal(true)}
         tripsCount={bookedTrips.length}
         userName={userName}
@@ -499,6 +557,18 @@ export default function App() {
               onSelectCategory={(cat) => setActiveCategory(cat)}
               fromCity={fromCity}
               toCity={toCity}
+              cabPickupPoint={cabPickupPoint}
+              cabDropPoint={cabDropPoint}
+              cabPickupMapsUrl={cabPickupMapsUrl}
+              cabDropMapsUrl={cabDropMapsUrl}
+              onChangeCabPickupPoint={(pt, url) => {
+                setCabPickupPoint(pt);
+                if (url) setCabPickupMapsUrl(url);
+              }}
+              onChangeCabDropPoint={(pt, url) => {
+                setCabDropPoint(pt);
+                if (url) setCabDropMapsUrl(url);
+              }}
               onChangeFromCity={(city) => setFromCity(city)}
               onChangeToCity={(city) => setToCity(city)}
               onSwapCities={handleSwapCities}
@@ -573,6 +643,10 @@ export default function App() {
             activeCategory={activeCategory}
             fromCity={fromCity}
             toCity={toCity}
+            cabPickupPoint={cabPickupPoint}
+            cabDropPoint={cabDropPoint}
+            cabPickupMapsUrl={cabPickupMapsUrl}
+            cabDropMapsUrl={cabDropMapsUrl}
             tripType={tripType}
             dummyTripType={dummyTripType}
             departureDate={departureDate}
@@ -584,6 +658,14 @@ export default function App() {
             onChangeDummyTripType={setDummyTripType}
             onChangeFromCity={setFromCity}
             onChangeToCity={setToCity}
+            onChangeCabPickupPoint={(pt, url) => {
+              setCabPickupPoint(pt);
+              if (url) setCabPickupMapsUrl(url);
+            }}
+            onChangeCabDropPoint={(pt, url) => {
+              setCabDropPoint(pt);
+              if (url) setCabDropMapsUrl(url);
+            }}
             onChangeDepartureDate={setDepartureDate}
             onChangeReturnDate={setReturnDate}
             onChangeTravellers={(count, cabin) => {
@@ -617,8 +699,12 @@ export default function App() {
               );
               setCheckoutItem({
                 ...item,
-                fromCity: item.fromCity || `${fromCity.city} (${fromCity.code})`,
-                toCity: item.toCity || `${toCity.city} (${toCity.code})`,
+                fromCity: item.fromCity || (item.category === 'cabs' ? (item.cabPickupPoint || cabPickupPoint) : `${fromCity.city} (${fromCity.code})`),
+                toCity: item.toCity || (item.category === 'cabs' ? (item.cabDropPoint || cabDropPoint) : `${toCity.city} (${toCity.code})`),
+                cabPickupPoint: item.cabPickupPoint || cabPickupPoint,
+                cabDropPoint: item.cabDropPoint || cabDropPoint,
+                cabPickupMapsUrl: item.cabPickupMapsUrl || cabPickupMapsUrl,
+                cabDropMapsUrl: item.cabDropMapsUrl || cabDropMapsUrl,
                 travelDate: item.travelDate || departureDate,
                 returnDate: isRT ? (item.returnDate || returnDate) : undefined,
                 isRoundTrip: isRT,
@@ -728,6 +814,8 @@ export default function App() {
           <TripsDashboardPage
             currency={currency}
             bookedTrips={bookedTrips}
+            userName={userName}
+            onOpenAuth={() => handleOpenAuth('trips')}
             onUpdateBookedTrips={setBookedTrips}
             onBookNewTrip={() => navigateTo('home')}
             onOpenCredentialModal={(modal) => setActiveCredentialModal(modal)}
@@ -972,6 +1060,10 @@ export default function App() {
             localStorage.setItem('tripyeah_logged_user', name);
             localStorage.setItem('tripyeah_user_role', activeRole);
           } catch {}
+          const target = pendingRedirectRef.current || pendingRedirectAfterLogin;
+          pendingRedirectRef.current = null;
+          setPendingRedirectAfterLogin(null);
+
           if (activeRole === 'admin') {
             handleNotify(
               'TripWork Company Portal Active',
@@ -979,6 +1071,13 @@ export default function App() {
               'success'
             );
             navigateTo('admin');
+          } else if (target) {
+            handleNotify(
+              'Welcome Back!',
+              `Welcome, ${name}! Opening your ${target === 'trips' ? 'booked trips' : target}.`,
+              'success'
+            );
+            navigateTo(target);
           } else {
             handleNotify('Account Verified!', `Welcome, ${name}! Your TripYeah account is active.`, 'success');
             navigateTo('account');

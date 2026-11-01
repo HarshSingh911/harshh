@@ -70,11 +70,16 @@ import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
 import { CheckoutItem } from './CheckoutPaymentPage';
 import { ListPropertyModal } from './ListPropertyModal';
 import { fetchApprovedProperties, PropertyListing } from '../services/propertyService';
+import { CabLocationAutocompleteModal, CabPlace } from './CabLocationAutocompleteModal';
 
 interface FlightSearchResultsPageProps {
   activeCategory: BookingCategory;
   fromCity: CityOption;
   toCity: CityOption;
+  cabPickupPoint?: string;
+  cabDropPoint?: string;
+  cabPickupMapsUrl?: string;
+  cabDropMapsUrl?: string;
   tripType?: TripType;
   dummyTripType?: 'one-way' | 'round-trip';
   departureDate: string;
@@ -86,6 +91,8 @@ interface FlightSearchResultsPageProps {
   onChangeDummyTripType?: (t: 'one-way' | 'round-trip') => void;
   onChangeFromCity?: (c: CityOption) => void;
   onChangeToCity?: (c: CityOption) => void;
+  onChangeCabPickupPoint?: (pt: string, mapsUrl?: string) => void;
+  onChangeCabDropPoint?: (pt: string, mapsUrl?: string) => void;
   onChangeDepartureDate?: (d: string) => void;
   onChangeReturnDate?: (d: string) => void;
   onChangeTravellers?: (count: number, cabin: string) => void;
@@ -314,7 +321,118 @@ export interface CabResult {
   tag: string;
 }
 
-const CAB_RESULTS: CabResult[] = [];
+const CAB_RESULTS: CabResult[] = [
+  {
+    id: 'cab-sedan-prime',
+    cabType: 'Prime Sedan (Dzire / Etios / Aura)',
+    modelExamples: 'Maruti Suzuki Dzire, Toyota Etios, Hyundai Aura',
+    cabCategory: 'Sedan',
+    seats: 4,
+    bags: 3,
+    acType: 'Air Conditioned',
+    priceInr: 2850,
+    perKmRate: 12,
+    includedKm: 250,
+    tollTaxesIncluded: true,
+    driverRating: 4.89,
+    driverTrips: 1420,
+    perks: [
+      'Verified Google Maps Doorstep Pickup & Drop',
+      'Toll charges, state permits & driver allowance included',
+      'Free 45 mins airport/doorstep waiting period',
+      'Top-rated chauffeur with clean sanitized car & GPS tracking'
+    ],
+    tag: 'Most Popular · Best Value',
+  },
+  {
+    id: 'cab-suv-ertiga',
+    cabType: 'Family SUV (Maruti Ertiga / Triber)',
+    modelExamples: 'Maruti Suzuki Ertiga, Renault Triber',
+    cabCategory: 'SUV',
+    seats: 6,
+    bags: 4,
+    acType: 'Dual Air Conditioned',
+    priceInr: 3950,
+    perKmRate: 15,
+    includedKm: 250,
+    tollTaxesIncluded: true,
+    driverRating: 4.92,
+    driverTrips: 980,
+    perks: [
+      'Extra boot space for family luggage & roof carrier support',
+      'Verified Google Maps Route with real-time live tracking',
+      'Zero surge guarantee on holidays & weekends',
+      'Complimentary bottled water & phone charging port'
+    ],
+    tag: 'Spacious · Family Favorite',
+  },
+  {
+    id: 'cab-crysta-luxury',
+    cabType: 'Prime Executive (Toyota Innova Crysta)',
+    modelExamples: 'Toyota Innova Crysta ZX / GX',
+    cabCategory: 'Prime Crysta',
+    seats: 7,
+    bags: 5,
+    acType: 'Climate Control AC',
+    priceInr: 5450,
+    perKmRate: 19,
+    includedKm: 250,
+    tollTaxesIncluded: true,
+    driverRating: 4.97,
+    driverTrips: 2150,
+    perks: [
+      'Executive captain seats with premium leather interior',
+      'Guaranteed on-time arrival or 20% cashback',
+      'Express highway FASTag tolls & state road tax included',
+      'Senior chauffeur in formal attire with 10+ yrs highway experience'
+    ],
+    tag: 'Luxury Comfort · Top Rated',
+  },
+  {
+    id: 'cab-tempo-traveller',
+    cabType: 'Luxury Group Tempo (Force 12-Seater AC)',
+    modelExamples: 'Force Traveller Luxury 12-Seater Executive',
+    cabCategory: 'Tempo',
+    seats: 12,
+    bags: 10,
+    acType: 'High-Power Rooftop AC',
+    priceInr: 9600,
+    perKmRate: 26,
+    includedKm: 300,
+    tollTaxesIncluded: true,
+    driverRating: 4.88,
+    driverTrips: 640,
+    perks: [
+      'Push-back reclining seats with ample aisle space',
+      'Large luggage carrier and individual USB mobile chargers',
+      'Commercial permit valid across all state borders',
+      'Dedicated backup vehicle support 24/7'
+    ],
+    tag: 'Large Groups & Events',
+  },
+  {
+    id: 'cab-sedan-comfort',
+    cabType: 'Economy Sedan (Honda Amaze / Tigor)',
+    modelExamples: 'Honda Amaze, Tata Tigor',
+    cabCategory: 'Sedan',
+    seats: 4,
+    bags: 2,
+    acType: 'Air Conditioned',
+    priceInr: 2450,
+    perKmRate: 11,
+    includedKm: 200,
+    tollTaxesIncluded: true,
+    driverRating: 4.82,
+    driverTrips: 830,
+    perks: [
+      'Budget-friendly outstation & airport transfer option',
+      'Verified Google Maps pickup and drop coordinates',
+      'Driver allowance & state entry tax covered',
+      'Flexible 2-hour rescheduling without fees'
+    ],
+    tag: 'Budget Friendly',
+  },
+];
 
 // --- F. HOLIDAY RESULTS (MakeMyTrip Style Packages) ---
 export interface HolidayPackageItineraryDay {
@@ -374,6 +492,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   activeCategory: initialActiveCategory,
   fromCity,
   toCity,
+  cabPickupPoint: propCabPickupPoint,
+  cabDropPoint: propCabDropPoint,
+  cabPickupMapsUrl: propCabPickupMapsUrl,
+  cabDropMapsUrl: propCabDropMapsUrl,
   tripType = 'one-way',
   dummyTripType = 'one-way',
   departureDate,
@@ -387,6 +509,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   onChangeDummyTripType,
   onChangeFromCity,
   onChangeToCity,
+  onChangeCabPickupPoint,
+  onChangeCabDropPoint,
   onChangeDepartureDate,
   onChangeReturnDate,
   onChangeTravellers,
@@ -413,6 +537,41 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [realHotels, setRealHotels] = useState<HotelResult[]>([]);
   const [isLoadingProperties, setIsLoadingProperties] = useState<boolean>(false);
   const [showListPropertyModal, setShowListPropertyModal] = useState<boolean>(false);
+
+  // Cabs Pickup / Drop Grounded State
+  const [localCabPickup, setLocalCabPickup] = useState<string>(
+    propCabPickupPoint || 'Indira Gandhi International Airport (Terminal 3)'
+  );
+  const [localCabDrop, setLocalCabDrop] = useState<string>(
+    propCabDropPoint || 'Connaught Place (Inner & Outer Circle)'
+  );
+  const [localCabPickupMapsUrl, setLocalCabPickupMapsUrl] = useState<string>(
+    propCabPickupMapsUrl || 'https://www.google.com/maps/search/?api=1&query=Indira+Gandhi+International+Airport+Terminal+3+New+Delhi'
+  );
+  const [localCabDropMapsUrl, setLocalCabDropMapsUrl] = useState<string>(
+    propCabDropMapsUrl || 'https://www.google.com/maps/search/?api=1&query=Connaught+Place+New+Delhi'
+  );
+  const [activeCabModal, setActiveCabModal] = useState<'pickup' | 'drop' | null>(null);
+
+  const activeCabPickup = propCabPickupPoint || localCabPickup;
+  const activeCabDrop = propCabDropPoint || localCabDrop;
+  const activeCabPickupMapsUrl = propCabPickupMapsUrl || localCabPickupMapsUrl;
+  const activeCabDropMapsUrl = propCabDropMapsUrl || localCabDropMapsUrl;
+
+  const handleSelectCabLocation = (place: CabPlace, customText?: string) => {
+    const locName = customText || place.name;
+    const url = place.mapsUrl;
+    if (activeCabModal === 'pickup') {
+      setLocalCabPickup(locName);
+      setLocalCabPickupMapsUrl(url);
+      onChangeCabPickupPoint?.(locName, url);
+    } else if (activeCabModal === 'drop') {
+      setLocalCabDrop(locName);
+      setLocalCabDropMapsUrl(url);
+      onChangeCabDropPoint?.(locName, url);
+    }
+    setActiveCabModal(null);
+  };
 
   // Fetch approved properties from Supabase / verified partner storage
   useEffect(() => {
@@ -6997,19 +7156,98 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             =============================================================== */}
             {currentCategory === 'cabs' && (
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-sky-800 via-blue-800 to-slate-900 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                      <Car className="w-5 h-5 text-sky-300" />
+                {/* Google Maps Grounded Route & Pickup/Drop Banner */}
+                <div className="bg-gradient-to-r from-sky-900 via-blue-900 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-lg space-y-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                        <Car className="w-5 h-5 text-sky-300" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-sm sm:text-base">All-Inclusive Chauffeur Cabs</h3>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                            <MapPin className="w-2.5 h-2.5" /> Maps Grounded
+                          </span>
+                        </div>
+                        <p className="text-xs text-sky-200">
+                          Tolls, state taxes &amp; driver allowance included · Zero hidden surge
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base">All-Inclusive Outstation Cabs</h3>
-                      <p className="text-xs text-sky-100">
-                        Driver allowance included · Zero hidden charges on highway
-                      </p>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCabModal('pickup')}
+                        className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors cursor-pointer border border-white/10"
+                      >
+                        Change Pickup
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveCabModal('drop')}
+                        className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors cursor-pointer border border-white/10"
+                      >
+                        Change Drop
+                      </button>
                     </div>
                   </div>
-                  <div className="text-xs text-sky-200">Doorstep Pickup Guarantee</div>
+
+                  {/* Route Visualizer Card */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-white/10">
+                    <div
+                      onClick={() => setActiveCabModal('pickup')}
+                      className="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-sky-300">
+                          Pickup Location (From)
+                        </span>
+                        {activeCabPickupMapsUrl && (
+                          <a
+                            href={activeCabPickupMapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[10px] text-sky-300 hover:text-white underline font-medium"
+                          >
+                            View on Maps ↗
+                          </a>
+                        )}
+                      </div>
+                      <div className="font-bold text-xs sm:text-sm text-white truncate mt-1" title={activeCabPickup}>
+                        {activeCabPickup}
+                      </div>
+                      <div className="text-[10px] text-sky-200/80 mt-0.5">Click to search verified landmarks</div>
+                    </div>
+
+                    <div
+                      onClick={() => setActiveCabModal('drop')}
+                      className="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">
+                          Drop Location (To)
+                        </span>
+                        {activeCabDropMapsUrl && (
+                          <a
+                            href={activeCabDropMapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[10px] text-indigo-300 hover:text-white underline font-medium"
+                          >
+                            View on Maps ↗
+                          </a>
+                        )}
+                      </div>
+                      <div className="font-bold text-xs sm:text-sm text-white truncate mt-1" title={activeCabDrop}>
+                        {activeCabDrop}
+                      </div>
+                      <div className="text-[10px] text-indigo-200/80 mt-0.5">Click to search destination drop</div>
+                    </div>
+                  </div>
                 </div>
 
                 {processedCabs.length === 0 ? (
@@ -7039,6 +7277,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 {cab.tag}
                               </span>
                               <h4 className="font-bold text-slate-900 text-lg mt-1.5">{cab.cabType}</h4>
+                              <p className="text-[11px] text-slate-500">{cab.modelExamples}</p>
                             </div>
 
                             <div className="text-right">
@@ -7051,11 +7290,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           </div>
 
                           <div className="flex items-center gap-4 py-3 my-2 border-y border-slate-100 text-xs text-slate-600">
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 font-medium">
                               <Users className="w-3.5 h-3.5 text-slate-400" /> {cab.seats} Seats
                             </span>
-                            <span className="flex items-center gap-1">
-                              <Zap className="w-3.5 h-3.5 text-slate-400" /> AC Included
+                            <span className="flex items-center gap-1 font-medium">
+                              <Luggage className="w-3.5 h-3.5 text-slate-400" /> {cab.bags} Bags
+                            </span>
+                            <span className="flex items-center gap-1 font-medium">
+                              <Zap className="w-3.5 h-3.5 text-emerald-600" /> AC Included
                             </span>
                           </div>
 
@@ -7071,9 +7313,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                         <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
                           <div>
-                            <div className="text-2xl font-black text-slate-900">
+                            <div className="text-2xl font-black text-slate-900 font-mono">
                               {formatPrice(cab.priceInr, currency)}
                             </div>
+                            <div className="text-[10px] text-slate-400">Includes {cab.includedKm} km · ₹{cab.perKmRate}/km extra</div>
                           </div>
 
                           <button
@@ -7084,13 +7327,20 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 code: cab.id,
                                 depTime: 'Pickup: As Scheduled',
                                 arrTime: 'Doorstep Drop',
-                                duration: 'All-inclusive Cab',
+                                duration: `${cab.includedKm} km Included`,
                                 priceInr: cab.priceInr,
                                 category: 'cabs',
                                 cabType: cab.cabType,
+                                cabPickupPoint: activeCabPickup,
+                                cabDropPoint: activeCabDrop,
+                                cabPickupMapsUrl: activeCabPickupMapsUrl,
+                                cabDropMapsUrl: activeCabDropMapsUrl,
+                                fromCity: activeCabPickup,
+                                toCity: activeCabDrop,
+                                travelDate: currentDepDate,
                               })
                             }
-                            className="px-6 py-2.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/20 cursor-pointer"
+                            className="px-6 py-2.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/20 cursor-pointer transition-all active:scale-95"
                           >
                             Book Cab
                           </button>
@@ -7725,6 +7975,18 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             setCalendarTarget(null);
           }}
           onClose={() => setCalendarTarget(null)}
+        />
+      )}
+
+      {/* Cab Pickup / Drop Google Maps Grounded Modal */}
+      {activeCabModal && (
+        <CabLocationAutocompleteModal
+          isOpen={true}
+          onClose={() => setActiveCabModal(null)}
+          mode={activeCabModal}
+          initialQuery={activeCabModal === 'pickup' ? activeCabPickup : activeCabDrop}
+          cityContext={activeCabModal === 'pickup' ? currentFromCity.city : currentToCity.city}
+          onSelectPlace={handleSelectCabLocation}
         />
       )}
     </div>

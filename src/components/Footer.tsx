@@ -195,7 +195,7 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigatePage('trips')}
+                  onClick={() => onNavigatePage('about-us')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   Newsroom
