@@ -511,13 +511,6 @@ export const PLATFORM_SERVICES: {
     accentColor: 'from-sky-500 to-blue-600',
   },
   {
-    id: 'trains',
-    title: 'Book Trains',
-    subtitle: 'IRCTC & Partner Trains',
-    image: ASSETS.heroAlpine,
-    accentColor: 'from-indigo-500 to-violet-600',
-  },
-  {
     id: 'hotels',
     title: 'Hotels',
     subtitle: 'Best stays worldwide',

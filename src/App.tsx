@@ -91,7 +91,19 @@ export default function App() {
   const [region, setRegion] = useState<string>('India');
   const [userName, setUserName] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('tripyeah_logged_user');
+      const stored = localStorage.getItem('tripyeah_logged_user');
+      if (stored && stored !== 'Aryan Kapoor' && stored !== 'Corporate Traveler') {
+        return stored;
+      }
+      if (stored === 'Aryan Kapoor' || stored === 'Corporate Traveler') {
+        localStorage.removeItem('tripyeah_logged_user');
+        localStorage.removeItem('tripyeah_user_email');
+        localStorage.removeItem('tripyeah_user_role');
+        localStorage.removeItem('tripyeah_user_profile');
+        localStorage.removeItem('tripyeah_frequent_flyers');
+        localStorage.removeItem('tripyeah_co_travellers');
+      }
+      return null;
     } catch {
       return null;
     }
@@ -1079,8 +1091,7 @@ export default function App() {
             );
             navigateTo(target);
           } else {
-            handleNotify('Account Verified!', `Welcome, ${name}! Your TripYeah account is active.`, 'success');
-            navigateTo('account');
+            handleNotify('Welcome Back!', `Welcome, ${name}! You are now signed in.`, 'success');
           }
         }}
         onLogout={() => {

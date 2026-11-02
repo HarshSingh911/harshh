@@ -703,7 +703,6 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
               { id: 'all', label: 'All Categories' },
               { id: 'flights', label: 'Flights' },
               { id: 'hotels', label: 'Hotels' },
-              { id: 'trains', label: 'Trains' },
               { id: 'holidays', label: 'Holidays' },
             ].map((cat) => (
               <button

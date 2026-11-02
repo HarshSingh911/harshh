@@ -231,7 +231,7 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
             </span>
           </h2>
           <p className="text-sm sm:text-base text-slate-600">
-            Flights, hotels, trains, cabs, holiday packages and more – all in one place.
+            Flights, hotels, cabs, holiday packages, attractions and more – all in one place.
           </p>
         </div>
 

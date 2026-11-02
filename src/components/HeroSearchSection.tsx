@@ -13,19 +13,14 @@ import {
   ChevronDown,
   ShieldCheck,
   Clock,
-  Briefcase,
   Sparkles,
   BadgePercent,
   CheckCircle2,
   MapPin,
   Users,
-  Compass,
   Gift,
   Globe,
-  Camera,
   X,
-  UtensilsCrossed,
-  Database,
 } from 'lucide-react';
 import {
   ASSETS,
@@ -37,7 +32,6 @@ import {
 import { SafeImage } from './SafeImage';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
-import { SupabaseStatusModal } from './SupabaseStatusModal';
 import { CabLocationAutocompleteModal, CabPlace } from './CabLocationAutocompleteModal';
 import { CabLocationDropdown } from './CabLocationDropdown';
 
@@ -86,7 +80,6 @@ const SERVICE_TABS: {
   icon: React.FC<{ className?: string }>;
 }[] = [
   { id: 'flights', label: 'Flights', ctaLabel: 'Search Flights', icon: Plane },
-  { id: 'trains', label: 'Trains', ctaLabel: 'Search Trains', icon: TrainFront },
   { id: 'hotels', label: 'Hotels', ctaLabel: 'Search Hotels', icon: Building2 },
   { id: 'buses', label: 'Buses', ctaLabel: 'Search Buses', icon: Bus },
   { id: 'cabs', label: 'Cabs', ctaLabel: 'Search Cabs', icon: Car },
@@ -108,49 +101,7 @@ const BUS_TYPES = ['All Buses', 'AC Sleeper', 'AC Seater', 'Volvo Multi-Axle'];
 const CAB_TIMES = ['06:00 AM', '09:00 AM', '11:30 AM', '02:00 PM', '05:00 PM', '08:30 PM'];
 const CAB_PACKAGES = ['4 Hrs / 40 km', '8 Hrs / 80 km', '12 Hrs / 120 km'];
 
-export interface DiscoveryOption {
-  id: 'explore' | 'business-travel' | 'dining-club' | 'influencers';
-  icon: React.FC<{ className?: string }>;
-  title: string;
-  subtitle: string;
-  badge?: string;
-  detail: string;
-}
 
-const DISCOVERY_OPTIONS: DiscoveryOption[] = [
-  {
-    id: 'explore',
-    icon: Compass,
-    title: 'Explore',
-    subtitle: 'Curated Destinations',
-    badge: 'Popular',
-    detail: 'Discover handpicked international & domestic getaways, scenic hidden gems, and trending travel itineraries across the globe.',
-  },
-  {
-    id: 'business-travel',
-    icon: Briefcase,
-    title: 'Business Travel',
-    subtitle: 'Corporate Fares & GST',
-    badge: 'Corporate',
-    detail: 'Automated GST tax invoices, corporate discounted airfares, zero cancellation fees, and dedicated company expense management.',
-  },
-  {
-    id: 'dining-club',
-    icon: UtensilsCrossed,
-    title: 'Dining Club',
-    subtitle: 'VIP Tables & Parties',
-    badge: 'Luxury VIP',
-    detail: 'Reserve Michelin-inspired tables, pre-order gourmet food, book private group party banquets, secure VIP club passes & join social dining tables.',
-  },
-  {
-    id: 'influencers',
-    icon: Camera,
-    title: 'Influencers',
-    subtitle: 'Creator Club & Perks',
-    badge: 'Creators',
-    detail: 'TripYeah Creator Club for Instagram & YouTube creators: Sponsored luxury resort stays, flight credits, affiliate commissions & PR media kits.',
-  },
-];
 
 export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   activeCategory,
@@ -227,10 +178,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     };
   }, [openDropdown]);
 
-  // Business Travel & Gift Cards interactive states
-  const [showBusinessModal, setShowBusinessModal] = useState<boolean>(false);
+  // Gift Cards interactive states
   const [showGiftCardsModal, setShowGiftCardsModal] = useState<boolean>(false);
-  const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
   const [giftAmount, setGiftAmount] = useState<number>(2500);
   const [giftRecipient, setGiftRecipient] = useState<string>('');
   const [giftEmail, setGiftEmail] = useState<string>('');
@@ -238,10 +187,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     'Wishing you wonderful journeys and unforgettable memories with TripYeah!'
   );
   const [giftSentSuccess, setGiftSentSuccess] = useState<boolean>(false);
-  const [bizCompany, setBizCompany] = useState<string>('');
-  const [bizGst, setBizGst] = useState<string>('');
-  const [bizEmail, setBizEmail] = useState<string>('');
-  const [bizSuccess, setBizSuccess] = useState<boolean>(false);
 
   // Category-specific realistic online booking states
   // 1. Trains state
@@ -407,7 +352,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             <span className="text-sky-300">next?</span>
           </h1>
           <p className="text-xs sm:text-sm lg:text-base text-white/95 font-medium max-w-xl mx-auto drop-shadow-[0_2px_10px_rgba(15,23,42,0.45)]">
-            Flights, Trains, Hotels, Buses, Cabs &amp; Holiday Packages — all in one
+            Flights, Hotels, Buses, Cabs &amp; Holiday Packages — all in one
             place.
           </p>
         </div>
@@ -416,11 +361,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
       {/* Floating Multi-Modal Search Engine Card — Positioned in the Middle over the Hero */}
       <div className="relative z-20 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 -mt-64 sm:-mt-72 lg:-mt-80">
         <div className="bg-white rounded-[26px] shadow-[0_20px_50px_rgba(15,23,42,0.12)] border border-slate-200/80 p-3.5 sm:p-5 lg:p-6">
-          {/* ROW 1: 7 Service Category Tabs in a single horizontal landscape line */}
+          {/* ROW 1: 6 Service Category Tabs in a single horizontal landscape line */}
           <div
             role="tablist"
             aria-label="Booking categories"
-            className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
+            className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
           >
             {SERVICE_TABS.map((tab) => {
               const Icon = tab.icon;
@@ -511,19 +456,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   )}
                 </div>
 
-                {/* Right Controls: Supabase live DB badge + Traveller & Class Dropdown (Original Position) */}
+                {/* Right Controls: Traveller & Class Dropdown (Original Position) */}
                 <div className="flex items-center gap-2 sm:gap-3 relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setShowSupabaseModal(true)}
-                    title="Connected to Supabase Database (9,054 airports loaded). Click to test connection."
-                    className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/90 hover:bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs font-semibold transition-all cursor-pointer shadow-2xs group"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                    <Database className="w-3 h-3 text-emerald-700 shrink-0" />
-                    <span className="hidden sm:inline">Supabase:</span>
-                    <span>9,054 Airports</span>
-                  </button>
 
                   {/* Traveller & Flight Class Popover in original top-right position */}
                   <div className="relative dropdown-field-container" data-dropdown-container="true">
@@ -2365,187 +2299,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             </>
           )}
         </div>
-
-        {/* 4 Feature Options Strip: Explore, Business Travel, Gift Cards, Influencers */}
-        <div className="mt-5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-2 sm:p-3 shadow-md shadow-slate-900/5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            {DISCOVERY_OPTIONS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    if (item.id === 'explore') {
-                      if (onOpenExplorePage) {
-                        onOpenExplorePage();
-                      } else {
-                        onSelectTrustPillar('Explore Destinations', item.detail);
-                        const destEl = document.querySelector('section:has(h2)') || document.getElementById('top');
-                        destEl?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    } else if (item.id === 'business-travel') {
-                      setShowBusinessModal(true);
-                    } else if (item.id === 'dining-club') {
-                      if (onOpenDiningClubPage) {
-                        onOpenDiningClubPage();
-                      } else {
-                        onSelectTrustPillar('Dining Club', item.detail);
-                      }
-                    } else if (item.id === 'influencers') {
-                      if (onOpenInfluencersPage) {
-                        onOpenInfluencersPage();
-                      }
-                    }
-                  }}
-                  className="flex items-center gap-2.5 sm:gap-3.5 text-left group p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/90 transition-all cursor-pointer min-w-0"
-                >
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-[#2563EB] group-hover:text-white flex items-center justify-center shrink-0 transition-all shadow-xs group-hover:scale-105">
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
-                        {item.title}
-                      </span>
-                      {item.badge && (
-                        <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono shrink-0">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-slate-500 truncate">
-                      {item.subtitle}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
-
-      {/* Interactive Modal: Business Travel */}
-      {showBusinessModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Briefcase className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-lg font-bold text-slate-900">TripYeah Business Travel</h3>
-                  <p className="text-xs text-slate-500">Corporate Fares, GST Invoicing &amp; Managed Trips</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowBusinessModal(false);
-                  setBizSuccess(false);
-                }}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {bizSuccess ? (
-              <div className="p-6 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-                <h4 className="font-display text-lg font-bold text-slate-900">Corporate Account Registered!</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Our Corporate Accounts Desk has provisioned your company profile. Corporate discounted fares and automated GST invoices will now apply on all bookings for <strong>{bizCompany || 'your organization'}</strong>.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowBusinessModal(false);
-                    setBizSuccess(false);
-                  }}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer shadow-md"
-                >
-                  Done &amp; Continue
-                </button>
-              </div>
-            ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setBizSuccess(true);
-                  onSelectTrustPillar('Corporate Account Linked', `GST profile for ${bizCompany || 'your company'} configured with corporate benefits.`);
-                }}
-                className="space-y-4"
-              >
-                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-xs text-slate-700 space-y-1">
-                  <div className="font-bold text-blue-900">🏢 Exclusive Corporate Benefits:</div>
-                  <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-slate-600">
-                    <li>Automated GST Tax Invoices for 100% Input Tax Credit claim</li>
-                    <li>Up to 15% corporate special fares on flights &amp; partner business stays</li>
-                    <li>Free flight date modifications and zero cancellation charges</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Company / Organization Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={bizCompany}
-                    onChange={(e) => setBizCompany(e.target.value)}
-                    placeholder="e.g. Acme Technologies Pvt Ltd"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Corporate GSTIN (Optional)</label>
-                    <input
-                      type="text"
-                      maxLength={15}
-                      value={bizGst}
-                      onChange={(e) => setBizGst(e.target.value.toUpperCase())}
-                      placeholder="07AAAAA0000A1Z5"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold uppercase font-mono-tabular focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Corporate Work Email *</label>
-                    <input
-                      type="email"
-                      required
-                      value={bizEmail}
-                      onChange={(e) => setBizEmail(e.target.value)}
-                      placeholder="travel@acme.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowBusinessModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:brightness-110 text-white font-bold text-xs shadow-md shadow-blue-600/25 cursor-pointer"
-                  >
-                    Register Corporate Desk
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Interactive Modal: Gift Cards */}
       {showGiftCardsModal && (
@@ -2699,13 +2453,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           </div>
         </div>
       )}
-
-      {/* Supabase Database Connection & Diagnostics Modal */}
-      <SupabaseStatusModal
-        isOpen={showSupabaseModal}
-        onClose={() => setShowSupabaseModal(false)}
-      />
-
     </section>
   );
 };

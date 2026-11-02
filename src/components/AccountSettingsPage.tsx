@@ -165,34 +165,47 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
     try {
       const stored = localStorage.getItem('tripyeah_user_profile');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.fullName !== 'Aryan Kapoor' && parsed.email !== 'aryan.kapoor@gmail.com') {
+          return parsed;
+        }
       }
     } catch {
       // fallback
     }
+    const realEmail = (typeof window !== 'undefined' && localStorage.getItem('tripyeah_user_email')) || '';
+    const realPhone = (typeof window !== 'undefined' && localStorage.getItem('tripyeah_user_phone')) || '';
+    const safeUserName = (userName && userName !== 'Aryan Kapoor' && userName !== 'Corporate Traveler') ? userName : '';
     return {
-      fullName: userName || 'Aryan Kapoor',
+      fullName: safeUserName,
       gender: 'Male',
-      dob: '1992-08-14',
+      dob: '',
       nationality: 'Indian',
-      maritalStatus: 'Married',
-      anniversary: '2019-11-28',
-      city: 'Gurugram',
-      state: 'Haryana',
-      mobile: '+91 98765 43210',
-      email: userName ? `${userName.toLowerCase().replace(/\s+/g, '.')}@example.com` : 'aryan.kapoor@gmail.com',
-      passportNumber: 'Z4829105',
-      passportExpiry: '2032-10-15',
+      maritalStatus: 'Single',
+      anniversary: '',
+      city: '',
+      state: '',
+      mobile: realPhone,
+      email: realEmail,
+      passportNumber: '',
+      passportExpiry: '',
       passportIssuingCountry: 'Republic of India',
-      panNumber: 'ABCDE1234F',
-      insurancePreference: 'Comprehensive International TripProtect (Schengen & Worldwide)',
-      insuranceNominee: 'Pooja Sharma',
-      insuranceNomineeRelation: 'Spouse',
+      panNumber: '',
+      insurancePreference: '',
+      insuranceNominee: '',
+      insuranceNomineeRelation: '',
       hasPreExistingCondition: false,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      avatarUrl: '',
       bannerUrl: '/assets/images/hero_alpine_lakeside_1790774682097.jpg',
     };
   });
+
+  // Keep full name in sync with authenticated user name
+  useEffect(() => {
+    if (userName && userName !== 'Aryan Kapoor' && userName !== 'Corporate Traveler') {
+      setProfile((prev) => (!prev.fullName ? { ...prev, fullName: userName } : prev));
+    }
+  }, [userName]);
 
   // Wallpaper & Avatar modal pickers
   const [showWallpaperPicker, setShowWallpaperPicker] = useState<boolean>(false);
@@ -200,19 +213,20 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
   const [customWallpaperInput, setCustomWallpaperInput] = useState<string>('');
   const [customAvatarInput, setCustomAvatarInput] = useState<string>('');
 
-  // Frequent Flyer memberships
+  // Frequent Flyer memberships (clean default, user can add their own)
   const [frequentFlyers, setFrequentFlyers] = useState<FrequentFlyerCard[]>(() => {
     try {
       const stored = localStorage.getItem('tripyeah_frequent_flyers');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && !parsed.some((f: any) => f.membershipNumber === 'AI-9948201')) {
+          return parsed;
+        }
+      }
     } catch {
       // fallback
     }
-    return [
-      { id: 'ff-1', airline: 'Air India', program: 'Flying Returns', membershipNumber: 'AI-9948201', tier: 'Gold Maharaja' },
-      { id: 'ff-2', airline: 'IndiGo', program: '6E Rewards', membershipNumber: '6E-7728104', tier: 'Titanium' },
-      { id: 'ff-3', airline: 'Singapore Airlines', program: 'KrisFlyer', membershipNumber: 'KF-4481029', tier: 'Elite Silver' },
-    ];
+    return [];
   });
   const [showAddFlyerModal, setShowAddFlyerModal] = useState<boolean>(false);
   const [newFlyerAirline, setNewFlyerAirline] = useState<string>('Air India');
@@ -220,49 +234,20 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
   const [newFlyerNumber, setNewFlyerNumber] = useState<string>('');
   const [newFlyerTier, setNewFlyerTier] = useState<string>('Member');
 
-  // Co-Travellers state
+  // Co-Travellers state (clean default, user can add their own family members)
   const [coTravellers, setCoTravellers] = useState<CoTraveller[]>(() => {
     try {
       const stored = localStorage.getItem('tripyeah_co_travellers');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && !parsed.some((c: any) => c.name === 'Pooja Sharma')) {
+          return parsed;
+        }
+      }
     } catch {
       // fallback
     }
-    return [
-      {
-        id: 'cotrav-1',
-        name: 'Pooja Sharma',
-        relation: 'Spouse',
-        gender: 'Female',
-        dob: '1994-02-02',
-        passportNumber: 'Z8810294',
-        idStatus: 'Passport Linked (Exp: 2031)',
-        meal: 'Hindu Vegetarian',
-        seatPreference: 'Window',
-      },
-      {
-        id: 'cotrav-2',
-        name: 'Aarav Sharma',
-        relation: 'Child',
-        gender: 'Male',
-        dob: '2018-05-18',
-        passportNumber: 'Z1193840',
-        idStatus: 'Aadhaar & Minor Passport Linked',
-        meal: 'Child Meal',
-        seatPreference: 'Aisle',
-      },
-      {
-        id: 'cotrav-3',
-        name: 'Kabir Sharma',
-        relation: 'Parent',
-        gender: 'Male',
-        dob: '1962-11-19',
-        passportNumber: 'Z7719203',
-        idStatus: 'Senior Citizen Passport Linked',
-        meal: 'Low Sodium Diabetic Meal',
-        seatPreference: 'Aisle',
-      },
-    ];
+    return [];
   });
   const [editingCoTraveller, setEditingCoTraveller] = useState<CoTraveller | null>(null);
   const [showCoTravellerModal, setShowCoTravellerModal] = useState<boolean>(false);
@@ -444,7 +429,7 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
       <div className="relative w-full min-h-[300px] sm:min-h-[340px] lg:min-h-[360px] bg-slate-950 overflow-hidden flex flex-col justify-end pt-24 pb-8 sm:pb-10">
         {/* Banner Image */}
         <img
-          src={profile.bannerUrl}
+          src={profile.bannerUrl || '/assets/images/hero_alpine_lakeside_1790774682097.jpg'}
           alt="Profile Wallpaper"
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/assets/images/hero_alpine_lakeside_1790774682097.jpg';
@@ -462,16 +447,26 @@ export const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
           <div className="flex items-center gap-4 sm:gap-6">
             {/* Profile Picture set over wallpaper */}
-            <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl sm:rounded-3xl p-1 bg-white/20 backdrop-blur-md shadow-2xl ring-4 ring-white/80 overflow-hidden shrink-0">
-              <img
-                src={profile.avatarUrl}
-                alt={profile.fullName}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
-                }}
-                className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
-              />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl sm:rounded-3xl p-1 bg-white/20 backdrop-blur-md shadow-2xl ring-4 ring-white/80 overflow-hidden shrink-0 flex items-center justify-center bg-slate-800">
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.fullName || 'User Profile'}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+                  }}
+                  className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+                />
+              ) : (
+                <div className="w-full h-full rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-800 flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl shadow-inner">
+                  {profile.fullName && profile.fullName.trim().length > 0 ? (
+                    profile.fullName.trim().charAt(0).toUpperCase()
+                  ) : (
+                    <User className="w-8 h-8 sm:w-10 sm:h-10 text-white/90" />
+                  )}
+                </div>
+              )}
             </div>
 
             {/* In front of Profile Picture: Name, Below it Number with emoji & Email with emoji */}

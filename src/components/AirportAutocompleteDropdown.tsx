@@ -88,38 +88,20 @@ export const AirportAutocompleteDropdown: React.FC<AirportAutocompleteDropdownPr
         align === 'right' ? 'right-0' : 'left-0'
       } top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3 z-50 animate-in fade-in zoom-in-95 duration-150`}
     >
-      {/* Header with Title and Supabase Status */}
+      {/* Header with Title and Airport Network Status */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-slate-800">Select {label}</span>
           <span className="text-[10px] text-slate-400">({isStation ? 'Rail/Air' : 'Airport'})</span>
         </div>
 
-        {/* Supabase Connection indicator pill */}
+        {/* Airport count indicator */}
         <div
-          title={
-            connStatus?.connected
-              ? `Connected to Supabase (${connStatus.totalAirports?.toLocaleString() || '9,000+'} airports in '${connStatus.tableName}' table)`
-              : connStatus?.error
-              ? `Supabase Error: ${connStatus.error}`
-              : 'Connecting to Supabase...'
-          }
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
-            connStatus?.connected
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : hasError
-              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-              : 'bg-slate-100 text-slate-600'
-          }`}
+          title="Verified international & domestic airport directory"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80"
         >
-          <Database className="w-2.5 h-2.5 text-current" />
-          <span>
-            {connStatus?.connected
-              ? `Supabase Live (${connStatus.totalAirports || '9k+'})`
-              : hasError
-              ? 'Local Fallback'
-              : 'Connecting...'}
-          </span>
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+          <span>{connStatus?.totalAirports ? `${connStatus.totalAirports.toLocaleString()} Airports` : '9,000+ Airports'}</span>
         </div>
       </div>
 
@@ -159,7 +141,7 @@ export const AirportAutocompleteDropdown: React.FC<AirportAutocompleteDropdownPr
         <span>{query ? `Search Results (${results.length})` : 'Popular Destinations'}</span>
         {loading && (
           <span className="flex items-center gap-1 text-blue-600 font-normal normal-case">
-            <Loader2 className="w-3 h-3 animate-spin" /> Searching Supabase...
+            <Loader2 className="w-3 h-3 animate-spin" /> Searching airports...
           </span>
         )}
       </div>
@@ -218,7 +200,7 @@ export const AirportAutocompleteDropdown: React.FC<AirportAutocompleteDropdownPr
 
       {/* Footer info badge */}
       <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 px-1">
-        <span>Powered by Supabase Database</span>
+        <span>Global Airport Directory</span>
         <button
           type="button"
           onClick={onClose}
