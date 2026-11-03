@@ -371,7 +371,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
         </div>
 
         {/* Hero Content (Breadcrumb, Title, Destination Modifier & Category Tabs) */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-indigo-200 text-xs font-bold mb-2 drop-shadow-md">
@@ -576,15 +576,15 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
         </div>
       </div>
 
-      {/* Main Body: Two-Column Layout (Filters Left, Results Right) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 sm:-mt-14 relative z-20">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+      {/* Main Body: Two-Column Layout (Filters Left, Results Right) Full-Width Corner to Corner */}
+      <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 -mt-10 sm:-mt-14 relative z-20">
+        <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-start w-full">
           {/* ===================================================================
               LEFT SIDEBAR: FILTERS
           =================================================================== */}
           <aside
-            className={`lg:col-span-1 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-5 ${
-              showMobileFilters ? 'block' : 'hidden lg:block'
+            className={`w-full lg:w-72 xl:w-80 shrink-0 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-5 sticky top-20 z-10 ${
+              showMobileFilters ? 'block mb-4' : 'hidden lg:block'
             }`}
           >
             {/* Header */}
@@ -766,7 +766,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
           {/* ===================================================================
               RIGHT COLUMN: RESULTS LIST
           =================================================================== */}
-          <main className="lg:col-span-3 space-y-4">
+          <main className="flex-1 min-w-0 w-full space-y-4">
             {/* Top Results Toolbar */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
               <div>

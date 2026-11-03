@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Luggage, Sparkles, Globe, User, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Luggage, Sparkles, User, ChevronDown, ShieldCheck } from 'lucide-react';
 import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelData';
 import { TripYeahLogo } from './TripYeahLogo';
 
@@ -32,7 +32,7 @@ interface NavbarProps {
   language?: string;
   region?: string;
   onOpenLanguageModal: () => void;
-  onOpenListProperty: () => void;
+  onOpenListProperty?: () => void;
   onOpenInsurance: () => void;
   onOpenAuth: (redirectTarget?: AppPageView) => void;
   onOpenOffers?: () => void;
@@ -61,7 +61,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   language = 'English',
   region = 'India',
   onOpenLanguageModal,
-  onOpenListProperty,
   onOpenInsurance,
   onOpenAuth,
   onOpenOffers,
@@ -130,38 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right: All Header Options Grouped Together with Uniform Spacing */}
         <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 lg:gap-6 shrink-0">
-          {/* 1. Go Global Option */}
-          <button
-            type="button"
-            onClick={() => onNavigatePage('international-planner')}
-            title="Go Global — International Itineraries & Visa Guide"
-            className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
-              activePage === 'international-planner'
-                ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
-                : isDarkHeader
-                ? 'text-white/85 hover:text-white'
-                : 'text-slate-700 hover:text-blue-600'
-            }`}
-          >
-            <Globe className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
-            <span>Go Global</span>
-          </button>
-
-          {/* 2. List Your Property */}
-          <button
-            type="button"
-            onClick={onOpenListProperty}
-            className={`hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
-              isDarkHeader
-                ? 'text-white/85 hover:text-white'
-                : 'text-slate-700 hover:text-blue-600'
-            }`}
-          >
-            <Building2 className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-blue-600'}`} />
-            <span>List Your Property</span>
-          </button>
-
-          {/* 3. Travel Insurance */}
+          {/* 1. Travel Insurance */}
           <button
             type="button"
             onClick={onOpenInsurance}

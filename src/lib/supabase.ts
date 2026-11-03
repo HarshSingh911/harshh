@@ -1,11 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
+const getEnv = (key: string): string => {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta && import.meta.env && import.meta.env[key]) {
+      return import.meta.env[key];
+    }
+  } catch {}
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key] || '';
+    }
+  } catch {}
+  return '';
+};
+
 // Clean any accidental whitespace from the Supabase URL
-const rawUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ufnjelaypwikopefbfji.supabase.co';
+const rawUrl = getEnv('VITE_SUPABASE_URL') || 'https://ufnjelaypwikopefbfji.supabase.co';
 const supabaseUrl = rawUrl.replace(/\s+/g, '');
 const supabaseAnonKey =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') ||
+  getEnv('VITE_SUPABASE_ANON_KEY') ||
   'sb_publishable_cmYa-kIeYjdMygWU3LU4OQ_hLh8gG99';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

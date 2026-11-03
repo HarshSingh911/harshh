@@ -66,6 +66,13 @@ import {
   CurrencyCode,
   formatPrice,
 } from '../data/travelData';
+import {
+  SupabaseCountry,
+  SupabaseCity,
+  fetchCountriesFromSupabase,
+  fetchCitiesByCountryFromSupabase,
+} from '../services/destinationLocationService';
+import { GoGlobalDestinationSelector } from './GoGlobalDestinationSelector';
 import solarpunkHeroImg from '../assets/images/solarpunk_hero_3be410f8.png';
 
 interface InternationalPlannerProps {
@@ -1750,7 +1757,8 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
 
   // Form State
   const [destination, setDestination] = useState<string>('Paris • France');
-  const [searchDestInput, setSearchDestInput] = useState<string>('');
+  const [selectedCountry, setSelectedCountry] = useState<SupabaseCountry | null>(null);
+  const [selectedCity, setSelectedCity] = useState<SupabaseCity | null>(null);
   const [origin, setOrigin] = useState<string>('New Delhi');
   const [startDate, setStartDate] = useState<string>('2026-10-20');
   const [endDate, setEndDate] = useState<string>('2026-10-24');
@@ -1761,6 +1769,50 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatingStatus, setGeneratingStatus] = useState<string>('');
 
+  // Initialize Go Global destination from Supabase public.countries & public.cities on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchCountriesFromSupabase().then((res) => {
+      if (!isMounted) return;
+      if (res.countries.length > 0) {
+        const france = res.countries.find((c) => c.iso2 === 'FR') || res.countries[0];
+        if (france) {
+          setSelectedCountry(france);
+          fetchCitiesByCountryFromSupabase({
+            countryIso2: france.iso2,
+            searchQuery: 'Paris',
+            pageSize: 1,
+          }).then((ciRes) => {
+            if (!isMounted) return;
+            const paris = ciRes.cities.find((c) => c.city_name.toLowerCase() === 'paris') || ciRes.cities[0];
+            if (paris) {
+              setSelectedCity(paris);
+              setDestination(`${paris.city_name} • ${france.country_name}`);
+            }
+          });
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleCountryChange = (country: SupabaseCountry) => {
+    setSelectedCountry(country);
+    setSelectedCity(null); // Requirement 7: When the country changes, clear the previously selected city
+    setDestination(country.country_name);
+  };
+
+  const handleCityChange = (city: SupabaseCity) => {
+    setSelectedCity(city);
+    if (selectedCountry) {
+      setDestination(`${city.city_name} • ${selectedCountry.country_name}`);
+    } else {
+      setDestination(city.city_name);
+    }
+  };
+
   // AI-Generated Dynamic Overrides
   const [dynamicItinerary, setDynamicItinerary] = useState<FullItinerary | null>(null);
   const [dynamicVisa, setDynamicVisa] = useState<VisaDetails | null>(null);
@@ -1769,7 +1821,6 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   const [dynamicCustoms, setDynamicCustoms] = useState<{ arrivalName: string; details: string; qrRequirement: string } | null>(null);
 
   // Dropdown states for pill search bar
-  const [showDestDropdown, setShowDestDropdown] = useState<boolean>(false);
   const [showDatesPicker, setShowDatesPicker] = useState<boolean>(false);
   const [showTravellersDropdown, setShowTravellersDropdown] = useState<boolean>(false);
   const [showBudgetDropdown, setShowBudgetDropdown] = useState<boolean>(false);
@@ -1784,7 +1835,6 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchBarRef.current && !searchBarRef.current.contains(e.target as Node)) {
-        setShowDestDropdown(false);
         setShowDatesPicker(false);
         setShowTravellersDropdown(false);
         setShowBudgetDropdown(false);
@@ -2219,116 +2269,14 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
           <div ref={searchBarRef} className="w-full max-w-4xl mt-6 sm:mt-7 relative z-50 overflow-visible">
             <div className="relative bg-white/95 backdrop-blur-md border border-white/60 shadow-[0_20px_50px_rgba(15,23,42,0.35)] rounded-full p-2 sm:p-2.5 transition-all overflow-visible">
               <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-1 sm:gap-2">
-                {/* 1. Destination Segment */}
-                <div className="relative flex-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDestDropdown(!showDestDropdown);
-                      setShowDatesPicker(false);
-                      setShowTravellersDropdown(false);
-                      setShowBudgetDropdown(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 rounded-full hover:bg-slate-100 transition-all text-left cursor-pointer group"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        Destination
-                      </span>
-                      <span className="font-bold text-xs sm:text-sm text-slate-900 truncate block">
-                        {destination}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* Destination Dropdown - Floating above with z-[70] and shadow-2xl */}
-                  {showDestDropdown && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute top-full left-0 mt-3 w-84 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-slate-200 p-2.5 z-[70] animate-modal-slide-up"
-                    >
-                      {/* Search input for ANY city or country worldwide */}
-                      <div className="mb-2 p-1">
-                        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-                          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <input
-                            type="text"
-                            placeholder="Type ANY city or country worldwide..."
-                            value={searchDestInput}
-                            onChange={(e) => setSearchDestInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && searchDestInput.trim()) {
-                                setDestination(searchDestInput.trim());
-                                setShowDestDropdown(false);
-                                onNotify('Destination Selected', `Click "Plan" to generate Gemini AI itinerary for ${searchDestInput.trim()}`, 'info');
-                              }
-                            }}
-                            className="w-full text-xs font-semibold text-slate-900 placeholder:text-slate-400 bg-transparent outline-none"
-                          />
-                          {searchDestInput.trim() && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDestination(searchDestInput.trim());
-                                setShowDestDropdown(false);
-                                onNotify('Destination Selected', `Click "Plan" to generate Gemini AI itinerary for ${searchDestInput.trim()}`, 'info');
-                              }}
-                              className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shrink-0 cursor-pointer"
-                            >
-                              Set
-                            </button>
-                          )}
-                        </div>
-                        <span className="block text-[10px] text-slate-400 font-medium px-1 mt-1">
-                          Press Enter or click Set for any destination worldwide
-                        </span>
-                      </div>
-
-                      <div className="text-[11px] font-bold text-slate-400 uppercase px-3 py-1.5 flex items-center justify-between border-t border-slate-100">
-                        <span>Popular Curated Guides</span>
-                        <span className="text-[10px] text-emerald-600 font-bold">Instant</span>
-                      </div>
-                      <div className="space-y-1 max-h-56 overflow-y-auto scrollbar-thin">
-                        {POPULAR_DESTINATIONS.map((dest) => (
-                          <button
-                            key={dest.name}
-                            type="button"
-                            onClick={() => {
-                              setDestination(dest.name);
-                              setShowDestDropdown(false);
-                              if (dest.name.includes('Paris')) {
-                                setSelectedDayNumber(2);
-                              } else {
-                                setSelectedDayNumber(1);
-                              }
-                              onNotify('Destination Changed', `Selected ${dest.name}. Click "Plan" to generate dynamic AI plan.`, 'info');
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                              destination.includes(dest.city)
-                                ? 'bg-emerald-50 text-emerald-800 font-bold'
-                                : 'hover:bg-slate-50 text-slate-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-base">{dest.flag}</span>
-                              <div>
-                                <span className="block font-bold text-slate-900">{dest.name}</span>
-                                <span className="block text-[10px] text-slate-500">{dest.highlight}</span>
-                              </div>
-                            </div>
-                            {destination.includes(dest.city) && (
-                              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {/* 1. Supabase Connected Go Global Destination Selector (Country & City) */}
+                <GoGlobalDestinationSelector
+                  selectedCountry={selectedCountry}
+                  selectedCity={selectedCity}
+                  onCountryChange={handleCountryChange}
+                  onCityChange={handleCityChange}
+                  onNotify={onNotify}
+                />
 
                 <div className="hidden md:block w-px h-7 bg-slate-200" />
 
@@ -2339,7 +2287,6 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowDatesPicker(!showDatesPicker);
-                      setShowDestDropdown(false);
                       setShowTravellersDropdown(false);
                       setShowBudgetDropdown(false);
                     }}
@@ -2379,7 +2326,6 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowTravellersDropdown(!showTravellersDropdown);
-                      setShowDestDropdown(false);
                       setShowDatesPicker(false);
                       setShowBudgetDropdown(false);
                     }}
@@ -2449,7 +2395,6 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowBudgetDropdown(!showBudgetDropdown);
-                      setShowDestDropdown(false);
                       setShowDatesPicker(false);
                       setShowTravellersDropdown(false);
                     }}

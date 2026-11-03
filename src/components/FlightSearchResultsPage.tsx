@@ -1608,7 +1608,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           1. TOP COMPACT & INLINE MODIFY SEARCH STRIP (MakeMyTrip Style)
       =================================================================== */}
       <div className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Clickable Origin, Destination & Trip Type Chip */}
             <div
@@ -3765,15 +3765,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       </div>
 
       {/* ===================================================================
-          2. TWO-COLUMN LAYOUT: LEFT FILTERS SIDEBAR + RIGHT MAIN RESULTS
+          2. TWO-COLUMN LAYOUT: LEFT FILTERS SIDEBAR + RIGHT MAIN RESULTS (Full-Width Corner to Corner)
       =================================================================== */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 pt-5">
+        <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-start w-full">
           {/* =================================================================
               LEFT COLUMN: UNIFIED FILTER SIDEBAR
           =================================================================== */}
           <aside
-            className={`lg:col-span-3 bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5 ${
+            className={`w-full lg:w-72 xl:w-80 shrink-0 bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5 sticky top-16 z-10 ${
               showMobileFilters ? 'block mb-4' : 'hidden lg:block'
             }`}
           >
@@ -5349,7 +5349,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           {/* =================================================================
               RIGHT COLUMN: SORT BAR & LIVE RESULTS
           =================================================================== */}
-          <main className="lg:col-span-9 space-y-4">
+          <main className="flex-1 min-w-0 w-full space-y-4">
             {/* Bus Specific Header: Cities Route & Horizontal Date Carousel with Left/Right Buttons */}
             {currentCategory === 'buses' && (
               <div className="space-y-3">
@@ -7756,7 +7756,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           aria-label="Selected Round-Trip Booking Summary"
           className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl py-3 px-3 sm:px-6 animate-in slide-in-from-bottom duration-300"
         >
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 flex flex-col md:flex-row md:items-center justify-between gap-3">
             {/* Outbound & Return Selected Details */}
             <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-4 flex-1">
               {/* Outbound Flight Pill */}
