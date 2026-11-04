@@ -6,7 +6,7 @@ import {
   Bus,
   Car,
   Palmtree,
-  RollerCoaster,
+  Ticket,
   ArrowLeftRight,
   Calendar,
   Search,
@@ -86,7 +86,7 @@ const SERVICE_TABS: {
   { id: 'buses', label: 'Buses', ctaLabel: 'Search Buses', icon: Bus },
   { id: 'cabs', label: 'Cabs', ctaLabel: 'Search Cabs', icon: Car },
   { id: 'holidays', label: 'Holidays', ctaLabel: 'Search Holidays', icon: Palmtree },
-  { id: 'experiences', label: 'Attractions', ctaLabel: 'Explore Attractions', icon: RollerCoaster },
+  { id: 'experiences', label: 'Attractions', ctaLabel: 'Explore Attractions', icon: Ticket },
 ];
 
 const FLIGHT_CLASSES = ['Economy', 'Premium Eco', 'Business', 'First Class'];

@@ -145,17 +145,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onSelectCategory('cabs')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  {t('hero.cabs', 'Airport Cabs')}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => onNavigatePage('dining-club')}
-                  className="hover:text-amber-600 font-bold text-amber-700 cursor-pointer flex items-center gap-1"
-                >
-                  <span>{t('hero.diningClub', 'Dining Club')}</span>
-                  <span className="text-[9px] bg-amber-100 text-amber-800 px-1 py-0.2 rounded font-bold">VIP</span>
+                  {t('hero.cabs', 'Cabs')}
                 </button>
               </li>
             </ul>
@@ -192,16 +182,6 @@ export const Footer: React.FC<FooterProps> = ({
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   {t('footer.newsroom', 'Newsroom')}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => onNavigatePage('influencers')}
-                  className="hover:text-rose-600 font-semibold text-rose-500 cursor-pointer flex items-center gap-1"
-                >
-                  <span>{t('footer.influencers', 'Influencers & Creators')}</span>
-                  <span className="text-[9px] bg-rose-100 text-rose-700 px-1 py-0.2 rounded font-bold">New</span>
                 </button>
               </li>
               <li>

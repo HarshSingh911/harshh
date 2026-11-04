@@ -142,9 +142,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'text-slate-700 hover:text-emerald-600'
             }`}
           >
-            <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
+            <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-white' : 'text-slate-700'}`} />
             <span>{t('nav.travelInsurance', 'Travel Insurance')}</span>
           </button>
+
+          {/* Divider between Travel Insurance and Currency / Language Selector */}
+          <span
+            className={`hidden md:inline-block text-sm font-light select-none ${
+              isDarkHeader ? 'text-white/35' : 'text-slate-300'
+            }`}
+            aria-hidden="true"
+          >
+            |
+          </span>
 
           {/* 5. Flag, Currency Code & Language Selector */}
           <button
@@ -159,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span className="text-sm sm:text-base leading-none">{regionFlag}</span>
             <span className={`font-mono-tabular font-bold ${isDarkHeader ? 'text-white' : 'text-slate-900'}`}>{currency}</span>
-            <span className={isDarkHeader ? 'text-white/60' : 'text-slate-400'}>&</span>
+            <span className={isDarkHeader ? 'text-white/60' : 'text-slate-400'}>|</span>
             <span className={`font-medium ${isDarkHeader ? 'text-white/90' : 'text-slate-700'}`}>{language}</span>
             <ChevronDown className={`w-3.5 h-3.5 ${isDarkHeader ? 'text-white/70' : 'text-slate-400'}`} />
           </button>
