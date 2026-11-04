@@ -1,16 +1,17 @@
 import React from 'react';
 import { ArrowRight, Plane, Building2, Palmtree } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   ASSETS,
   BookingCategory,
   CurrencyCode,
   DestinationPlace,
-  formatPrice,
   PLATFORM_SERVICES,
   PROMO_OFFERS,
   PromoOffer,
   TOP_DESTINATIONS,
 } from '../data/travelData';
+import { formatPriceWithLocale } from '../i18n/formatters';
 import { SafeImage } from './SafeImage';
 
 interface ShowcaseSectionsProps {
@@ -32,6 +33,8 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
   onSelectPlatformService,
   onStartExploring,
 }) => {
+  const { t, i18n } = useTranslation();
+
   return (
     <div className="w-full">
       {/* SECTION 1: TOP DESTINATIONS — Popular Places to Explore */}
@@ -42,13 +45,10 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
         <div className="flex items-end justify-between gap-4 mb-6">
           <div>
             <p className="text-xs font-semibold tracking-wider text-blue-600 mb-1">
-              Top Destinations
+              {t('showcase.topDestinations', 'Top Destinations')}
             </p>
             <h2 className="font-display text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-              Popular Places to{' '}
-              <span className="bg-gradient-to-r from-[#2563EB] to-[#6366F1] bg-clip-text text-transparent">
-                Explore
-              </span>
+              {t('showcase.popularPlaces', 'Popular Places to Explore')}
             </h2>
           </div>
 
@@ -57,7 +57,7 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
             onClick={onOpenAllDestinations}
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 hover:text-indigo-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <span>View All</span>
+            <span>{t('showcase.viewAll', 'View All')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -93,7 +93,7 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
 
               {/* Top Right Starting Price */}
               <div className="absolute top-3 right-3 text-xs font-mono-tabular font-semibold text-white/95 bg-slate-950/45 backdrop-blur-xs px-2.5 py-1 rounded-md">
-                From {formatPrice(dest.startingFareInr, currency)}
+                {t('showcase.from', 'From')} {formatPriceWithLocale(dest.startingFareInr, currency, i18n.language)}
               </div>
 
               {/* Bottom Info & Circular Arrow Button */}
@@ -141,20 +141,20 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
             {/* Left Offer Copy */}
             <div className="lg:col-span-5 text-white">
               <p className="text-xs font-semibold tracking-[0.16em] text-sky-200 mb-2">
-                Limited Time Offers
+                {t('showcase.limitedOffers', 'Limited Time Offers')}
               </p>
               <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-3">
-                Travel Deals You’ll Love
+                {t('showcase.travelDeals', 'Travel Deals You’ll Love')}
               </h2>
               <p className="text-sm sm:text-base text-slate-100/90 mb-6 max-w-md leading-relaxed">
-                Exclusive discounts on flights, hotels and holiday packages.
+                {t('showcase.dealsDesc', 'Exclusive discounts on flights, hotels and holiday packages.')}
               </p>
               <button
                 type="button"
                 onClick={onOpenOffersModal}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold text-xs sm:text-sm shadow-md transition-transform active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                <span>View Offers</span>
+                <span>{t('showcase.viewOffers', 'View Offers')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -222,16 +222,13 @@ export const ShowcaseSections: React.FC<ShowcaseSectionsProps> = ({
       >
         <div className="mb-7">
           <p className="text-xs font-semibold tracking-wider text-blue-600 mb-1">
-            Plan Your Trip
+            {t('showcase.planYourTrip', 'Plan Your Trip')}
           </p>
           <h2 className="font-display text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">
-            Everything You Need,{' '}
-            <span className="bg-gradient-to-r from-[#2563EB] to-[#6366F1] bg-clip-text text-transparent">
-              One Platform
-            </span>
+            {t('showcase.everythingYouNeed', 'Everything You Need, One Platform')}
           </h2>
           <p className="text-sm sm:text-base text-slate-600">
-            Flights, hotels, cabs, holiday packages, attractions and more – all in one place.
+            {t('showcase.platformDesc', 'Flights, hotels, cabs, holiday packages, attractions and more – all in one place.')}
           </p>
         </div>
 

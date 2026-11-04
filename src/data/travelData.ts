@@ -164,10 +164,42 @@ export const CURRENCY_RATES: Record<CurrencyCode, { symbol: string; rate: number
   CAD: { symbol: 'C$', rate: 0.0165, label: 'CAD (C$)' },
 };
 
-export function formatPrice(amountInr: number, currency: CurrencyCode): string {
-  const { symbol, rate } = CURRENCY_RATES[currency];
-  const converted = Math.round(amountInr * rate);
-  return `${symbol}${converted.toLocaleString('en-IN')}`;
+const LOCALE_BY_LANG: Record<string, string> = {
+  en: 'en-US',
+  hi: 'hi-IN',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  es: 'es-ES',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  zh: 'zh-CN',
+  ar: 'ar-SA',
+  ru: 'ru-RU',
+  pt: 'pt-BR',
+  th: 'th-TH',
+};
+
+export function formatPrice(amountInr: number, currency: CurrencyCode, lang?: string): string {
+  const rateObj = CURRENCY_RATES[currency] || CURRENCY_RATES.INR;
+  const converted = Math.round(amountInr * rateObj.rate);
+  let activeLang = lang;
+  if (!activeLang && typeof window !== 'undefined') {
+    try {
+      activeLang = localStorage.getItem('tripyeah_lang') || 'en';
+    } catch {
+      activeLang = 'en';
+    }
+  }
+  const locale = LOCALE_BY_LANG[activeLang || 'en'] || 'en-US';
+  try {
+    const formatted = new Intl.NumberFormat(locale).format(converted);
+    if (activeLang === 'ar') {
+      return `${formatted} ${rateObj.symbol.trim()}`;
+    }
+    return `${rateObj.symbol.trim()}${rateObj.symbol.endsWith(' ') ? ' ' : ''}${formatted}`;
+  } catch {
+    return `${rateObj.symbol}${converted}`;
+  }
 }
 
 export const CITIES: CityOption[] = [
@@ -485,7 +517,7 @@ export const PROMO_OFFERS: PromoOffer[] = [
   {
     id: 'offer-experiences',
     category: 'experiences',
-    label: 'Experiences',
+    label: 'Attractions',
     subLabel: 'Up to',
     discountHeadline: '35% OFF',
     code: 'EXPLORE35',
@@ -519,8 +551,8 @@ export const PLATFORM_SERVICES: {
   },
   {
     id: 'holidays',
-    title: 'Holiday Packages',
-    subtitle: 'Curated experiences',
+    title: 'Holidays',
+    subtitle: 'Curated packages & tours',
     image: ASSETS.bali,
     accentColor: 'from-emerald-500 to-teal-600',
   },

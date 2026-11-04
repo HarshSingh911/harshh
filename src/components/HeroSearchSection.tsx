@@ -29,6 +29,8 @@ import {
   CityOption,
   TripType,
 } from '../data/travelData';
+import { useTranslation } from 'react-i18next';
+import { formatDateWithLocale } from '../i18n/formatters';
 import { SafeImage } from './SafeImage';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
@@ -140,6 +142,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   hotelMode: propHotelMode,
   onChangeHotelMode,
 }) => {
+  const { t, i18n } = useTranslation();
   const [internalDummyTripType, setInternalDummyTripType] = useState<'one-way' | 'round-trip'>('one-way');
   const activeDummyTripType = dummyTripType || internalDummyTripType;
   const isRoundTripActive =
@@ -279,8 +282,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   const [holidayRooms, setHolidayRooms] = useState<number>(1);
   const [holidayGuests, setHolidayGuests] = useState<number>(2);
 
-  // 6. Tours & Experiences state
-  const [experienceTheme, setExperienceTheme] = useState<string>('All Experiences');
+  // 6. Tours & Attractions state
+  const [experienceTheme, setExperienceTheme] = useState<string>('All Attractions');
 
   const handleSwap = () => {
     setSwapRotated((prev) => !prev);
@@ -291,11 +294,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     if (!dateStr) return fallback;
     const parsed = new Date(dateStr + 'T00:00:00');
     if (isNaN(parsed.getTime())) return fallback;
-    return parsed.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    return formatDateWithLocale(dateStr, i18n.language);
   };
 
   // Reusable City/Station Picker Popover (Connected to Supabase)
@@ -307,7 +306,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   ) => {
     return (
       <AirportAutocompleteDropdown
-        label={which === 'from' ? 'From' : 'To'}
+        label={which === 'from' ? t('hero.from', 'From') : t('hero.to', 'To')}
         selectedCity={selected}
         onSelectCity={(c) => {
           onSelect(c);
@@ -345,15 +344,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
         {/* Centered Hero Headline above the middle Search Bar */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 text-center">
           <p className="text-xs sm:text-sm font-bold tracking-[0.2em] text-white uppercase drop-shadow-sm mb-2">
-            Explore the World with TripYeah
+            TripYehh
           </p>
           <h1 className="font-display text-3xl sm:text-5xl lg:text-[56px] font-bold text-white leading-[1.08] tracking-tight mb-2.5 drop-shadow-[0_4px_18px_rgba(15,23,42,0.45)] mx-auto max-w-3xl">
-            Where will you go{' '}
-            <span className="text-sky-300">next?</span>
+            {t('hero.tagline', 'Where will you go next?')}
           </h1>
           <p className="text-xs sm:text-sm lg:text-base text-white/95 font-medium max-w-xl mx-auto drop-shadow-[0_2px_10px_rgba(15,23,42,0.45)]">
-            Flights, Hotels, Buses, Cabs &amp; Holiday Packages — all in one
-            place.
+            {t('hero.subtitle', 'Flights, Hotels, Buses, Cabs & Holidays — all in one place.')}
           </p>
         </div>
       </div>
@@ -370,6 +367,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             {SERVICE_TABS.map((tab) => {
               const Icon = tab.icon;
               const isSelected = activeCategory === tab.id;
+              const tabLabel =
+                tab.id === 'flights' ? t('hero.flights', 'Flights') :
+                tab.id === 'hotels' ? t('hero.hotels', 'Hotels') :
+                tab.id === 'buses' ? t('hero.buses', 'Buses') :
+                tab.id === 'cabs' ? t('hero.cabs', 'Cabs') :
+                tab.id === 'holidays' ? t('hero.holidays', 'Holidays') :
+                tab.id === 'experiences' ? t('hero.experiences', 'Attractions') :
+                tab.label;
+
               return (
                 <button
                   key={tab.id}
@@ -387,7 +393,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">{tab.label}</span>
+                  <span className="truncate">{tabLabel}</span>
                 </button>
               );
             })}
@@ -403,24 +409,24 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
                   {(
                     [
-                      { id: 'one-way', label: 'One Way' },
-                      { id: 'round-trip', label: 'Round Trip' },
-                      { id: 'dummy-flights', label: 'Dummy Flights' },
+                      { id: 'one-way', label: t('hero.oneWay', 'One Way') },
+                      { id: 'round-trip', label: t('hero.roundTrip', 'Round Trip') },
+                      { id: 'dummy-flights', label: t('hero.dummyFlights', 'Dummy Flights') },
                     ] as { id: TripType; label: string }[]
-                  ).map((t) => {
-                    const active = tripType === t.id;
+                  ).map((tOpt) => {
+                    const active = tripType === tOpt.id;
                     return (
                       <button
-                        key={t.id}
+                        key={tOpt.id}
                         type="button"
-                        onClick={() => onChangeTripType(t.id)}
+                        onClick={() => onChangeTripType(tOpt.id)}
                         className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                           active
                             ? 'bg-[#2563EB] text-white shadow-xs'
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
                         }`}
                       >
-                        {t.label}
+                        {tOpt.label}
                       </button>
                     );
                   })}
@@ -490,7 +496,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
                           <div>
                             <span className="text-xs font-bold text-slate-800 block">
-                              Travellers
+                              {t('hero.travellers', 'Travellers')}
                             </span>
                             <span className="text-[10px] text-slate-400">Adults (12+ yrs)</span>
                           </div>
@@ -529,7 +535,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
                         <div>
                           <p className="text-xs font-bold text-slate-700 mb-2">
-                            Flight Class
+                            {t('hero.cabinClass', 'Flight Class')}
                           </p>
                           <div className="grid grid-cols-2 gap-1.5">
                             {FLIGHT_CLASSES.map((c) => (
@@ -571,7 +577,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
-                        From
+                        {t('hero.from', 'From')}
                       </span>
                       <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
                         {fromCity.city}
@@ -604,7 +610,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
-                        To
+                        {t('hero.to', 'To')}
                       </span>
                       <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
                         {toCity.city}
@@ -635,13 +641,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   >
                     <div className="min-w-0">
                       <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
-                        Departure Date
+                        {t('hero.departure', 'Departure Date')}
                       </span>
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(departureDate)}
                       </span>
                       <span className="block text-[11px] text-slate-400 truncate">
-                        One-Way / Outbound
+                        {tripType === 'round-trip' ? t('hero.roundTrip', 'Round Trip') : t('hero.oneWay', 'One Way')}
                       </span>
                     </div>
                     <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs">
@@ -694,15 +700,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                             ? 'text-amber-700 group-hover:text-amber-800'
                             : 'text-indigo-600 group-hover:text-indigo-700'
                         }`}>
-                          Return Date
+                          {t('hero.return', 'Return Date')}
                         </span>
                         <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
-                          {formatDisplayDate(returnDate, 'Select Return')}
+                          {formatDisplayDate(returnDate, t('hero.return', 'Select Return'))}
                         </span>
                         <span className={`block text-[11px] truncate ${
                           tripType === 'dummy-flights' ? 'text-amber-600 font-medium' : 'text-indigo-500'
                         }`}>
-                          Round-Trip Save 10%
+                          {t('hero.roundTrip', 'Round Trip')}
                         </span>
                       </div>
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs ${
@@ -740,7 +746,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                     className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Search className="w-4 h-4 shrink-0" />
-                    <span>Search</span>
+                    <span>{t('hero.searchFlights', 'Search Flights')}</span>
                   </button>
                 </div>
               </div>
@@ -2190,7 +2196,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap overflow-x-auto pb-1 scrollbar-none">
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {[
-                    'All Experiences',
+                    'All Attractions',
                     '🎢 Theme Parks',
                     '🌊 Water Parks',
                     '🪂 Adventure & Outdoor',
@@ -2237,7 +2243,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       {toCity.city}, {toCity.country}
                     </span>
                     <span className="block text-[11px] text-slate-500 truncate">
-                      {experienceTheme === 'All Experiences'
+                      {experienceTheme === 'All Attractions'
                         ? 'Theme Parks, Water Parks, Sightseeing & Activities'
                         : `${experienceTheme} & Guided Passes`}
                     </span>

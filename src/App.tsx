@@ -37,7 +37,9 @@ import {
   CredentialModals,
 } from './components/CredentialModals';
 import { Footer } from './components/Footer';
-import { LanguageRegionModal } from './components/LanguageRegionModal';
+import { LanguageRegionModal, LANGUAGES } from './components/LanguageRegionModal';
+import { useTranslation } from 'react-i18next';
+import { applyDocumentLanguageAndDir } from './i18n/formatters';
 import { ListPropertyModal } from './components/ListPropertyModal';
 import { TravelInsuranceModal } from './components/TravelInsuranceModal';
 import { HotelDetailsPage } from './components/HotelDetailsPage';
@@ -86,8 +88,17 @@ export default function App() {
   );
 
   // Display & User State
+  const { t, i18n } = useTranslation();
   const [currency, setCurrency] = useState<CurrencyCode>('INR');
-  const [language, setLanguage] = useState<string>('English');
+  const [language, setLanguage] = useState<string>(() => {
+    try {
+      const savedCode = localStorage.getItem('tripyeah_lang') || 'en';
+      const match = LANGUAGES.find((l) => l.code === savedCode);
+      return match ? match.name : 'English';
+    } catch {
+      return 'English';
+    }
+  });
   const [region, setRegion] = useState<string>('India');
   const [userName, setUserName] = useState<string | null>(() => {
     try {
@@ -148,15 +159,8 @@ export default function App() {
     useState<boolean>(false);
   const [showInsuranceModal, setShowInsuranceModal] =
     useState<boolean>(false);
-  // Open Login / Register modal automatically on website open as requested
-  // Show auth modal on initial open unless user already has an active session
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(() => {
-    try {
-      return !localStorage.getItem('tripyeah_logged_user');
-    } catch {
-      return false;
-    }
-  });
+  // Auth modal only opens on user interaction (e.g. clicking Login button)
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
   // Track pending page to open after user logs in (e.g. if unauthenticated user clicks 'My Trips')
   const pendingRedirectRef = useRef<AppPageView | null>(null);
@@ -1078,8 +1082,8 @@ export default function App() {
 
           if (activeRole === 'admin') {
             handleNotify(
-              'TripWork Company Portal Active',
-              `Welcome, ${name}! TripYeah management mode enabled. Managing bookings, fares, inventory & operations.`,
+              'Admin Portal Active',
+              `Welcome, ${name}! TripYeah administrator mode enabled. Managing bookings, fares, inventory & operations.`,
               'success'
             );
             navigateTo('admin');
@@ -1125,9 +1129,13 @@ export default function App() {
           setLanguage(newLang);
           setRegion(newReg);
           setCurrency(newCurr);
+          const langMatch = LANGUAGES.find((l) => l.name === newLang || l.code === newLang);
+          const code = langMatch ? langMatch.code : 'en';
+          i18n.changeLanguage(code);
+          applyDocumentLanguageAndDir(code);
           handleNotify(
-            'Preferences Updated',
-            `Region: ${newReg} · Language: ${newLang} · Currency: ${newCurr}`,
+            t('common.save', 'Preferences Updated'),
+            `${newReg} · ${newLang} · ${newCurr}`,
             'success'
           );
         }}

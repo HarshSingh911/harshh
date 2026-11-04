@@ -120,8 +120,8 @@ export const SearchResultsSection: React.FC<SearchResultsSectionProps> = ({
               <span className="text-sm font-normal text-slate-500 ml-1">
                 · {tripType === 'dummy-flights'
                     ? dummyTripType === 'round-trip'
-                      ? 'Dummy Flight (Round Trip)'
-                      : 'Dummy Flight (One Way)'
+                      ? 'Dummy Flights (Round Trip)'
+                      : 'Dummy Flights (One Way)'
                     : tripType === 'round-trip'
                     ? 'Round Trip'
                     : 'One Way'} · {travellers} {travellers === 1 ? 'Traveller' : 'Travellers'} · {cabinClass}

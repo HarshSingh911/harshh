@@ -5,7 +5,7 @@ import { searchSupabaseAirports } from '../services/airportService';
 import { testSupabaseConnection, SupabaseConnectionStatus } from '../lib/supabase';
 
 interface AirportAutocompleteDropdownProps {
-  label: 'From' | 'To' | 'City / Airport';
+  label: string;
   selectedCity: CityOption;
   onSelectCity: (city: CityOption) => void;
   isOpen: boolean;

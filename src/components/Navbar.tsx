@@ -1,5 +1,6 @@
 import React from 'react';
-import { Luggage, Sparkles, User, ChevronDown, ShieldCheck } from 'lucide-react';
+import { User, ChevronDown, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelData';
 import { TripYeahLogo } from './TripYeahLogo';
 
@@ -98,6 +99,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   // Categories show in top navigation after searching (search-results page or checkout)
   const isSearchResultsPage = activePage === 'search-results';
 
+  const { t } = useTranslation();
+
   return (
     <header
       className={`relative z-40 w-full ${
@@ -140,37 +143,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-emerald-300' : 'text-emerald-600'}`} />
-            <span>Travel Insurance</span>
-          </button>
-
-          {/* 4. My Trips */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!userName) {
-                onOpenAuth('trips');
-              } else {
-                onNavigatePage('trips');
-              }
-            }}
-            title={userName ? "View My Booked Trips" : "Login to view your booked trips"}
-            className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
-              activePage === 'trips'
-                ? isDarkHeader ? 'text-sky-300 font-bold' : 'text-blue-600 font-bold'
-                : isDarkHeader
-                ? 'text-white/85 hover:text-white'
-                : 'text-slate-700 hover:text-blue-600'
-            }`}
-          >
-            <Luggage className={`w-4 h-4 ${isDarkHeader ? 'text-sky-300' : 'text-slate-500'}`} />
-            <span className="hidden sm:inline">My Trips</span>
+            <span>{t('nav.travelInsurance', 'Travel Insurance')}</span>
           </button>
 
           {/* 5. Flag, Currency Code & Language Selector */}
           <button
             type="button"
             onClick={onOpenLanguageModal}
-            title="Change Region, Currency & Language"
+            title={t('modal.title', 'Change Region, Currency & Language')}
             className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
               isDarkHeader
                 ? 'text-white/85 hover:text-white'
@@ -197,8 +177,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5 text-slate-950" />
-              <span className="hidden sm:inline">Company Admin</span>
-              <span className="sm:hidden">Admin</span>
+              <span className="hidden sm:inline">{t('nav.companyAdmin', 'Company Admin')}</span>
+              <span className="sm:hidden">{t('nav.admin', 'Admin')}</span>
             </button>
           )}
 
@@ -207,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => onNavigatePage('account')}
-              title={`Logged in as ${userName} - Account Settings`}
+              title={`Logged in as ${userName} - ${t('nav.accountSettings', 'Account Settings')}`}
               className={`relative group px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
                 isDarkHeader
                   ? 'bg-gradient-to-r from-white via-slate-50 to-blue-50 text-slate-900 border-white/60 shadow-white/15'
@@ -223,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => onOpenAuth()}
-              title="Login or Create a TripYeah Account"
+              title={t('nav.loginOrCreate', 'Login')}
               className={`relative group overflow-hidden px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-tight shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
                 isDarkHeader
                   ? 'bg-gradient-to-r from-white via-sky-50 to-blue-100 hover:from-white hover:to-sky-50 text-slate-950 border-white/80 shadow-[0_4px_20px_rgba(255,255,255,0.25)] hover:shadow-[0_6px_25px_rgba(56,189,248,0.35)]'
@@ -238,11 +218,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <User className="w-3 h-3" />
               </span>
               <span className={isDarkHeader ? 'bg-gradient-to-r from-slate-950 to-blue-950 bg-clip-text text-transparent font-extrabold' : 'font-bold'}>
-                Login or Create Account
+                {t('nav.loginOrCreate', 'Login')}
               </span>
-              <Sparkles className={`w-3.5 h-3.5 transition-transform group-hover:rotate-12 ${
-                isDarkHeader ? 'text-amber-500' : 'text-amber-300'
-              }`} />
             </button>
           )}
         </div>

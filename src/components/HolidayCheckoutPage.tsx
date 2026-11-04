@@ -324,7 +324,7 @@ export const HolidayCheckoutPage: React.FC<HolidayCheckoutPageProps> = ({
             <div className="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-blue-50 text-slate-600 group-hover:text-blue-600 flex items-center justify-center transition-all">
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
             </div>
-            <span>Back to Holiday Packages</span>
+            <span>Back to Holidays</span>
           </button>
 
           <div className="flex items-center gap-2 sm:gap-3">

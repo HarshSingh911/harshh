@@ -1,5 +1,6 @@
 import React from 'react';
 import { Instagram, Facebook, Twitter, Linkedin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BookingCategory } from '../data/travelData';
 import { AppPageView } from './Navbar';
 import { TripYeahLogo } from './TripYeahLogo';
@@ -48,6 +49,8 @@ export const Footer: React.FC<FooterProps> = ({
   onSelectCategory,
   onNavigatePage,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-white text-slate-600 border-t border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -69,13 +72,12 @@ export const Footer: React.FC<FooterProps> = ({
               />
             </a>
             <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-              Smart, high-velocity travel platform engineered for digital nomads,
-              spontaneous wanderers, and global business travelers.
+              {t('footer.tagline', 'Smart, high-velocity travel platform engineered for digital nomads, spontaneous wanderers, and global business travelers.')}
             </p>
             {/* Social Media Links */}
             <div className="pt-2">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-                Follow TripYeah
+                {t('footer.followUs', 'Follow TripYeah')}
               </span>
               <div className="flex items-center gap-2.5">
                 {SOCIAL_PROFILES.map((social) => {
@@ -101,7 +103,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 2: Bookings */}
           <div className="md:col-span-2 space-y-2.5 text-xs">
             <h4 className="font-display font-bold text-slate-900 text-sm">
-              Bookings
+              {t('footer.bookings', 'Bookings')}
             </h4>
             <ul className="space-y-2 text-slate-500">
               <li>
@@ -113,7 +115,7 @@ export const Footer: React.FC<FooterProps> = ({
                   }}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Flights
+                  {t('hero.flights', 'Flights')}
                 </button>
               </li>
               <li>
@@ -125,7 +127,7 @@ export const Footer: React.FC<FooterProps> = ({
                   }}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Hotels &amp; Stays
+                  {t('hero.hotels', 'Hotels')}
                 </button>
               </li>
               <li>
@@ -134,7 +136,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onSelectCategory('buses')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Buses
+                  {t('hero.buses', 'Buses')}
                 </button>
               </li>
               <li>
@@ -143,7 +145,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onSelectCategory('cabs')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Airport Cabs
+                  {t('hero.cabs', 'Airport Cabs')}
                 </button>
               </li>
               <li>
@@ -152,7 +154,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('dining-club')}
                   className="hover:text-amber-600 font-bold text-amber-700 cursor-pointer flex items-center gap-1"
                 >
-                  <span>Dining Club</span>
+                  <span>{t('hero.diningClub', 'Dining Club')}</span>
                   <span className="text-[9px] bg-amber-100 text-amber-800 px-1 py-0.2 rounded font-bold">VIP</span>
                 </button>
               </li>
@@ -162,7 +164,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 3: Company */}
           <div className="md:col-span-2 space-y-2.5 text-xs">
             <h4 className="font-display font-bold text-slate-900 text-sm">
-              Company
+              {t('footer.company', 'Company')}
             </h4>
             <ul className="space-y-2 text-slate-500">
               <li>
@@ -171,7 +173,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('about-us')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  About Us
+                  {t('footer.aboutUs', 'About Us')}
                 </button>
               </li>
               <li>
@@ -180,7 +182,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('account')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Careers
+                  {t('footer.careers', 'Careers')}
                 </button>
               </li>
               <li>
@@ -189,7 +191,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('about-us')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Newsroom
+                  {t('footer.newsroom', 'Newsroom')}
                 </button>
               </li>
               <li>
@@ -198,7 +200,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('influencers')}
                   className="hover:text-rose-600 font-semibold text-rose-500 cursor-pointer flex items-center gap-1"
                 >
-                  <span>Influencers &amp; Creators</span>
+                  <span>{t('footer.influencers', 'Influencers & Creators')}</span>
                   <span className="text-[9px] bg-rose-100 text-rose-700 px-1 py-0.2 rounded font-bold">New</span>
                 </button>
               </li>
@@ -208,7 +210,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('checkout')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Partner Network
+                  {t('footer.partnerNetwork', 'Partner Network')}
                 </button>
               </li>
             </ul>
@@ -217,7 +219,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 4: Support & Legal */}
           <div className="md:col-span-3 space-y-2.5 text-xs">
             <h4 className="font-display font-bold text-slate-900 text-sm">
-              Support &amp; Legal
+              {t('footer.supportLegal', 'Support & Legal')}
             </h4>
             <ul className="space-y-2 text-slate-500">
               <li>
@@ -226,7 +228,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('support')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Support Center
+                  {t('footer.supportCenter', 'Support Center')}
                 </button>
               </li>
               <li>
@@ -235,7 +237,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('privacy-policy')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Privacy Policy
+                  {t('footer.privacyPolicy', 'Privacy Policy')}
                 </button>
               </li>
               <li>
@@ -244,7 +246,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('terms-of-service')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Terms of Service
+                  {t('footer.termsOfService', 'Terms of Service')}
                 </button>
               </li>
               <li>
@@ -253,7 +255,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigatePage('account')}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  Trust &amp; Security
+                  {t('footer.safetySecurity', 'Safety & Security')}
                 </button>
               </li>
             </ul>
@@ -261,7 +263,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© 2026 TripYeah Inc. All rights reserved.</p>
+          <p>© 2026 TripYeah Inc. {t('footer.rightsReserved', 'All rights reserved.')}</p>
 
           {/* Social Profiles Quick Bar */}
           <div className="flex items-center gap-2">
@@ -290,21 +292,21 @@ export const Footer: React.FC<FooterProps> = ({
               onClick={() => onNavigatePage('privacy-policy')}
               className="hover:text-slate-700 cursor-pointer"
             >
-              Privacy
+              {t('footer.privacyPolicy', 'Privacy Policy')}
             </button>
             <button
               type="button"
               onClick={() => onNavigatePage('terms-of-service')}
               className="hover:text-slate-700 cursor-pointer"
             >
-              Terms
+              {t('footer.termsOfService', 'Terms of Service')}
             </button>
             <button
               type="button"
-              onClick={() => onNavigatePage('trips')}
+              onClick={() => onNavigatePage('support')}
               className="hover:text-slate-700 cursor-pointer"
             >
-              Help Desk
+              {t('footer.supportCenter', 'Support')}
             </button>
           </div>
         </div>

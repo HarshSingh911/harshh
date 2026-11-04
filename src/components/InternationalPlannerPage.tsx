@@ -3232,7 +3232,7 @@ export const InternationalPlannerPage: React.FC<InternationalPlannerProps> = ({
                   <div className="flex justify-between text-xs font-bold mb-1">
                     <span className="flex items-center gap-1.5 text-slate-700">
                       <Building2 className="w-3.5 h-3.5 text-sky-500" />
-                      Hotels & Stays (Per Night)
+                      Hotels (Per Night)
                     </span>
                     <span className="text-sky-700 font-extrabold">{formatPrice(hotelTierRate, currency)}</span>
                   </div>

@@ -61,6 +61,8 @@ import {
   TripType,
   formatPrice,
 } from '../data/travelData';
+import { useTranslation } from 'react-i18next';
+import { formatDateWithLocale } from '../i18n/formatters';
 import { SafeImage } from './SafeImage';
 import { BusSeatLayoutSelector } from './BusSeatLayoutSelector';
 import { FlightFareOptionsModal } from './FlightFareOptionsModal';
@@ -522,6 +524,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   onOpenHostelsPage,
   onNotify,
 }) => {
+  const { t, i18n } = useTranslation();
   // Current active results tab (Flights, Trains, Hotels, Buses, Cabs, Holidays)
   const [currentCategory, setCurrentCategory] = useState<BookingCategory>(initialActiveCategory);
   const [currentTripType, setCurrentTripType] = useState<TripType>(tripType || 'one-way');
@@ -811,13 +814,13 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     const flightTypeLabel =
       modTripType === 'dummy-flights'
         ? modDummyTripType === 'round-trip'
-          ? 'Dummy Flight (Round Trip)'
-          : 'Dummy Flight (One Way)'
+          ? 'Dummy Flights (Round Trip)'
+          : 'Dummy Flights (One Way)'
         : modTripType === 'round-trip'
         ? 'Round Trip'
         : 'One Way';
     
-    let stayTypeLabel = 'Hotels & Stays';
+    let stayTypeLabel = 'Hotels';
     if (modCategory === 'hotels') {
       if (modHotelMode === 'villas') stayTypeLabel = 'Luxury Villas & Resorts';
       else if (modHotelMode === 'hourly') stayTypeLabel = 'Hourly Stays';
@@ -1226,9 +1229,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
   const formatFriendlyDate = (dateStr: string) => {
     if (!dateStr) return 'Select Date';
-    const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('en-IN', {
+    return formatDateWithLocale(dateStr, i18n.language, {
       weekday: 'short',
       day: 'numeric',
       month: 'short',
@@ -1652,7 +1653,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         ? 'Hourly Stays'
                         : currentHotelMode === 'hostels'
                         ? 'Hostels & Backpackers'
-                        : 'Hotels & Stays'}
+                        : 'Hotels'}
                     </span>
                   </>
                 ) : (
@@ -1685,8 +1686,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       }`}>
                         {currentTripType === 'dummy-flights'
                           ? currentDummyTripType === 'round-trip'
-                            ? 'Dummy Ticket (Round Trip)'
-                            : 'Dummy Ticket (One Way)'
+                            ? 'Dummy Flights (Round Trip)'
+                            : 'Dummy Flights (One Way)'
                           : currentTripType === 'round-trip'
                           ? 'Round Trip'
                           : 'One Way'}
@@ -2600,7 +2601,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <label className="text-xs font-bold text-slate-600">Stay Type:</label>
                     <div className="inline-flex rounded-xl p-1 bg-white border border-slate-200 shadow-2xs gap-1">
                       {[
-                        { id: 'overnight', label: 'Hotels & Stays' },
+                        { id: 'overnight', label: 'Hotels' },
                         { id: 'villas', label: 'Luxury Villas & Resorts' },
                         { id: 'hourly', label: 'Hourly Stays' },
                         { id: 'hostels', label: 'Hostels' },
@@ -3511,7 +3512,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     >
                       <div className="truncate">
                         <div className="text-slate-900 font-bold">{modToCity.city}</div>
-                        <div className="text-[10px] text-slate-500 truncate">Holiday Packages</div>
+                        <div className="text-[10px] text-slate-500 truncate">Holidays</div>
                       </div>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openHolidayDropdown === 'to' ? 'rotate-180 text-blue-600' : ''}`} />
                     </button>
@@ -5641,7 +5642,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                           {/* Quick Sort Popover */}
                           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px]">
-                            <span className="text-slate-400 font-medium">{processedFlights.length} Flights Found</span>
+                            <span className="text-slate-400 font-medium">{processedFlights.length} {t('search.flightsFound', 'Flights Found')}</span>
                             <div className="relative dropdown-field-container">
                               <button
                                 type="button"
@@ -5653,9 +5654,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-white text-slate-800 text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
                               >
                                 <SlidersHorizontal className="w-3 h-3 text-blue-600" />
-                                <span>Sort By:</span>
+                                <span>{t('search.sortBy', 'Sort By')}:</span>
                                 <span className="text-blue-700 capitalize font-extrabold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 text-[10px]">
-                                  {sortBy === 'cheapest' ? 'Cheapest' : sortBy === 'fastest' ? 'Fastest' : 'Departure'}
+                                  {sortBy === 'cheapest' ? t('search.cheapest', 'Cheapest') : sortBy === 'fastest' ? t('search.fastest', 'Fastest') : 'Departure'}
                                 </span>
                                 <ChevronDown
                                   className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${

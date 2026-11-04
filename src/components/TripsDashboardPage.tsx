@@ -435,7 +435,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-blue-500/25 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2.5"
             >
               <User className="w-4 h-4" />
-              <span>Login or Create Account</span>
+              <span>Login</span>
             </button>
           </div>
         </div>
@@ -826,7 +826,7 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
                     }}
                     className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold cursor-pointer transition-colors"
                   >
-                    Holiday Packages
+                    Holidays
                   </button>
                 </>
               )}

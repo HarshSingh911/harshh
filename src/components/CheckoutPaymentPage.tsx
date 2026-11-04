@@ -50,6 +50,7 @@ import {
   CurrencyCode,
   formatPrice,
 } from '../data/travelData';
+import { useTranslation } from 'react-i18next';
 import { SafeImage } from './SafeImage';
 import { TrainBookingCheckoutPage } from './TrainBookingCheckoutPage';
 import { FlightBookingCheckoutPage } from './FlightBookingCheckoutPage';
@@ -135,6 +136,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
   onNotify,
   onGoToTrips,
 }) => {
+  const { t } = useTranslation();
   const category = item.category || 'flights';
 
   // Dynamic Passengers (Matching Train Checkout Page: Empty defaults, custom dropdowns, dynamic add/remove)
@@ -1389,15 +1391,15 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
           {/* PRICE BREAKDOWN CARD */}
           <div className="bg-white rounded-3xl border border-slate-200/85 p-5 shadow-xs space-y-4">
             <h3 className="font-display text-base font-bold text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
-              <span>Fare Breakdown</span>
+              <span>{t('checkout.fareSummary', 'Fare Breakdown')}</span>
               <span className="text-xs font-normal text-slate-500">
-                {travellersCount} {travellersCount === 1 ? 'Traveller' : 'Travellers'}
+                {travellersCount} {travellersCount === 1 ? t('hero.traveller', 'Traveller') : t('hero.travellers', 'Travellers')}
               </span>
             </h3>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between items-center text-slate-600">
-                <span>Base Service Fare</span>
+                <span>{t('checkout.baseFare', 'Base Service Fare')}</span>
                 <span className="font-mono-tabular font-bold text-slate-900">
                   {formatPrice(baseServiceFare, currency)}
                 </span>
@@ -1413,7 +1415,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
               )}
 
               <div className="flex justify-between items-center text-slate-600">
-                <span>Taxes &amp; Operational Charges</span>
+                <span>{t('checkout.taxes', 'Taxes & Surcharges')}</span>
                 <span className="font-mono-tabular font-bold text-slate-900">
                   +{formatPrice(taxesAndFeesInr, currency)}
                 </span>
@@ -1430,7 +1432,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
 
               <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
                 <div>
-                  <div className="text-sm font-bold text-slate-900">Total Payable</div>
+                  <div className="text-sm font-bold text-slate-900">{t('checkout.totalPayable', 'Total Payable')}</div>
                   <div className="text-[10px] text-emerald-600 font-semibold">Incl. of all taxes &amp; charges</div>
                 </div>
                 <div className="text-2xl font-medium text-blue-700 font-mono-tabular">
@@ -1449,11 +1451,11 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                   {isProcessingPayment ? (
                     <>
                       <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Confirming Booking...</span>
+                      <span>{t('common.loading', 'Confirming Booking...')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Continue</span>
+                      <span>{t('checkout.payNow', 'Proceed to Payment')}</span>
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}
@@ -1474,7 +1476,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                 type="text"
                 value={customCouponInput}
                 onChange={(e) => setCustomCouponInput(e.target.value)}
-                placeholder="ENTER PROMO CODE"
+                placeholder={t('checkout.enterCoupon', 'Enter promo code')}
                 className="flex-1 px-3 py-2 rounded-l-xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
@@ -1482,7 +1484,7 @@ const DefaultCheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = ({
                 onClick={handleApplyCoupon}
                 className="px-4 py-2 rounded-r-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer transition-colors"
               >
-                Apply
+                {t('checkout.apply', 'Apply')}
               </button>
             </div>
 

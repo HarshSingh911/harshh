@@ -375,7 +375,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-indigo-200 text-xs font-bold mb-2 drop-shadow-md">
-                <span>TripYeah Experiences</span>
+                <span>TripYeah Attractions</span>
                 <span>/</span>
                 <span className="text-white">Theme Parks, Activities & Attractions</span>
                 {selectedCityFilter !== 'all' && (
@@ -520,7 +520,7 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
           {/* Quick Category Tabs Bar: Clean transparent buttons without dark/black fill */}
           <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {[
-              { id: 'all', label: '🌟 All Experiences', count: EXPERIENCES_DATA.length },
+              { id: 'all', label: '🌟 All Attractions', count: EXPERIENCES_DATA.length },
               {
                 id: 'theme-parks',
                 label: '🎢 Theme Parks',

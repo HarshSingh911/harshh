@@ -25,6 +25,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { TripYeahLogo } from './TripYeahLogo';
+import { useTranslation } from 'react-i18next';
 import { auth, googleAuthProvider, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import {
   signInWithPopup,
@@ -187,6 +188,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onOpenPrivacyPolicy,
   onOpenTermsOfService,
 }) => {
+  const { t } = useTranslation();
   // Navigation & Method Tabs ('phone' | 'email')
   const [authMethod, setAuthMethod] = useState<AuthMethod>('phone');
   const [step, setStep] = useState<AuthStep>('phone-input');
@@ -656,12 +658,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 450);
   };
 
-  // TripWork Company Management / Operations Submit
-  const handleTripWorkSubmit = (e: React.FormEvent) => {
+  // Email Login Submit
+  const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = emailInput.trim();
     if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
-      setError('Please enter a valid company/admin email address.');
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -669,34 +671,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setTimeout(() => {
       setLoading(false);
       const rawName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      const adminName = rawName.toLowerCase().includes('admin') || rawName.toLowerCase().includes('trip')
-        ? rawName
-        : `${rawName} (Admin)`;
+      const isBootstrappedAdmin = cleanEmail.toLowerCase() === 'meetsingh7416@gmail.com';
+      const userName = rawName || 'Traveller';
+      const resolvedRole: 'user' | 'admin' = isBootstrappedAdmin ? 'admin' : 'user';
 
-      // Save user record with admin role
+      // Save user record
       try {
         const storedAccountsStr = localStorage.getItem('tripyeah_registered_accounts');
         const accounts: any[] = storedAccountsStr ? JSON.parse(storedAccountsStr) : [];
         const newAccount = {
           email: cleanEmail,
-          name: adminName,
+          name: userName,
           phone: '',
-          accountType: 'tripwork_admin',
-          role: 'admin',
+          accountType: 'email_user',
+          role: resolvedRole,
           createdAt: new Date().toISOString(),
         };
         localStorage.setItem(
           'tripyeah_registered_accounts',
           JSON.stringify([...accounts.filter((a) => a.email !== cleanEmail), newAccount])
         );
-        localStorage.setItem('tripyeah_user_role', 'admin');
-        localStorage.setItem('tripyeah_logged_user', adminName);
+        localStorage.setItem('tripyeah_user_role', resolvedRole);
+        localStorage.setItem('tripyeah_logged_user', userName);
       } catch {}
 
-      onLoginSuccess(adminName, cleanEmail, '', 'admin');
+      onLoginSuccess(userName, cleanEmail, '', resolvedRole);
       onClose();
     }, 450);
   };
+
 
   // Real Firebase Google Login with Popup
   const handleGoogleLogin = async () => {
@@ -855,7 +858,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Form Content Area */}
           <div className="flex-1 flex flex-col justify-center">
 
-            {/* Method Tabs: Phone vs TripWork (Positioned right above input fields with tight, clean gap) */}
+            {/* Method Tabs: Phone vs Email (Positioned right above input fields with tight, clean gap) */}
             {(step === 'phone-input' || step === 'email-login') && (
               <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-3">
                 <button
@@ -888,8 +891,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span>TripWork</span>
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Email</span>
                 </button>
               </div>
             )}
@@ -901,7 +904,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <form onSubmit={handlePhoneSubmit} className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                    Mobile Number
+                    MOBILE NUMBER
                   </label>
                   <div className="relative flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all">
                     {/* Custom Country Code Selector with Search & Scroll */}
@@ -923,7 +926,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         type="tel"
                         value={phoneNumber}
                         onChange={handlePhoneChange}
-                        placeholder="Enter Mobile Number"
+                        placeholder="MOBILE NUMBER"
                         maxLength={10}
                         autoFocus
                         required
@@ -1003,7 +1006,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>Continue</span>
+                      <span>{t('auth.continue', 'Continue')}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -1012,13 +1015,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             {/* -------------------------------------------------------------
-                METHOD 2: TRIPWORK COMPANY MANAGEMENT
+                METHOD 2: EMAIL LOGIN
                ------------------------------------------------------------- */}
             {step === 'email-login' && authMethod === 'email' && (
-              <form onSubmit={handleTripWorkSubmit} className="space-y-3">
+              <form onSubmit={handleEmailSubmit} className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                    Work Email
+                    EMAIL ADDRESS
                   </label>
                   <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all overflow-hidden">
                     <div className="pl-3 text-slate-400">
@@ -1032,7 +1035,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                           setEmailInput(e.target.value);
                           setError('');
                         }}
-                        placeholder="Enter Work Email ID"
+                        placeholder="Enter Email Address"
                         autoFocus
                         required
                         className="w-full px-3 py-2.5 text-xs sm:text-sm font-normal text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400"
@@ -1125,7 +1128,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>Verify &amp; Continue</span>
+                      <span>{t('auth.verifyAndProceed', 'Verify & Continue')}</span>
                       <CheckCircle2 className="w-4 h-4" />
                     </>
                   )}
@@ -1281,9 +1284,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <div className="w-full border-t border-slate-200" />
                   </div>
                   <span className="relative z-10 bg-white px-3 text-[11px] font-medium text-slate-400 text-center">
-                    {authMethod === 'email'
-                      ? 'or use your corporate account with'
-                      : 'or Login/Signup with'}
+                    {t('auth.orContinueWith', 'or Login/Signup with')}
                   </span>
                 </div>
 
