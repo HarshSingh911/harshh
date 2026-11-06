@@ -2602,7 +2602,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     <div className="inline-flex rounded-xl p-1 bg-white border border-slate-200 shadow-2xs gap-1">
                       {[
                         { id: 'overnight', label: 'Hotels' },
-                        { id: 'villas', label: 'Luxury Villas & Resorts' },
                         { id: 'hourly', label: 'Hourly Stays' },
                         { id: 'hostels', label: 'Hostels' },
                       ].map((m) => (
@@ -2807,7 +2806,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-xs font-semibold text-slate-700 block">Rooms</span>
-                            <span className="text-[10px] text-slate-400">Up to 4 rooms</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -2823,8 +2821,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             </span>
                             <button
                               type="button"
-                              onClick={() => setModHotelRooms(Math.min(4, modHotelRooms + 1))}
-                              disabled={modHotelRooms >= 4}
+                              onClick={() => setModHotelRooms(Math.min(10, modHotelRooms + 1))}
+                              disabled={modHotelRooms >= 10}
                               className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                               +
@@ -3628,7 +3626,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-xs font-semibold text-slate-700 block">Rooms</span>
-                            <span className="text-[10px] text-slate-400">Up to 4 rooms</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -3644,8 +3641,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             </span>
                             <button
                               type="button"
-                              onClick={() => setModHotelRooms(Math.min(4, modHotelRooms + 1))}
-                              disabled={modHotelRooms >= 4}
+                              onClick={() => setModHotelRooms(Math.min(10, modHotelRooms + 1))}
+                              disabled={modHotelRooms >= 10}
                               className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                               +

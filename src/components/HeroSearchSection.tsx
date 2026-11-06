@@ -83,7 +83,6 @@ const SERVICE_TABS: {
 }[] = [
   { id: 'flights', label: 'Flights', ctaLabel: 'Search Flights', icon: Plane },
   { id: 'hotels', label: 'Hotels', ctaLabel: 'Search Hotels', icon: Building2 },
-  { id: 'buses', label: 'Buses', ctaLabel: 'Search Buses', icon: Bus },
   { id: 'cabs', label: 'Cabs', ctaLabel: 'Search Cabs', icon: Car },
   { id: 'holidays', label: 'Holidays', ctaLabel: 'Search Holidays', icon: Palmtree },
   { id: 'experiences', label: 'Attractions', ctaLabel: 'Explore Attractions', icon: Ticket },
@@ -350,7 +349,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             {t('hero.tagline', 'Where will you go next?')}
           </h1>
           <p className="text-xs sm:text-sm lg:text-base text-white/95 font-medium max-w-xl mx-auto drop-shadow-[0_2px_10px_rgba(15,23,42,0.45)]">
-            {t('hero.subtitle', 'Flights, Hotels, Buses, Cabs & Holidays — all in one place.')}
+            {t('hero.subtitle', 'Flights, Hotels, Cabs & Holidays — all in one place.')}
           </p>
         </div>
       </div>
@@ -358,11 +357,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
       {/* Floating Multi-Modal Search Engine Card — Positioned in the Middle over the Hero */}
       <div className="relative z-20 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 -mt-64 sm:-mt-72 lg:-mt-80">
         <div className="bg-white rounded-[26px] shadow-[0_20px_50px_rgba(15,23,42,0.12)] border border-slate-200/80 p-3.5 sm:p-5 lg:p-6">
-          {/* ROW 1: 6 Service Category Tabs in a single horizontal landscape line */}
+          {/* ROW 1: 5 Service Category Tabs in a single horizontal landscape line */}
           <div
             role="tablist"
             aria-label="Booking categories"
-            className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
           >
             {SERVICE_TABS.map((tab) => {
               const Icon = tab.icon;
@@ -370,7 +369,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               const tabLabel =
                 tab.id === 'flights' ? t('hero.flights', 'Flights') :
                 tab.id === 'hotels' ? t('hero.hotels', 'Hotels') :
-                tab.id === 'buses' ? t('hero.buses', 'Buses') :
                 tab.id === 'cabs' ? t('hero.cabs', 'Cabs') :
                 tab.id === 'holidays' ? t('hero.holidays', 'Holidays') :
                 tab.id === 'experiences' ? t('hero.experiences', 'Attractions') :
@@ -1081,16 +1079,14 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           )}
 
           {/* ===================================================================
-              3. HOTELS INTERFACE (Upto 4 Rooms | Hourly Stays | Villas + City/Property, Check-In, Check-Out, Rooms & Guests)
+              3. HOTELS INTERFACE (Hourly Stays | Hostels + City/Property, Check-In, Check-Out, Rooms & Guests)
           =================================================================== */}
           {activeCategory === 'hotels' && (
             <>
               <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {[
-                    { id: 'overnight', label: 'Upto 4 Rooms' },
                     { id: 'hourly', label: 'Hourly Stays' },
-                    { id: 'villas', label: 'Luxury Villas & Resorts' },
                     { id: 'hostels', label: 'Hostels (Hosteller / goSTOPS)' },
                   ].map((m) => (
                     <button
@@ -1104,7 +1100,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                             setHotelMode('hostels');
                           }
                         } else {
-                          setHotelMode(m.id as 'overnight' | 'hourly' | 'villas' | 'hostels');
+                          // Toggle between hourly and standard overnight stay
+                          setHotelMode(hotelMode === 'hourly' ? 'overnight' : 'hourly');
                         }
                       }}
                       className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -1121,6 +1118,15 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       {m.label}
                     </button>
                   ))}
+                  {hotelMode === 'hourly' && (
+                    <button
+                      type="button"
+                      onClick={() => setHotelMode('overnight')}
+                      className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                    >
+                      ✕ Reset to Standard Hotels
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1142,10 +1148,10 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       {toCity.city}, {toCity.country}
                     </span>
                     <span className="block text-[11px] text-slate-500 truncate">
-                      {hotelMode === 'villas'
-                        ? 'Private Pool Villas & Beach Resorts'
-                        : hotelMode === 'hostels'
+                      {hotelMode === 'hostels'
                         ? 'The Hosteller, goSTOPS, Zostel & Dorms'
+                        : hotelMode === 'hourly'
+                        ? 'Micro-stays & Day-use Rooms'
                         : '320+ Verified Properties'}
                     </span>
                   </button>
@@ -1337,7 +1343,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                           </span>
                           <button
                             type="button"
-                            onClick={() => setHotelRooms(Math.min(4, hotelRooms + 1))}
+                            onClick={() => setHotelRooms(Math.min(10, hotelRooms + 1))}
                             className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer"
                           >
                             +
@@ -1454,146 +1460,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             </>
           )}
 
-          {/* ===================================================================
-              4. BUSES INTERFACE (RedBus / MMT Style: Coach Filters + From City ⇄ To City + Travel Date + Seat Type)
-          =================================================================== */}
-          {activeCategory === 'buses' && (
-            <>
-              <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  {BUS_TYPES.map((bt) => (
-                    <button
-                      key={bt}
-                      type="button"
-                      onClick={() => {
-                        setBusFilter(bt);
-                        onChangeTravellers(travellers, bt);
-                      }}
-                      className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                        busFilter === bt
-                          ? 'bg-[#2563EB] text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                      }`}
-                    >
-                      {bt}
-                    </button>
-                  ))}
-                </div>
 
-              </div>
-
-              <div className="flex items-stretch gap-2 w-full">
-                {/* From Bus Stand ⇄ To Bus Stand */}
-                <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
-                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDropdown(openDropdown === 'from' ? null : 'from');
-                      }}
-                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
-                    >
-                      <span className="block text-[11px] text-slate-500 font-medium">
-                        From City
-                      </span>
-                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
-                        {fromCity.city}
-                      </span>
-                      <span className="block text-[11px] text-slate-500 truncate">
-                        ISBT / Main Boarding Point
-                      </span>
-                    </button>
-                    {renderCityDropdown('from', fromCity, onChangeFromCity)}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleSwap}
-                    aria-label="Swap bus cities"
-                    className={`flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-md items-center justify-center text-slate-700 hover:text-indigo-600 transition-transform duration-200 cursor-pointer ${
-                      swapRotated ? 'rotate-180' : ''
-                    }`}
-                  >
-                    <ArrowLeftRight className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDropdown(openDropdown === 'to' ? null : 'to');
-                      }}
-                      className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
-                    >
-                      <span className="block text-[11px] text-slate-500 font-medium">
-                        To City
-                      </span>
-                      <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
-                        {toCity.city}
-                      </span>
-                      <span className="block text-[11px] text-slate-500 truncate">
-                        Central Bus Terminal
-                      </span>
-                    </button>
-                    {renderCityDropdown('to', toCity, onChangeToCity)}
-                  </div>
-                </div>
-
-                {/* Travel Date — Opens Normal Inline Calendar */}
-                <div className="flex-1 min-w-0 relative dropdown-field-container">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDropdown(openDropdown === 'bus-date' ? null : 'bus-date');
-                    }}
-                    className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
-                      openDropdown === 'bus-date'
-                        ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
-                        : 'bg-slate-50/90 hover:bg-slate-100/90 hover:border-blue-400 border-slate-200/90'
-                    }`}
-                    title="Click to select bus travel date"
-                  >
-                    <div className="min-w-0">
-                      <span className="block text-[11px] text-slate-500 font-medium group-hover:text-blue-600 transition-colors">
-                        Travel Date
-                      </span>
-                      <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
-                        {formatDisplayDate(departureDate)}
-                      </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        {busFilter}
-                      </span>
-                    </div>
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
-                      <Calendar className="w-4 h-4" />
-                    </div>
-                  </button>
-                  {openDropdown === 'bus-date' && (
-                    <NormalCalendarDropdown
-                      selectedDate={departureDate}
-                      minDate="2026-10-15"
-                      onSelectDate={(newDate) => onChangeDepartureDate(newDate)}
-                      onClose={() => setOpenDropdown(null)}
-                      alignRight={false}
-                    />
-                  )}
-                </div>
-
-                {/* Search Buses Button */}
-                <button
-                  type="button"
-                  onClick={onTriggerSearch}
-                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
-                >
-                  <Search className="w-4 h-4 shrink-0" />
-                  <span>Search</span>
-                </button>
-              </div>
-            </>
-          )}
 
           {/* ===================================================================
               5. CABS INTERFACE (Outstation One-Way | Outstation Round-Trip | Airport Transfer | Hourly Rental)
@@ -2118,8 +1985,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                           </span>
                           <button
                             type="button"
-                            onClick={() => setHolidayRooms(Math.min(4, holidayRooms + 1))}
-                            disabled={holidayRooms >= 4}
+                            onClick={() => setHolidayRooms(Math.min(10, holidayRooms + 1))}
+                            disabled={holidayRooms >= 10}
                             className="w-7 h-7 rounded-full border border-slate-200 font-bold text-xs cursor-pointer flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
                             +

@@ -1,33 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search,
-  Luggage,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
   ChevronRight,
   ChevronDown,
   User,
-  CreditCard,
   HelpCircle,
   ShieldCheck,
-  Compass,
-  Gift,
-  UtensilsCrossed,
   Mail,
   Phone,
   MessageSquare,
-  AlertCircle,
-  FileText,
-  RotateCcw,
-  Sparkles,
-  Send,
   X,
-  ExternalLink,
 } from 'lucide-react';
 import { AppPageView } from './Navbar';
-import { BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
+import { BookedTrip, CurrencyCode } from '../data/travelData';
 import supportHeroBg from '../assets/images/support_hero_bg_1792412778981.jpg';
 import customerSupportImg from '../assets/images/customer_support_rep_1792420256877.jpg';
 
@@ -46,9 +31,7 @@ export interface SupportCenterPageProps {
 type FaqCategory =
   | 'all'
   | 'Booking'
-  | 'Payments'
   | 'Cancellations'
-  | 'Refunds'
   | 'Account & Login'
   | 'Travel Assistance';
 
@@ -95,34 +78,7 @@ const FAQS_DATA: FaqItem[] = [
     answer:
       'Go to "My Trips", select the booking you wish to alter, and click "Reschedule / Change Date". TripYehh members enjoy zero date-change fees on select domestic routes and hotel bookings (fare difference, if applicable, is shown transparently).',
   },
-  {
-    id: 'r-1',
-    category: 'Refunds',
-    question: 'How long does it take for my refund to reflect in my bank account?',
-    answer:
-      'For UPI payments (Google Pay, PhonePe, Paytm), refunds are processed instantaneously within 2 to 24 hours. For Debit/Credit Card and Net Banking transactions, the credited amount reflects in your account within 3 to 5 business days, subject to your issuing bank’s clearing cycle.',
-  },
-  {
-    id: 'r-2',
-    category: 'Refunds',
-    question: 'Can I track the real-time status of my refund?',
-    answer:
-      'Yes! Click on "Track Refund" in the My Trips section or check the Refund Tracker tool on this page using your Booking Reference ID (e.g. TY-8841-GOA). You will see step-by-step milestones: Request Received, Airline/Hotel Approval, Bank Gateway Dispatch, and Account Credit.',
-  },
-  {
-    id: 'p-1',
-    category: 'Payments',
-    question: 'Which payment modes are supported on TripYehh?',
-    answer:
-      'TripYehh supports all major payment methods including Instant UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards (Visa, Mastercard, RuPay, Amex), Net Banking across 50+ Indian banks, and TripPoints rewards balance.',
-  },
-  {
-    id: 'p-2',
-    category: 'Payments',
-    question: 'Is my payment transaction secure on TripYehh?',
-    answer:
-      'All transactions on TripYehh are processed through PCI-DSS Level 1 certified payment gateways with industry-grade SSL encryption. We never store your full card numbers, CVVs, or UPI PINs.',
-  },
+
   {
     id: 'a-1',
     category: 'Account & Login',
@@ -162,25 +118,6 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
   const [activeFaqCategory, setActiveFaqCategory] = useState<FaqCategory>('all');
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>('b-1');
 
-  // Refund tracker modal
-  const [showRefundTracker, setShowRefundTracker] = useState(false);
-  const [refundTrackingId, setRefundTrackingId] = useState(
-    bookedTrips[0]?.bookingId || 'TY-8841-GOA'
-  );
-
-  // Contact form state
-  const [contactName, setContactName] = useState(userName || '');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactCategory, setContactCategory] = useState('Booking & Reservation');
-  const [contactBookingRef, setContactBookingRef] = useState('');
-  const [contactMessage, setContactMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedTicket, setSubmittedTicket] = useState<{
-    ticketId: string;
-    subject: string;
-    date: string;
-  } | null>(null);
-
   // Filter FAQs based on category & search query
   const filteredFaqs = useMemo(() => {
     return FAQS_DATA.filter((faq) => {
@@ -194,65 +131,6 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
       return matchesCategory && matchesSearch;
     });
   }, [activeFaqCategory, searchQuery]);
-
-  // Handle support form submit
-  const handleContactSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
-      onNotify?.('Missing Information', 'Please fill in all required fields.', 'info');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const generatedId = `TY-TK-${Math.floor(10000 + Math.random() * 90000)}`;
-
-      // Save ticket to localStorage
-      try {
-        const stored = localStorage.getItem('tripyeah_support_tickets');
-        const tickets = stored ? JSON.parse(stored) : [];
-        const newTicket = {
-          id: generatedId,
-          customerName: contactName.trim(),
-          email: contactEmail.trim(),
-          category: contactCategory,
-          bookingRef: contactBookingRef.trim() || 'N/A',
-          subject: contactMessage.slice(0, 60) + (contactMessage.length > 60 ? '...' : ''),
-          message: contactMessage.trim(),
-          status: 'Open',
-          priority: 'High',
-          date: 'Just now',
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem(
-          'tripyeah_support_tickets',
-          JSON.stringify([newTicket, ...tickets])
-        );
-      } catch (err) {
-        console.warn('Error saving support ticket:', err);
-      }
-
-      setSubmittedTicket({
-        ticketId: generatedId,
-        subject: contactCategory,
-        date: 'Just now',
-      });
-
-      onNotify?.(
-        'Support Ticket Created',
-        `Ticket #${generatedId} has been logged. Our executive will reach out to ${contactEmail.trim()} within 2-4 hours.`,
-        'success'
-      );
-    }, 600);
-  };
-
-  const handleResetForm = () => {
-    setSubmittedTicket(null);
-    setContactMessage('');
-    setContactBookingRef('');
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
@@ -298,189 +176,7 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
         {/* Container for main content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 space-y-10 sm:space-y-12 relative z-20">
 
-          {/* =========================================================================
-              2. MY TRIPS SECTION (WHITE CARD BELOW HERO BANNER)
-          ========================================================================= */}
-          <section className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                    <Luggage className="w-4 h-4" />
-                  </div>
-                  <h2 className="font-display text-2xl font-bold text-slate-900">
-                    My Trips
-                  </h2>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  View and manage your bookings in one place.
-                </p>
-              </div>
 
-              {/* 4 Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => onNavigatePage('trips')}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                >
-                  <Luggage className="w-3.5 h-3.5" />
-                  <span>View Bookings</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onNavigatePage('trips')}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Modify Booking</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onNavigatePage('trips')}
-                  className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
-                  <span>Cancel Booking</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowRefundTracker(true)}
-                  className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Track Refund</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Bookings Display / Empty State */}
-            <div className="pt-6">
-              {bookedTrips && bookedTrips.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                    <span>
-                      Showing {bookedTrips.length} recent{' '}
-                      {bookedTrips.length === 1 ? 'booking' : 'bookings'} associated with your profile:
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onNavigatePage('trips')}
-                      className="text-blue-600 font-bold hover:underline cursor-pointer flex items-center gap-1"
-                    >
-                      <span>Full Trips Dashboard</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {bookedTrips.map((trip) => {
-                      const isConfirmed = trip.status === 'Confirmed';
-                      const isCancelled = trip.status === 'Cancelled';
-
-                      return (
-                        <div
-                          key={trip.bookingId}
-                          onClick={() => onNavigatePage('trips')}
-                          className="p-5 rounded-2xl border border-slate-200 hover:border-blue-400 bg-white hover:bg-slate-50/60 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
-                        >
-                          <div>
-                            <div className="flex items-start justify-between gap-3 mb-2">
-                              <div>
-                                <span className="font-mono text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
-                                  Ref: #{trip.bookingId}
-                                </span>
-                                {trip.pnr && (
-                                  <span className="font-mono text-[11px] font-semibold text-slate-500 ml-2">
-                                    PNR: {trip.pnr}
-                                  </span>
-                                )}
-                              </div>
-
-                              <span
-                                className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                                  isConfirmed
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : isCancelled
-                                    ? 'bg-rose-100 text-rose-800'
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}
-                              >
-                                {trip.status}
-                              </span>
-                            </div>
-
-                            <h3 className="font-display text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                              {trip.title}
-                            </h3>
-
-                            <p className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span>{trip.dateSummary || `${trip.departureDate} – ${trip.returnDate}`}</span>
-                              <span>·</span>
-                              <span>{trip.routeSummary}</span>
-                            </p>
-
-                            <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">
-                              {trip.carrierOrHotel || trip.cabinOrRoom}
-                            </p>
-                          </div>
-
-                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                            <span className="font-bold text-slate-900 font-mono">
-                              Total: {formatPrice(trip.totalPaidInr, currency)}
-                            </span>
-                            <span className="text-blue-600 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                              <span>Manage details</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                /* Proper Empty State */
-                <div className="text-center py-12 px-4 max-w-md mx-auto space-y-4">
-                  <div className="w-16 h-16 rounded-3xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-                    <Luggage className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-lg font-bold text-slate-900">
-                      No bookings found
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {userName
-                        ? 'You currently do not have any active or upcoming travel reservations.'
-                        : 'Sign in to access your flight tickets, hotel vouchers, and PNR details.'}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={onBackToHome}
-                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
-                    >
-                      Explore Trips
-                    </button>
-                    {!userName && (
-                      <button
-                        type="button"
-                        onClick={onOpenAuth}
-                        className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors cursor-pointer"
-                      >
-                        Sign In
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
 
           {/* =========================================================================
               3. QUICK LINKS SECTION
@@ -516,30 +212,7 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 </div>
               </button>
 
-              {/* Card 2: Payment & Refunds */}
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveFaqCategory('Refunds');
-                  setShowRefundTracker(true);
-                }}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-400 shadow-2xs hover:shadow-md transition-all text-left flex items-start gap-3.5 group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors flex items-center justify-between">
-                    <span>Payment &amp; Refunds</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-600 transition-all" />
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Check payment-related help, UPI/Card statuses, and instant refund timelines.
-                  </p>
-                </div>
-              </button>
-
-              {/* Card 3: Booking Help */}
+              {/* Card 2: Booking Help */}
               <button
                 type="button"
                 onClick={() => {
@@ -563,7 +236,7 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 </div>
               </button>
 
-              {/* Card 4: Travel Insurance */}
+              {/* Card 3: Travel Insurance */}
               <button
                 type="button"
                 onClick={onOpenInsurance}
@@ -579,69 +252,6 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                   </h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                     View policy documents, claim assistance, and emergency cashless hospital cover.
-                  </p>
-                </div>
-              </button>
-
-              {/* Card 5: Trip Ideas */}
-              <button
-                type="button"
-                onClick={() => onNavigatePage('explore')}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 shadow-2xs hover:shadow-md transition-all text-left flex items-start gap-3.5 group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors flex items-center justify-between">
-                    <span>Trip Ideas</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-amber-600 transition-all" />
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Discover travel inspiration, curated itineraries, and top trending destinations.
-                  </p>
-                </div>
-              </button>
-
-              {/* Card 6: Dining Club & VIP Tables */}
-              <button
-                type="button"
-                onClick={() => onNavigatePage('dining-club')}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 shadow-2xs hover:shadow-md transition-all text-left flex items-start gap-3.5 group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                  <UtensilsCrossed className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors flex items-center justify-between">
-                    <span>Dining Club &amp; VIP Tables</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-amber-600 transition-all" />
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Reserve Michelin-inspired restaurant seats, pre-order food, book group parties &amp; club passes.
-                  </p>
-                </div>
-              </button>
-
-              {/* Card 7: Contact Support */}
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('contact-form-section');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-md transition-all text-left flex items-start gap-3.5 group cursor-pointer sm:col-span-2 lg:col-span-3"
-              >
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                  <MessageSquare className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center justify-between">
-                    <span>Contact Support Team</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-blue-600 transition-all" />
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Speak directly with the TripYehh 24x7 customer assistance desk or raise an expedited ticket.
                   </p>
                 </div>
               </button>
@@ -690,9 +300,7 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 [
                   'all',
                   'Booking',
-                  'Payments',
                   'Cancellations',
-                  'Refunds',
                   'Account & Login',
                   'Travel Assistance',
                 ] as FaqCategory[]
@@ -760,372 +368,104 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
           </section>
 
           {/* =========================================================================
-              5. CONTACT SUPPORT & FORM SECTION
+              DIRECT 24x7 CONCIERGE DESK
           ========================================================================= */}
-          <section id="contact-form-section" className="pt-4">
+          <section className="pt-4">
             <div className="relative rounded-3xl text-white p-6 sm:p-8 md:p-10 shadow-2xl border border-slate-700/80 overflow-hidden">
-              {/* Customer Support Representative Background Image */}
+              {/* Background */}
               <div className="absolute inset-0 z-0">
                 <img
                   src={customerSupportImg}
                   alt="TripYehh Customer Support Team"
                   className="w-full h-full object-cover object-center brightness-95 contrast-105"
                 />
-                {/* Clean dark scrim so contact details on left and form on right are clearly legible */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/80 to-slate-950/75" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/90 to-slate-950/85" />
               </div>
 
-              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-                
-                {/* Left: Verified Contact Information & Details */}
-                <div className="lg:col-span-5 space-y-6">
-                  <div>
-                    <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider block mb-1">
-                      Direct Concierge Desk
-                    </span>
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                      Contact TripYehh Support
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
-                      Have a query regarding an existing booking, immediate flight change, or refund status? Our customer service champions are at your disposal.
-                    </p>
-                  </div>
+              <div className="relative z-10 space-y-6">
+                <div>
+                  <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider block mb-1">
+                    Direct Concierge Desk
+                  </span>
+                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    24x7 Dedicated Travel Assistance
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed max-w-2xl">
+                    Need immediate assistance with flight changes, terminal updates, or hotel check-in? Connect directly with our priority customer support desk.
+                  </p>
+                </div>
 
-                  {/* Verified Support Cards with Glassmorphism */}
-                  <div className="space-y-3.5">
-                    {/* Phone Helpline */}
-                    <div className="p-4 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-blue-600/30 text-sky-400 flex items-center justify-center shrink-0 border border-blue-500/30">
-                        <Phone className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
-                          24x7 Toll-Free Helpline
-                        </span>
-                        <a
-                          href="tel:18001207433"
-                          className="font-mono text-sm sm:text-base font-bold text-white hover:text-sky-300 transition-colors"
-                        >
-                          1800-120-7433
-                        </a>
-                        <span className="text-[11px] text-emerald-400 block mt-0.5">
-                          Toll-Free within India · Zero wait time for members
-                        </span>
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Phone Helpline */}
+                  <div className="p-5 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/30 text-sky-400 flex items-center justify-center shrink-0 border border-blue-500/30">
+                      <Phone className="w-5 h-5" />
                     </div>
-
-                    {/* Official Email */}
-                    <div className="p-4 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-cyan-600/30 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30">
-                        <Mail className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
-                          Priority Email Desk
-                        </span>
-                        <a
-                          href="mailto:support@tripyeah.com"
-                          className="font-mono text-sm sm:text-base font-bold text-white hover:text-cyan-300 transition-colors"
-                        >
-                          support@tripyeah.com
-                        </a>
-                        <span className="text-[11px] text-slate-300 block mt-0.5">
-                          Average email response time: within 15 minutes
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* WhatsApp Support */}
-                    <div className="p-4 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-600/30 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
-                        <MessageSquare className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
-                          WhatsApp Quick Chat
-                        </span>
-                        <span className="font-mono text-sm sm:text-base font-bold text-white">
-                          +91 98110 54321
-                        </span>
-                        <span className="text-[11px] text-slate-300 block mt-0.5">
-                          Instant boarding pass &amp; PNR dispatch on WhatsApp
-                        </span>
-                      </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
+                        24x7 Toll-Free Helpline
+                      </span>
+                      <a
+                        href="tel:18001207433"
+                        className="font-mono text-base font-bold text-white hover:text-sky-300 transition-colors block mt-0.5"
+                      >
+                        1800-120-7433
+                      </a>
+                      <span className="text-[11px] text-emerald-400 block mt-1">
+                        Toll-Free within India · Instant response
+                      </span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md text-xs text-sky-200 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Authorized customer support system · All inquiries securely logged.</span>
+                  {/* Official Email */}
+                  <div className="p-5 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-600/30 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
+                        Priority Email Desk
+                      </span>
+                      <a
+                        href="mailto:support@tripyeah.com"
+                        className="font-mono text-base font-bold text-white hover:text-cyan-300 transition-colors block mt-0.5"
+                      >
+                        support@tripyeah.com
+                      </a>
+                      <span className="text-[11px] text-slate-300 block mt-1">
+                        Average response: within 15 minutes
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Support */}
+                  <div className="p-5 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600/30 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                      <MessageSquare className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider">
+                        WhatsApp Quick Chat
+                      </span>
+                      <span className="font-mono text-base font-bold text-white block mt-0.5">
+                        +91 98110 54321
+                      </span>
+                      <span className="text-[11px] text-slate-300 block mt-1">
+                        Instant boarding pass &amp; PNR updates
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right: Contact Form */}
-                <div className="lg:col-span-7 bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl">
-                  {submittedTicket ? (
-                    <div className="text-center py-8 space-y-4 animate-in fade-in zoom-in-95">
-                      <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
-                        <CheckCircle2 className="w-8 h-8" />
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-xs uppercase font-bold text-emerald-700 tracking-wider">
-                          Support Request Logged
-                        </span>
-                        <h3 className="font-display text-2xl font-bold text-slate-900">
-                          Ticket #{submittedTicket.ticketId} Created
-                        </h3>
-                        <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                          We have recorded your ticket for <strong>{submittedTicket.subject}</strong>. A support executive has been allocated to review your request.
-                        </p>
-                      </div>
-
-                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 max-w-sm mx-auto text-xs text-slate-600 text-left space-y-1 font-mono-tabular">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Response Target:</span>
-                          <strong className="text-emerald-700">&lt; 2 Hours</strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Assigned Desk:</span>
-                          <strong className="text-slate-800">TripYehh Concierge Tier 1</strong>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleResetForm}
-                        className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
-                      >
-                        Submit Another Inquiry
-                      </button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleContactSubmit} className="space-y-4">
-                      <div>
-                        <h3 className="font-display text-lg font-bold text-slate-900">
-                          Submit an Inquiry
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Fill out the details below and our team will get in touch.
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        {/* Name */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Your Name *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={contactName}
-                            onChange={(e) => setContactName(e.target.value)}
-                            placeholder="e.g. Rahul Sharma"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                          />
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Email Address *
-                          </label>
-                          <input
-                            type="email"
-                            required
-                            value={contactEmail}
-                            onChange={(e) => setContactEmail(e.target.value)}
-                            placeholder="e.g. rahul@example.com"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        {/* Category */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Issue Category *
-                          </label>
-                          <select
-                            value={contactCategory}
-                            onChange={(e) => setContactCategory(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                          >
-                            <option value="Booking & Reservation">Booking &amp; Reservation</option>
-                            <option value="Flight Reschedule / Cancellation">Flight Reschedule / Cancellation</option>
-                            <option value="Refund Status & Timeline">Refund Status &amp; Timeline</option>
-                            <option value="Hotel Check-in & Room Issue">Hotel Check-in &amp; Room Issue</option>
-                            <option value="Train / IRCTC Sync Inquiry">Train / IRCTC Sync Inquiry</option>
-                            <option value="Account & Login Help">Account &amp; Login Help</option>
-                            <option value="Other Travel Question">Other Travel Question</option>
-                          </select>
-                        </div>
-
-                        {/* Booking Ref */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Booking Reference / PNR (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={contactBookingRef}
-                            onChange={(e) => setContactBookingRef(e.target.value)}
-                            placeholder="e.g. TY-8841-GOA"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500 font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Message */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Message / Issue Description *
-                        </label>
-                        <textarea
-                          required
-                          rows={4}
-                          value={contactMessage}
-                          onChange={(e) => setContactMessage(e.target.value)}
-                          placeholder="Please provide details about your inquiry so we can resolve it promptly..."
-                          className="w-full p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                      >
-                        {isSubmitting ? (
-                          <span>Submitting Request...</span>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4" />
-                            <span>Submit Support Request</span>
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  )}
+                <div className="p-3.5 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-md text-xs text-sky-200 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Authorized customer assistance system · 24x7 verified agents.</span>
                 </div>
-
               </div>
             </div>
           </section>
-
         </div>
       </div>
-
-      {/* =========================================================================
-          TRACK REFUND MODAL
-      ========================================================================= */}
-      {showRefundTracker && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-4 overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95 my-8">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                  <RotateCcw className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-lg font-bold text-slate-900">
-                    Live Refund Tracker
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Verify real-time status of your payment return
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowRefundTracker(false)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Reference Input */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Enter Booking ID or Reference
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={refundTrackingId}
-                    onChange={(e) => setRefundTrackingId(e.target.value.toUpperCase())}
-                    placeholder="e.g. TY-8841-GOA"
-                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-xs sm:text-sm font-bold text-slate-900 uppercase focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-              </div>
-
-              {/* Progress Milestones */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-700">Tracking: #{refundTrackingId}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-                    IN PROGRESS
-                  </span>
-                </div>
-
-                <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-400">
-                  {/* Step 1 */}
-                  <div className="relative">
-                    <span className="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
-                      ✓
-                    </span>
-                    <h4 className="text-xs font-bold text-slate-900">1. Refund Request Verified</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Zero cancellation deduction policy validated by TripYehh.
-                    </p>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="relative">
-                    <span className="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
-                      ✓
-                    </span>
-                    <h4 className="text-xs font-bold text-slate-900">2. Airline / Property Approved</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Carrier authorization reference generated.
-                    </p>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="relative">
-                    <span className="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] animate-pulse">
-                      ●
-                    </span>
-                    <h4 className="text-xs font-bold text-blue-900">3. Gateway Clearing to Source</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Funds dispatched to originating payment mode (Expected within 2-4 hours for UPI).
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowRefundTracker(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold cursor-pointer"
-                >
-                  Close Tracker
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

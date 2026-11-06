@@ -133,15 +133,6 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onSelectCategory('buses')}
-                  className="hover:text-blue-600 cursor-pointer"
-                >
-                  {t('hero.buses', 'Buses')}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
                   onClick={() => onSelectCategory('cabs')}
                   className="hover:text-blue-600 cursor-pointer"
                 >

@@ -1462,7 +1462,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <option value="trains">Trains</option>
                           <option value="hotels">Hotels</option>
                           <option value="holidays">Holidays</option>
-                          <option value="buses">Buses</option>
                           <option value="cabs">Cabs</option>
                         </select>
                       </div>
