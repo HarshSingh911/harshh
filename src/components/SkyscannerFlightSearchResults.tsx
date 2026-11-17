@@ -17,7 +17,6 @@ import {
   Zap,
   Sun,
   Moon,
-  Search,
   Utensils,
   Wifi,
   Armchair,
@@ -490,6 +489,36 @@ const SKY_RETURN_FLIGHT_CATALOG: SkyscannerFlight[] = [
   },
 ];
 
+const STOP_CITY_LABELS: Record<string, string> = {
+  BOM: 'Mumbai (BOM)',
+  DEL: 'Delhi (DEL)',
+  BLR: 'Bengaluru (BLR)',
+  HYD: 'Hyderabad (HYD)',
+  MAA: 'Chennai (MAA)',
+  CCU: 'Kolkata (CCU)',
+  AMD: 'Ahmedabad (AMD)',
+  AMS: 'Amsterdam (AMS)',
+  FRA: 'Frankfurt (FRA)',
+  DXB: 'Dubai (DXB)',
+  DOH: 'Doha (DOH)',
+  SIN: 'Singapore (SIN)',
+  LHR: 'London (LHR)',
+  CDG: 'Paris (CDG)',
+};
+
+const getReadableStopLabel = (fl: SkyscannerFlight): string => {
+  const isDirect = fl.stopsCount === 0 && fl.stops === 'Direct';
+  if (isDirect) return 'Direct';
+
+  const rawHub = fl.stopAirport ? fl.stopAirport.split(' · ')[0].trim() : '';
+  const fromStopsMatch = fl.stops.match(/\(([^)]+)\)/);
+  const candidate = rawHub || (fromStopsMatch ? fromStopsMatch[1].trim() : '');
+  const readableHub = STOP_CITY_LABELS[candidate.toUpperCase()] || candidate;
+  const countPrefix = fl.stopsCount >= 2 ? `${fl.stopsCount} stops` : '1 stop';
+
+  return readableHub ? `${countPrefix} · ${readableHub}` : fl.stops;
+};
+
 export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResultsProps> = ({
   fromCity,
   toCity,
@@ -611,6 +640,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
   const [liveFlights, setLiveFlights] = useState<SkyscannerFlight[] | null>(null);
   const [liveReturnFlights, setLiveReturnFlights] = useState<SkyscannerFlight[] | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState<boolean>(false);
+  const [isReturnLoading, setIsReturnLoading] = useState<boolean>(false);
   const [liveApiSource, setLiveApiSource] = useState<'aviationstack' | 'verified_schedule' | null>(null);
   const [hasAviationstackKey, setHasAviationstackKey] = useState<boolean>(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('Just now');
@@ -621,6 +651,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     dateOverride?: string
   ) => {
     setIsLiveLoading(true);
+    const startedAt = Date.now();
     try {
       const depCode = depOverride || appliedFromCity.code || 'DEL';
       const arrCode = arrOverride || appliedToCity.code || 'BOM';
@@ -637,6 +668,10 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
           setLastRefreshedAt(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
         }
       }
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 220) {
+        await new Promise((resolve) => setTimeout(resolve, 220 - elapsed));
+      }
     } catch (err) {
       console.warn('Live flights API request error:', err);
     } finally {
@@ -648,11 +683,16 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     fetchLiveFlightsData(appliedFromCity.code, appliedToCity.code, appliedDepDate);
   }, [appliedFromCity.code, appliedToCity.code, appliedDepDate]);
 
-  // Round-Trip Return Flight Live Fetch (only reacts to applied search state)
+  // Round-Trip Return Flight Live Fetch (reacts immediately to applied return date / route changes)
   useEffect(() => {
-    if (!isAppliedRoundTrip) return;
+    if (!isAppliedRoundTrip) {
+      setIsReturnLoading(false);
+      return;
+    }
     let isCancelled = false;
     const fetchReturnData = async () => {
+      setIsReturnLoading(true);
+      const startedAt = Date.now();
       try {
         const depCode = appliedToCity.code || 'BOM';
         const arrCode = appliedFromCity.code || 'DEL';
@@ -665,8 +705,16 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
             setLiveReturnFlights(data.flights);
           }
         }
+        const elapsed = Date.now() - startedAt;
+        if (!isCancelled && elapsed < 220) {
+          await new Promise((resolve) => setTimeout(resolve, 220 - elapsed));
+        }
       } catch (err) {
         console.warn('Return flights API fetch note:', err);
+      } finally {
+        if (!isCancelled) {
+          setIsReturnLoading(false);
+        }
       }
     };
     fetchReturnData();
@@ -728,6 +776,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     e.stopPropagation();
     const newD = shiftDate(draftDepDate, -1);
     setDraftDepDate(newD);
+    setAppliedDepDate(newD);
+    onChangeDepartureDate?.(newD);
   };
 
   const handleNextDeparture = (e: React.MouseEvent) => {
@@ -735,8 +785,13 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     e.stopPropagation();
     const newD = shiftDate(draftDepDate, 1);
     setDraftDepDate(newD);
+    setAppliedDepDate(newD);
+    onChangeDepartureDate?.(newD);
     if (isDraftRoundTrip && draftRetDate < newD) {
-      setDraftRetDate(shiftDate(newD, 3));
+      const newR = shiftDate(newD, 3);
+      setDraftRetDate(newR);
+      setAppliedRetDate(newR);
+      onChangeReturnDate?.(newR);
     }
   };
 
@@ -746,6 +801,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     const targetBase = draftRetDate || shiftDate(draftDepDate, 4);
     const newR = shiftDate(targetBase, -1, draftDepDate);
     setDraftRetDate(newR);
+    setAppliedRetDate(newR);
+    onChangeReturnDate?.(newR);
   };
 
   const handleNextReturn = (e: React.MouseEvent) => {
@@ -754,6 +811,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     const targetBase = draftRetDate || shiftDate(draftDepDate, 4);
     const newR = shiftDate(targetBase, 1);
     setDraftRetDate(newR);
+    setAppliedRetDate(newR);
+    onChangeReturnDate?.(newR);
   };
 
   // Filtered & Sorted Flights (uses applied search state only)
@@ -825,6 +884,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
 
   // Handlers
   const handleResetFilters = () => {
+    setDraftDirectOnly(false);
     setAppliedDirectOnly(false);
     setSelectedStops(['direct', '1-stop']);
     setSelectedDepTimes([]);
@@ -845,45 +905,14 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
   };
 
   const handleSwapCities = () => {
-    const temp = draftFromCity;
-    setDraftFromCity(draftToCity);
-    setDraftToCity(temp);
-  };
-
-  const handleSearchSubmit = () => {
-    setOpenCityPicker(null);
-    setOpenCalendarDropdown(null);
-    setOpenTravellersDropdown(false);
-
-    const sameOutboundQuery =
-      draftFromCity.code === appliedFromCity.code &&
-      draftToCity.code === appliedToCity.code &&
-      draftDepDate === appliedDepDate;
-
-    setAppliedTripType(draftTripType);
-    setAppliedFromCity(draftFromCity);
-    setAppliedToCity(draftToCity);
-    setAppliedDepDate(draftDepDate);
-    setAppliedRetDate(draftRetDate);
-    setAppliedTravellers(draftTravellers);
-    setAppliedCabinClass(draftCabinClass);
-    setAppliedDirectOnly(draftDirectOnly);
-
-    onChangeTripType?.(draftTripType);
-    onChangeFromCity?.(draftFromCity);
-    onChangeToCity?.(draftToCity);
-    onChangeDepartureDate?.(draftDepDate);
-    onChangeReturnDate?.(draftRetDate);
-    onChangeTravellers?.(draftTravellers, draftCabinClass);
-
-    if (sameOutboundQuery) {
-      fetchLiveFlightsData(draftFromCity.code, draftToCity.code, draftDepDate);
-    }
-    onNotify(
-      'Flight Search Updated',
-      `Searching live flights for ${draftFromCity.code} → ${draftToCity.code} (${formatDisplayDate(draftDepDate)}${isDraftRoundTrip ? ' - ' + formatDisplayDate(draftRetDate) : ''})`,
-      'success'
-    );
+    const nextFrom = draftToCity;
+    const nextTo = draftFromCity;
+    setDraftFromCity(nextFrom);
+    setDraftToCity(nextTo);
+    setAppliedFromCity(nextFrom);
+    setAppliedToCity(nextTo);
+    onChangeFromCity?.(nextFrom);
+    onChangeToCity?.(nextTo);
   };
 
   const handleSelectFlight = (flight: SkyscannerFlight, returnFlight?: SkyscannerFlight) => {
@@ -951,7 +980,11 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
               <div className="inline-flex rounded-xl p-1 bg-white/10 border border-white/15 backdrop-blur-xs">
                 <button
                   type="button"
-                  onClick={() => setDraftTripType('one-way')}
+                  onClick={() => {
+                    setDraftTripType('one-way');
+                    setAppliedTripType('one-way');
+                    onChangeTripType?.('one-way');
+                  }}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     draftTripType === 'one-way'
                       ? 'bg-white text-[#05203c] shadow-xs'
@@ -964,8 +997,13 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                   type="button"
                   onClick={() => {
                     setDraftTripType('round-trip');
+                    setAppliedTripType('round-trip');
+                    onChangeTripType?.('round-trip');
                     if (!draftRetDate || draftRetDate <= draftDepDate) {
-                      setDraftRetDate(shiftDate(draftDepDate, 4));
+                      const nextRet = shiftDate(draftDepDate, 4);
+                      setDraftRetDate(nextRet);
+                      setAppliedRetDate(nextRet);
+                      onChangeReturnDate?.(nextRet);
                     }
                   }}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
@@ -1003,7 +1041,12 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setDraftTravellers(Math.max(1, draftTravellers - 1))}
+                          onClick={() => {
+                            const nextCount = Math.max(1, draftTravellers - 1);
+                            setDraftTravellers(nextCount);
+                            setAppliedTravellers(nextCount);
+                            onChangeTravellers?.(nextCount, draftCabinClass);
+                          }}
                           className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
                         >
                           <Minus className="w-3.5 h-3.5" />
@@ -1011,7 +1054,12 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                         <span className="font-bold text-sm w-4 text-center tabular-nums">{draftTravellers}</span>
                         <button
                           type="button"
-                          onClick={() => setDraftTravellers(Math.min(9, draftTravellers + 1))}
+                          onClick={() => {
+                            const nextCount = Math.min(9, draftTravellers + 1);
+                            setDraftTravellers(nextCount);
+                            setAppliedTravellers(nextCount);
+                            onChangeTravellers?.(nextCount, draftCabinClass);
+                          }}
                           className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -1028,6 +1076,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                             type="button"
                             onClick={() => {
                               setDraftCabinClass(c);
+                              setAppliedCabinClass(c);
+                              onChangeTravellers?.(draftTravellers, c);
                               setOpenTravellersDropdown(false);
                             }}
                             className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors cursor-pointer ${
@@ -1052,221 +1102,216 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
               <input
                 type="checkbox"
                 checked={draftDirectOnly}
-                onChange={(e) => setDraftDirectOnly(e.target.checked)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setDraftDirectOnly(checked);
+                  setAppliedDirectOnly(checked);
+                }}
                 className="w-4 h-4 rounded text-blue-500 focus:ring-blue-400 accent-blue-500 cursor-pointer"
               />
               <span>Direct flights only</span>
             </label>
           </div>
 
-          {/* Unified Clean White Search Strip */}
-          <div className="bg-white rounded-2xl p-1.5 shadow-xl border border-white/15">
+          {/* Glass Outer Search Strip matching One Way / Round Trip container */}
+          <div className="rounded-2xl p-1.5 bg-white/10 border border-white/15 backdrop-blur-xs shadow-lg">
             <div className="flex flex-col lg:flex-row items-stretch gap-1.5">
               {/* Route: FROM & TO with overlapping Swap button */}
               <div className="flex flex-col sm:flex-row items-stretch gap-1.5 relative lg:flex-[2] min-w-0">
-                {/* FROM */}
-                <div className="relative flex-1 min-w-0">
-                  <div
-                    onClick={() => setOpenCityPicker(openCityPicker === 'from' ? null : 'from')}
-                    className="px-4 py-2 rounded-xl bg-slate-50/75 hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center"
-                  >
-                    <div className="text-[11px] font-semibold text-slate-500 leading-none">From</div>
-                    <div className="flex items-baseline gap-1.5 mt-1 truncate">
-                      <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftFromCity.city}</span>
-                      <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{draftFromCity.code}</span>
-                    </div>
+              {/* FROM */}
+              <div className="relative flex-1 min-w-0">
+                <div
+                  onClick={() => setOpenCityPicker(openCityPicker === 'from' ? null : 'from')}
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-blue-50/95 border border-white/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center shadow-md"
+                >
+                  <div className="text-[11px] font-semibold text-slate-500 leading-none">From</div>
+                  <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                    <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftFromCity.city}</span>
+                    <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{draftFromCity.code}</span>
                   </div>
-
-                  <AirportAutocompleteDropdown
-                    label="From"
-                    selectedCity={draftFromCity}
-                    onSelectCity={(c) => {
-                      setDraftFromCity(c);
-                      setOpenCityPicker(null);
-                    }}
-                    isOpen={openCityPicker === 'from'}
-                    onClose={() => setOpenCityPicker(null)}
-                    align="left"
-                  />
                 </div>
 
-                {/* Overlapping Swap Button */}
-                <div className="shrink-0 flex items-center justify-center sm:-mx-3 z-10">
+                <AirportAutocompleteDropdown
+                  label="From"
+                  selectedCity={draftFromCity}
+                  onSelectCity={(c) => {
+                    setDraftFromCity(c);
+                    setAppliedFromCity(c);
+                    onChangeFromCity?.(c);
+                    setOpenCityPicker(null);
+                  }}
+                  isOpen={openCityPicker === 'from'}
+                  onClose={() => setOpenCityPicker(null)}
+                  align="left"
+                />
+              </div>
+
+              {/* Overlapping Swap Button */}
+              <div className="shrink-0 flex items-center justify-center sm:-mx-3.5 z-10">
+                <button
+                  type="button"
+                  onClick={handleSwapCities}
+                  title="Swap From and To"
+                  aria-label="Swap From and To cities"
+                  className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-blue-400 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* TO */}
+              <div className="relative flex-1 min-w-0">
+                <div
+                  onClick={() => setOpenCityPicker(openCityPicker === 'to' ? null : 'to')}
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-blue-50/95 border border-white/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center sm:pl-5 shadow-md"
+                >
+                  <div className="text-[11px] font-semibold text-slate-500 leading-none">To</div>
+                  <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                    <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftToCity.city}</span>
+                    <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{draftToCity.code}</span>
+                  </div>
+                </div>
+
+                <AirportAutocompleteDropdown
+                  label="To"
+                  selectedCity={draftToCity}
+                  onSelectCity={(c) => {
+                    setDraftToCity(c);
+                    setAppliedToCity(c);
+                    onChangeToCity?.(c);
+                    setOpenCityPicker(null);
+                  }}
+                  isOpen={openCityPicker === 'to'}
+                  onClose={() => setOpenCityPicker(null)}
+                  align="left"
+                />
+              </div>
+            </div>
+
+            {/* Dates: Departure (+ Return in Round Trip) — equal 1:1 width with From and To */}
+            <div
+              className={`flex flex-col sm:flex-row items-stretch gap-1.5 min-w-0 ${
+                isDraftRoundTrip ? 'lg:flex-[2]' : 'lg:flex-1'
+              }`}
+            >
+              {/* Departure Date */}
+              <div className="relative flex-1 min-w-0">
+                <div className="flex items-stretch gap-1.5 h-[58px]">
                   <button
                     type="button"
-                    onClick={handleSwapCities}
-                    title="Swap From and To"
-                    aria-label="Swap From and To cities"
-                    className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-blue-400 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                    onClick={handlePrevDeparture}
+                    title="Previous Day"
+                    aria-label="Previous departure day"
+                    className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
                   >
-                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenCalendarDropdown(openCalendarDropdown === 'departure' ? null : 'departure');
+                    }}
+                    className="flex-1 min-w-0 h-[58px] px-3 rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 transition-colors cursor-pointer select-none flex items-center justify-center gap-2 hover:text-blue-600 shadow-md"
+                    title="Click to open calendar"
+                  >
+                    <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
+                      {formatDisplayDate(draftDepDate)}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNextDeparture}
+                    title="Next Day"
+                    aria-label="Next departure day"
+                    className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
+                  >
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
 
-                {/* TO */}
-                <div className="relative flex-1 min-w-0">
-                  <div
-                    onClick={() => setOpenCityPicker(openCityPicker === 'to' ? null : 'to')}
-                    className="px-4 py-2 rounded-xl bg-slate-50/75 hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center sm:pl-5"
-                  >
-                    <div className="text-[11px] font-semibold text-slate-500 leading-none">To</div>
-                    <div className="flex items-baseline gap-1.5 mt-1 truncate">
-                      <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftToCity.city}</span>
-                      <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{draftToCity.code}</span>
-                    </div>
-                  </div>
-
-                  <AirportAutocompleteDropdown
-                    label="To"
-                    selectedCity={draftToCity}
-                    onSelectCity={(c) => {
-                      setDraftToCity(c);
-                      setOpenCityPicker(null);
+                {openCalendarDropdown === 'departure' && (
+                  <NormalCalendarDropdown
+                    selectedDate={draftDepDate}
+                    minDate="2026-01-01"
+                    onSelectDate={(newDate) => {
+                      setDraftDepDate(newDate);
+                      setAppliedDepDate(newDate);
+                      onChangeDepartureDate?.(newDate);
+                      if (isDraftRoundTrip && draftRetDate < newDate) {
+                        const nextRet = shiftDate(newDate, 3);
+                        setDraftRetDate(nextRet);
+                        setAppliedRetDate(nextRet);
+                        onChangeReturnDate?.(nextRet);
+                      }
+                      setOpenCalendarDropdown(null);
                     }}
-                    isOpen={openCityPicker === 'to'}
-                    onClose={() => setOpenCityPicker(null)}
-                    align="left"
+                    onClose={() => setOpenCalendarDropdown(null)}
+                    alignRight={false}
                   />
-                </div>
-              </div>
-
-              {/* Dates: Departure (+ Return in Round Trip) — equal 1:1 width with From and To */}
-              <div
-                className={`flex flex-col sm:flex-row items-stretch gap-1.5 min-w-0 ${
-                  isDraftRoundTrip ? 'lg:flex-[2]' : 'lg:flex-1'
-                }`}
-              >
-                {/* Departure Date */}
-                <div className="relative flex-1 min-w-0">
-                  <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
-                    <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
-                      Depart
-                    </div>
-                    <div className="flex items-center justify-between gap-1">
-                      <button
-                        type="button"
-                        onClick={handlePrevDeparture}
-                        title="Previous Day"
-                        aria-label="Previous departure day"
-                        className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                      </button>
-
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenCalendarDropdown(openCalendarDropdown === 'departure' ? null : 'departure');
-                        }}
-                        className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
-                        title="Click to open calendar"
-                      >
-                        <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
-                          {formatDisplayDate(draftDepDate)}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleNextDeparture}
-                        title="Next Day"
-                        aria-label="Next departure day"
-                        className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                      >
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {openCalendarDropdown === 'departure' && (
-                    <NormalCalendarDropdown
-                      selectedDate={draftDepDate}
-                      minDate="2026-01-01"
-                      onSelectDate={(newDate) => {
-                        setDraftDepDate(newDate);
-                        if (isDraftRoundTrip && draftRetDate < newDate) {
-                          setDraftRetDate(shiftDate(newDate, 3));
-                        }
-                        setOpenCalendarDropdown(null);
-                      }}
-                      onClose={() => setOpenCalendarDropdown(null)}
-                      alignRight={false}
-                    />
-                  )}
-                </div>
-
-                {/* Return Date (shown in Round Trip mode) */}
-                {isDraftRoundTrip && (
-                  <div className="relative flex-1 min-w-0">
-                    <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
-                      <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
-                        Return
-                      </div>
-                      <div className="flex items-center justify-between gap-1">
-                        <button
-                          type="button"
-                          onClick={handlePrevReturn}
-                          title="Previous Day"
-                          aria-label="Previous return day"
-                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                        >
-                          <ChevronLeft className="w-3.5 h-3.5" />
-                        </button>
-
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenCalendarDropdown(openCalendarDropdown === 'return' ? null : 'return');
-                          }}
-                          className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
-                          title="Click to open calendar"
-                        >
-                          <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
-                            {formatDisplayDate(draftRetDate)}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={handleNextReturn}
-                          title="Next Day"
-                          aria-label="Next return day"
-                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                        >
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {openCalendarDropdown === 'return' && (
-                      <NormalCalendarDropdown
-                        selectedDate={draftRetDate}
-                        minDate={draftDepDate}
-                        onSelectDate={(newDate) => {
-                          setDraftRetDate(newDate);
-                          setOpenCalendarDropdown(null);
-                        }}
-                        onClose={() => setOpenCalendarDropdown(null)}
-                        alignRight={true}
-                      />
-                    )}
-                  </div>
                 )}
               </div>
 
-              {/* Search CTA Button */}
-              <div className="shrink-0 flex items-center">
-                <button
-                  type="button"
-                  onClick={handleSearchSubmit}
-                  className="w-full lg:w-auto px-7 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer h-[58px] lg:min-w-[132px] whitespace-nowrap shrink-0"
-                >
-                  <Search className="w-4 h-4" />
-                  <span>Search</span>
-                </button>
-              </div>
+              {/* Return Date (shown in Round Trip mode) */}
+              {isDraftRoundTrip && (
+                <div className="relative flex-1 min-w-0">
+                  <div className="flex items-stretch gap-1.5 h-[58px]">
+                    <button
+                      type="button"
+                      onClick={handlePrevReturn}
+                      title="Previous Day"
+                      aria-label="Previous return day"
+                      className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenCalendarDropdown(openCalendarDropdown === 'return' ? null : 'return');
+                      }}
+                      className="flex-1 min-w-0 h-[58px] px-3 rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 transition-colors cursor-pointer select-none flex items-center justify-center gap-2 hover:text-blue-600 shadow-md"
+                      title="Click to open calendar"
+                    >
+                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
+                        {formatDisplayDate(draftRetDate)}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleNextReturn}
+                      title="Next Day"
+                      aria-label="Next return day"
+                      className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {openCalendarDropdown === 'return' && (
+                    <NormalCalendarDropdown
+                      selectedDate={draftRetDate}
+                      minDate={draftDepDate}
+                      onSelectDate={(newDate) => {
+                        setDraftRetDate(newDate);
+                        setAppliedRetDate(newDate);
+                        onChangeReturnDate?.(newDate);
+                        setOpenCalendarDropdown(null);
+                      }}
+                      onClose={() => setOpenCalendarDropdown(null)}
+                      alignRight={true}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
             </div>
           </div>
         </div>
@@ -1352,7 +1397,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                           />
                           <span className="font-semibold text-slate-800">{s.label}</span>
                         </div>
-                        <span className="font-mono text-slate-600 font-semibold">
+                        <span className="font-price text-slate-900 font-medium">
                           {formatPrice(s.price, currency)}
                         </span>
                       </label>
@@ -1439,7 +1484,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                           />
                           <span className="font-semibold text-slate-800">{air.name}</span>
                         </div>
-                        <span className="font-mono text-slate-600 font-semibold">
+                        <span className="font-price text-slate-900 font-medium">
                           {formatPrice(air.price, currency)}
                         </span>
                       </label>
@@ -1508,71 +1553,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
               RIGHT COLUMN: RESULTS, TABS & FLIGHT CARDS
           =============================================================== */}
           <div className="lg:col-span-9 space-y-4">
-            {/* Top 3 Summary Cards (Best / Cheapest / Fastest) matching Skyscanner */}
-            <div className="grid grid-cols-3 gap-3">
-              {/* Best */}
-              <button
-                type="button"
-                onClick={() => setSortBy('best')}
-                className={`p-3 sm:p-4 rounded-2xl text-left border transition-all cursor-pointer ${
-                  sortBy === 'best'
-                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
-                    : 'bg-white border-slate-200/90 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700">
-                  <ThumbsUp className="w-3.5 h-3.5" />
-                  <span>Best</span>
-                </div>
-                <div className="font-extrabold text-base sm:text-xl text-slate-900 mt-1 font-mono">
-                  {formatPrice(summaryMetrics.best.price, currency)}
-                </div>
-                <div className="text-[11px] text-slate-500 font-medium">
-                  {summaryMetrics.best.duration}
-                </div>
-              </button>
-
-              {/* Cheapest */}
-              <button
-                type="button"
-                onClick={() => setSortBy('cheapest')}
-                className={`p-3 sm:p-4 rounded-2xl text-left border transition-all cursor-pointer ${
-                  sortBy === 'cheapest'
-                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
-                    : 'bg-white border-slate-200/90 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-xs font-bold text-slate-700">Cheapest</div>
-                <div className="font-extrabold text-base sm:text-xl text-emerald-600 mt-1 font-mono">
-                  {formatPrice(summaryMetrics.cheapest.price, currency)}
-                </div>
-                <div className="text-[11px] text-slate-500 font-medium">
-                  {summaryMetrics.cheapest.duration}
-                </div>
-              </button>
-
-              {/* Fastest */}
-              <button
-                type="button"
-                onClick={() => setSortBy('fastest')}
-                className={`p-3 sm:p-4 rounded-2xl text-left border transition-all cursor-pointer ${
-                  sortBy === 'fastest'
-                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
-                    : 'bg-white border-slate-200/90 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-xs font-bold text-slate-700">Fastest</div>
-                <div className="font-extrabold text-base sm:text-xl text-slate-900 mt-1 font-mono">
-                  {formatPrice(summaryMetrics.fastest.price, currency)}
-                </div>
-                <div className="text-[11px] text-slate-500 font-medium">
-                  {summaryMetrics.fastest.duration}
-                </div>
-              </button>
-            </div>
-
             {/* Results Header: Count & Custom Sort Dropdown */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
               <div>
                 Showing <strong className="text-slate-900">{filteredFlights.length} flights</strong> from{' '}
                 <span className="font-semibold">{appliedFromCity.city}</span> to{' '}
@@ -1641,9 +1623,108 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
               </div>
             </div>
 
+            {/* Top 3 Summary Cards (Best / Cheapest / Fastest) */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* Best */}
+              <button
+                type="button"
+                onClick={() => setSortBy('best')}
+                className={`p-3 sm:p-4 rounded-2xl text-left border transition-all cursor-pointer ${
+                  sortBy === 'best'
+                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
+                    : 'bg-white border-slate-200/90 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700">
+                  <ThumbsUp className="w-3.5 h-3.5" />
+                  <span>Best</span>
+                </div>
+                <div className="font-price font-medium text-base sm:text-xl text-slate-950 mt-1">
+                  {formatPrice(summaryMetrics.best.price, currency)}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {summaryMetrics.best.duration}
+                </div>
+              </button>
+
+              {/* Cheapest */}
+              <button
+                type="button"
+                onClick={() => setSortBy('cheapest')}
+                className={`p-3 sm:p-4 rounded-2xl text-left border transition-all cursor-pointer ${
+                  sortBy === 'cheapest'
+                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
+                    : 'bg-white border-slate-200/90 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-xs font-bold text-slate-700">Cheapest</div>
+                <div className="font-price font-medium text-base sm:text-xl text-slate-950 mt-1">
+                  {formatPrice(summaryMetrics.cheapest.price, currency)}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {summaryMetrics.cheapest.duration}
+                </div>
+              </button>
+
+              {/* Fastest */}
+              <button
+                type="button"
+                onClick={() => setSortBy('fastest')}
+                className={`p-3 sm:p-4 rounded-2xl text-left border transition-all cursor-pointer ${
+                  sortBy === 'fastest'
+                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
+                    : 'bg-white border-slate-200/90 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-xs font-bold text-slate-700">Fastest</div>
+                <div className="font-price font-medium text-base sm:text-xl text-slate-950 mt-1">
+                  {formatPrice(summaryMetrics.fastest.price, currency)}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {summaryMetrics.fastest.duration}
+                </div>
+              </button>
+            </div>
+
             {/* Flights Cards List */}
-            {filteredFlights.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+            {isLiveLoading || isReturnLoading ? (
+              <div className="space-y-4">
+                {[0, 1, 2].map((skeletonIdx) => (
+                  <div
+                    key={skeletonIdx}
+                    className="bg-white rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-7 sm:py-6 shadow-xs animate-pulse"
+                  >
+                    <div className="h-3.5 w-28 bg-slate-200 rounded mb-4" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                      <div className="flex-1 flex items-center gap-4 sm:gap-5">
+                        <div className="w-11 h-11 rounded-xl bg-slate-200 shrink-0" />
+                        <div className="w-16 space-y-2">
+                          <div className="h-5 bg-slate-200 rounded" />
+                          <div className="h-3 w-10 bg-slate-100 rounded" />
+                        </div>
+                        <div className="flex-1 max-w-[340px] space-y-2 flex flex-col items-center">
+                          <div className="h-3 w-12 bg-slate-100 rounded" />
+                          <div className="h-0.5 w-full bg-slate-200 rounded" />
+                          <div className="h-3 w-16 bg-slate-100 rounded" />
+                        </div>
+                        <div className="w-16 space-y-2">
+                          <div className="h-5 bg-slate-200 rounded" />
+                          <div className="h-3 w-10 bg-slate-100 rounded ml-auto" />
+                        </div>
+                      </div>
+                      <div className="md:w-[310px] lg:w-[335px] flex items-center justify-between md:justify-end gap-5 md:border-l border-slate-100 md:pl-7">
+                        <div className="space-y-2">
+                          <div className="h-7 w-24 bg-slate-200 rounded" />
+                          <div className="h-3 w-28 bg-slate-100 rounded" />
+                        </div>
+                        <div className="h-11 w-24 bg-slate-200 rounded-xl" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredFlights.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-3">
                 <Plane className="w-10 h-10 text-slate-300 mx-auto" />
                 <h4 className="font-bold text-base text-slate-800">No flights match the selected filters</h4>
                 <p className="text-xs text-slate-500">Try adjusting your price, timing or airline filters.</p>
@@ -1656,168 +1737,195 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                 </button>
               </div>
             ) : (
-              filteredFlights.slice(0, visibleCount).map((flight, idx) => {
-                const returnPool = liveReturnFlights && liveReturnFlights.length > 0 ? liveReturnFlights : SKY_RETURN_FLIGHT_CATALOG;
-                const returnFlight = isAppliedRoundTrip
-                  ? returnPool[idx % returnPool.length]
-                  : undefined;
-                const cardPrice = returnFlight
-                  ? flight.priceInr + returnFlight.priceInr
-                  : flight.priceInr;
-                const airlineHeading =
-                  returnFlight && returnFlight.airline !== flight.airline
-                    ? `${flight.airline} and ${returnFlight.airline}`
-                    : flight.airline;
+              <div className="space-y-4">
+                {filteredFlights.slice(0, visibleCount).map((flight, idx) => {
+                  const returnPool = liveReturnFlights && liveReturnFlights.length > 0 ? liveReturnFlights : SKY_RETURN_FLIGHT_CATALOG;
+                  const returnFlight = isAppliedRoundTrip
+                    ? returnPool[idx % returnPool.length]
+                    : undefined;
+                  const cardPrice = returnFlight
+                    ? flight.priceInr + returnFlight.priceInr
+                    : flight.priceInr;
+                  const airlineHeading =
+                    returnFlight && returnFlight.airline !== flight.airline
+                      ? `${flight.airline} and ${returnFlight.airline}`
+                      : flight.airline;
+                  const isOutboundStoppage = flight.stopsCount > 0 || flight.stops !== 'Direct';
+                  const outboundStopLabel = getReadableStopLabel(flight);
+                  const isReturnStoppage = returnFlight ? returnFlight.stopsCount > 0 || returnFlight.stops !== 'Direct' : false;
+                  const returnStopLabel = returnFlight ? getReadableStopLabel(returnFlight) : '';
 
-                return (
-                  <div
-                    key={flight.id}
-                    className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-md transition-shadow relative"
-                  >
-                    {/* Top Row: Airline Name Only */}
-                    <div className="mb-3.5">
-                      <div className="text-xs font-bold text-slate-700 tracking-tight">
-                        {airlineHeading}
-                      </div>
-                    </div>
-
-                    {/* Main Flight Layout: Left Flight Tracks + Right Price CTA */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      {/* Left Side: Legs Container (aligned columns, no divider line) */}
-                      <div className="flex-1 space-y-3.5">
-                        {/* Outbound Leg */}
-                        <div className="flex items-center gap-4 sm:gap-6">
-                          {/* Airline Badge */}
-                          <div className="w-10 shrink-0 flex items-center justify-center">
-                            <div
-                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${flight.badgeBg} text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs`}
-                            >
-                              {flight.badgeCode}
+                  return (
+                    <div
+                      key={flight.id}
+                      className="bg-white rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-7 sm:py-6 shadow-xs hover:shadow-md transition-shadow relative"
+                    >
+                      {/* Main Flight Layout: Left Flight Tracks + Right Price CTA */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 md:gap-7">
+                        {/* Left Side: Airline Heading + Legs Container */}
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-3">
+                            <div className="text-sm font-bold text-slate-800 tracking-tight">
+                              {airlineHeading}
                             </div>
                           </div>
 
-                          {/* Departure */}
-                          <div className="w-[72px] shrink-0 text-left">
-                            <div className="font-extrabold text-slate-900 text-lg sm:text-xl font-mono leading-none">
-                              {flight.depTime}
-                            </div>
-                            <div className="text-xs font-bold text-slate-500 mt-1">{appliedFromCity.code}</div>
-                          </div>
+                          <div className="space-y-4">
+                            {/* Outbound Leg */}
+                            <div className="flex items-center gap-4 sm:gap-5">
+                              {/* Airline Badge */}
+                              <div className="w-11 shrink-0 flex items-center justify-center">
+                                <div
+                                  className={`w-11 h-11 rounded-xl ${flight.badgeBg} text-white font-extrabold flex items-center justify-center text-sm shrink-0 shadow-2xs`}
+                                >
+                                  {flight.badgeCode}
+                                </div>
+                              </div>
 
-                          {/* Flight Center Line Track */}
-                          <div className="flex-1 flex flex-col items-center max-w-[200px] sm:max-w-[240px]">
-                            <span className="text-[11px] font-medium text-slate-500">{flight.duration}</span>
-                            <div className="relative w-full flex items-center justify-center my-1">
-                              <div className="w-full h-[1.5px] bg-slate-300" />
-                              <div className="w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white absolute" />
-                            </div>
-                            <span
-                              className={`text-[10px] font-bold ${
-                                flight.stops === 'Direct' ? 'text-emerald-600' : 'text-slate-600'
-                              }`}
-                            >
-                              {flight.stops}
-                            </span>
-                          </div>
+                              {/* Departure */}
+                              <div className="w-[72px] sm:w-[80px] shrink-0 text-left">
+                                <div className="font-price font-medium text-slate-900 text-xl sm:text-[22px] leading-none">
+                                  {flight.depTime}
+                                </div>
+                                <div className="text-xs font-bold text-slate-500 mt-1.5">{appliedFromCity.code}</div>
+                              </div>
 
-                          {/* Arrival */}
-                          <div className="w-[72px] shrink-0 text-right">
-                            <div className="font-extrabold text-slate-900 text-lg sm:text-xl font-mono leading-none flex items-center justify-end">
-                              <span>{flight.arrTime}</span>
-                              {flight.daysLater && (
-                                <sup className="text-[10px] text-red-600 font-extrabold ml-0.5">
-                                  +{flight.daysLater}
-                                </sup>
-                              )}
+                              {/* Flight Center Line Track */}
+                              <div className="flex-1 flex flex-col items-center min-w-[100px] max-w-[340px]">
+                                <span className="text-xs font-medium text-slate-500 leading-none">{flight.duration}</span>
+                                <div className="relative w-full flex items-center my-2">
+                                  <div className="flex-1 h-[1.5px] bg-slate-300 relative flex items-center justify-center">
+                                    {isOutboundStoppage && (
+                                      flight.stopsCount >= 2 ? (
+                                        <div className="flex items-center justify-evenly w-full px-4">
+                                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white shadow-2xs" />
+                                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white shadow-2xs" />
+                                        </div>
+                                      ) : (
+                                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white shadow-2xs" />
+                                      )
+                                    )}
+                                  </div>
+                                  <Plane className="w-4 h-4 text-slate-500 fill-slate-500 rotate-45 -ml-0.5 shrink-0" />
+                                </div>
+                                <span
+                                  className={`text-xs font-bold leading-none text-center ${
+                                    isOutboundStoppage ? 'text-amber-700' : 'text-emerald-600'
+                                  }`}
+                                >
+                                  {outboundStopLabel}
+                                </span>
+                              </div>
+
+                              {/* Arrival */}
+                              <div className="w-[72px] sm:w-[80px] shrink-0 text-right">
+                                <div className="font-price font-medium text-slate-900 text-xl sm:text-[22px] leading-none flex items-center justify-end">
+                                  <span>{flight.arrTime}</span>
+                                  {flight.daysLater && (
+                                    <sup className="text-[10px] text-red-600 font-bold ml-0.5">
+                                      +{flight.daysLater}
+                                    </sup>
+                                  )}
+                                </div>
+                                <div className="text-xs font-bold text-slate-500 mt-1.5">{appliedToCity.code}</div>
+                              </div>
                             </div>
-                            <div className="text-xs font-bold text-slate-500 mt-1">{appliedToCity.code}</div>
+
+                            {/* Return Leg (if Round-Trip) — identical alignment, no divider line */}
+                            {isAppliedRoundTrip && returnFlight && (
+                              <div className="flex items-center gap-4 sm:gap-5">
+                                {/* Airline Badge */}
+                                <div className="w-11 shrink-0 flex items-center justify-center">
+                                  <div
+                                    className={`w-11 h-11 rounded-xl ${returnFlight.badgeBg} text-white font-extrabold flex items-center justify-center text-sm shrink-0 shadow-2xs`}
+                                  >
+                                    {returnFlight.badgeCode}
+                                  </div>
+                                </div>
+
+                                {/* Departure */}
+                                <div className="w-[72px] sm:w-[80px] shrink-0 text-left">
+                                  <div className="font-price font-medium text-slate-900 text-xl sm:text-[22px] leading-none">
+                                    {returnFlight.depTime}
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-500 mt-1.5">{appliedToCity.code}</div>
+                                </div>
+
+                                {/* Flight Center Line Track */}
+                                <div className="flex-1 flex flex-col items-center min-w-[100px] max-w-[340px]">
+                                  <span className="text-xs font-medium text-slate-500 leading-none">{returnFlight.duration}</span>
+                                  <div className="relative w-full flex items-center my-2">
+                                    <div className="flex-1 h-[1.5px] bg-slate-300 relative flex items-center justify-center">
+                                      {isReturnStoppage && (
+                                        returnFlight.stopsCount >= 2 ? (
+                                          <div className="flex items-center justify-evenly w-full px-4">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white shadow-2xs" />
+                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white shadow-2xs" />
+                                          </div>
+                                        ) : (
+                                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white shadow-2xs" />
+                                        )
+                                      )}
+                                    </div>
+                                    <Plane className="w-4 h-4 text-slate-500 fill-slate-500 rotate-45 -ml-0.5 shrink-0" />
+                                  </div>
+                                  <span
+                                    className={`text-xs font-bold leading-none text-center ${
+                                      isReturnStoppage ? 'text-amber-700' : 'text-emerald-600'
+                                    }`}
+                                  >
+                                    {returnStopLabel}
+                                  </span>
+                                </div>
+
+                                {/* Arrival */}
+                                <div className="w-[72px] sm:w-[80px] shrink-0 text-right">
+                                  <div className="font-price font-medium text-slate-900 text-xl sm:text-[22px] leading-none flex items-center justify-end">
+                                    <span>{returnFlight.arrTime}</span>
+                                    {returnFlight.daysLater && (
+                                      <sup className="text-[10px] text-red-600 font-bold ml-0.5">
+                                        +{returnFlight.daysLater}
+                                      </sup>
+                                    )}
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-500 mt-1.5">{appliedFromCity.code}</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        {/* Return Leg (if Round-Trip) — identical alignment, no divider line */}
-                        {isAppliedRoundTrip && returnFlight && (
-                          <div className="flex items-center gap-4 sm:gap-6">
-                            {/* Airline Badge */}
-                            <div className="w-10 shrink-0 flex items-center justify-center">
-                              <div
-                                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${returnFlight.badgeBg} text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs`}
-                              >
-                                {returnFlight.badgeCode}
-                              </div>
-                            </div>
-
-                            {/* Departure */}
-                            <div className="w-[72px] shrink-0 text-left">
-                              <div className="font-extrabold text-slate-900 text-lg sm:text-xl font-mono leading-none">
-                                {returnFlight.depTime}
-                              </div>
-                              <div className="text-xs font-bold text-slate-500 mt-1">{appliedToCity.code}</div>
-                            </div>
-
-                            {/* Flight Center Line Track */}
-                            <div className="flex-1 flex flex-col items-center max-w-[200px] sm:max-w-[240px]">
-                              <span className="text-[11px] font-medium text-slate-500">{returnFlight.duration}</span>
-                              <div className="relative w-full flex items-center justify-center my-1">
-                                <div className="w-full h-[1.5px] bg-slate-300" />
-                                <div className="w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white absolute" />
-                              </div>
-                              <span
-                                className={`text-[10px] font-bold ${
-                                  returnFlight.stops === 'Direct' ? 'text-emerald-600' : 'text-slate-600'
-                                }`}
-                              >
-                                {returnFlight.stops}
+                        {/* Right Side: Price & "Select ->" Action */}
+                        <div className="md:w-[310px] lg:w-[335px] shrink-0 flex items-center justify-between md:justify-end gap-5 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-7">
+                          <div className="text-left md:text-right">
+                            <div className="flex items-baseline gap-1 md:justify-end">
+                              <span className="text-xs text-slate-400">From</span>
+                              <span className="font-price text-2xl sm:text-[26px] font-medium text-slate-950 leading-none">
+                                {formatPrice(cardPrice * appliedTravellers, currency)}
                               </span>
                             </div>
-
-                            {/* Arrival */}
-                            <div className="w-[72px] shrink-0 text-right">
-                              <div className="font-extrabold text-slate-900 text-lg sm:text-xl font-mono leading-none flex items-center justify-end">
-                                <span>{returnFlight.arrTime}</span>
-                                {returnFlight.daysLater && (
-                                  <sup className="text-[10px] text-red-600 font-extrabold ml-0.5">
-                                    +{returnFlight.daysLater}
-                                  </sup>
-                                )}
-                              </div>
-                              <div className="text-xs font-bold text-slate-500 mt-1">{appliedFromCity.code}</div>
+                            <div className="text-xs text-slate-500 font-medium mt-1.5">
+                              {appliedTravellers > 1 ? `Total for ${appliedTravellers} travelers` : 'Total for 1 traveler'}
+                            </div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">
+                              {flight.providersCount} deals
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      {/* Right Side: Price & "Select ->" Action */}
-                      <div className="md:min-w-[190px] flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
-                        <div className="text-left md:text-right">
-                          <div className="flex items-baseline gap-1 md:justify-end">
-                            <span className="text-xs text-slate-400">From</span>
-                            <span className="text-2xl sm:text-3xl font-black text-blue-600 font-mono">
-                              {formatPrice(cardPrice * appliedTravellers, currency)}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-slate-500 font-medium">
-                            {appliedTravellers > 1 ? `Total for ${appliedTravellers} travelers` : 'Total for 1 traveler'}
-                          </div>
-                        </div>
-
-                        <div className="mt-3 text-right">
                           <button
                             type="button"
                             onClick={() => handleSelectFlight(flight, returnFlight)}
-                            className="px-7 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-md shadow-blue-600/25 flex items-center gap-1.5 cursor-pointer transition-all hover:shadow-lg"
+                            className="px-6 py-3 rounded-xl bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] hover:from-[#072a4f] hover:via-[#093461] hover:to-[#0d437c] active:scale-95 text-white font-bold text-sm shadow-sm shadow-[#05203c]/25 flex items-center gap-1.5 cursor-pointer transition-all hover:shadow-md shrink-0 whitespace-nowrap"
                           >
                             <span>Select</span>
                             <ArrowRight className="w-4 h-4" />
                           </button>
-                          <div className="text-[11px] text-slate-400 mt-1.5">
-                            {flight.providersCount} deals
-                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
 
             {/* Show More Flights Button */}

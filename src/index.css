@@ -38,6 +38,11 @@
   .font-mono-tabular.font-bold {
     font-weight: 500 !important;
   }
+
+  .font-price {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 /* ============================================================================

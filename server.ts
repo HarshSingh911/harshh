@@ -337,13 +337,22 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
   const isInternational = ['LHR', 'JFK', 'DXB', 'SIN', 'DPS', 'BKK', 'HND', 'NRT', 'FRA', 'CDG'].includes(dep) ||
     ['LHR', 'JFK', 'DXB', 'SIN', 'DPS', 'BKK', 'HND', 'NRT', 'FRA', 'CDG'].includes(arr);
 
+  const domesticHubPool = [
+    { code: 'BOM', name: 'Mumbai' },
+    { code: 'BLR', name: 'Bengaluru' },
+    { code: 'HYD', name: 'Hyderabad' },
+    { code: 'DEL', name: 'Delhi' },
+  ];
+  const hub1 = domesticHubPool.find((h) => h.code !== dep && h.code !== arr) || { code: 'BOM', name: 'Mumbai' };
+  const hub2 = domesticHubPool.find((h) => h.code !== dep && h.code !== arr && h.code !== hub1.code) || { code: 'BLR', name: 'Bengaluru' };
+
   const carriers = isInternational
     ? [
         { name: 'British Airways', code: 'BA', flight: '178', aircraft: 'Boeing 777-300ER', depT: '08:30', arrT: '11:35', dur: '8h 05m', durMins: 485, direct: true, mult: 1.05 },
         { name: 'Virgin Atlantic', code: 'VS', flight: '45', aircraft: 'Airbus A350-1000', depT: '10:45', arrT: '13:40', dur: '7h 55m', durMins: 475, direct: true, mult: 1.12 },
         { name: 'Emirates', code: 'EK', flight: '511', aircraft: 'Boeing 777-300ER', depT: '13:10', arrT: '16:25', dur: '8h 15m', durMins: 495, direct: true, mult: 0.95 },
-        { name: 'Delta Air Lines', code: 'DL', flight: '108', aircraft: 'Airbus A330-900neo', depT: '06:15', arrT: '11:45', dur: '10h 30m', durMins: 630, direct: false, mult: 0.92, layover: 'AMS · 1h 20m layover' },
-        { name: 'Lufthansa', code: 'LH', flight: '761', aircraft: 'Boeing 747-8 Intercontinental', depT: '14:20', arrT: '19:55', dur: '11h 10m', durMins: 670, direct: false, mult: 0.98, layover: 'FRA · 1h 45m layover' },
+        { name: 'Delta Air Lines', code: 'DL', flight: '108', aircraft: 'Airbus A330-900neo', depT: '06:15', arrT: '11:45', dur: '10h 30m', durMins: 630, direct: false, mult: 0.92, layover: 'Amsterdam (AMS) · 1h 20m layover' },
+        { name: 'Lufthansa', code: 'LH', flight: '761', aircraft: 'Boeing 747-8 Intercontinental', depT: '14:20', arrT: '19:55', dur: '11h 10m', durMins: 670, direct: false, mult: 0.98, layover: 'Frankfurt (FRA) · 1h 45m layover' },
         { name: 'Air India', code: 'AI', flight: '161', aircraft: 'Boeing 787-8 Dreamliner', depT: '18:20', arrT: '06:25', dur: '7h 05m', durMins: 425, direct: true, mult: 1.02 },
       ]
     : [
@@ -351,7 +360,9 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
         { name: 'Air India', code: 'AI', flight: '805', aircraft: 'Airbus A320neo', depT: '07:30', arrT: '09:45', dur: '2h 15m', durMins: 135, direct: true, mult: 1.08 },
         { name: 'Vistara', code: 'UK', flight: '975', aircraft: 'Boeing 737-800', depT: '09:15', arrT: '11:30', dur: '2h 15m', durMins: 135, direct: true, mult: 1.15 },
         { name: 'Akasa Air', code: 'QP', flight: '1120', aircraft: 'Boeing 737 MAX 8', depT: '11:45', arrT: '14:00', dur: '2h 15m', durMins: 135, direct: true, mult: 0.88 },
+        { name: 'Air India', code: 'AI', flight: '814', aircraft: 'Airbus A320neo', depT: '12:35', arrT: '17:15', dur: '4h 40m', durMins: 280, direct: false, mult: 0.89, layover: `${hub1.name} (${hub1.code}) · 1h 15m layover` },
         { name: 'SpiceJet', code: 'SG', flight: '8169', aircraft: 'Boeing 737-800', depT: '15:20', arrT: '17:40', dur: '2h 20m', durMins: 140, direct: true, mult: 0.85 },
+        { name: 'IndiGo', code: '6E', flight: '6412', aircraft: 'Airbus A321neo', depT: '16:10', arrT: '21:05', dur: '4h 55m', durMins: 295, direct: false, mult: 0.86, layover: `${hub2.name} (${hub2.code}) · 1h 25m layover` },
         { name: 'IndiGo', code: '6E', flight: '5324', aircraft: 'Airbus A320neo', depT: '18:40', arrT: '21:00', dur: '2h 20m', durMins: 140, direct: true, mult: 0.98 },
         { name: 'Air India', code: 'AI', flight: '665', aircraft: 'Airbus A321neo', depT: '21:15', arrT: '23:30', dur: '2h 15m', durMins: 135, direct: true, mult: 1.04 },
       ];
