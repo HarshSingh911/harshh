@@ -1,8 +1,9 @@
 import React from 'react';
-import { User, ChevronDown, ShieldCheck } from 'lucide-react';
+import { User, ChevronDown, ShieldCheck, HelpCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { BookingCategory, CurrencyCode, CURRENCY_RATES } from '../data/travelData';
+import { BookingCategory, CurrencyCode } from '../data/travelData';
 import { TripYeahLogo } from './TripYeahLogo';
+import { CountryFlag } from './CountryFlag';
 
 export type AppPageView =
   | 'home'
@@ -34,7 +35,7 @@ interface NavbarProps {
   region?: string;
   onOpenLanguageModal: () => void;
   onOpenListProperty?: () => void;
-  onOpenInsurance: () => void;
+  onOpenInsurance?: () => void;
   onOpenAuth: (redirectTarget?: AppPageView) => void;
   onOpenOffers?: () => void;
   tripsCount: number;
@@ -42,49 +43,26 @@ interface NavbarProps {
   userRole?: 'user' | 'admin';
 }
 
-// Region flag helper
-const REGION_FLAGS: Record<string, string> = {
-  India: '🇮🇳',
-  'United States': '🇺🇸',
-  'United Arab Emirates': '🇦🇪',
-  'United Kingdom': '🇬🇧',
-  'European Union': '🇪🇺',
-  Singapore: '🇸🇬',
-  Canada: '🇨🇦',
-};
-
 export const Navbar: React.FC<NavbarProps> = ({
   activePage,
   activeCategory,
-  onSelectCategory,
   onNavigatePage,
   currency,
   language = 'English',
   region = 'India',
   onOpenLanguageModal,
-  onOpenInsurance,
   onOpenAuth,
-  onOpenOffers,
-  tripsCount,
   userName,
   userRole = 'user',
 }) => {
-  // Flag for current region
-  const regionFlag = REGION_FLAGS[region] || '🇮🇳';
-  const currencySymbol = CURRENCY_RATES[currency]?.symbol?.trim() || '₹';
-  const langCode = language.includes('(') ? language.split('(')[1].replace(')', '') : language.slice(0, 2).toUpperCase();
+  const isSeamlessOceanHeader =
+    ((activePage === 'search-results' || activePage === 'checkout') &&
+      ((activeCategory as string) === 'flights' ||
+        (activeCategory as string) === 'hotels' ||
+        (activeCategory as string) === 'cabs')) ||
+    activePage === 'hotel-details';
 
-  const [isScrolled, setIsScrolled] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Front page (home), international planner, explore, influencers, trips, account, and support have scenic backgrounds behind the navbar
+  // Front page (home), international planner, explore, influencers, trips, account, support, and ocean-header results/checkout have dark/scenic backgrounds behind the navbar
   const isDarkHeader =
     activePage === 'home' ||
     activePage === 'international-planner' ||
@@ -94,22 +72,28 @@ export const Navbar: React.FC<NavbarProps> = ({
     activePage === 'trips' ||
     activePage === 'account' ||
     activePage === 'support' ||
-    activePage === 'hostels';
-
-  // Categories show in top navigation after searching (search-results page or checkout)
-  const isSearchResultsPage = activePage === 'search-results';
+    activePage === 'hostels' ||
+    isSeamlessOceanHeader;
 
   const { t } = useTranslation();
 
   return (
     <header
       className={`relative z-40 w-full ${
-        isDarkHeader
+        isSeamlessOceanHeader
+          ? 'bg-transparent'
+          : isDarkHeader
           ? 'bg-gradient-to-b from-slate-950/75 via-slate-950/30 to-transparent'
           : 'bg-white border-b border-slate-100 shadow-xs'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div
+        className={`h-16 flex items-center justify-between gap-4 ${
+          isSeamlessOceanHeader
+            ? 'w-full px-3 sm:px-5 lg:px-6'
+            : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+        }`}
+      >
         {/* Left: Brand Logo Only - Perfectly leveled in one horizontal line with the header navigation */}
         <div className="flex items-center shrink-0">
           <a
@@ -131,24 +115,27 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right: All Header Options Grouped Together with Uniform Spacing */}
-        <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 lg:gap-6 shrink-0">
-          {/* 1. Travel Insurance */}
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6 shrink-0">
+          {/* 1. Help / Support Center */}
           <button
             type="button"
-            onClick={onOpenInsurance}
-            className={`hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
+            onClick={() => onNavigatePage('support')}
+            title="Open Support Center"
+            className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors py-1.5 px-1 whitespace-nowrap shrink-0 cursor-pointer ${
               isDarkHeader
-                ? 'text-white/85 hover:text-white'
-                : 'text-slate-700 hover:text-emerald-600'
+                ? activePage === 'support'
+                  ? 'text-white underline underline-offset-4'
+                  : 'text-white/90 hover:text-white'
+                : 'text-slate-700 hover:text-blue-600'
             }`}
           >
-            <ShieldCheck className={`w-4 h-4 ${isDarkHeader ? 'text-white' : 'text-slate-700'}`} />
-            <span>{t('nav.travelInsurance', 'Travel Insurance')}</span>
+            <HelpCircle className={`w-4 h-4 ${isDarkHeader ? 'text-white' : 'text-slate-700'}`} />
+            <span>{t('nav.help', 'Help')}</span>
           </button>
 
-          {/* Divider between Travel Insurance and Currency / Language Selector */}
+          {/* Divider between Help and Currency / Language Selector */}
           <span
-            className={`hidden md:inline-block text-sm font-light select-none ${
+            className={`inline-block text-sm font-light select-none ${
               isDarkHeader ? 'text-white/35' : 'text-slate-300'
             }`}
             aria-hidden="true"
@@ -167,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'text-slate-700 hover:text-blue-600'
             }`}
           >
-            <span className="text-sm sm:text-base leading-none">{regionFlag}</span>
+            <CountryFlag countryOrCode={region} className="w-5 h-3.5 sm:w-[22px] sm:h-[15px]" />
             <span className={`font-mono-tabular font-bold ${isDarkHeader ? 'text-white' : 'text-slate-900'}`}>{currency}</span>
             <span className={isDarkHeader ? 'text-white/60' : 'text-slate-400'}>|</span>
             <span className={`font-medium ${isDarkHeader ? 'text-white/90' : 'text-slate-700'}`}>{language}</span>
@@ -213,22 +200,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => onOpenAuth()}
-              title={t('nav.loginOrCreate', 'Login')}
-              className={`relative group overflow-hidden px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-tight shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 border ${
+              title={t('nav.loginOrCreate', 'Log in')}
+              className={`relative group h-10 sm:h-11 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-bold tracking-tight leading-normal shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer flex items-center justify-center border ${
                 isDarkHeader
                   ? 'bg-gradient-to-r from-white via-sky-50 to-blue-100 hover:from-white hover:to-sky-50 text-slate-950 border-white/80 shadow-[0_4px_20px_rgba(255,255,255,0.25)] hover:shadow-[0_6px_25px_rgba(56,189,248,0.35)]'
                   : 'bg-gradient-to-r from-[#2563EB] via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-400/40 shadow-blue-600/30 hover:shadow-blue-600/40'
               }`}
             >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform ${
-                isDarkHeader
-                  ? 'bg-gradient-to-tr from-[#2563EB] to-indigo-600 text-white'
-                  : 'bg-white/20 text-white'
-              }`}>
-                <User className="w-3 h-3" />
-              </span>
-              <span className={isDarkHeader ? 'bg-gradient-to-r from-slate-950 to-blue-950 bg-clip-text text-transparent font-extrabold' : 'font-bold'}>
-                {t('nav.loginOrCreate', 'Login')}
+              <span className={`whitespace-nowrap leading-normal ${isDarkHeader ? 'text-slate-950 font-extrabold' : 'text-white font-bold'}`}>
+                {t('nav.loginOrCreate', 'Log in')}
               </span>
             </button>
           )}

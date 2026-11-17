@@ -84,7 +84,6 @@ const SERVICE_TABS: {
   { id: 'flights', label: 'Flights', ctaLabel: 'Search Flights', icon: Plane },
   { id: 'hotels', label: 'Hotels', ctaLabel: 'Search Hotels', icon: Building2 },
   { id: 'cabs', label: 'Cabs', ctaLabel: 'Search Cabs', icon: Car },
-  { id: 'holidays', label: 'Holidays', ctaLabel: 'Search Holidays', icon: Palmtree },
   { id: 'experiences', label: 'Attractions', ctaLabel: 'Explore Attractions', icon: Ticket },
 ];
 
@@ -144,16 +143,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   const { t, i18n } = useTranslation();
   const [internalDummyTripType, setInternalDummyTripType] = useState<'one-way' | 'round-trip'>('one-way');
   const activeDummyTripType = dummyTripType || internalDummyTripType;
-  const isRoundTripActive =
-    tripType === 'round-trip' ||
-    (tripType === 'dummy-flights' && activeDummyTripType === 'round-trip');
-
-  const handleSelectDummyTripType = (type: 'one-way' | 'round-trip') => {
-    setInternalDummyTripType(type);
-    if (onChangeDummyTripType) {
-      onChangeDummyTripType(type);
-    }
-  };
+  const isRoundTripActive = tripType === 'round-trip';
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [swapRotated, setSwapRotated] = useState(false);
@@ -349,7 +339,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
             {t('hero.tagline', 'Where will you go next?')}
           </h1>
           <p className="text-xs sm:text-sm lg:text-base text-white/95 font-medium max-w-xl mx-auto drop-shadow-[0_2px_10px_rgba(15,23,42,0.45)]">
-            {t('hero.subtitle', 'Flights, Hotels, Cabs & Holidays — all in one place.')}
+            {t('hero.subtitle', 'Flights, Hotels, Cabs & Attractions — all in one place.')}
           </p>
         </div>
       </div>
@@ -357,11 +347,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
       {/* Floating Multi-Modal Search Engine Card — Positioned in the Middle over the Hero */}
       <div className="relative z-20 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 -mt-64 sm:-mt-72 lg:-mt-80">
         <div className="bg-white rounded-[26px] shadow-[0_20px_50px_rgba(15,23,42,0.12)] border border-slate-200/80 p-3.5 sm:p-5 lg:p-6">
-          {/* ROW 1: 5 Service Category Tabs in a single horizontal landscape line */}
+          {/* ROW 1: 4 Service Category Tabs in a clean balanced grid */}
           <div
             role="tablist"
             aria-label="Booking categories"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
+            className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-1.5 sm:gap-2 pb-3.5 mb-3.5 border-b border-slate-100"
           >
             {SERVICE_TABS.map((tab) => {
               const Icon = tab.icon;
@@ -370,7 +360,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 tab.id === 'flights' ? t('hero.flights', 'Flights') :
                 tab.id === 'hotels' ? t('hero.hotels', 'Hotels') :
                 tab.id === 'cabs' ? t('hero.cabs', 'Cabs') :
-                tab.id === 'holidays' ? t('hero.holidays', 'Holidays') :
                 tab.id === 'experiences' ? t('hero.experiences', 'Attractions') :
                 tab.label;
 
@@ -402,14 +391,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
           =================================================================== */}
           {activeCategory === 'flights' && (
             <>
-              {/* Row 2: One Way | Round Trip | Dummy Flights + Traveller & Class */}
+              {/* Row 2: One Way | Round Trip + Traveller & Class */}
               <div className="flex items-center justify-between gap-2 mb-3.5 flex-nowrap">
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
                   {(
                     [
                       { id: 'one-way', label: t('hero.oneWay', 'One Way') },
                       { id: 'round-trip', label: t('hero.roundTrip', 'Round Trip') },
-                      { id: 'dummy-flights', label: t('hero.dummyFlights', 'Dummy Flights') },
                     ] as { id: TripType; label: string }[]
                   ).map((tOpt) => {
                     const active = tripType === tOpt.id;
@@ -428,36 +416,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       </button>
                     );
                   })}
-
-                  {/* Dummy Flights Sub-selector: One Way vs Round Trip */}
-                  {tripType === 'dummy-flights' && (
-                    <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-300/80 rounded-full p-0.5 shadow-2xs ml-0.5 sm:ml-1 animate-fadeIn">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectDummyTripType('one-way')}
-                        title="One-Way Verifiable PNR for Proof of Travel"
-                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          activeDummyTripType === 'one-way'
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'text-amber-800 hover:bg-amber-100/80'
-                        }`}
-                      >
-                        One Way
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectDummyTripType('round-trip')}
-                        title="Round-Trip Verifiable PNR with Return Ticket for Visa"
-                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          activeDummyTripType === 'round-trip'
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'text-amber-800 hover:bg-amber-100/80'
-                        }`}
-                      >
-                        Round Trip
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Right Controls: Traveller & Class Dropdown (Original Position) */}
@@ -685,35 +643,23 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       className={`w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group shadow-2xs ${
                         openDropdown === 'return-date'
                           ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-200'
-                          : tripType === 'dummy-flights'
-                          ? 'bg-amber-50/70 hover:bg-amber-50 hover:border-amber-400 border-amber-200'
                           : 'bg-indigo-50/60 hover:bg-indigo-50 hover:border-indigo-400 border-indigo-200'
                       }`}
                       title="Click to select return date"
                       aria-label="Select return date"
                     >
                       <div className="min-w-0">
-                        <span className={`block text-[11px] font-semibold transition-colors ${
-                          tripType === 'dummy-flights'
-                            ? 'text-amber-700 group-hover:text-amber-800'
-                            : 'text-indigo-600 group-hover:text-indigo-700'
-                        }`}>
+                        <span className="block text-[11px] font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
                           {t('hero.return', 'Return Date')}
                         </span>
                         <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                           {formatDisplayDate(returnDate, t('hero.return', 'Select Return'))}
                         </span>
-                        <span className={`block text-[11px] truncate ${
-                          tripType === 'dummy-flights' ? 'text-amber-600 font-medium' : 'text-indigo-500'
-                        }`}>
+                        <span className="block text-[11px] truncate text-indigo-500">
                           {t('hero.roundTrip', 'Round Trip')}
                         </span>
                       </div>
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs ${
-                        tripType === 'dummy-flights'
-                          ? 'bg-amber-100/80 group-hover:bg-amber-600 text-amber-700 group-hover:text-white'
-                          : 'bg-indigo-100/80 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white'
-                      }`}>
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs bg-indigo-100/80 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white">
                         <Calendar className="w-4 h-4" />
                       </div>
                     </button>

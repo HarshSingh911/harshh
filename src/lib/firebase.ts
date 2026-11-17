@@ -1,5 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  OAuthProvider,
+  signInWithPopup,
+  signOut as fbSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -9,6 +18,13 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleAuthProvider = new GoogleAuthProvider();
+export const facebookAuthProvider = new FacebookAuthProvider();
+facebookAuthProvider.addScope('email');
+facebookAuthProvider.addScope('public_profile');
+
+export const appleAuthProvider = new OAuthProvider('apple.com');
+appleAuthProvider.addScope('email');
+appleAuthProvider.addScope('name');
 
 export enum OperationType {
   CREATE = 'create',

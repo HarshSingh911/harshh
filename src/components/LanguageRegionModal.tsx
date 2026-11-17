@@ -3,6 +3,7 @@ import { X, Check, Globe, DollarSign, MapPin, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CurrencyCode, CURRENCY_RATES } from '../data/travelData';
 import { applyDocumentLanguageAndDir } from '../i18n/formatters';
+import { CountryFlag } from './CountryFlag';
 
 export interface LanguageOption {
   code: string;
@@ -178,7 +179,11 @@ export const LanguageRegionModal: React.FC<LanguageRegionModalProps> = ({
             }`}
           >
             <MapPin className="w-3.5 h-3.5" />
-            <span>{t('modal.region', 'Region')} ({currentRegionObj.flag} {selectedRegion})</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span>{t('modal.region', 'Region')}</span>
+              <CountryFlag countryOrCode={currentRegionObj.code} className="w-4 h-3" />
+              <span>{selectedRegion}</span>
+            </span>
           </button>
 
           <button
@@ -276,7 +281,7 @@ export const LanguageRegionModal: React.FC<LanguageRegionModalProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{r.flag}</span>
+                      <CountryFlag countryOrCode={r.code} className="w-6 h-4" />
                       <div>
                         <div className="text-xs sm:text-sm font-bold text-slate-900">{r.name}</div>
                         <div className="text-[11px] text-slate-500">
@@ -311,7 +316,7 @@ export const LanguageRegionModal: React.FC<LanguageRegionModalProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{l.flag}</span>
+                      <CountryFlag countryOrCode={l.code} className="w-6 h-4" />
                       <div>
                         <div className="text-xs sm:text-sm font-bold text-slate-900">{l.name}</div>
                         <div className="text-[11px] text-slate-500">{l.nativeName}</div>
@@ -331,9 +336,13 @@ export const LanguageRegionModal: React.FC<LanguageRegionModalProps> = ({
 
         {/* Footer */}
         <div className="px-4 py-3 sm:px-5 sm:py-3 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <div className="text-[11px] text-slate-600 text-center sm:text-left">
-            {t('modal.active', 'Active')}: <strong className="text-slate-900">{selectedLanguage}</strong> ·{' '}
-            <strong className="text-slate-900">{currentRegionObj.flag} {selectedRegion}</strong> ·{' '}
+          <div className="text-[11px] text-slate-600 text-center sm:text-left flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+            <span>{t('modal.active', 'Active')}:</span>
+            <strong className="text-slate-900">{selectedLanguage}</strong> ·{' '}
+            <strong className="text-slate-900 inline-flex items-center gap-1">
+              <CountryFlag countryOrCode={currentRegionObj.code} className="w-4 h-2.5" />
+              <span>{selectedRegion}</span>
+            </strong> ·{' '}
             <strong className="text-blue-700 font-bold">{selectedCurrency}</strong>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">

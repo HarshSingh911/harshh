@@ -120,8 +120,8 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
   const [freeCancellationOnly, setFreeCancellationOnly] = useState<boolean>(false);
   const [hotelPickupOnly, setHotelPickupOnly] = useState<boolean>(false);
 
-  // Sorting
-  const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'rating' | 'reviews'>('recommended');
+  // Sorting (Cheapest First by default)
+  const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'rating' | 'reviews'>('price-asc');
 
   // Mobile Filters toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -265,13 +265,13 @@ export const ExperiencesSearchResultsPage: React.FC<ExperiencesSearchResultsPage
       return true;
     });
 
-    // Sorting
+    // Sorting (lowest price first guarantee)
     return list.sort((a, b) => {
       if (sortBy === 'price-asc') return a.startingPriceInr - b.startingPriceInr;
       if (sortBy === 'price-desc') return b.startingPriceInr - a.startingPriceInr;
-      if (sortBy === 'rating') return b.rating - a.rating;
-      if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
-      return b.reviewCount * b.rating - a.reviewCount * a.rating; // recommended default
+      if (sortBy === 'rating') return (b.rating - a.rating) || (a.startingPriceInr - b.startingPriceInr);
+      if (sortBy === 'reviews') return (b.reviewCount - a.reviewCount) || (a.startingPriceInr - b.startingPriceInr);
+      return a.startingPriceInr - b.startingPriceInr;
     });
   }, [
     searchQuery,

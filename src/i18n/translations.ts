@@ -7,7 +7,8 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   en: {
     nav: {
       travelInsurance: 'Travel Insurance',
-      loginOrCreate: 'Login',
+      help: 'Help',
+      loginOrCreate: 'Log in',
       companyAdmin: 'Company Admin',
       admin: 'Admin',
       accountSettings: 'Account Settings',
@@ -171,6 +172,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   hi: {
     nav: {
       travelInsurance: 'यात्रा बीमा',
+      help: 'सहायता',
       loginOrCreate: 'लॉग इन',
       companyAdmin: 'कंपनी एडमिन',
       admin: 'व्यवस्थापक',
@@ -335,6 +337,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   fr: {
     nav: {
       travelInsurance: 'Assurance Voyage',
+      help: 'Aide',
       loginOrCreate: 'Connexion',
       companyAdmin: 'Admin Entreprise',
       admin: 'Admin',
@@ -499,6 +502,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   de: {
     nav: {
       travelInsurance: 'Reiseversicherung',
+      help: 'Hilfe',
       loginOrCreate: 'Anmelden',
       companyAdmin: 'Unternehmens-Admin',
       admin: 'Admin',
@@ -663,6 +667,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   es: {
     nav: {
       travelInsurance: 'Seguro de viaje',
+      help: 'Ayuda',
       loginOrCreate: 'Iniciar sesión',
       companyAdmin: 'Admin corporativo',
       admin: 'Admin',
@@ -827,6 +832,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   ja: {
     nav: {
       travelInsurance: '旅行保険',
+      help: 'ヘルプ',
       loginOrCreate: 'ログイン',
       companyAdmin: '会社管理者',
       admin: '管理者',
@@ -991,6 +997,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   ko: {
     nav: {
       travelInsurance: '여행자 보험',
+      help: '도움말',
       loginOrCreate: '로그인',
       companyAdmin: '기업 관리자',
       admin: '관리자',
@@ -1155,6 +1162,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   zh: {
     nav: {
       travelInsurance: '旅行保险',
+      help: '帮助中心',
       loginOrCreate: '登录 / 注册',
       companyAdmin: '企业管理',
       admin: '管理员',
@@ -1319,6 +1327,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   ar: {
     nav: {
       travelInsurance: 'تأمين السفر',
+      help: 'المساعدة',
       loginOrCreate: 'تسجيل الدخول / إنشاء حساب',
       companyAdmin: 'إدارة الشركة',
       admin: 'المدير',
@@ -1483,6 +1492,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   ru: {
     nav: {
       travelInsurance: 'Страхование путешествий',
+      help: 'Помощь',
       loginOrCreate: 'Войти / Регистрация',
       companyAdmin: 'Администратор компании',
       admin: 'Админ',
@@ -1647,6 +1657,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   pt: {
     nav: {
       travelInsurance: 'Seguro Viagem',
+      help: 'Ajuda',
       loginOrCreate: 'Entrar / Criar Conta',
       companyAdmin: 'Admin Corporativo',
       admin: 'Admin',
@@ -1811,6 +1822,7 @@ export const TRANSLATIONS: Record<string, Record<string, any>> = {
   th: {
     nav: {
       travelInsurance: 'ประกันภัยการเดินทาง',
+      help: 'ช่วยเหลือ',
       loginOrCreate: 'เข้าสู่ระบบ / สมัครสมาชิก',
       companyAdmin: 'ผู้ดูแลระบบองค์กร',
       admin: 'แอดมิน',

@@ -54,6 +54,9 @@ import { useTranslation } from 'react-i18next';
 import { SafeImage } from './SafeImage';
 import { TrainBookingCheckoutPage } from './TrainBookingCheckoutPage';
 import { FlightBookingCheckoutPage } from './FlightBookingCheckoutPage';
+import { HotelBookingCheckoutPage } from './HotelBookingCheckoutPage';
+import { CabBookingCheckoutPage } from './CabBookingCheckoutPage';
+import { AttractionBookingCheckoutPage } from './AttractionBookingCheckoutPage';
 import { TripDatePickerModal } from './TripDatePickerModal';
 
 export interface CheckoutItem {
@@ -1630,6 +1633,15 @@ export const CheckoutPaymentPage: React.FC<CheckoutPaymentPageProps> = (props) =
   }
   if (props.item.category === 'flights') {
     return <FlightBookingCheckoutPage {...props} />;
+  }
+  if (props.item.category === 'hotels') {
+    return <HotelBookingCheckoutPage {...props} />;
+  }
+  if (props.item.category === 'cabs') {
+    return <CabBookingCheckoutPage {...props} />;
+  }
+  if (props.item.category === 'experiences' || (props.item.category as any) === 'attractions') {
+    return <AttractionBookingCheckoutPage {...props} />;
   }
   return <DefaultCheckoutPaymentPage {...props} />;
 };

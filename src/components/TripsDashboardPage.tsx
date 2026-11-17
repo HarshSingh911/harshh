@@ -703,7 +703,8 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
               { id: 'all', label: 'All Categories' },
               { id: 'flights', label: 'Flights' },
               { id: 'hotels', label: 'Hotels' },
-              { id: 'holidays', label: 'Holidays' },
+              { id: 'cabs', label: 'Cabs' },
+              { id: 'experiences', label: 'Attractions' },
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -821,12 +822,12 @@ export const TripsDashboardPage: React.FC<TripsDashboardPageProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      if (onNavigateToSearch) onNavigateToSearch('holidays');
+                      if (onNavigateToSearch) onNavigateToSearch('cabs');
                       else onBookNewTrip();
                     }}
                     className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold cursor-pointer transition-colors"
                   >
-                    Holidays
+                    Explore Cabs
                   </button>
                 </>
               )}

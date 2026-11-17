@@ -1,39 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
-  Phone,
-  Lock,
-  User,
   Mail,
-  ShieldCheck,
   ArrowRight,
-  CheckCircle2,
   AlertCircle,
-  Eye,
-  EyeOff,
-  Sparkles,
   RefreshCw,
-  KeyRound,
-  Tag,
-  Copy,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Percent,
-  Briefcase,
-  Search,
-  ChevronDown,
+  CheckCircle2,
 } from 'lucide-react';
 import { TripYeahLogo } from './TripYeahLogo';
 import { useTranslation } from 'react-i18next';
-import { auth, googleAuthProvider, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import {
-  signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+  auth,
+  googleAuthProvider,
+  appleAuthProvider,
+  facebookAuthProvider,
+  db,
+} from '../lib/firebase';
+import { signInWithPopup, AuthProvider } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 // High-resolution destination scenery images for the slideshow
 import destMaldives from '../assets/images/dest_maldives_resort_1792241008307.jpg';
@@ -51,116 +35,21 @@ export interface AuthModalProps {
   onOpenTermsOfService?: () => void;
 }
 
-export type AuthMethod = 'phone' | 'email';
-export type AuthStep = 'phone-input' | 'otp-verify' | 'email-login' | 'create-account' | 'google-picker';
+export type AuthMethod = 'email';
+export type AuthStep = 'email-login';
 
-export interface CountryDialOption {
-  code: string;
-  name: string;
-  dialCode: string;
-  flag: string;
-}
-
-export const COUNTRIES_LIST: CountryDialOption[] = [
-  { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳' },
-  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸' },
-  { code: 'AE', name: 'United Arab Emirates', dialCode: '+971', flag: '🇦🇪' },
-  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
-  { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬' },
-  { code: 'CA', name: 'Canada', dialCode: '+1', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺' },
-  { code: 'DE', name: 'Germany', dialCode: '+49', flag: '🇩🇪' },
-  { code: 'FR', name: 'France', dialCode: '+33', flag: '🇫🇷' },
-  { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵' },
-  { code: 'TH', name: 'Thailand', dialCode: '+66', flag: '🇹🇭' },
-  { code: 'ID', name: 'Indonesia', dialCode: '+62', flag: '🇮🇩' },
-  { code: 'MY', name: 'Malaysia', dialCode: '+60', flag: '🇲🇾' },
-  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' },
-  { code: 'QA', name: 'Qatar', dialCode: '+974', flag: '🇶🇦' },
-  { code: 'OM', name: 'Oman', dialCode: '+968', flag: '🇴🇲' },
-  { code: 'KW', name: 'Kuwait', dialCode: '+965', flag: '🇰🇼' },
-  { code: 'BH', name: 'Bahrain', dialCode: '+973', flag: '🇧🇭' },
-  { code: 'NP', name: 'Nepal', dialCode: '+977', flag: '🇳🇵' },
-  { code: 'LK', name: 'Sri Lanka', dialCode: '+94', flag: '🇱🇰' },
-  { code: 'BD', name: 'Bangladesh', dialCode: '+880', flag: '🇧🇩' },
-  { code: 'MV', name: 'Maldives', dialCode: '+960', flag: '🇲🇻' },
-  { code: 'CH', name: 'Switzerland', dialCode: '+41', flag: '🇨🇭' },
-  { code: 'IT', name: 'Italy', dialCode: '+39', flag: '🇮🇹' },
-  { code: 'ES', name: 'Spain', dialCode: '+34', flag: '🇪🇸' },
-  { code: 'NL', name: 'Netherlands', dialCode: '+31', flag: '🇳🇱' },
-  { code: 'NZ', name: 'New Zealand', dialCode: '+64', flag: '🇳🇿' },
-  { code: 'ZA', name: 'South Africa', dialCode: '+27', flag: '🇿🇦' },
-  { code: 'PH', name: 'Philippines', dialCode: '+63', flag: '🇵🇭' },
-  { code: 'VN', name: 'Vietnam', dialCode: '+84', flag: '🇻🇳' },
-];
-
-// Curated Slideshow Sceneries with Exclusive Member Travel Offers
+// Curated Slideshow Sceneries
 const SLIDESHOW_OFFERS = [
-  {
-    id: 'maldives',
-    image: destMaldives,
-    destination: 'Maldives',
-    country: 'Indian Ocean Paradise',
-    badge: 'MEMBER EXCLUSIVE',
-    badgeColor: 'bg-emerald-500/90 text-white',
-    offerTitle: 'FLAT 25% OFF On Overwater Luxury Villas',
-    offerDescription: 'Unlock private pool water villas with complimentary speedboat airport transfers & daily floating breakfast.',
-    promoCode: 'MALDIVES25',
-    savings: 'Save up to ₹18,000',
-  },
-  {
-    id: 'swiss',
-    image: destSwissAlps,
-    destination: 'Swiss Alps & Glaciers',
-    country: 'Switzerland',
-    badge: 'SUMMER SPECIAL',
-    badgeColor: 'bg-cyan-500/90 text-white',
-    offerTitle: 'SAVE ₹6,000 On International Flights',
-    offerDescription: 'Zero convenience fee on direct flights from Delhi/Mumbai with 100% free date change protection.',
-    promoCode: 'GLOBALFLY',
-    savings: 'Save ₹6,000 on Roundtrips',
-  },
-  {
-    id: 'bali',
-    image: destBali,
-    destination: 'Bali Clifftops & Ubud',
-    country: 'Indonesia',
-    badge: 'HOT HOLIDAY DEAL',
-    badgeColor: 'bg-rose-500/90 text-white',
-    offerTitle: 'BUY 1 GET 1 FREE Resort Stays',
-    offerDescription: 'Book 3 nights in Ubud rainforest or Seminyak beach club resort and get 2 nights free in Nusa Penida.',
-    promoCode: 'BALIBOGO',
-    savings: 'Value ₹22,500 Free',
-  },
-  {
-    id: 'dubai',
-    image: destDubai,
-    destination: 'Dubai Skyline & Marina',
-    country: 'United Arab Emirates',
-    badge: 'CITY BREAK',
-    badgeColor: 'bg-amber-500/90 text-white',
-    offerTitle: 'FREE Burj Khalifa Top Deck Tickets',
-    offerDescription: 'Includes VIP fast-track tickets to Level 124 + premium 4x4 red dune desert safari on all 4N packages.',
-    promoCode: 'BURJFREE',
-    savings: 'Save ₹7,200',
-  },
-  {
-    id: 'paris',
-    image: destParis,
-    destination: 'Paris & Seine Riverfront',
-    country: 'France',
-    badge: 'ROMANTIC ESCAPE',
-    badgeColor: 'bg-purple-500/90 text-white',
-    offerTitle: 'FLAT ₹5,000 Instant Cash Voucher',
-    offerDescription: 'Earn 3x TripPoints + instant ₹5,000 off on flights & charming boutique Montmartre hotel bookings.',
-    promoCode: 'PARISNOW',
-    savings: 'Instant ₹5,000 Discount',
-  },
+  { id: 'maldives', image: destMaldives, destination: 'Maldives' },
+  { id: 'swiss', image: destSwissAlps, destination: 'Swiss Alps & Glaciers' },
+  { id: 'bali', image: destBali, destination: 'Bali Clifftops & Ubud' },
+  { id: 'dubai', image: destDubai, destination: 'Dubai Skyline & Marina' },
+  { id: 'paris', image: destParis, destination: 'Paris & Seine Riverfront' },
 ];
 
 // Google Logo SVG
 const GoogleIcon = ({ className = 'w-5 h-5 shrink-0' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24">
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -180,62 +69,44 @@ const GoogleIcon = ({ className = 'w-5 h-5 shrink-0' }: { className?: string }) 
   </svg>
 );
 
+// Apple Logo SVG
+const AppleIcon = ({ className = 'w-5 h-5 shrink-0' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z" />
+  </svg>
+);
+
+// Facebook Logo SVG
+const FacebookIcon = ({ className = 'w-5 h-5 shrink-0' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="#1877F2"
+      d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.026 4.388 11.022 10.125 11.927v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.095 24 18.099 24 12.073z"
+    />
+  </svg>
+);
+
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   onLoginSuccess,
-  initialMobile = '',
   onOpenPrivacyPolicy,
   onOpenTermsOfService,
 }) => {
   const { t } = useTranslation();
-  // Navigation & Method Tabs ('phone' | 'email')
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('phone');
-  const [step, setStep] = useState<AuthStep>('phone-input');
 
   // Slideshow State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Phone input states
-  const [selectedCountry, setSelectedCountry] = useState<CountryDialOption>(COUNTRIES_LIST[0]);
-  const [countryCode, setCountryCode] = useState('+91');
-  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
-  const [countrySearchQuery, setCountrySearchQuery] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(initialMobile);
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [testOtpCode, setTestOtpCode] = useState<string | null>(null);
-
-  const filteredCountries = COUNTRIES_LIST.filter(
-    (c) =>
-      c.name.toLowerCase().includes(countrySearchQuery.toLowerCase()) ||
-      c.dialCode.includes(countrySearchQuery) ||
-      c.code.toLowerCase().includes(countrySearchQuery.toLowerCase())
-  );
-
-  // Email input states
+  // Email input state
   const [emailInput, setEmailInput] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [isEmailSignUp, setIsEmailSignUp] = useState(false);
-  const [emailFullName, setEmailFullName] = useState('');
-
-  // Create account states
-  const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [agreeTerms, setAgreeTerms] = useState(true);
-
-  // Password visibility
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showEmailPassword, setShowEmailPassword] = useState(false);
 
   // Status & loading states
   const [error, setError] = useState('');
   const [infoNotice, setInfoNotice] = useState('');
   const [loading, setLoading] = useState(false);
-  const [countdown, setCountdown] = useState(60);
+  const [activeProvider, setActiveProvider] = useState<'email' | 'google' | 'apple' | 'facebook' | null>(null);
 
   // Auto-rotate scenery slideshow every 4.5 seconds
   useEffect(() => {
@@ -246,436 +117,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return () => clearInterval(timer);
   }, [isOpen, isPaused]);
 
-  // Ref to store single RecaptchaVerifier instance across renders (Point 3)
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-
-  // Safely clear previous instance and clean DOM container (Point 4)
-  const cleanupRecaptcha = () => {
-    if (recaptchaVerifierRef.current) {
-      try {
-        recaptchaVerifierRef.current.clear();
-      } catch (e) {
-        console.warn('Error clearing recaptchaVerifierRef:', e);
-      }
-      recaptchaVerifierRef.current = null;
-    }
-    if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
-      try {
-        (window as any).recaptchaVerifier.clear();
-      } catch {}
-      (window as any).recaptchaVerifier = null;
-    }
-    const container = document.getElementById('recaptcha-container');
-    if (container) {
-      container.innerHTML = '';
-    }
-  };
-
-  // Handle component unmount properly by cleaning up the verifier (Point 6 & 7)
-  useEffect(() => {
-    return () => {
-      cleanupRecaptcha();
-    };
-  }, []);
-
-  // Initialize reCAPTCHA only after its container exists in the DOM, and cleanup on close (Point 5 & 6)
-  useEffect(() => {
-    if (!isOpen) {
-      cleanupRecaptcha();
-      return;
-    }
-
-    // Modal is opened and container is mounted in DOM; initialize once after DOM is ready
-    const timer = setTimeout(() => {
-      getOrCreateRecaptcha();
-    }, 50);
-
-    return () => {
-      clearTimeout(timer);
-      cleanupRecaptcha();
-    };
-  }, [isOpen]);
-
-  // OTP Countdown timer
-  useEffect(() => {
-    let timer: any;
-    if (step === 'otp-verify' && countdown > 0) {
-      timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [step, countdown]);
-
-  // Get or safely create the single RecaptchaVerifier instance (Points 2, 3, 4, 5, 7)
-  const getOrCreateRecaptcha = (): RecaptchaVerifier | null => {
-    if (typeof window === 'undefined') return null;
-
-    const container = document.getElementById('recaptcha-container');
-    if (!container) {
-      console.warn('reCAPTCHA container (#recaptcha-container) not found in DOM');
-      return null;
-    }
-
-    // 1. If valid verifier already exists in ref, reuse it (Point 3)
-    if (recaptchaVerifierRef.current) {
-      return recaptchaVerifierRef.current;
-    }
-
-    // 2. Before creating a new instance, safely clear previous instance and clean DOM container (Point 4)
-    cleanupRecaptcha();
-
-    try {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: () => {
-          // reCAPTCHA solved automatically
-        },
-        'expired-callback': () => {
-          setError('reCAPTCHA expired. Please tap Continue to send OTP again.');
-        },
-      });
-
-      recaptchaVerifierRef.current = verifier;
-      (window as any).recaptchaVerifier = verifier;
-      return verifier;
-    } catch (err: any) {
-      console.error('Error initializing RecaptchaVerifier:', err);
-      const errMsg = err?.message || String(err);
-      if (errMsg.includes('already been rendered')) {
-        // Recovery: wipe DOM and re-instantiate cleanly
-        cleanupRecaptcha();
-        try {
-          const freshVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: () => {},
-            'expired-callback': () => {
-              setError('reCAPTCHA expired. Please tap Continue to send OTP again.');
-            },
-          });
-          recaptchaVerifierRef.current = freshVerifier;
-          (window as any).recaptchaVerifier = freshVerifier;
-          return freshVerifier;
-        } catch (retryErr) {
-          console.error('Fatal retry creating RecaptchaVerifier:', retryErr);
-        }
-      }
-      return null;
-    }
-  };
-
   if (!isOpen) return null;
-
-  // Format and clean phone input
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setPhoneNumber(val);
-    setError('');
-  };
-
-  // Real Firebase Phone OTP Submit using signInWithPhoneNumber (Point 8)
-  const handlePhoneSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (loading) return;
-
-    const cleanNumber = phoneNumber.trim().replace(/\D/g, '');
-
-    // 1. Validate Indian (+91) 10-digit mobile number
-    if (countryCode === '+91') {
-      if (cleanNumber.length !== 10) {
-        setError('Please enter a valid 10-digit Indian mobile number.');
-        return;
-      }
-      if (!/^[6-9]\d{9}$/.test(cleanNumber)) {
-        setError('Please enter a valid Indian mobile number starting with 6, 7, 8, or 9.');
-        return;
-      }
-    } else if (cleanNumber.length < 7 || cleanNumber.length > 15) {
-      setError('Please enter a valid mobile number.');
-      return;
-    }
-
-    const fullPhoneNumber = `${countryCode}${cleanNumber}`;
-    setError('');
-    setInfoNotice('');
-    setLoading(true);
-
-    try {
-      const appVerifier = getOrCreateRecaptcha();
-      if (!appVerifier) {
-        throw new Error('Could not initialize reCAPTCHA verifier. Please refresh and try again.');
-      }
-
-      const confirmation = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
-      setConfirmationResult(confirmation);
-      setLoading(false);
-      setCountdown(60);
-      setOtp(['', '', '', '', '', '']);
-      if (step === 'otp-verify') {
-        setInfoNotice('A fresh 6-digit verification code has been sent via SMS.');
-      }
-      setStep('otp-verify');
-    } catch (err: any) {
-      console.error('Firebase signInWithPhoneNumber error:', err);
-      setLoading(false);
-
-      const code = err?.code || '';
-      if (
-        code === 'auth/billing-not-enabled' ||
-        `${err}`.includes('billing-not-enabled') ||
-        `${err}`.includes('billing not enabled')
-      ) {
-        cleanupRecaptcha();
-        const testCode = '123456';
-        setTestOtpCode(testCode);
-        setConfirmationResult(null);
-        setCountdown(60);
-        setOtp(['', '', '', '', '', '']);
-        setInfoNotice(`Firebase SMS carrier delivery requires a Blaze plan. For testing, your verification OTP is: ${testCode}`);
-        setStep('otp-verify');
-      } else if (code === 'auth/captcha-check-failed' || `${err}`.includes('reCAPTCHA') || `${err}`.includes('recaptcha')) {
-        cleanupRecaptcha();
-        setError('reCAPTCHA verification failed. Please tap Continue to try again.');
-      } else if (code === 'auth/invalid-phone-number') {
-        setError('The mobile number format is invalid. Please check and try again.');
-      } else if (code === 'auth/too-many-requests') {
-        setError('Too many OTP attempts in a short time. Please wait a few moments before trying again.');
-      } else if (code === 'auth/quota-exceeded') {
-        setError('SMS quota limit reached for this project. Please try again later or sign in with Google.');
-      } else {
-        setError(err?.message || 'Failed to send OTP. Please check your connection and try again.');
-      }
-    }
-  };
-
-  // Handle single digit OTP change across 6 digits
-  const handleOtpBoxChange = (val: string, index: number) => {
-    const cleanDigits = val.replace(/\D/g, '');
-
-    // If multi-digit pasted or typed
-    if (cleanDigits.length > 1) {
-      const digits = cleanDigits.slice(0, 6).split('');
-      const newOtp = [...otp];
-      digits.forEach((d, i) => {
-        if (index + i < 6) newOtp[index + i] = d;
-      });
-      setOtp(newOtp);
-      setError('');
-      setInfoNotice('');
-      const targetFocusIdx = Math.min(index + digits.length, 5);
-      document.getElementById(`modal-otp-${targetFocusIdx}`)?.focus();
-      return;
-    }
-
-    const sanitized = cleanDigits.slice(-1);
-    const newOtp = [...otp];
-    newOtp[index] = sanitized;
-    setOtp(newOtp);
-    setError('');
-    setInfoNotice('');
-
-    if (sanitized && index < 5) {
-      const nextInput = document.getElementById(`modal-otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  // Handle backspace navigation in 6-digit OTP
-  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`modal-otp-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  // Handle paste in OTP
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (!pasted) return;
-    const digits = pasted.split('');
-    const newOtp = ['', '', '', '', '', ''];
-    digits.forEach((d, i) => {
-      if (i < 6) newOtp[i] = d;
-    });
-    setOtp(newOtp);
-    setError('');
-    setInfoNotice('');
-    const nextIdx = Math.min(digits.length, 5);
-    document.getElementById(`modal-otp-${nextIdx}`)?.focus();
-  };
-
-  // Real Firebase OTP Verification using confirmationResult.confirm()
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const enteredOtp = otp.join('').trim();
-    if (enteredOtp.length !== 6) {
-      setError('Please enter all 6 digits of the SMS OTP.');
-      return;
-    }
-
-    if (!confirmationResult && !testOtpCode) {
-      setError('Authentication session expired. Please go back and request a new OTP.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    // Handle test OTP fallback when Firebase SMS carrier billing is not enabled
-    if (testOtpCode && !confirmationResult) {
-      if (enteredOtp !== testOtpCode) {
-        setLoading(false);
-        setError(`Invalid verification code. Please enter ${testOtpCode}`);
-        return;
-      }
-
-      const verifiedPhone = `${countryCode}${phoneNumber}`;
-      const customerName = `Traveller ${phoneNumber.slice(-4)}`;
-      const customerEmail = `${phoneNumber}@tripyeah.com`;
-      const role: 'user' | 'admin' = 'user';
-
-      try {
-        localStorage.setItem('tripyeah_logged_user', customerName);
-        localStorage.setItem('tripyeah_user_role', role);
-        localStorage.setItem('tripyeah_user_phone', verifiedPhone);
-      } catch {}
-
-      setLoading(false);
-      onLoginSuccess(customerName, customerEmail, verifiedPhone, role);
-      onClose();
-      return;
-    }
-
-    try {
-      const userCredential = await confirmationResult!.confirm(enteredOtp);
-      const user = userCredential.user;
-      const uid = user.uid;
-      const verifiedPhone = user.phoneNumber || `${countryCode}${phoneNumber}`;
-
-      // 5. Create or update customer profile in Firestore using Firebase UID
-      const userRef = doc(db, 'users', uid);
-      let customerName = user.displayName;
-
-      try {
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          if (!customerName && data?.displayName) {
-            customerName = data.displayName;
-          }
-        }
-      } catch (fsErr) {
-        console.warn('Firestore user query note:', fsErr);
-      }
-
-      if (!customerName) {
-        customerName = `Traveller ${phoneNumber.slice(-4)}`;
-      }
-
-      const customerEmail = user.email || `${phoneNumber}@tripyeah.com`;
-      const isBootstrappedAdmin = customerEmail.toLowerCase() === 'meetsingh7416@gmail.com';
-      const role: 'user' | 'admin' = isBootstrappedAdmin ? 'admin' : 'user';
-
-      try {
-        await setDoc(userRef, {
-          id: uid,
-          phoneNumber: verifiedPhone,
-          displayName: customerName,
-          email: customerEmail,
-          role: role,
-          updatedAt: new Date().toISOString(),
-        }, { merge: true });
-      } catch (fsWriteErr) {
-        console.warn('Firestore user profile sync note:', fsWriteErr);
-      }
-
-      try {
-        localStorage.setItem('tripyeah_logged_user', customerName);
-        localStorage.setItem('tripyeah_user_role', role);
-        localStorage.setItem('tripyeah_user_phone', verifiedPhone);
-      } catch {}
-
-      setLoading(false);
-      onLoginSuccess(customerName, customerEmail, verifiedPhone, role);
-      onClose();
-    } catch (err: any) {
-      console.error('Firebase OTP confirm error:', err);
-      setLoading(false);
-      const code = err?.code || '';
-      if (code === 'auth/invalid-verification-code') {
-        setError('Invalid OTP entered. Please check the 6-digit code and try again.');
-      } else if (code === 'auth/code-expired') {
-        setError('The OTP code has expired. Please tap "Resend OTP Now" to get a fresh code.');
-      } else {
-        setError(err?.message || 'OTP verification failed. Please try again.');
-      }
-    }
-  };
-
-  // Create Account Submit
-  const handleCreateAccountSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim()) {
-      setError('Please enter your full name.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please verify.');
-      return;
-    }
-    if (!agreeTerms) {
-      setError('Please agree to TripYeah Terms of Service.');
-      return;
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const userEmail = `${phoneNumber}@tripyeah.com`;
-
-      try {
-        const storedAccountsStr = localStorage.getItem('tripyeah_registered_accounts');
-        const accounts: any[] = storedAccountsStr ? JSON.parse(storedAccountsStr) : [];
-        const newAccount = {
-          phone: phoneNumber,
-          name: fullName.trim(),
-          email: userEmail,
-          password: password,
-          role: 'user',
-          createdAt: new Date().toISOString(),
-        };
-        const updatedAccounts = [...accounts.filter((a) => a.phone !== phoneNumber), newAccount];
-        localStorage.setItem('tripyeah_registered_accounts', JSON.stringify(updatedAccounts));
-      } catch (err) {
-        console.warn('LocalStorage save note:', err);
-      }
-
-      onLoginSuccess(fullName.trim(), userEmail, phoneNumber, 'user');
-      onClose();
-    }, 450);
-  };
 
   // Email Login Submit
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = emailInput.trim();
-    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       setError('Please enter a valid email address.');
       return;
     }
 
+    setError('');
+    setInfoNotice('');
     setLoading(true);
+    setActiveProvider('email');
+
     setTimeout(() => {
       setLoading(false);
-      const rawName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      setActiveProvider(null);
+      const rawName = cleanEmail
+        .split('@')[0]
+        .replace(/[._-]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
       const isBootstrappedAdmin = cleanEmail.toLowerCase() === 'meetsingh7416@gmail.com';
       const userName = rawName || 'Traveller';
       const resolvedRole: 'user' | 'admin' = isBootstrappedAdmin ? 'admin' : 'user';
 
-      // Save user record
       try {
         const storedAccountsStr = localStorage.getItem('tripyeah_registered_accounts');
         const accounts: any[] = storedAccountsStr ? JSON.parse(storedAccountsStr) : [];
@@ -693,88 +161,130 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         );
         localStorage.setItem('tripyeah_user_role', resolvedRole);
         localStorage.setItem('tripyeah_logged_user', userName);
+        localStorage.setItem('tripyeah_user_email', cleanEmail);
       } catch {}
 
       onLoginSuccess(userName, cleanEmail, '', resolvedRole);
       onClose();
-    }, 450);
+    }, 350);
   };
 
-
-  // Real Firebase Google Login with Popup
-  const handleGoogleLogin = async () => {
+  // Real Firebase Social Login with Popup (Google, Apple, Facebook)
+  const handleSocialLogin = async (providerKey: 'google' | 'apple' | 'facebook') => {
+    if (loading) return;
     setLoading(true);
+    setActiveProvider(providerKey);
     setError('');
+    setInfoNotice('');
+
+    const providerMap: Record<'google' | 'apple' | 'facebook', AuthProvider> = {
+      google: googleAuthProvider,
+      apple: appleAuthProvider,
+      facebook: facebookAuthProvider,
+    };
+
+    const providerLabelMap: Record<'google' | 'apple' | 'facebook', string> = {
+      google: 'Google',
+      apple: 'Apple',
+      facebook: 'Facebook',
+    };
+
+    const selectedProvider = providerMap[providerKey];
+    const providerLabel = providerLabelMap[providerKey];
 
     try {
-      const result = await signInWithPopup(auth, googleAuthProvider);
+      const result = await signInWithPopup(auth, selectedProvider);
       const user = result.user;
-      const gName = user.displayName || user.email?.split('@')[0] || 'Traveller';
-      const gEmail = user.email || '';
-      const isBootstrappedAdmin = gEmail.toLowerCase() === 'meetsingh7416@gmail.com';
+      const resolvedEmail = user.email || '';
+      const resolvedName =
+        user.displayName ||
+        resolvedEmail.split('@')[0] ||
+        `${providerLabel} Traveller`;
+      const isBootstrappedAdmin = resolvedEmail.toLowerCase() === 'meetsingh7416@gmail.com';
       const resolvedRole: 'user' | 'admin' = isBootstrappedAdmin ? 'admin' : 'user';
 
       // Persist user record in Firestore
       try {
-        await setDoc(doc(db, 'users', user.uid), {
-          id: user.uid,
-          email: gEmail,
-          displayName: gName,
-          photoURL: user.photoURL || '',
-          role: resolvedRole,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }, { merge: true });
+        await setDoc(
+          doc(db, 'users', user.uid),
+          {
+            id: user.uid,
+            email: resolvedEmail,
+            displayName: resolvedName,
+            photoURL: user.photoURL || '',
+            provider: providerKey,
+            role: resolvedRole,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
       } catch (fsErr) {
         console.warn('Firestore user profile sync notice:', fsErr);
       }
 
       try {
         localStorage.setItem('tripyeah_user_role', resolvedRole);
-        localStorage.setItem('tripyeah_logged_user', gName);
-        localStorage.setItem('tripyeah_user_email', gEmail);
+        localStorage.setItem('tripyeah_logged_user', resolvedName);
+        if (resolvedEmail) {
+          localStorage.setItem('tripyeah_user_email', resolvedEmail);
+        }
         if (user.phoneNumber) {
           localStorage.setItem('tripyeah_user_phone', user.phoneNumber);
         }
       } catch {}
 
       setLoading(false);
-      onLoginSuccess(gName, gEmail, user.phoneNumber || '', resolvedRole);
+      setActiveProvider(null);
+      onLoginSuccess(resolvedName, resolvedEmail, user.phoneNumber || '', resolvedRole);
       onClose();
     } catch (popupErr: any) {
-      console.warn('Firebase signInWithPopup error:', popupErr?.code || popupErr?.message);
+      console.warn(`Firebase ${providerLabel} signInWithPopup error:`, popupErr?.code || popupErr?.message);
       setLoading(false);
+      setActiveProvider(null);
 
-      if (popupErr?.code === 'auth/popup-closed-by-user' || popupErr?.code === 'auth/cancelled-popup-request') {
-        setError('Google sign-in popup was closed. Please try again.');
-      } else if (popupErr?.code === 'auth/popup-blocked') {
+      const errCode = popupErr?.code || '';
+      if (errCode === 'auth/popup-closed-by-user' || errCode === 'auth/cancelled-popup-request') {
+        setError(`${providerLabel} sign-in popup was closed. Please try again.`);
+      } else if (errCode === 'auth/popup-blocked') {
         setError('Popup was blocked by your browser. Please allow popups for this site and try again.');
-      } else if (popupErr?.code === 'auth/unauthorized-domain') {
-        setError('Domain not authorized in Firebase Console. Please sign in using Phone OTP or Email.');
+      } else if (
+        errCode === 'auth/operation-not-allowed' ||
+        errCode === 'auth/configuration-not-found' ||
+        errCode === 'auth/invalid-credential'
+      ) {
+        setError(
+          `${providerLabel} sign-in is not yet enabled in Firebase Console (Authentication → Sign-in method → ${providerLabel}). Please enable it or continue with Email / Google.`
+        );
+      } else if (errCode === 'auth/account-exists-with-different-credential') {
+        setError(
+          'An account already exists with this email using another login method. Please sign in with Google or Email.'
+        );
+      } else if (errCode === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized in Firebase Console. Please sign in using Email.');
       } else {
-        setError(popupErr?.message || 'Google sign-in could not be completed. Please try again.');
+        setError(popupErr?.message || `${providerLabel} sign-in could not be completed. Please try again.`);
       }
     }
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
       role="dialog"
       aria-modal="true"
+      aria-label="Login or Create Account"
     >
-      {/* Medium-Sized Balanced 2-Column Modal */}
+      {/* Medium-Sized Balanced 2-Column Modal (Original Normal Size) */}
       <div className="bg-slate-900 rounded-3xl max-w-xl md:max-w-3xl lg:max-w-[780px] w-full overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 grid grid-cols-1 md:grid-cols-12 min-h-[460px] sm:min-h-[500px]">
-        
         {/* =====================================================================
-            LEFT COLUMN (5-cols on md+): SCENERIES SLIDESHOW WITH TRAVEL OFFERS
+            LEFT COLUMN (5-cols on md+): SCENERIES SLIDESHOW
            ===================================================================== */}
         <div
           className="md:col-span-5 relative overflow-hidden bg-slate-900 flex flex-col justify-between p-4 sm:p-5 min-h-[220px] md:min-h-full"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Animated Background Scenery Images with Crossfade (Clean, no text overlay) */}
           <div className="absolute inset-0 z-0">
             {SLIDESHOW_OFFERS.map((slide, idx) => (
               <div
@@ -795,45 +305,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* =====================================================================
-            RIGHT COLUMN (7-cols on md+): AUTHENTICATION FORMS & GOOGLE SIGN-IN
+            RIGHT COLUMN (7-cols on md+): EMAIL LOGIN & SOCIAL PROVIDERS
            ===================================================================== */}
         <div className="md:col-span-7 p-5 sm:p-6 lg:p-7 flex flex-col justify-between relative bg-white">
-          
           {/* Top Close Button */}
           <button
             type="button"
-            onClick={() => {
-              cleanupRecaptcha();
-              onClose();
-            }}
+            onClick={onClose}
             className="absolute right-4 top-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer z-20"
             aria-label="Close login modal"
           >
             <X className="w-4 h-4" />
           </button>
 
-          {/* Top Branding & Method Tabs */}
+          {/* Top Branding */}
           <div>
             <div className="flex items-center justify-between mb-3 pr-8">
               <TripYeahLogo className="h-7.5 sm:h-8.5 w-auto" />
             </div>
-
-            {step === 'otp-verify' && (
-              <>
-                <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
-                  Verify Mobile Number
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5 mb-3.5">
-                  Enter 6-digit verification code sent to {countryCode} {phoneNumber}
-                </p>
-              </>
-            )}
-
-            {step === 'create-account' && (
-              <h2 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-3">
-                Complete Profile
-              </h2>
-            )}
           </div>
 
           {/* Info Notice Banner */}
@@ -846,461 +335,130 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Error Message Banner */}
           {error && (
-            <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Firebase Phone Authentication Invisible reCAPTCHA Container (Persistent in DOM) */}
-          <div id="recaptcha-container" className="flex justify-center" />
-
           {/* Form Content Area */}
           <div className="flex-1 flex flex-col justify-center">
-
-            {/* Method Tabs: Phone vs Email (Positioned right above input fields with tight, clean gap) */}
-            {(step === 'phone-input' || step === 'email-login') && (
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMethod('phone');
-                    setStep('phone-input');
-                    setError('');
-                  }}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    authMethod === 'phone'
-                      ? 'bg-white text-blue-600 shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>Phone</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMethod('email');
-                    setStep('email-login');
-                    setError('');
-                  }}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    authMethod === 'email'
-                      ? 'bg-white text-blue-600 shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email</span>
-                </button>
+            {/* Email Tab Pill */}
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-3">
+              <div className="flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 bg-white text-blue-600 shadow-2xs">
+                <Mail className="w-3.5 h-3.5" />
+                <span>Email</span>
               </div>
-            )}
+            </div>
 
-            {/* -------------------------------------------------------------
-                METHOD 1: PHONE NUMBER INPUT
-               ------------------------------------------------------------- */}
-            {step === 'phone-input' && authMethod === 'phone' && (
-              <form onSubmit={handlePhoneSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                    MOBILE NUMBER
-                  </label>
-                  <div className="relative flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all">
-                    {/* Custom Country Code Selector with Search & Scroll */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCountryDropdownOpen(!isCountryDropdownOpen);
-                        setCountrySearchQuery('');
+            {/* EMAIL LOGIN FORM */}
+            <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <div>
+                <label
+                  htmlFor="auth-email-input"
+                  className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider"
+                >
+                  EMAIL ADDRESS
+                </label>
+                <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all overflow-hidden">
+                  <div className="pl-3 text-slate-400">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div className="relative flex-1">
+                    <input
+                      id="auth-email-input"
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => {
+                        setEmailInput(e.target.value);
+                        setError('');
                       }}
-                      className="bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800 px-2.5 py-2.5 rounded-l-xl border-r border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer select-none shrink-0"
-                    >
-                      <span className="text-base leading-none">{selectedCountry.flag}</span>
-                      <span className="font-mono-tabular font-bold">{selectedCountry.dialCode}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    <div className="relative flex-1">
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={handlePhoneChange}
-                        placeholder="MOBILE NUMBER"
-                        maxLength={10}
-                        autoFocus
-                        required
-                        className="w-full px-3 py-2.5 text-xs sm:text-sm font-normal text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400 rounded-r-xl"
-                      />
-                    </div>
-
-                    {/* Searchable Country Dropdown */}
-                    {isCountryDropdownOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setIsCountryDropdownOpen(false)}
-                        />
-                        <div className="absolute left-0 top-[calc(100%+6px)] w-72 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                          {/* Search Header */}
-                          <div className="p-2 border-b border-slate-100 bg-slate-50">
-                            <div className="relative">
-                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                              <input
-                                type="text"
-                                value={countrySearchQuery}
-                                onChange={(e) => setCountrySearchQuery(e.target.value)}
-                                placeholder="Search country or code..."
-                                autoFocus
-                                className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600 font-medium text-slate-800 placeholder:text-slate-400"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Scrollable Country List */}
-                          <div className="max-h-56 overflow-y-auto divide-y divide-slate-100/70 custom-scrollbar">
-                            {filteredCountries.length > 0 ? (
-                              filteredCountries.map((c) => (
-                                <button
-                                  key={`${c.code}-${c.dialCode}`}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedCountry(c);
-                                    setCountryCode(c.dialCode);
-                                    setIsCountryDropdownOpen(false);
-                                    setCountrySearchQuery('');
-                                  }}
-                                  className={`w-full px-3 py-2 text-left flex items-center justify-between text-xs hover:bg-blue-50/80 transition-colors cursor-pointer ${
-                                    selectedCountry.code === c.code && selectedCountry.dialCode === c.dialCode
-                                      ? 'bg-blue-50 text-blue-600 font-bold'
-                                      : 'text-slate-700'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-base shrink-0 leading-none">{c.flag}</span>
-                                    <span className="truncate">{c.name}</span>
-                                  </div>
-                                  <span className="font-mono text-[11px] font-semibold text-slate-500 shrink-0 ml-2">
-                                    {c.dialCode}
-                                  </span>
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-3 py-4 text-center text-xs text-slate-400">
-                                No countries found for "{countrySearchQuery}"
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || phoneNumber.length < 10}
-                  className="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{t('auth.continue', 'Continue')}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* -------------------------------------------------------------
-                METHOD 2: EMAIL LOGIN
-               ------------------------------------------------------------- */}
-            {step === 'email-login' && authMethod === 'email' && (
-              <form onSubmit={handleEmailSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                    EMAIL ADDRESS
-                  </label>
-                  <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-slate-50 transition-all overflow-hidden">
-                    <div className="pl-3 text-slate-400">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <div className="relative flex-1">
-                      <input
-                        type="email"
-                        value={emailInput}
-                        onChange={(e) => {
-                          setEmailInput(e.target.value);
-                          setError('');
-                        }}
-                        placeholder="Enter Email Address"
-                        autoFocus
-                        required
-                        className="w-full px-3 py-2.5 text-xs sm:text-sm font-normal text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !emailInput.trim()}
-                  className="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>Continue</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* -------------------------------------------------------------
-                STEP 2: OTP VERIFICATION
-               ------------------------------------------------------------- */}
-            {step === 'otp-verify' && (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-between text-xs">
-                  <span className="text-slate-700">
-                    OTP sent to <strong className="font-mono text-slate-900">{countryCode} {phoneNumber}</strong>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('phone-input');
-                      setError('');
-                    }}
-                    className="text-blue-600 font-bold hover:underline cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </div>
-
-                {/* 6-Digit SMS OTP Verification Inputs */}
-                <div className="flex items-center justify-center gap-2 sm:gap-2.5 my-3">
-                  {[0, 1, 2, 3, 4, 5].map((idx) => (
-                    <input
-                      key={idx}
-                      id={`modal-otp-${idx}`}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={1}
-                      value={otp[idx] || ''}
-                      onChange={(e) => handleOtpBoxChange(e.target.value, idx)}
-                      onKeyDown={(e) => handleOtpKeyDown(e, idx)}
-                      onPaste={handleOtpPaste}
-                      autoFocus={idx === 0}
-                      className="w-10 sm:w-11.5 h-12 sm:h-14 text-center font-mono-tabular text-xl sm:text-2xl font-bold text-slate-900 rounded-xl sm:rounded-2xl border-2 border-slate-300 focus:border-blue-600 focus:bg-blue-50/30 focus:outline-none transition-all shadow-2xs"
-                    />
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>
-                    {countdown > 0 ? (
-                      `Resend OTP in ${countdown}s`
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handlePhoneSubmit()}
-                        disabled={loading}
-                        className="text-blue-600 font-bold hover:underline cursor-pointer disabled:opacity-50"
-                      >
-                        Resend OTP Now
-                      </button>
-                    )}
-                  </span>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || otp.join('').length < 6}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {loading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{t('auth.verifyAndProceed', 'Verify & Continue')}</span>
-                      <CheckCircle2 className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep('phone-input');
-                    setError('');
-                  }}
-                  className="w-full py-1 text-center text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
-                >
-                  ← Back to Number Entry
-                </button>
-              </form>
-            )}
-
-            {/* -------------------------------------------------------------
-                STEP 3: CREATE ACCOUNT (NAME & PASSWORD)
-               ------------------------------------------------------------- */}
-            {step === 'create-account' && (
-              <form onSubmit={handleCreateAccountSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Full Name (as on Gov ID) *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Rahul Sharma"
-                      required
+                      placeholder="Enter Email Address"
                       autoFocus
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Create Password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Min 6 characters"
                       required
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2.5 text-xs sm:text-sm font-normal text-slate-900 bg-transparent focus:outline-none placeholder:font-normal placeholder:text-slate-400"
                     />
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Confirm Password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter password"
-                      required
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+              <button
+                type="submit"
+                disabled={loading || !emailInput.trim()}
+                className="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading && activeProvider === 'email' ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <span>{t('auth.continue', 'Continue')}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* SOCIAL LOGIN BUTTONS: ICON ONLY (GOOGLE, APPLE & FACEBOOK) */}
+            <div className="mt-3.5 space-y-2.5">
+              <div className="relative my-3 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200" />
                 </div>
+                <span className="relative z-10 bg-white px-3 text-[11px] font-medium text-slate-400 text-center">
+                  {t('auth.orContinueWith', 'or Login/Signup with')}
+                </span>
+              </div>
 
-                <div className="flex items-start gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="agree-terms-check"
-                    checked={agreeTerms}
-                    onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <label htmlFor="agree-terms-check" className="text-[11px] text-slate-500 leading-tight">
-                    I agree to TripYeah's{' '}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onClose();
-                        onOpenTermsOfService?.();
-                      }}
-                      className="text-blue-600 hover:underline font-semibold cursor-pointer"
-                    >
-                      Terms of Service
-                    </button>{' '}
-                    and{' '}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onClose();
-                        onOpenPrivacyPolicy?.();
-                      }}
-                      className="text-blue-600 hover:underline font-semibold cursor-pointer"
-                    >
-                      Privacy Policy
-                    </button>
-                    . Send booking confirmations &amp; flight check-in alerts.
-                  </label>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !fullName.trim() || !password}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:brightness-110 text-white font-bold text-sm shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {loading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                      <span>Create Account &amp; Sign In</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* -------------------------------------------------------------
-                GOOGLE 1-CLICK SOCIAL LOGIN BUTTON (Always accessible)
-               ------------------------------------------------------------- */}
-            {(step === 'phone-input' || step === 'email-login') && (
-              <div className="mt-3.5 space-y-2.5">
-                <div className="relative my-3 flex items-center justify-center">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
-                  </div>
-                  <span className="relative z-10 bg-white px-3 text-[11px] font-medium text-slate-400 text-center">
-                    {t('auth.orContinueWith', 'or Login/Signup with')}
-                  </span>
-                </div>
-
-                {/* Google Sign-In Button */}
+              <div className="grid grid-cols-3 gap-2.5">
+                {/* Google (icon only) */}
                 <button
                   type="button"
-                  onClick={() => handleGoogleLogin()}
+                  onClick={() => handleSocialLogin('google')}
                   disabled={loading}
                   title="Continue with Google"
                   aria-label="Continue with Google"
-                  className="w-full py-2.5 px-3 rounded-xl border border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-98"
+                  className="py-2.5 px-3 rounded-xl border border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-98 disabled:opacity-50"
                 >
-                  <GoogleIcon className="w-5 h-5" />
+                  {loading && activeProvider === 'google' ? (
+                    <RefreshCw className="w-5 h-5 animate-spin text-slate-500" />
+                  ) : (
+                    <GoogleIcon className="w-5 h-5" />
+                  )}
+                </button>
+
+                {/* Apple (icon only) */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin('apple')}
+                  disabled={loading}
+                  title="Continue with Apple"
+                  aria-label="Continue with Apple"
+                  className="py-2.5 px-3 rounded-xl border border-slate-300 hover:border-slate-400 hover:bg-slate-50 flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-98 disabled:opacity-50 text-slate-900"
+                >
+                  {loading && activeProvider === 'apple' ? (
+                    <RefreshCw className="w-5 h-5 animate-spin text-slate-500" />
+                  ) : (
+                    <AppleIcon className="w-5 h-5" />
+                  )}
+                </button>
+
+                {/* Facebook (icon only) */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin('facebook')}
+                  disabled={loading}
+                  title="Continue with Facebook"
+                  aria-label="Continue with Facebook"
+                  className="py-2.5 px-3 rounded-xl border border-slate-300 hover:border-blue-300 hover:bg-blue-50/40 flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-98 disabled:opacity-50"
+                >
+                  {loading && activeProvider === 'facebook' ? (
+                    <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
+                  ) : (
+                    <FacebookIcon className="w-5 h-5" />
+                  )}
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Bottom Trust & Compliance Footer */}
@@ -1321,7 +479,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             </span>
           </div>
-
         </div>
       </div>
     </div>

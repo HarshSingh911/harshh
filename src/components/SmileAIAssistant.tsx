@@ -446,7 +446,7 @@ export const SmileAIAssistant: React.FC<SmileAIAssistantProps> = ({
                     TripYehh Travel Concierge
                   </h4>
                   <p className="text-slate-500 text-[11px] mt-0.5">
-                    Ask me to find flights, recommend hotels, plan holidays, or estimate your budget!
+                    Ask me to find flights, recommend hotels, book cabs, or estimate your budget!
                   </p>
                 </div>
               </div>

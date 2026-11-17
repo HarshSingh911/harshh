@@ -29,10 +29,12 @@ import {
   Landmark,
   Luggage,
   MapPin,
+  Minus,
   Moon,
   Palmtree,
   Phone,
   Plane,
+  Plus,
   RefreshCw,
   RotateCcw,
   Search,
@@ -65,10 +67,10 @@ import { useTranslation } from 'react-i18next';
 import { formatDateWithLocale } from '../i18n/formatters';
 import { SafeImage } from './SafeImage';
 import { BusSeatLayoutSelector } from './BusSeatLayoutSelector';
-import { FlightFareOptionsModal } from './FlightFareOptionsModal';
 import { TripDatePickerModal } from './TripDatePickerModal';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
+import { SkyscannerFlightSearchResults } from './SkyscannerFlightSearchResults';
 import { CheckoutItem } from './CheckoutPaymentPage';
 import { ListPropertyModal } from './ListPropertyModal';
 import { fetchApprovedProperties, PropertyListing } from '../services/propertyService';
@@ -149,10 +151,243 @@ export interface FlightResult {
   refundable: boolean;
 }
 
-const FLIGHT_RESULTS: FlightResult[] = [];
-const RETURN_FLIGHT_RESULTS: FlightResult[] = [];
+const FLIGHT_RESULTS: FlightResult[] = [
+  {
+    id: 'fl-akasa-qp1382',
+    airline: 'Akasa Air',
+    flightNo: 'QP-1382',
+    badgeCode: 'QP',
+    badgeBg: 'bg-orange-500',
+    aircraft: 'Boeing 737 MAX 8',
+    depTime: '06:10',
+    depTerminal: 'Terminal 1',
+    duration: '2h 15m',
+    durationMins: 135,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '08:25',
+    arrTerminal: 'Terminal 2',
+    priceInr: 3299,
+    rating: 4.6,
+    tags: ['Cheapest Deal', 'Super Saver', 'Zero Reschedule Fee'],
+    baggage: '7 kg Cabin + 15 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '6am-12pm',
+    refundable: true,
+  },
+  {
+    id: 'fl-indigo-6e2134',
+    airline: 'IndiGo',
+    flightNo: '6E-2134',
+    badgeCode: '6E',
+    badgeBg: 'bg-blue-600',
+    aircraft: 'Airbus A321neo',
+    depTime: '09:20',
+    depTerminal: 'Terminal 1D',
+    duration: '2h 20m',
+    durationMins: 140,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '11:40',
+    arrTerminal: 'Terminal 1',
+    priceInr: 3850,
+    rating: 4.8,
+    tags: ['Most Popular', 'On-Time Punctuality 94%', 'Free Beverage'],
+    baggage: '7 kg Cabin + 15 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '6am-12pm',
+    refundable: true,
+  },
+  {
+    id: 'fl-indigo-6e5182',
+    airline: 'IndiGo',
+    flightNo: '6E-5182',
+    badgeCode: '6E',
+    badgeBg: 'bg-blue-600',
+    aircraft: 'Airbus A320neo',
+    depTime: '14:30',
+    depTerminal: 'Terminal 1D',
+    duration: '2h 15m',
+    durationMins: 135,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '16:45',
+    arrTerminal: 'Terminal 1',
+    priceInr: 4450,
+    rating: 4.7,
+    tags: ['Afternoon Departure', 'Express Baggage Clearance'],
+    baggage: '7 kg Cabin + 15 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '12pm-6pm',
+    refundable: true,
+  },
+  {
+    id: 'fl-airindia-ai883',
+    airline: 'Air India',
+    flightNo: 'AI-883',
+    badgeCode: 'AI',
+    badgeBg: 'bg-red-600',
+    aircraft: 'Airbus A320neo',
+    depTime: '17:45',
+    depTerminal: 'Terminal 3',
+    duration: '2h 25m',
+    durationMins: 145,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '20:10',
+    arrTerminal: 'Terminal 2',
+    priceInr: 5120,
+    rating: 4.5,
+    tags: ['Free Hot Meal Included', '20kg Free Check-in Baggage'],
+    baggage: '7 kg Cabin + 20 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '12pm-6pm',
+    refundable: true,
+  },
+  {
+    id: 'fl-vistara-uk945',
+    airline: 'Vistara',
+    flightNo: 'UK-945',
+    badgeCode: 'UK',
+    badgeBg: 'bg-purple-900',
+    aircraft: 'Airbus A321neo',
+    depTime: '19:15',
+    depTerminal: 'Terminal 3',
+    duration: '2h 10m',
+    durationMins: 130,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '21:25',
+    arrTerminal: 'Terminal 2',
+    priceInr: 6750,
+    rating: 4.9,
+    tags: ['Full-Service Luxury', 'Gourmet 3-Course Dining', 'Premium Economy Option'],
+    baggage: '7 kg Cabin + 25 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '6pm-12am',
+    refundable: true,
+  },
+];
 
-// --- B. TRAIN RESULTS (IRCTC Rail Gateway Integration Pending) ---
+const RETURN_FLIGHT_RESULTS: FlightResult[] = [
+  {
+    id: 'ret-akasa-qp1383',
+    airline: 'Akasa Air',
+    flightNo: 'QP-1383',
+    badgeCode: 'QP',
+    badgeBg: 'bg-orange-500',
+    aircraft: 'Boeing 737 MAX 8',
+    depTime: '09:00',
+    depTerminal: 'Terminal 2',
+    duration: '2h 15m',
+    durationMins: 135,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '11:15',
+    arrTerminal: 'Terminal 1',
+    priceInr: 3350,
+    rating: 4.6,
+    tags: ['Cheapest Return Deal', 'Early Flight'],
+    baggage: '7 kg Cabin + 15 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '6am-12pm',
+    refundable: true,
+  },
+  {
+    id: 'ret-indigo-6e2135',
+    airline: 'IndiGo',
+    flightNo: '6E-2135',
+    badgeCode: '6E',
+    badgeBg: 'bg-blue-600',
+    aircraft: 'Airbus A321neo',
+    depTime: '12:30',
+    depTerminal: 'Terminal 1',
+    duration: '2h 20m',
+    durationMins: 140,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '14:50',
+    arrTerminal: 'Terminal 1D',
+    priceInr: 3920,
+    rating: 4.8,
+    tags: ['Most Popular Return', 'Smooth Transit'],
+    baggage: '7 kg Cabin + 15 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '12pm-6pm',
+    refundable: true,
+  },
+  {
+    id: 'ret-indigo-6e5183',
+    airline: 'IndiGo',
+    flightNo: '6E-5183',
+    badgeCode: '6E',
+    badgeBg: 'bg-blue-600',
+    aircraft: 'Airbus A320neo',
+    depTime: '17:10',
+    depTerminal: 'Terminal 1',
+    duration: '2h 15m',
+    durationMins: 135,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '19:25',
+    arrTerminal: 'Terminal 1D',
+    priceInr: 4510,
+    rating: 4.7,
+    tags: ['Sunset Departure', 'On-Time Guaranteed'],
+    baggage: '7 kg Cabin + 15 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '12pm-6pm',
+    refundable: true,
+  },
+  {
+    id: 'ret-airindia-ai884',
+    airline: 'Air India',
+    flightNo: 'AI-884',
+    badgeCode: 'AI',
+    badgeBg: 'bg-red-600',
+    aircraft: 'Airbus A320neo',
+    depTime: '20:50',
+    depTerminal: 'Terminal 2',
+    duration: '2h 25m',
+    durationMins: 145,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '23:15',
+    arrTerminal: 'Terminal 3',
+    priceInr: 5080,
+    rating: 4.5,
+    tags: ['Complimentary Dinner', 'Late Evening Flight'],
+    baggage: '7 kg Cabin + 20 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '6pm-12am',
+    refundable: true,
+  },
+  {
+    id: 'ret-vistara-uk946',
+    airline: 'Vistara',
+    flightNo: 'UK-946',
+    badgeCode: 'UK',
+    badgeBg: 'bg-purple-900',
+    aircraft: 'Airbus A321neo',
+    depTime: '22:15',
+    depTerminal: 'Terminal 2',
+    duration: '2h 10m',
+    durationMins: 130,
+    stops: 'Non-stop',
+    stopsCount: 0,
+    arrTime: '00:25',
+    arrTerminal: 'Terminal 3',
+    priceInr: 6680,
+    rating: 4.9,
+    tags: ['Luxury Night Cruiser', 'Premium Dining'],
+    baggage: '7 kg Cabin + 25 kg Check-in',
+    hasCheckInBaggage: true,
+    period: '6pm-12am',
+    refundable: true,
+  },
+];
+
+// --- B. TRAIN RESULTS (TripYeah Rail Experience) ---
 export interface TrainClassQuota {
   classCode: string;
   className: string;
@@ -188,9 +423,121 @@ export interface TrainResult {
   classes: TrainClassQuota[];
 }
 
-const TRAIN_RESULTS: TrainResult[] = [];
+const TRAIN_RESULTS: TrainResult[] = [
+  {
+    id: 'tr-mandovi-10103',
+    trainNo: '10103',
+    trainName: 'Mandovi Superfast Express',
+    depTime: '07:10',
+    depStation: 'CSMT Mumbai',
+    depCode: 'CSMT',
+    arrTime: '18:45',
+    arrStation: 'Madgaon Junction',
+    arrCode: 'MAO',
+    duration: '11h 35m',
+    durationMins: 695,
+    runningDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+    trainType: 'Superfast',
+    pantryAvailable: true,
+    onTimePercent: 93,
+    minPriceInr: 480,
+    depPeriod: '6am-12pm',
+    arrPeriod: '6pm-12am',
+    freeCancellation: true,
+    hasAlternateGuarantee: true,
+    quotas: ['General Quota', 'Tatkal', 'Ladies Quota', 'Sr. Citizen'],
+    classes: [
+      { classCode: 'SL', className: 'Sleeper (SL)', priceInr: 480, status: 'AVAILABLE', quotaLabel: 'Curated Rail Saver', isAC: false },
+      { classCode: '3A', className: 'AC 3 Tier (3A)', priceInr: 1290, status: 'AVAILABLE', quotaLabel: 'General Quota', isAC: true },
+      { classCode: '2A', className: 'AC 2 Tier (2A)', priceInr: 1850, status: 'AVAILABLE', quotaLabel: 'General Quota', isAC: true },
+    ],
+  },
+  {
+    id: 'tr-goa-sampark-12450',
+    trainNo: '12450',
+    trainName: 'Goa Sampark Kranti Express',
+    depTime: '06:15',
+    depStation: 'New Delhi',
+    depCode: 'NDLS',
+    arrTime: '11:30',
+    arrStation: 'Madgaon Junction',
+    arrCode: 'MAO',
+    duration: '29h 15m',
+    durationMins: 1755,
+    runningDays: ['M', 'S'],
+    trainType: 'Superfast',
+    pantryAvailable: true,
+    onTimePercent: 91,
+    minPriceInr: 620,
+    depPeriod: '6am-12pm',
+    arrPeriod: '6am-12pm',
+    freeCancellation: true,
+    hasAlternateGuarantee: true,
+    quotas: ['General Quota', 'Tatkal', 'Sr. Citizen'],
+    classes: [
+      { classCode: 'SL', className: 'Sleeper (SL)', priceInr: 620, status: 'AVAILABLE', quotaLabel: 'Budget Fare', isAC: false },
+      { classCode: '3A', className: 'AC 3 Tier (3A)', priceInr: 1680, status: 'AVAILABLE', quotaLabel: 'General Quota', isAC: true },
+      { classCode: '2A', className: 'AC 2 Tier (2A)', priceInr: 2350, status: 'AVAILABLE', quotaLabel: 'General Quota', isAC: true },
+    ],
+  },
+  {
+    id: 'tr-vande-bharat-20972',
+    trainNo: '20972',
+    trainName: 'Vande Bharat Express (Semihigh-speed)',
+    depTime: '05:25',
+    depStation: 'CSMT Mumbai',
+    depCode: 'CSMT',
+    arrTime: '13:10',
+    arrStation: 'Madgaon Junction',
+    arrCode: 'MAO',
+    duration: '7h 45m',
+    durationMins: 465,
+    runningDays: ['M', 'T', 'W', 'F', 'S', 'S'],
+    trainType: 'Vande Bharat',
+    pantryAvailable: true,
+    onTimePercent: 98,
+    minPriceInr: 1850,
+    depPeriod: '12am-6am',
+    arrPeriod: '12pm-6pm',
+    freeCancellation: true,
+    hasAlternateGuarantee: true,
+    quotas: ['General Quota', 'Tatkal', 'Ladies Quota'],
+    classes: [
+      { classCode: 'CC', className: 'AC Chair Car (CC)', priceInr: 1850, status: 'AVAILABLE', quotaLabel: 'Catering Included', isAC: true },
+      { classCode: 'EC', className: 'Executive Chair Car (EC)', priceInr: 3250, status: 'AVAILABLE', quotaLabel: 'Premium Lounge Seat', isAC: true },
+    ],
+  },
+  {
+    id: 'tr-rajdhani-22414',
+    trainNo: '22414',
+    trainName: 'Madgaon Rajdhani Express',
+    depTime: '10:55',
+    depStation: 'Hazrat Nizamuddin',
+    depCode: 'NZM',
+    arrTime: '12:40',
+    arrStation: 'Madgaon Junction',
+    arrCode: 'MAO',
+    duration: '25h 45m',
+    durationMins: 1545,
+    runningDays: ['F', 'S'],
+    trainType: 'Rajdhani',
+    pantryAvailable: true,
+    onTimePercent: 96,
+    minPriceInr: 2150,
+    depPeriod: '6am-12pm',
+    arrPeriod: '12pm-6pm',
+    freeCancellation: true,
+    hasAlternateGuarantee: true,
+    quotas: ['General Quota', 'Tatkal'],
+    classes: [
+      { classCode: '3A', className: 'AC 3 Tier (3A)', priceInr: 2150, status: 'AVAILABLE', quotaLabel: 'Bedroll & Food Included', isAC: true },
+      { classCode: '2A', className: 'AC 2 Tier (2A)', priceInr: 3120, status: 'AVAILABLE', quotaLabel: 'Gourmet Rail Dining', isAC: true },
+      { classCode: '1A', className: 'AC 1st Class (1A)', priceInr: 4890, status: 'AVAILABLE', quotaLabel: 'Private Lockable Coupe', isAC: true },
+    ],
+  },
+];
 
-// --- C. HOTEL RESULTS (Populated dynamically from Supabase database) ---
+// --- C. HOTEL RESULTS (Curated Stays & Partner Inventory) ---
 export interface HotelResult {
   id: string;
   name: string;
@@ -219,7 +566,143 @@ export interface HotelResult {
   tag: string;
 }
 
-const HOTEL_RESULTS: HotelResult[] = [];
+const HOTEL_RESULTS: HotelResult[] = [
+  {
+    id: 'hotel-zostel-goa',
+    name: 'Zostel Goa & Backpackers Social Haven',
+    location: 'Anjuna Beach Road, North Goa',
+    locality: 'Anjuna',
+    stars: 3,
+    rating: 4.7,
+    reviews: 840,
+    propertyType: 'Hotel',
+    roomType: 'Air Conditioned Deluxe Private Room',
+    perks: 'Free High-Speed Wi-Fi · Rooftop Cafe & Co-working · 5 Mins to Anjuna Beach',
+    hasBreakfast: true,
+    hasPool: true,
+    hasWifi: true,
+    isBeachfront: true,
+    isCoupleFriendly: true,
+    freeCancellation: true,
+    payAtHotel: true,
+    hasSpa: false,
+    hasAirportShuttle: true,
+    isTripYeahAssured: true,
+    amenities: ['Free WiFi', 'Air Conditioning', 'Swimming Pool', 'Rooftop Cafe', 'Couple Friendly', 'Power Backup'],
+    priceInr: 899,
+    originalPriceInr: 1600,
+    image: ASSETS.goa,
+    tag: 'Cheapest Deal · Backpacker Top Pick',
+  },
+  {
+    id: 'hotel-goa-palms',
+    name: 'Goa Palms Heritage Boutique Resort & Pool',
+    location: 'Calangute - Baga Circle, North Goa',
+    locality: 'Calangute',
+    stars: 4,
+    rating: 4.8,
+    reviews: 620,
+    propertyType: 'Resort',
+    roomType: 'Deluxe Garden & Pool View Room',
+    perks: 'Complimentary Buffet Breakfast · Outdoor Pool & Bar · Free Airport Shuttle',
+    hasBreakfast: true,
+    hasPool: true,
+    hasWifi: true,
+    isBeachfront: true,
+    isCoupleFriendly: true,
+    freeCancellation: true,
+    payAtHotel: true,
+    hasSpa: true,
+    hasAirportShuttle: true,
+    isTripYeahAssured: true,
+    amenities: ['Free WiFi', 'Swimming Pool', 'Complimentary Breakfast', 'Air Conditioning', 'Bar & Lounge', 'Spa'],
+    priceInr: 1950,
+    originalPriceInr: 3200,
+    image: ASSETS.bali,
+    tag: 'Best Value · 40% Off',
+  },
+  {
+    id: 'hotel-lemon-tree',
+    name: 'Lemon Tree Amarante Beach Resort',
+    location: 'Candolim Beach Road, North Goa',
+    locality: 'Candolim',
+    stars: 4,
+    rating: 4.85,
+    reviews: 790,
+    propertyType: 'Resort',
+    roomType: 'Superior Pool Facing Suite',
+    perks: 'Direct Beach Walk · Multi-Cuisine Restaurant · Fitness Centre & Spa',
+    hasBreakfast: true,
+    hasPool: true,
+    hasWifi: true,
+    isBeachfront: true,
+    isCoupleFriendly: true,
+    freeCancellation: true,
+    payAtHotel: true,
+    hasSpa: true,
+    hasAirportShuttle: true,
+    isTripYeahAssured: true,
+    amenities: ['Swimming Pool', 'Spa & Wellness', 'Free Breakfast', 'Couple Friendly', 'Air Conditioning', 'Bar'],
+    priceInr: 3400,
+    originalPriceInr: 5200,
+    image: ASSETS.udaipur,
+    tag: 'Top Rated Beach Resort',
+  },
+  {
+    id: 'hotel-casa-bella-villa',
+    name: 'Casa Bella Seaview Private Pool Villa',
+    location: 'Candolim Beach Promenade, North Goa',
+    locality: 'Candolim',
+    stars: 5,
+    rating: 4.9,
+    reviews: 310,
+    propertyType: 'Villa',
+    roomType: '2BHK Luxury Villa with Private Infinity Plunge Pool',
+    perks: 'Private Plunge Pool · Personal Butler & Chef · Direct Beach Access',
+    hasBreakfast: true,
+    hasPool: true,
+    hasWifi: true,
+    isBeachfront: true,
+    isCoupleFriendly: true,
+    freeCancellation: true,
+    payAtHotel: true,
+    hasSpa: true,
+    hasAirportShuttle: true,
+    isTripYeahAssured: true,
+    amenities: ['Private Pool', 'Direct Beach Access', 'Free WiFi', 'Chef on Demand', 'Air Conditioning', 'Kitchenette'],
+    priceInr: 4499,
+    originalPriceInr: 7200,
+    image: ASSETS.maldives,
+    tag: 'Exclusive Villa · Private Pool',
+  },
+  {
+    id: 'hotel-taj-exotica',
+    name: 'Taj Exotica Resort & Spa Goa (5★ Luxury Icon)',
+    location: 'Benaulim Beach, South Goa',
+    locality: 'Benaulim',
+    stars: 5,
+    rating: 4.96,
+    reviews: 1540,
+    propertyType: 'Resort',
+    roomType: 'Premium Ocean-Facing Heritage Suite',
+    perks: '5★ Taj Hospitality · Signature Jiva Ayurvedic Spa · 9-Hole Golf Course & Private Beach Cabanas',
+    hasBreakfast: true,
+    hasPool: true,
+    hasWifi: true,
+    isBeachfront: true,
+    isCoupleFriendly: true,
+    freeCancellation: true,
+    payAtHotel: true,
+    hasSpa: true,
+    hasAirportShuttle: true,
+    isTripYeahAssured: true,
+    amenities: ['Private Beach', 'Olympic Size Pool', 'Jiva Spa', 'Free High Speed WiFi', 'Tennis Court', 'Valet Parking'],
+    priceInr: 11800,
+    originalPriceInr: 17500,
+    image: ASSETS.heroAlpine,
+    tag: 'TripYeah Luxe · 5★ Icon',
+  },
+];
 
 export function mapPropertyToHotelResult(p: PropertyListing): HotelResult {
   const cat = (p.category || 'hotel').toLowerCase();
@@ -302,7 +785,108 @@ export interface BusResult {
   badges: string[];
 }
 
-const BUS_RESULTS: BusResult[] = [];
+const BUS_RESULTS: BusResult[] = [
+  {
+    id: 'bus-intrcity-smart',
+    operator: 'IntrCity SmartBus (AC Sleeper)',
+    busType: 'Bharat Benz AC Sleeper 2+1',
+    busCategory: 'AC Sleeper',
+    depTime: '19:30',
+    depPoint: 'Kashmere Gate Metro Gate 5',
+    depPeriod: '6pm-12am',
+    arrTime: '06:15',
+    arrPoint: 'Main Bus Terminal',
+    arrPeriod: '6am-12pm',
+    duration: '10h 45m',
+    durationMins: 645,
+    rating: 4.85,
+    totalRatings: 1820,
+    priceInr: 649,
+    originalPriceInr: 1100,
+    seatsLeft: 8,
+    isSingleLadyBerth: true,
+    isPrimo: true,
+    hasLiveTracking: true,
+    hasFreeCancellation: true,
+    amenities: ['Free WiFi', 'Charging Point', 'Reading Light', 'Blanket & Pillow', 'GPS Live Tracking'],
+    badges: ['Cheapest First', 'Top Rated Operator', 'Safe Travel Certified'],
+  },
+  {
+    id: 'bus-zingbus-electric',
+    operator: 'Zingbus Electric High-Deck Sleeper',
+    busType: 'Premium Electric Multi-Axle Sleeper',
+    busCategory: 'Electric',
+    depTime: '21:00',
+    depPoint: 'RK Ashram Metro Station',
+    depPeriod: '6pm-12am',
+    arrTime: '07:30',
+    arrPoint: 'City Center Bus Stand',
+    arrPeriod: '6am-12pm',
+    duration: '10h 30m',
+    durationMins: 630,
+    rating: 4.9,
+    totalRatings: 2450,
+    priceInr: 899,
+    originalPriceInr: 1400,
+    seatsLeft: 12,
+    isSingleLadyBerth: true,
+    isPrimo: true,
+    hasLiveTracking: true,
+    hasFreeCancellation: true,
+    amenities: ['100% Eco Electric', 'Free Water Bottle', 'USB Type-C Fast Charger', 'Personal AC Vents'],
+    badges: ['Primo Guaranteed', 'Zero Carbon Emission', 'High On-Time Record'],
+  },
+  {
+    id: 'bus-vrl-volvo',
+    operator: 'VRL Multi-Axle Volvo 9600 Sleeper',
+    busType: 'Volvo 9600 Multi-Axle Luxury AC Sleeper',
+    busCategory: 'Volvo Multi-Axle',
+    depTime: '22:15',
+    depPoint: 'Dhaula Kuan Metro Pillar 84',
+    depPeriod: '6pm-12am',
+    arrTime: '08:45',
+    arrPoint: 'Central Railway Station Bus Bay',
+    arrPeriod: '6am-12pm',
+    duration: '10h 30m',
+    durationMins: 630,
+    rating: 4.75,
+    totalRatings: 3100,
+    priceInr: 1250,
+    originalPriceInr: 1800,
+    seatsLeft: 6,
+    isSingleLadyBerth: true,
+    isPrimo: false,
+    hasLiveTracking: true,
+    hasFreeCancellation: true,
+    amenities: ['Air Suspension', 'Wide Berths', 'Movie Screen', 'Emergency SOS Button', 'Snacks'],
+    badges: ['Smooth Ride Guarantee', 'Punctuality King'],
+  },
+  {
+    id: 'bus-srs-royal',
+    operator: 'SRS Travels Royal Executive AC Sleeper',
+    busType: 'Mercedes-Benz Super High-Deck AC Sleeper',
+    busCategory: 'AC Sleeper',
+    depTime: '23:30',
+    depPoint: 'ISBT Anand Vihar Platform 12',
+    depPeriod: '6pm-12am',
+    arrTime: '10:00',
+    arrPoint: 'Royal Inn Circle Drop Point',
+    arrPeriod: '6am-12pm',
+    duration: '10h 30m',
+    durationMins: 630,
+    rating: 4.7,
+    totalRatings: 1120,
+    priceInr: 1490,
+    originalPriceInr: 2100,
+    seatsLeft: 4,
+    isSingleLadyBerth: false,
+    isPrimo: false,
+    hasLiveTracking: true,
+    hasFreeCancellation: true,
+    amenities: ['Reclining Sleeper', 'CCTV Security', 'Reading Lamp', 'Water Bottle'],
+    badges: ['Executive Class', 'Clean Linens Guaranteed'],
+  },
+];
 
 // --- E. CABS RESULTS (MakeMyTrip Outstation & Intercity) ---
 export interface CabResult {
@@ -537,7 +1121,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [currentCabinClass, setCurrentCabinClass] = useState<string>(cabinClass || 'Economy');
   const [currentHotelMode, setCurrentHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
   const [modHotelMode, setModHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
-  const [realHotels, setRealHotels] = useState<HotelResult[]>([]);
+  const [realHotels, setRealHotels] = useState<HotelResult[]>(HOTEL_RESULTS);
   const [isLoadingProperties, setIsLoadingProperties] = useState<boolean>(false);
   const [showListPropertyModal, setShowListPropertyModal] = useState<boolean>(false);
 
@@ -583,14 +1167,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     fetchApprovedProperties({ city: currentToCity.city, hotelMode: currentHotelMode })
       .then((props) => {
         if (isMounted) {
-          setRealHotels(props.map(mapPropertyToHotelResult));
+          const mapped = props.map(mapPropertyToHotelResult);
+          if (mapped.length > 0) {
+            setRealHotels(mapped);
+          } else {
+            setRealHotels(HOTEL_RESULTS);
+          }
           setIsLoadingProperties(false);
         }
       })
       .catch((err) => {
         console.error('Failed to load approved properties', err);
         if (isMounted) {
-          setRealHotels([]);
+          setRealHotels(HOTEL_RESULTS);
           setIsLoadingProperties(false);
         }
       });
@@ -609,48 +1198,71 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   // Sync with prop changes
   useEffect(() => {
     setCurrentCategory(initialActiveCategory);
+    setModCategory(initialActiveCategory);
   }, [initialActiveCategory]);
 
   useEffect(() => {
-    if (tripType) setCurrentTripType(tripType);
+    if (tripType) {
+      setCurrentTripType(tripType);
+      setModTripType(tripType);
+    }
   }, [tripType]);
 
   useEffect(() => {
     if (dummyTripType) {
       setCurrentDummyTripType(dummyTripType);
+      setModDummyTripType(dummyTripType);
     }
   }, [dummyTripType]);
 
   useEffect(() => {
-    if (fromCity) setCurrentFromCity(fromCity);
+    if (fromCity) {
+      setCurrentFromCity(fromCity);
+      setModFromCity(fromCity);
+    }
   }, [fromCity]);
 
   useEffect(() => {
-    if (toCity) setCurrentToCity(toCity);
+    if (toCity) {
+      setCurrentToCity(toCity);
+      setModToCity(toCity);
+    }
   }, [toCity]);
 
   useEffect(() => {
-    if (departureDate) setCurrentDepDate(departureDate);
+    if (departureDate) {
+      setCurrentDepDate(departureDate);
+      setModDepDate(departureDate);
+    }
   }, [departureDate]);
 
   useEffect(() => {
-    if (returnDate) setCurrentRetDate(returnDate);
+    if (returnDate) {
+      setCurrentRetDate(returnDate);
+      setModRetDate(returnDate);
+    }
   }, [returnDate]);
 
   useEffect(() => {
-    if (travellers) setCurrentTravellers(travellers);
+    if (travellers) {
+      setCurrentTravellers(travellers);
+      setModTravellers(travellers);
+      setModHotelGuests(travellers);
+      setCurrentHotelGuests(travellers);
+    }
   }, [travellers]);
 
   useEffect(() => {
-    if (cabinClass) setCurrentCabinClass(cabinClass);
+    if (cabinClass) {
+      setCurrentCabinClass(cabinClass);
+      setModCabinClass(cabinClass);
+    }
   }, [cabinClass]);
 
-  // Combined Round-Trip check (Standard Round Trip OR Dummy Flights with Round Trip)
-  const isFlightRoundTrip =
-    currentTripType === 'round-trip' ||
-    (currentTripType === 'dummy-flights' && currentDummyTripType === 'round-trip');
+  // Round-Trip check
+  const isFlightRoundTrip = currentTripType === 'round-trip';
 
-  // --- INLINE MODIFY SEARCH BAR STATE (For All 6 Categories) ---
+  // --- INLINE MODIFY SEARCH BAR STATE (For All Categories) ---
   const [isModifyOpen, setIsModifyOpen] = useState<boolean>(false);
   const [modCategory, setModCategory] = useState<BookingCategory>(currentCategory);
   const [modTripType, setModTripType] = useState<TripType>(currentTripType);
@@ -663,14 +1275,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [modCabinClass, setModCabinClass] = useState<string>(currentCabinClass);
   const [openCityPicker, setOpenCityPicker] = useState<'from' | 'to' | 'hotel-dest' | null>(null);
 
-  // Category specific fields in modify bar
+  // Category specific fields in modify bar & applied state for Hotels / Cabs
   const [modTrainClass, setModTrainClass] = useState<string>('All Classes');
   const [modTrainQuota, setModTrainQuota] = useState<string>('General Quota');
   const [modHotelRooms, setModHotelRooms] = useState<number>(1);
-  const [modHotelGuests, setModHotelGuests] = useState<number>(2);
+  const [modHotelGuests, setModHotelGuests] = useState<number>(Math.max(1, travellers || 2));
+  const [currentHotelRooms, setCurrentHotelRooms] = useState<number>(1);
+  const [currentHotelGuests, setCurrentHotelGuests] = useState<number>(Math.max(1, travellers || 2));
   const [modBusType, setModBusType] = useState<string>('All Buses');
   const [modCabType, setModCabType] = useState<string>('SUV / Sedan');
   const [modCabTime, setModCabTime] = useState<string>('10:00 AM');
+  const [currentCabTime, setCurrentCabTime] = useState<string>('10:00 AM');
   const [modHolidayTheme, setModHolidayTheme] = useState<string>('All Packages');
   const [modHolidayDuration, setModHolidayDuration] = useState<string>('4N / 5D');
   const [calendarTarget, setCalendarTarget] = useState<'dep' | 'ret' | null>(null);
@@ -764,7 +1379,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   };
 
   const handleApplyModifySearch = () => {
-    setCurrentCategory(modCategory);
+    const activeCat = modCategory || currentCategory;
+    setCurrentCategory(activeCat);
     setCurrentTripType(modTripType);
     setCurrentDummyTripType(modDummyTripType);
     setCurrentFromCity(modFromCity);
@@ -774,6 +1390,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setCurrentTravellers(modTravellers);
     setCurrentCabinClass(modCabinClass);
     setCurrentHotelMode(modHotelMode);
+    setCurrentHotelRooms(modHotelRooms);
+    setCurrentHotelGuests(modHotelGuests);
+    setCurrentCabTime(modCabTime);
     onChangeHotelMode?.(modHotelMode);
 
     if (modDepDate && modDepDate.includes('-')) {
@@ -798,27 +1417,33 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       }
     }
 
-    onChangeCategory?.(modCategory);
+    if (activeCat === 'cabs') {
+      if (modFromCity.code !== currentFromCity.code) {
+        const nextPickup = `${modFromCity.city} (${modFromCity.airportName || 'City Center'})`;
+        setLocalCabPickup(nextPickup);
+        onChangeCabPickupPoint?.(nextPickup);
+      }
+      if (modToCity.code !== currentToCity.code) {
+        const nextDrop = `${modToCity.city} City Center`;
+        setLocalCabDrop(nextDrop);
+        onChangeCabDropPoint?.(nextDrop);
+      }
+    }
+
+    onChangeCategory?.(activeCat);
     onChangeTripType?.(modTripType);
     onChangeDummyTripType?.(modDummyTripType);
     onChangeFromCity?.(modFromCity);
     onChangeToCity?.(modToCity);
     onChangeDepartureDate?.(modDepDate);
     onChangeReturnDate?.(modRetDate);
-    onChangeTravellers?.(modTravellers, modCabinClass);
+    onChangeTravellers?.(activeCat === 'hotels' ? modHotelGuests : modTravellers, modCabinClass);
 
     setIsModifyOpen(false);
     setOpenCityPicker(null);
 
     const catLabel = modCategory.charAt(0).toUpperCase() + modCategory.slice(1);
-    const flightTypeLabel =
-      modTripType === 'dummy-flights'
-        ? modDummyTripType === 'round-trip'
-          ? 'Dummy Flights (Round Trip)'
-          : 'Dummy Flights (One Way)'
-        : modTripType === 'round-trip'
-        ? 'Round Trip'
-        : 'One Way';
+    const flightTypeLabel = modTripType === 'round-trip' ? 'Round Trip' : 'One Way';
     
     let stayTypeLabel = 'Hotels';
     if (modCategory === 'hotels') {
@@ -844,7 +1469,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [sortBy, setSortBy] = useState<'cheapest' | 'fastest' | 'rating' | 'departure'>('cheapest');
   const [codeCopied, setCodeCopied] = useState<boolean>(false);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
-  const [flightForFareModal, setFlightForFareModal] = useState<any | null>(null);
 
   // --- FILTERS STATE PER CATEGORY ---
   // 1. Flights
@@ -1220,12 +1844,49 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   }, [selectedReturnId]);
 
   const totalRoundTripFare = useMemo(() => {
-    if (currentTripType === 'dummy-flights') {
-      return 890 * currentTravellers;
-    }
     if (!selectedOutboundFlight || !selectedReturnFlight) return 0;
     return (((selectedOutboundFlight as any)?.priceInr || 0) + ((selectedReturnFlight as any)?.priceInr || 0)) * currentTravellers;
-  }, [currentTripType, selectedOutboundFlight, selectedReturnFlight, currentTravellers]);
+  }, [selectedOutboundFlight, selectedReturnFlight, currentTravellers]);
+
+  const shiftIsoDate = (currentDateStr: string, deltaDays: number, minDateStr?: string): string => {
+    if (!currentDateStr) return currentDateStr;
+    try {
+      const parts = currentDateStr.split('-').map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) return currentDateStr;
+      const [y, m, d] = parts;
+      const dateObj = new Date(Date.UTC(y, m - 1, d + deltaDays));
+      const newY = dateObj.getUTCFullYear();
+      const newM = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+      const newD = String(dateObj.getUTCDate()).padStart(2, '0');
+      const resultStr = `${newY}-${newM}-${newD}`;
+      if (minDateStr && resultStr < minDateStr) {
+        return minDateStr;
+      }
+      return resultStr;
+    } catch {
+      return currentDateStr;
+    }
+  };
+
+  const formatHeaderDisplayDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const parts = dateStr.split('-').map(Number);
+      if (parts.length === 3 && !parts.some(isNaN)) {
+        const [y, m, d] = parts;
+        const dateObj = new Date(Date.UTC(y, m - 1, d));
+        return dateObj.toLocaleDateString('en-US', {
+          timeZone: 'UTC',
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        });
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
+  };
 
   const formatFriendlyDate = (dateStr: string) => {
     if (!dateStr) return 'Select Date';
@@ -1365,21 +2026,21 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       return true;
     });
 
-    if (currentHotelMode === 'villas' && hotelSelectedPropertyTypes.length === 0) {
+    if (sortBy !== 'cheapest' && currentHotelMode === 'villas' && hotelSelectedPropertyTypes.length === 0) {
       list = [...list].sort((a, b) => {
         const aIsVR = a.propertyType === 'Villa' || a.propertyType === 'Resort';
         const bIsVR = b.propertyType === 'Villa' || b.propertyType === 'Resort';
         if (aIsVR && !bIsVR) return -1;
         if (!aIsVR && bIsVR) return 1;
-        return 0;
+        return a.priceInr - b.priceInr;
       });
     }
 
     return list.sort((a, b) => {
       if (sortBy === 'cheapest') return a.priceInr - b.priceInr;
-      if (sortBy === 'fastest') return b.rating - a.rating; // best value
-      if (sortBy === 'rating') return b.rating - a.rating;
-      if (sortBy === 'departure') return b.stars - a.stars; // star rating
+      if (sortBy === 'fastest') return (b.rating - a.rating) || (a.priceInr - b.priceInr); // best value
+      if (sortBy === 'rating') return (b.rating - a.rating) || (a.priceInr - b.priceInr);
+      if (sortBy === 'departure') return (b.stars - a.stars) || (a.priceInr - b.priceInr); // star rating
       return a.priceInr - b.priceInr;
     });
   }, [
@@ -1603,13 +2264,617 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setTimeout(() => setCodeCopied(false), 3000);
   };
 
+  const isFlightsView = (currentCategory as any) === 'flights';
+  if (isFlightsView) {
+    return (
+      <SkyscannerFlightSearchResults
+        fromCity={currentFromCity}
+        toCity={currentToCity}
+        departureDate={currentDepDate}
+        returnDate={currentRetDate}
+        tripType={currentTripType}
+        dummyTripType={currentDummyTripType}
+        travellers={currentTravellers}
+        cabinClass={currentCabinClass}
+        currency={currency}
+        onSelectFlightOrStayForCheckout={onSelectFlightOrStayForCheckout}
+        onChangeDepartureDate={(d) => {
+          setCurrentDepDate(d);
+          onChangeDepartureDate?.(d);
+        }}
+        onChangeReturnDate={(d) => {
+          setCurrentRetDate(d);
+          onChangeReturnDate?.(d);
+        }}
+        onChangeFromCity={(c) => {
+          setCurrentFromCity(c);
+          onChangeFromCity?.(c);
+        }}
+        onChangeToCity={(c) => {
+          setCurrentToCity(c);
+          onChangeToCity?.(c);
+        }}
+        onChangeTravellers={(count, cabin) => {
+          setCurrentTravellers(count);
+          setCurrentCabinClass(cabin);
+          onChangeTravellers?.(count, cabin);
+        }}
+        onChangeTripType={(t) => {
+          setCurrentTripType(t);
+          onChangeTripType?.(t);
+        }}
+        onChangeDummyTripType={(t) => {
+          setCurrentDummyTripType(t);
+          onChangeDummyTripType?.(t);
+        }}
+        onNotify={onNotify}
+        currentCategory={currentCategory}
+        onChangeCategory={(cat) => {
+          setCurrentCategory(cat);
+          onChangeCategory?.(cat);
+        }}
+      />
+    );
+  }
+
+  const isOceanHeaderCategory = currentCategory === 'hotels' || currentCategory === 'cabs';
+
   return (
-    <div className="bg-slate-100 min-h-screen pb-16">
+    <div className={`${isOceanHeaderCategory ? 'bg-[#f1f5f9]' : 'bg-slate-100'} min-h-screen pb-16`}>
       {/* ===================================================================
-          1. TOP COMPACT & INLINE MODIFY SEARCH STRIP (MakeMyTrip Style)
+          1. SECOND HEADER (OCEAN-NAVY FOR HOTELS & CABS MATCHING FLIGHTS;
+             COMPACT INLINE BAR FOR TRAINS, BUSES, HOLIDAYS)
       =================================================================== */}
-      <div className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
-        <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3">
+      {isOceanHeaderCategory ? (
+        <section className="bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] pt-[74px] pb-6 relative shadow-md">
+          <div className="w-full px-3 sm:px-5 lg:px-6">
+            {/* Top Compact Controls Row Directly on Ocean Navy */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3 text-xs">
+              <div className="flex flex-wrap items-center gap-2.5">
+                {currentCategory === 'hotels' ? (
+                  <>
+                    {/* Stay Type Segmented Control */}
+                    <div className="inline-flex rounded-xl p-1 bg-white/10 border border-white/15 backdrop-blur-xs">
+                      {[
+                        { id: 'overnight', label: 'Hotels' },
+                        { id: 'hourly', label: 'Hourly Stays' },
+                        { id: 'hostels', label: 'Hostels' },
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            if (m.id === 'hostels' && onOpenHostelsPage) {
+                              onOpenHostelsPage();
+                            } else {
+                              setModHotelMode(m.id as any);
+                            }
+                          }}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                            modHotelMode === m.id
+                              ? 'bg-white text-[#05203c] shadow-xs'
+                              : 'text-white/85 hover:text-white'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Rooms & Guests Dropdown Trigger */}
+                    <div className="relative dropdown-field-container">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenModTravellers(!openModTravellers);
+                          setOpenCityPicker(null);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/18 text-white font-semibold cursor-pointer transition-colors whitespace-nowrap shrink-0"
+                      >
+                        <span>
+                          {modHotelRooms} Room{modHotelRooms > 1 ? 's' : ''} · {modHotelGuests} Guest{modHotelGuests > 1 ? 's' : ''}
+                        </span>
+                        <ChevronDown className="w-3.5 h-3.5 text-white/75" />
+                      </button>
+
+                      {openModTravellers && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setOpenModTravellers(false)}
+                          />
+                          <div
+                            data-dropdown-container="true"
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-50 space-y-4 text-slate-800 animate-in fade-in"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-800 text-xs">Rooms</span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setModHotelRooms(Math.max(1, modHotelRooms - 1))}
+                                  className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="font-bold text-sm w-4 text-center tabular-nums">{modHotelRooms}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setModHotelRooms(Math.min(10, modHotelRooms + 1))}
+                                  className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-800 text-xs">Guests</span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setModHotelGuests(Math.max(1, modHotelGuests - 1))}
+                                  className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="font-bold text-sm w-4 text-center tabular-nums">{modHotelGuests}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setModHotelGuests(Math.min(10, modHotelGuests + 1))}
+                                  className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Cab Vehicle Category Segmented Control */}
+                    <div className="inline-flex rounded-xl p-1 bg-white/10 border border-white/15 backdrop-blur-xs overflow-x-auto max-w-full">
+                      {[
+                        { val: 'SUV / Sedan', label: 'All Cabs' },
+                        { val: 'Sedan', label: 'Sedan' },
+                        { val: 'SUV', label: 'SUV' },
+                        { val: 'Prime Crysta', label: 'Prime SUV' },
+                        { val: 'Tempo', label: 'Tempo' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setModCabType(opt.val)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                            modCabType === opt.val
+                              ? 'bg-white text-[#05203c] shadow-xs'
+                              : 'text-white/85 hover:text-white'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Cab Pickup Time Dropdown Trigger */}
+                    <div className="relative dropdown-field-container">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenCabDropdown(openCabDropdown === 'time' ? null : 'time');
+                          setOpenCityPicker(null);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/18 text-white font-semibold cursor-pointer transition-colors whitespace-nowrap shrink-0"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-sky-300" />
+                        <span>{modCabTime}</span>
+                        <ChevronDown className="w-3.5 h-3.5 text-white/75" />
+                      </button>
+
+                      {openCabDropdown === 'time' && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setOpenCabDropdown(null)}
+                          />
+                          <div
+                            data-dropdown-container="true"
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 top-full mt-2 w-48 max-h-60 overflow-y-auto overscroll-contain custom-scrollbar bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 text-slate-800 select-none animate-in fade-in"
+                          >
+                            {[
+                              '06:00 AM',
+                              '07:30 AM',
+                              '09:00 AM',
+                              '10:00 AM',
+                              '10:30 AM',
+                              '01:00 PM',
+                              '03:30 PM',
+                              '05:30 PM',
+                              '07:00 PM',
+                              '09:00 PM',
+                              '11:00 PM',
+                            ].map((timeSlot) => (
+                              <button
+                                key={timeSlot}
+                                type="button"
+                                onClick={() => {
+                                  setModCabTime(timeSlot);
+                                  setOpenCabDropdown(null);
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                                  modCabTime === timeSlot
+                                    ? 'bg-blue-50 text-blue-700 font-bold'
+                                    : 'hover:bg-slate-100 text-slate-700'
+                                }`}
+                              >
+                                <span className="font-semibold">{timeSlot}</span>
+                                {modCabTime === timeSlot && (
+                                  <Check className="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Mobile Filters Trigger */}
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters</span>
+              </button>
+            </div>
+
+            {/* Unified Clean White Search Strip Matching Flights */}
+            <div className="bg-white rounded-2xl p-1.5 shadow-xl border border-white/15">
+              {currentCategory === 'hotels' ? (
+                <div className="flex flex-col lg:flex-row items-stretch gap-1.5">
+                  {/* Destination */}
+                  <div className="relative flex-1 lg:flex-[1.2] min-w-0">
+                    <div
+                      onClick={() => setOpenCityPicker(openCityPicker === 'hotel-dest' ? null : 'hotel-dest')}
+                      className="px-4 py-2 rounded-xl bg-slate-50/75 hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center"
+                    >
+                      <div className="text-[11px] font-semibold text-slate-500 leading-none">Where to</div>
+                      <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                        <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{modToCity.city}</span>
+                        <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{modToCity.country}</span>
+                      </div>
+                    </div>
+
+                    <AirportAutocompleteDropdown
+                      label="Destination"
+                      selectedCity={modToCity}
+                      onSelectCity={(c) => {
+                        setModToCity(c);
+                        setOpenCityPicker(null);
+                      }}
+                      isOpen={openCityPicker === 'hotel-dest'}
+                      onClose={() => setOpenCityPicker(null)}
+                      align="left"
+                    />
+                  </div>
+
+                  {/* Check-in Date */}
+                  <div className="relative flex-1 min-w-0 dropdown-field-container">
+                    <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
+                      <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
+                        Check-in
+                      </div>
+                      <div className="flex items-center justify-between gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setModDepDate(shiftIsoDate(modDepDate || currentDepDate, -1));
+                          }}
+                          title="Previous Day"
+                          aria-label="Previous check-in day"
+                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                          }}
+                          className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
+                          title="Click to open calendar"
+                        >
+                          <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
+                            {formatHeaderDisplayDate(modDepDate || currentDepDate)}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const newD = shiftIsoDate(modDepDate || currentDepDate, 1);
+                            setModDepDate(newD);
+                            if (modRetDate && modRetDate <= newD) {
+                              setModRetDate(shiftIsoDate(newD, 2));
+                            }
+                          }}
+                          title="Next Day"
+                          aria-label="Next check-in day"
+                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-01-01"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          if (modRetDate && modRetDate <= newDate) {
+                            setModRetDate(shiftIsoDate(newDate, 2));
+                          }
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={false}
+                      />
+                    )}
+                  </div>
+
+                  {/* Check-out Date */}
+                  <div className="relative flex-1 min-w-0 dropdown-field-container">
+                    <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
+                      <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
+                        Check-out
+                      </div>
+                      <div className="flex items-center justify-between gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const minCheckOut = shiftIsoDate(modDepDate || currentDepDate, 1);
+                            setModRetDate(shiftIsoDate(modRetDate || currentRetDate, -1, minCheckOut));
+                          }}
+                          title="Previous Day"
+                          aria-label="Previous check-out day"
+                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCalendarDropdown(openCalendarDropdown === 'mod-ret' ? null : 'mod-ret');
+                          }}
+                          className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
+                          title="Click to open calendar"
+                        >
+                          <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
+                            {formatHeaderDisplayDate(modRetDate || currentRetDate)}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setModRetDate(shiftIsoDate(modRetDate || currentRetDate, 1));
+                          }}
+                          title="Next Day"
+                          aria-label="Next check-out day"
+                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {openCalendarDropdown === 'mod-ret' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modRetDate || currentRetDate}
+                        minDate={modDepDate || currentDepDate}
+                        onSelectDate={(newDate) => {
+                          setModRetDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={true}
+                      />
+                    )}
+                  </div>
+
+                  {/* Search CTA Button */}
+                  <div className="shrink-0 flex items-center">
+                    <button
+                      type="button"
+                      onClick={handleApplyModifySearch}
+                      className="w-full lg:w-auto px-7 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer h-[58px] lg:min-w-[132px] whitespace-nowrap shrink-0"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Search</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col lg:flex-row items-stretch gap-1.5">
+                  {/* Route: PICKUP & DROP with overlapping Swap button */}
+                  <div className="flex flex-col sm:flex-row items-stretch gap-1.5 relative lg:flex-[2] min-w-0">
+                    {/* PICKUP CITY */}
+                    <div className="relative flex-1 min-w-0">
+                      <div
+                        onClick={() => setOpenCityPicker(openCityPicker === 'from' ? null : 'from')}
+                        className="px-4 py-2 rounded-xl bg-slate-50/75 hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center"
+                      >
+                        <div className="text-[11px] font-semibold text-slate-500 leading-none">Pickup</div>
+                        <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                          <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{modFromCity.city}</span>
+                          <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{modFromCity.code}</span>
+                        </div>
+                      </div>
+
+                      <AirportAutocompleteDropdown
+                        label="Pickup City"
+                        selectedCity={modFromCity}
+                        onSelectCity={(c) => {
+                          setModFromCity(c);
+                          setOpenCityPicker(null);
+                        }}
+                        isOpen={openCityPicker === 'from'}
+                        onClose={() => setOpenCityPicker(null)}
+                        align="left"
+                      />
+                    </div>
+
+                    {/* Overlapping Swap Button */}
+                    <div className="shrink-0 flex items-center justify-center sm:-mx-3 z-10">
+                      <button
+                        type="button"
+                        onClick={handleSwapModCities}
+                        title="Swap Pickup and Drop"
+                        aria-label="Swap Pickup and Drop cities"
+                        className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-blue-400 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                      >
+                        <ArrowLeftRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* DROP CITY */}
+                    <div className="relative flex-1 min-w-0">
+                      <div
+                        onClick={() => setOpenCityPicker(openCityPicker === 'to' ? null : 'to')}
+                        className="px-4 py-2 rounded-xl bg-slate-50/75 hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center sm:pl-5"
+                      >
+                        <div className="text-[11px] font-semibold text-slate-500 leading-none">Drop</div>
+                        <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                          <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{modToCity.city}</span>
+                          <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{modToCity.code}</span>
+                        </div>
+                      </div>
+
+                      <AirportAutocompleteDropdown
+                        label="Drop City"
+                        selectedCity={modToCity}
+                        onSelectCity={(c) => {
+                          setModToCity(c);
+                          setOpenCityPicker(null);
+                        }}
+                        isOpen={openCityPicker === 'to'}
+                        onClose={() => setOpenCityPicker(null)}
+                        align="left"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pickup Date (equal 1:1 width with Pickup & Drop) */}
+                  <div className="relative flex-1 min-w-0 lg:flex-1 dropdown-field-container">
+                    <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
+                      <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
+                        Pickup Date
+                      </div>
+                      <div className="flex items-center justify-between gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setModDepDate(shiftIsoDate(modDepDate || currentDepDate, -1));
+                          }}
+                          title="Previous Day"
+                          aria-label="Previous pickup day"
+                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
+                          }}
+                          className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
+                          title="Click to open calendar"
+                        >
+                          <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
+                            {formatHeaderDisplayDate(modDepDate || currentDepDate)}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setModDepDate(shiftIsoDate(modDepDate || currentDepDate, 1));
+                          }}
+                          title="Next Day"
+                          aria-label="Next pickup day"
+                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {openCalendarDropdown === 'mod-dep' && (
+                      <NormalCalendarDropdown
+                        selectedDate={modDepDate || currentDepDate}
+                        minDate="2026-01-01"
+                        onSelectDate={(newDate) => {
+                          setModDepDate(newDate);
+                          setOpenCalendarDropdown(null);
+                        }}
+                        onClose={() => setOpenCalendarDropdown(null)}
+                        alignRight={true}
+                      />
+                    )}
+                  </div>
+
+                  {/* Search CTA Button */}
+                  <div className="shrink-0 flex items-center">
+                    <button
+                      type="button"
+                      onClick={handleApplyModifySearch}
+                      className="w-full lg:w-auto px-7 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer h-[58px] lg:min-w-[132px] whitespace-nowrap shrink-0"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Search</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <div className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+          <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Clickable Origin, Destination & Trip Type Chip */}
             <div
@@ -1627,186 +2892,42 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               >
                 {currentCategory === 'flights' && <Plane className="w-4 h-4 text-blue-600 shrink-0" />}
                 {currentCategory === 'trains' && <TrainFront className="w-4 h-4 text-emerald-600 shrink-0" />}
-                {currentCategory === 'hotels' && <Building2 className="w-4 h-4 text-amber-600 shrink-0" />}
                 {currentCategory === 'buses' && <Bus className="w-4 h-4 text-indigo-600 shrink-0" />}
-                {currentCategory === 'cabs' && <Car className="w-4 h-4 text-sky-600 shrink-0" />}
                 {currentCategory === 'holidays' && <Palmtree className="w-4 h-4 text-blue-600 shrink-0" />}
 
-                {currentCategory === 'hotels' ? (
-                  <>
-                    <span className="text-slate-900 font-extrabold">{currentToCity.city}</span>
-                    <span className="text-[11px] font-mono text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded font-bold">
-                      {currentToCity.country}
+                <>
+                  <span className="text-slate-900 font-semibold">{currentFromCity.city}</span>
+                  {currentCategory !== 'holidays' && (
+                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
+                      {currentCategory === 'trains' ? currentFromCity.stationCode : currentFromCity.code}
                     </span>
-                    <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
-                      currentHotelMode === 'villas'
-                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs'
-                        : currentHotelMode === 'hourly'
-                        ? 'bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-2xs'
-                        : currentHotelMode === 'hostels'
-                        ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs'
-                        : 'bg-amber-100 text-amber-800'
+                  )}
+
+                  <span className="text-slate-400 font-mono">
+                    {currentCategory === 'flights' && isFlightRoundTrip ? '⇄' : '→'}
+                  </span>
+
+                  <span className="text-slate-900 font-semibold">{currentToCity.city}</span>
+                  {currentCategory !== 'holidays' && (
+                    <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
+                      {currentCategory === 'trains' ? currentToCity.stationCode : currentToCity.code}
+                    </span>
+                  )}
+
+                  {currentCategory === 'flights' && (
+                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                      isFlightRoundTrip
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-slate-200 text-slate-700'
                     }`}>
-                      {currentHotelMode === 'villas'
-                        ? 'Luxury Villas & Resorts'
-                        : currentHotelMode === 'hourly'
-                        ? 'Hourly Stays'
-                        : currentHotelMode === 'hostels'
-                        ? 'Hostels & Backpackers'
-                        : 'Hotels'}
+                      {currentTripType === 'round-trip' ? 'Round Trip' : 'One Way'}
                     </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-slate-900 font-semibold">{currentFromCity.city}</span>
-                    {currentCategory !== 'holidays' && (
-                      <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
-                        {currentCategory === 'trains' ? currentFromCity.stationCode : currentFromCity.code}
-                      </span>
-                    )}
-
-                    <span className="text-slate-400 font-mono">
-                      {currentCategory === 'flights' && isFlightRoundTrip ? '⇄' : '→'}
-                    </span>
-
-                    <span className="text-slate-900 font-semibold">{currentToCity.city}</span>
-                    {currentCategory !== 'holidays' && (
-                      <span className="text-[11px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold">
-                        {currentCategory === 'trains' ? currentToCity.stationCode : currentToCity.code}
-                      </span>
-                    )}
-
-                    {currentCategory === 'flights' && (
-                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                        currentTripType === 'dummy-flights'
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300/70'
-                          : isFlightRoundTrip
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-slate-200 text-slate-700'
-                      }`}>
-                        {currentTripType === 'dummy-flights'
-                          ? currentDummyTripType === 'round-trip'
-                            ? 'Dummy Flights (Round Trip)'
-                            : 'Dummy Flights (One Way)'
-                          : currentTripType === 'round-trip'
-                          ? 'Round Trip'
-                          : 'One Way'}
-                      </span>
-                    )}
-                  </>
-                )}
+                  )}
+                </>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${isModifyOpen ? 'rotate-180 text-blue-600' : ''}`} />
               </div>
 
-              {/* Hotel Check-In & Check-Out Adjusted into a Single Combined Box */}
-              {currentCategory === 'hotels' ? (
-                <div className="relative dropdown-field-container">
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (openCalendarDropdown === 'header-hotel-checkin' || openCalendarDropdown === 'header-hotel-checkout') {
-                        setOpenCalendarDropdown(null);
-                      } else {
-                        setOpenCalendarDropdown('header-hotel-checkin');
-                      }
-                    }}
-                    className={`inline-flex items-center gap-2 text-xs sm:text-sm font-medium px-3 sm:px-3.5 py-1.5 rounded-xl border transition-all shadow-2xs select-none cursor-pointer ${
-                      openCalendarDropdown === 'header-hotel-checkin' || openCalendarDropdown === 'header-hotel-checkout'
-                        ? 'bg-blue-50 text-blue-700 border-blue-500 ring-2 ring-blue-100'
-                        : 'bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200'
-                    }`}
-                    title="Click to change check-in and check-out dates"
-                  >
-                    <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenCalendarDropdown(
-                          openCalendarDropdown === 'header-hotel-checkin' ? null : 'header-hotel-checkin'
-                        );
-                      }}
-                      className="cursor-pointer hover:text-blue-600 flex items-center gap-1 font-bold text-slate-900"
-                      title="Click to select check-in date"
-                    >
-                      <span className="text-[11px] text-slate-500 font-normal hidden sm:inline">In:</span>
-                      <span>{formatFriendlyDate(currentDepDate)}</span>
-                    </button>
-
-                    <span className="text-slate-400 font-mono text-xs">→</span>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenCalendarDropdown(
-                          openCalendarDropdown === 'header-hotel-checkout' ? null : 'header-hotel-checkout'
-                        );
-                      }}
-                      className="cursor-pointer hover:text-blue-600 flex items-center gap-1 font-bold text-slate-900"
-                      title="Click to select check-out date"
-                    >
-                      <span className="text-[11px] text-slate-500 font-normal hidden sm:inline">Out:</span>
-                      <span>{formatFriendlyDate(currentRetDate)}</span>
-                    </button>
-
-                    {(() => {
-                      try {
-                        const d1 = new Date(currentDepDate);
-                        const d2 = new Date(currentRetDate);
-                        const diffDays = Math.max(1, Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)));
-                        return (
-                          <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 ml-0.5">
-                            {diffDays} {diffDays === 1 ? 'Night' : 'Nights'}
-                          </span>
-                        );
-                      } catch {
-                        return null;
-                      }
-                    })()}
-                  </div>
-
-                  {openCalendarDropdown === 'header-hotel-checkin' && (
-                    <NormalCalendarDropdown
-                      selectedDate={currentDepDate}
-                      minDate="2026-10-15"
-                      onSelectDate={(newDate) => {
-                        setCurrentDepDate(newDate);
-                        setModDepDate(newDate);
-                        onChangeDepartureDate?.(newDate);
-                        if (currentRetDate <= newDate) {
-                          const nextD = new Date(newDate);
-                          nextD.setDate(nextD.getDate() + 1);
-                          const nextIso = nextD.toISOString().slice(0, 10);
-                          setCurrentRetDate(nextIso);
-                          setModRetDate(nextIso);
-                          onChangeReturnDate?.(nextIso);
-                        }
-                        setOpenCalendarDropdown('header-hotel-checkout');
-                        onNotify('Check-in Selected', `Now select check-out date`);
-                      }}
-                      onClose={() => setOpenCalendarDropdown(null)}
-                      alignRight={false}
-                    />
-                  )}
-
-                  {openCalendarDropdown === 'header-hotel-checkout' && (
-                    <NormalCalendarDropdown
-                      selectedDate={currentRetDate}
-                      minDate={currentDepDate}
-                      onSelectDate={(newDate) => {
-                        setCurrentRetDate(newDate);
-                        setModRetDate(newDate);
-                        onChangeReturnDate?.(newDate);
-                        setOpenCalendarDropdown(null);
-                        onNotify('Check-out Date Updated', `Check-out set to ${formatFriendlyDate(newDate)}`);
-                      }}
-                      onClose={() => setOpenCalendarDropdown(null)}
-                      alignRight={false}
-                    />
-                  )}
-                </div>
-              ) : currentCategory === 'flights' && isFlightRoundTrip ? (
+              {currentCategory === 'flights' && isFlightRoundTrip ? (
                 <div className="flex items-center gap-2">
                   {/* Outbound / Departure Date */}
                   <div className="relative dropdown-field-container">
@@ -1932,8 +3053,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
               )}
 
-              {/* Travellers / Guests (Custom Popover matching front page for flights, hidden for trains, hotels, buses, cabs, and holidays as requested) */}
-              {currentCategory !== 'trains' && currentCategory !== 'hotels' && currentCategory !== 'buses' && currentCategory !== 'cabs' && currentCategory !== 'holidays' && (
+              {/* Travellers / Guests */}
+              {currentCategory === 'flights' && (
                 <div className="relative dropdown-field-container">
                   <button
                     type="button"
@@ -2088,45 +3209,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       >
                         Round Trip
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setModTripType('dummy-flights')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                          modTripType === 'dummy-flights'
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        Dummy Flights
-                      </button>
                     </div>
-
-                    {modTripType === 'dummy-flights' && (
-                      <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-300/80 rounded-xl p-1 shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => setModDummyTripType('one-way')}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                            modDummyTripType === 'one-way'
-                              ? 'bg-amber-600 text-white shadow-xs'
-                              : 'text-amber-800 hover:bg-amber-100/70'
-                          }`}
-                        >
-                          One Way
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setModDummyTripType('round-trip')}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                            modDummyTripType === 'round-trip'
-                              ? 'bg-amber-600 text-white shadow-xs'
-                              : 'text-amber-800 hover:bg-amber-100/70'
-                          }`}
-                        >
-                          Round Trip
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   {/* Grid Inputs */}
@@ -2251,24 +3334,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           e.stopPropagation();
                           setOpenCalendarDropdown(openCalendarDropdown === 'mod-ret' ? null : 'mod-ret');
                           if (modTripType === 'one-way') setModTripType('round-trip');
-                          if (modTripType === 'dummy-flights' && modDummyTripType === 'one-way') {
-                            setModDummyTripType('round-trip');
-                          }
                         }}
                         className={`w-full text-left border rounded-xl p-2.5 text-xs font-bold shadow-2xs hover:border-blue-500 cursor-pointer flex items-center justify-between ${
                           openCalendarDropdown === 'mod-ret'
                             ? 'border-blue-500 ring-2 ring-blue-100'
-                            : modTripType === 'round-trip' || (modTripType === 'dummy-flights' && modDummyTripType === 'round-trip')
-                            ? modTripType === 'dummy-flights'
-                              ? 'bg-amber-50/70 border-amber-300 text-amber-950 font-semibold'
-                              : 'bg-blue-50/60 border-blue-300 text-blue-950 font-semibold'
+                            : modTripType === 'round-trip'
+                            ? 'bg-blue-50/60 border-blue-300 text-blue-950 font-semibold'
                             : 'bg-white border-slate-300 text-slate-500'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <Calendar className={`w-4 h-4 shrink-0 ${
-                            modTripType === 'dummy-flights' ? 'text-amber-600' : 'text-blue-600'
-                          }`} />
+                          <Calendar className="w-4 h-4 shrink-0 text-blue-600" />
                           <span className="truncate">
                             {modRetDate ? formatFriendlyDate(modRetDate) : 'Select Return Date'}
                           </span>
@@ -3759,13 +4835,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               </div>
             </div>
           )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ===================================================================
           2. TWO-COLUMN LAYOUT: LEFT FILTERS SIDEBAR + RIGHT MAIN RESULTS (Full-Width Corner to Corner)
       =================================================================== */}
-      <div className="w-full px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 pt-5">
+      <div className={`w-full ${isOceanHeaderCategory ? 'px-3 sm:px-5 lg:px-6' : 'px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12'} pt-5`}>
         <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-start w-full">
           {/* =================================================================
               LEFT COLUMN: UNIFIED FILTER SIDEBAR
@@ -5956,7 +7033,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         <div className="space-y-1 text-center sm:text-left">
                           <div className="flex items-center justify-center sm:justify-start gap-2">
                             <span className="text-xs font-bold text-amber-300 uppercase tracking-wider bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-                              {currentTripType === 'dummy-flights' ? 'Verifiable PNR Itinerary' : 'Combo Saver Deal'}
+                              Combo Saver Deal
                             </span>
                             <span className="text-xs text-slate-300 font-semibold">
                               {currentFromCity.code} ⇄ {currentToCity.code} ({currentTravellers} Traveller{currentTravellers > 1 ? 's' : ''})
@@ -5977,57 +7054,28 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                           <button
                             type="button"
-                            onClick={() =>
-                              setFlightForFareModal({
+                            onClick={() => {
+                              onSelectFlightOrStayForCheckout({
+                                title: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                                code: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                                depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                                arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                                duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                                priceInr: totalRoundTripFare,
+                                category: 'flights',
+                                airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                                flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                                cabinClass: currentCabinClass || 'Economy',
+                                fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
+                                toCity: `${currentToCity.city} (${currentToCity.code})`,
+                                travelDate: currentDepDate,
+                                returnDate: currentRetDate,
+                                travellers: currentTravellers,
                                 isRoundTrip: true,
-                                outboundFlight: {
-                                  id: selectedOutboundFlight.id,
-                                  airline: selectedOutboundFlight.airline,
-                                  flightNo: selectedOutboundFlight.flightNo,
-                                  depTime: selectedOutboundFlight.depTime,
-                                  arrTime: selectedOutboundFlight.arrTime,
-                                  depTerminal: selectedOutboundFlight.depTerminal,
-                                  arrTerminal: selectedOutboundFlight.arrTerminal,
-                                  duration: selectedOutboundFlight.duration,
-                                  priceInr: selectedOutboundFlight.priceInr,
-                                  badgeBg: selectedOutboundFlight.badgeBg,
-                                  badgeCode: selectedOutboundFlight.badgeCode,
-                                  aircraft: selectedOutboundFlight.aircraft,
-                                  fromCode: currentFromCity.code,
-                                  toCode: currentToCity.code,
-                                },
-                                returnFlight: {
-                                  id: selectedReturnFlight.id,
-                                  airline: selectedReturnFlight.airline,
-                                  flightNo: selectedReturnFlight.flightNo,
-                                  depTime: selectedReturnFlight.depTime,
-                                  arrTime: selectedReturnFlight.arrTime,
-                                  depTerminal: selectedReturnFlight.depTerminal,
-                                  arrTerminal: selectedReturnFlight.arrTerminal,
-                                  duration: selectedReturnFlight.duration,
-                                  priceInr: selectedReturnFlight.priceInr,
-                                  badgeBg: selectedReturnFlight.badgeBg,
-                                  badgeCode: selectedReturnFlight.badgeCode,
-                                  aircraft: selectedReturnFlight.aircraft,
-                                  fromCode: currentToCity.code,
-                                  toCode: currentFromCity.code,
-                                },
-                                flight: {
-                                  id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                                  airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
-                                  flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                                  depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                                  arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                                  duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                                  priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                                  badgeBg: selectedOutboundFlight.badgeBg,
-                                  badgeCode: selectedOutboundFlight.badgeCode,
-                                  aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
-                                  fromCode: currentFromCity.code,
-                                  toCode: currentToCity.code,
-                                },
-                              })
-                            }
+                                outboundFlight: selectedOutboundFlight,
+                                returnFlight: selectedReturnFlight,
+                              });
+                            }}
                             className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 active:scale-95 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-500/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl"
                           >
                             <span>Prices</span>
@@ -6054,11 +7102,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         </button>
                       </div>
                     ) : (
-                      processedFlights.map((fl) => (
+                      processedFlights.map((fl, flIdx) => (
                         <div
                           key={fl.id}
-                          className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs hover:shadow-md transition-shadow"
+                          className={`bg-white rounded-2xl border p-4 sm:p-5 shadow-xs hover:shadow-md transition-shadow relative ${
+                            flIdx === 0 && sortBy === 'cheapest' ? 'border-emerald-500/80 ring-1 ring-emerald-500/25' : 'border-slate-200/80'
+                          }`}
                         >
+                          {flIdx === 0 && sortBy === 'cheapest' && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 mb-2.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                              <Sparkles className="w-3 h-3 text-emerald-600" />
+                              <span>Lowest Price · Cheapest Fare First</span>
+                            </div>
+                          )}
                           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                             <div className="flex items-center gap-3 min-w-[190px]">
                               <div
@@ -6109,24 +7165,26 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
                               <button
                                 type="button"
-                                onClick={() =>
-                                  setFlightForFareModal({
-                                    id: fl.id,
-                                    airline: fl.airline,
-                                    flightNo: fl.flightNo,
+                                onClick={() => {
+                                  onSelectFlightOrStayForCheckout({
+                                    title: `${fl.airline} ${fl.flightNo}`,
+                                    code: fl.id,
                                     depTime: fl.depTime,
                                     arrTime: fl.arrTime,
-                                    depTerminal: fl.depTerminal,
-                                    arrTerminal: fl.arrTerminal,
                                     duration: fl.duration,
-                                    priceInr: fl.priceInr,
-                                    badgeBg: fl.badgeBg,
-                                    badgeCode: fl.badgeCode,
-                                    aircraft: fl.aircraft,
-                                    fromCode: currentFromCity.code,
-                                    toCode: currentToCity.code,
-                                  })
-                                }
+                                    priceInr: fl.priceInr * currentTravellers,
+                                    category: 'flights',
+                                    airline: fl.airline,
+                                    flightNo: fl.flightNo,
+                                    cabinClass: currentCabinClass || 'Economy',
+                                    fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
+                                    toCity: `${currentToCity.city} (${currentToCity.code})`,
+                                    travelDate: currentDepDate,
+                                    travellers: currentTravellers,
+                                    isRoundTrip: false,
+                                    outboundFlight: fl,
+                                  });
+                                }}
                                 className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 hover:shadow-lg"
                               >
                                 <span>Prices</span>
@@ -6675,7 +7733,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </div>
                   </div>
                 ) : (
-                  processedHotels.map((hotel) => {
+                  processedHotels.map((hotel, hIdx) => {
                     const discountPercent = Math.round(
                       ((hotel.originalPriceInr - hotel.priceInr) / hotel.originalPriceInr) * 100
                     );
@@ -6683,7 +7741,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     return (
                       <div
                         key={hotel.id}
-                        className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col md:flex-row group"
+                        className={`bg-white rounded-2xl border overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col md:flex-row group ${
+                          hIdx === 0 && sortBy === 'cheapest' ? 'border-emerald-500/80 ring-1 ring-emerald-500/25' : 'border-slate-200/90'
+                        }`}
                       >
                         {/* Image with Badges */}
                         <div
@@ -6697,9 +7757,16 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900/85 text-white backdrop-blur-xs shadow-xs">
-                              {hotel.tag}
-                            </span>
+                            {hIdx === 0 && sortBy === 'cheapest' ? (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white backdrop-blur-xs shadow-xs flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-emerald-200" />
+                                Lowest Price Stay
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900/85 text-white backdrop-blur-xs shadow-xs">
+                                {hotel.tag}
+                              </span>
+                            )}
                             {hotel.isTripYeahAssured && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white shadow-xs">
                                 <ShieldCheck className="w-3 h-3" />
@@ -6801,12 +7868,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               <div className="text-[10px] text-slate-400">+ ₹{Math.round(hotel.priceInr * 0.12)} taxes &amp; fees</div>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onSelectHotelForDetails) {
-                                  onSelectHotelForDetails(hotel);
-                                } else {
+                            <div className="flex items-center gap-3">
+                              {onSelectHotelForDetails && (
+                                <button
+                                  type="button"
+                                  onClick={() => onSelectHotelForDetails(hotel)}
+                                  className="text-xs text-slate-500 hover:text-blue-600 font-semibold cursor-pointer underline decoration-dotted hidden sm:inline-block"
+                                >
+                                  Photos &amp; Amenities
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
                                   onSelectFlightOrStayForCheckout({
                                     title: hotel.name,
                                     code: hotel.id,
@@ -6818,14 +7892,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                     hotelName: hotel.name,
                                     hotelLocation: hotel.location,
                                     roomType: 'Deluxe Suite (King Bed / City View)',
+                                    travelDate: currentDepDate,
+                                    returnDate: currentRetDate,
+                                    travellers: currentHotelGuests,
                                   });
-                                }
-                              }}
-                              className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
-                            >
-                              <span>Book Hotel &amp; View Rooms</span>
-                              <span>→</span>
-                            </button>
+                                }}
+                                className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
+                              >
+                                <span>Compare Rates &amp; Book</span>
+                                <span>→</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -7336,6 +8413,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 fromCity: activeCabPickup,
                                 toCity: activeCabDrop,
                                 travelDate: currentDepDate,
+                                pickupTime: currentCabTime,
                               })
                             }
                             className="px-6 py-2.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/20 cursor-pointer transition-all active:scale-95"
@@ -7819,7 +8897,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 shrink-0 pt-1 md:pt-0 border-t md:border-t-0 border-slate-100">
               <div className="text-left md:text-right">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  {currentTripType === 'dummy-flights' ? 'Dummy Round-Trip Ticket' : 'Total Round-Trip Fare'}
+                  Total Round-Trip Fare
                 </div>
                 <div className="text-xl sm:text-2xl font-medium text-slate-900 font-mono leading-tight">
                   {formatPrice(totalRoundTripFare, currency)}
@@ -7831,57 +8909,28 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
               <button
                 type="button"
-                onClick={() =>
-                  setFlightForFareModal({
+                onClick={() => {
+                  onSelectFlightOrStayForCheckout({
+                    title: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                    code: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
+                    depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
+                    arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
+                    duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
+                    priceInr: totalRoundTripFare,
+                    category: 'flights',
+                    airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
+                    flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
+                    cabinClass: currentCabinClass || 'Economy',
+                    fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
+                    toCity: `${currentToCity.city} (${currentToCity.code})`,
+                    travelDate: currentDepDate,
+                    returnDate: currentRetDate,
+                    travellers: currentTravellers,
                     isRoundTrip: true,
-                    outboundFlight: {
-                      id: selectedOutboundFlight.id,
-                      airline: selectedOutboundFlight.airline,
-                      flightNo: selectedOutboundFlight.flightNo,
-                      depTime: selectedOutboundFlight.depTime,
-                      arrTime: selectedOutboundFlight.arrTime,
-                      depTerminal: selectedOutboundFlight.depTerminal,
-                      arrTerminal: selectedOutboundFlight.arrTerminal,
-                      duration: selectedOutboundFlight.duration,
-                      priceInr: selectedOutboundFlight.priceInr,
-                      badgeBg: selectedOutboundFlight.badgeBg,
-                      badgeCode: selectedOutboundFlight.badgeCode,
-                      aircraft: selectedOutboundFlight.aircraft,
-                      fromCode: currentFromCity.code,
-                      toCode: currentToCity.code,
-                    },
-                    returnFlight: {
-                      id: selectedReturnFlight.id,
-                      airline: selectedReturnFlight.airline,
-                      flightNo: selectedReturnFlight.flightNo,
-                      depTime: selectedReturnFlight.depTime,
-                      arrTime: selectedReturnFlight.arrTime,
-                      depTerminal: selectedReturnFlight.depTerminal,
-                      arrTerminal: selectedReturnFlight.arrTerminal,
-                      duration: selectedReturnFlight.duration,
-                      priceInr: selectedReturnFlight.priceInr,
-                      badgeBg: selectedReturnFlight.badgeBg,
-                      badgeCode: selectedReturnFlight.badgeCode,
-                      aircraft: selectedReturnFlight.aircraft,
-                      fromCode: currentToCity.code,
-                      toCode: currentFromCity.code,
-                    },
-                    flight: {
-                      id: `${selectedOutboundFlight.id}-${selectedReturnFlight.id}`,
-                      airline: `${selectedOutboundFlight.airline} + ${selectedReturnFlight.airline}`,
-                      flightNo: `${selectedOutboundFlight.flightNo} + ${selectedReturnFlight.flightNo}`,
-                      depTime: `${selectedOutboundFlight.depTime} (Out) / ${selectedReturnFlight.depTime} (Ret)`,
-                      arrTime: `${selectedOutboundFlight.arrTime} / ${selectedReturnFlight.arrTime}`,
-                      duration: `Out: ${selectedOutboundFlight.duration} · Ret: ${selectedReturnFlight.duration}`,
-                      priceInr: Math.round(totalRoundTripFare / currentTravellers),
-                      badgeBg: selectedOutboundFlight.badgeBg,
-                      badgeCode: selectedOutboundFlight.badgeCode,
-                      aircraft: `${selectedOutboundFlight.aircraft} · ${selectedReturnFlight.aircraft}`,
-                      fromCode: currentFromCity.code,
-                      toCode: currentToCity.code,
-                    },
-                  })
-                }
+                    outboundFlight: selectedOutboundFlight,
+                    returnFlight: selectedReturnFlight,
+                  });
+                }}
                 className="px-6 sm:px-9 py-2.5 sm:py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-black text-xs sm:text-base shadow-lg shadow-blue-600/30 flex items-center gap-2 cursor-pointer transition-all hover:shadow-xl group"
               >
                 <span>Prices</span>
@@ -7890,67 +8939,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             </div>
           </div>
         </aside>
-      )}
-
-      {/* Flight Fare Options (Saver, Flexi Plus, Corporate, SpiceMax) Modal */}
-      {flightForFareModal && (
-        <FlightFareOptionsModal
-          flight={flightForFareModal.outboundFlight || flightForFareModal.flight || flightForFareModal}
-          returnFlight={flightForFareModal.returnFlight}
-          isRoundTrip={Boolean(flightForFareModal.isRoundTrip && flightForFareModal.returnFlight)}
-          currency={currency}
-          travellers={currentTravellers}
-          onSelectFareAndProceed={(fareTier, finalPriceInr, roundTripFares) => {
-            const isRT = Boolean(flightForFareModal.isRoundTrip && flightForFareModal.returnFlight && roundTripFares);
-            const outFlight = flightForFareModal.outboundFlight || flightForFareModal.flight || flightForFareModal;
-            const retFlight = flightForFareModal.returnFlight;
-
-            if (isRT && retFlight && roundTripFares) {
-              onSelectFlightOrStayForCheckout({
-                title: `${outFlight.airline} (${roundTripFares.outboundTier.name.split('/')[0].trim()}) + ${retFlight.airline} (${roundTripFares.returnTier.name.split('/')[0].trim()})`,
-                code: `${outFlight.id}-${retFlight.id}`,
-                depTime: `${outFlight.depTime} (Out) / ${retFlight.depTime} (Ret)`,
-                arrTime: `${outFlight.arrTime} / ${retFlight.arrTime}`,
-                duration: `Out: ${outFlight.duration} · Ret: ${retFlight.duration}`,
-                priceInr: finalPriceInr,
-                category: 'flights',
-                airline: `${outFlight.airline} + ${retFlight.airline}`,
-                flightNo: `${outFlight.flightNo} + ${retFlight.flightNo}`,
-                cabinClass: currentCabinClass || 'Economy',
-                roomType: `Out: ${roundTripFares.outboundTier.name.split('/')[0].trim()} · Ret: ${roundTripFares.returnTier.name.split('/')[0].trim()}`,
-                fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
-                toCity: `${currentToCity.city} (${currentToCity.code})`,
-                travellers: currentTravellers,
-                isRoundTrip: true,
-                outboundFlight: outFlight,
-                returnFlight: retFlight,
-                outboundTierName: roundTripFares.outboundTier.name.split('/')[0].trim(),
-                returnTierName: roundTripFares.returnTier.name.split('/')[0].trim(),
-              });
-            } else {
-              const singleFlight = flightForFareModal.flight || flightForFareModal;
-              onSelectFlightOrStayForCheckout({
-                title: `${singleFlight.airline} ${singleFlight.flightNo} (${fareTier.name})`,
-                code: singleFlight.id,
-                depTime: singleFlight.depTime,
-                arrTime: singleFlight.arrTime,
-                duration: singleFlight.duration,
-                priceInr: finalPriceInr,
-                category: 'flights',
-                airline: singleFlight.airline,
-                flightNo: singleFlight.flightNo,
-                cabinClass: currentCabinClass || 'Economy',
-                roomType: fareTier.name,
-                fromCity: `${currentFromCity.city} (${currentFromCity.code})`,
-                toCity: `${currentToCity.city} (${currentToCity.code})`,
-                travellers: currentTravellers,
-                isRoundTrip: false,
-              });
-            }
-            setFlightForFareModal(null);
-          }}
-          onClose={() => setFlightForFareModal(null)}
-        />
       )}
 
       {/* Interactive TripYeah Live Fare & Availability Calendar Modal */}

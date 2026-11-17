@@ -503,18 +503,6 @@ export const PROMO_OFFERS: PromoOffer[] = [
     validUntil: 'Valid through 31 Oct 2026',
   },
   {
-    id: 'offer-holidays',
-    category: 'holidays',
-    label: 'Holidays',
-    subLabel: 'Up to',
-    discountHeadline: '50% OFF',
-    code: 'HOLIDAY50',
-    discountPercent: 25,
-    maxDiscountInr: 12500,
-    description: 'All-inclusive flight + hotel + private transfer holiday bundles for families and couples.',
-    validUntil: 'Valid through 31 Oct 2026',
-  },
-  {
     id: 'offer-experiences',
     category: 'experiences',
     label: 'Attractions',
@@ -548,13 +536,6 @@ export const PLATFORM_SERVICES: {
     subtitle: 'Best stays worldwide',
     image: ASSETS.singapore,
     accentColor: 'from-amber-500 to-orange-600',
-  },
-  {
-    id: 'holidays',
-    title: 'Holidays',
-    subtitle: 'Curated packages & tours',
-    image: ASSETS.bali,
-    accentColor: 'from-emerald-500 to-teal-600',
   },
   {
     id: 'experiences',

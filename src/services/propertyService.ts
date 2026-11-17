@@ -31,18 +31,133 @@ export interface PropertyListing {
 
 const STORAGE_KEY = 'tripyeah_real_properties_v2';
 
+const INITIAL_SEED_PROPERTIES: PropertyListing[] = [
+  {
+    id: 'prop-zostel-goa',
+    name: 'Zostel Goa & Backpackers Social Haven',
+    category: 'hostel',
+    city: 'Goa',
+    state: 'Goa',
+    country: 'India',
+    address: 'Anjuna Beach Road, North Goa',
+    description: 'Vibrant beachside backpacker hostel with high-speed Wi-Fi, rooftop cafe, co-working desks, and live music evenings.',
+    photos: ['/public/assets/images/dest_goa_beach_1792241006825.jpg'],
+    roomType: 'Air Conditioned Deluxe Private Room',
+    basePriceInr: 899,
+    originalPriceInr: 1600,
+    rating: 4.7,
+    ratingCount: 840,
+    amenities: ['Free WiFi', 'Air Conditioning', 'Swimming Pool', 'Rooftop Cafe', 'Couple Friendly', 'Power Backup'],
+    availableRooms: 6,
+    checkInTime: '01:00 PM',
+    checkOutTime: '11:00 AM',
+    ownerName: 'Zostel Hospitality Desk',
+    ownerEmail: 'host@zostelgoa.com',
+    ownerPhone: '+91 98230 45678',
+    status: 'approved',
+    createdAt: new Date().toISOString(),
+    hotelMode: 'overnight',
+    badge: 'Cheapest Deal · Backpacker Top Pick',
+    verifiedBy: 'TripYeah Admin Verification Desk',
+  },
+  {
+    id: 'prop-goa-palms',
+    name: 'Goa Palms Heritage Boutique Resort & Pool',
+    category: 'resort',
+    city: 'Goa',
+    state: 'Goa',
+    country: 'India',
+    address: 'Calangute - Baga Circle, North Goa',
+    description: 'Charming Portuguese heritage boutique resort with outdoor swimming pool, complimentary buffet breakfast, and lush tropical gardens.',
+    photos: ['/public/assets/images/dest_bali_temple_1790774699717.jpg'],
+    roomType: 'Deluxe Garden & Pool View Room',
+    basePriceInr: 1950,
+    originalPriceInr: 3200,
+    rating: 4.8,
+    ratingCount: 620,
+    amenities: ['Free WiFi', 'Swimming Pool', 'Complimentary Breakfast', 'Air Conditioning', 'Bar & Lounge', 'Spa'],
+    availableRooms: 8,
+    checkInTime: '02:00 PM',
+    checkOutTime: '11:00 AM',
+    ownerName: 'Goa Palms Management',
+    ownerEmail: 'reservations@goapalms.in',
+    ownerPhone: '+91 98221 67890',
+    status: 'approved',
+    createdAt: new Date().toISOString(),
+    hotelMode: 'overnight',
+    badge: 'Best Value · 40% Off',
+    verifiedBy: 'TripYeah Admin Verification Desk',
+  },
+  {
+    id: 'prop-casa-bella',
+    name: 'Casa Bella Seaview Private Pool Villa',
+    category: 'villa',
+    city: 'Goa',
+    state: 'Goa',
+    country: 'India',
+    address: 'Candolim Beach Promenade, North Goa',
+    description: 'Exclusive 2BHK luxury beachfront villa with private infinity plunge pool, personal butler, and panoramic Arabian Sea sunset views.',
+    photos: ['/public/assets/images/dest_maldives_resort_1792241008307.jpg'],
+    roomType: '2BHK Luxury Villa with Private Infinity Plunge Pool',
+    basePriceInr: 4499,
+    originalPriceInr: 7200,
+    rating: 4.9,
+    ratingCount: 310,
+    amenities: ['Private Pool', 'Direct Beach Access', 'Free WiFi', 'Chef on Demand', 'Air Conditioning', 'Kitchenette'],
+    availableRooms: 2,
+    checkInTime: '02:00 PM',
+    checkOutTime: '12:00 PM',
+    ownerName: 'Casa Bella Estates',
+    ownerEmail: 'villas@casabellagoa.com',
+    ownerPhone: '+91 98110 23456',
+    status: 'approved',
+    createdAt: new Date().toISOString(),
+    hotelMode: 'villas',
+    badge: 'Exclusive Villa · Private Pool',
+    verifiedBy: 'TripYeah Admin Verification Desk',
+  },
+  {
+    id: 'prop-taj-exotica',
+    name: 'Taj Exotica Resort & Spa Goa (5★ Luxury Icon)',
+    category: 'resort',
+    city: 'Goa',
+    state: 'Goa',
+    country: 'India',
+    address: 'Benaulim Beach, South Goa',
+    description: 'Mediterranean-inspired 56-acre luxury beachfront resort with private beach cabanas, Jiva Ayurvedic spa, and world-class dining.',
+    photos: ['/public/assets/images/hero_alpine_lakeside_1790774682097.jpg'],
+    roomType: 'Premium Ocean-Facing Heritage Suite',
+    basePriceInr: 11800,
+    originalPriceInr: 17500,
+    rating: 4.96,
+    ratingCount: 1540,
+    amenities: ['Private Beach', 'Olympic Size Pool', 'Jiva Spa', 'Free High Speed WiFi', 'Tennis Court', 'Valet Parking'],
+    availableRooms: 12,
+    checkInTime: '02:00 PM',
+    checkOutTime: '12:00 PM',
+    ownerName: 'IHCL Taj Hotels',
+    ownerEmail: 'exotica.goa@tajhotels.com',
+    ownerPhone: '+91 832 668 3333',
+    status: 'approved',
+    createdAt: new Date().toISOString(),
+    hotelMode: 'overnight',
+    badge: 'TripYeah Luxe · 5★ Icon',
+    verifiedBy: 'TripYeah Admin Verification Desk',
+  },
+];
+
 // In-memory cache for fast UI updates
 let cachedProperties: PropertyListing[] | null = null;
 
 function loadLocalProperties(): PropertyListing[] {
-  if (cachedProperties !== null) {
+  if (cachedProperties !== null && cachedProperties.length > 0) {
     return cachedProperties;
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         cachedProperties = parsed;
         return parsed;
       }
@@ -50,8 +165,11 @@ function loadLocalProperties(): PropertyListing[] {
   } catch (e) {
     console.warn('Failed to parse local property listings:', e);
   }
-  cachedProperties = [];
-  return [];
+  cachedProperties = [...INITIAL_SEED_PROPERTIES];
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SEED_PROPERTIES));
+  } catch {}
+  return cachedProperties;
 }
 
 function saveLocalProperties(list: PropertyListing[]): void {
@@ -137,12 +255,15 @@ export async function fetchApprovedProperties(filters?: {
 
   if (filters?.city && filters.city.trim() !== '') {
     const qCity = filters.city.trim().toLowerCase();
-    approved = approved.filter(
+    const cityMatched = approved.filter(
       (p) =>
         p.city.toLowerCase().includes(qCity) ||
         qCity.includes(p.city.toLowerCase()) ||
         p.address.toLowerCase().includes(qCity)
     );
+    if (cityMatched.length > 0) {
+      approved = cityMatched;
+    }
   }
 
   if (filters?.category && filters.category !== 'all') {
@@ -151,15 +272,20 @@ export async function fetchApprovedProperties(filters?: {
 
   if (filters?.hotelMode) {
     if (filters.hotelMode === 'villas') {
-      approved = approved.filter((p) => p.category === 'villa' || p.category === 'homestay');
+      const villasOnly = approved.filter((p) => p.category === 'villa' || p.category === 'homestay');
+      if (villasOnly.length > 0) approved = villasOnly;
     } else if (filters.hotelMode === 'hostels') {
-      approved = approved.filter((p) => p.category === 'hostel');
+      const hostelsOnly = approved.filter((p) => p.category === 'hostel');
+      if (hostelsOnly.length > 0) approved = hostelsOnly;
     }
   }
 
   if (filters?.maxPrice && filters.maxPrice > 0) {
     approved = approved.filter((p) => p.basePriceInr <= filters.maxPrice!);
   }
+
+  // Always enforce lowest price first by default
+  approved.sort((a, b) => a.basePriceInr - b.basePriceInr);
 
   return approved;
 }

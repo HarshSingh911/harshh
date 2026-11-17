@@ -565,7 +565,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support' || activePage === 'hostels') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support' || activePage === 'hostels' || ((activePage === 'search-results' || activePage === 'checkout') && ((activeCategory as string) === 'flights' || (activeCategory as string) === 'hotels' || (activeCategory as string) === 'cabs')) || activePage === 'hotel-details') ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -710,8 +710,7 @@ export default function App() {
                 return;
               }
               const isRT = Boolean(
-                item.isRoundTrip ??
-                (tripType === 'round-trip' || (tripType === 'dummy-flights' && dummyTripType === 'round-trip'))
+                item.isRoundTrip ?? (tripType === 'round-trip')
               );
               setCheckoutItem({
                 ...item,
