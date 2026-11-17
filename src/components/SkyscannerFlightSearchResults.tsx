@@ -31,6 +31,7 @@ import {
   Minus,
   RefreshCw,
   Activity,
+  Search,
 } from 'lucide-react';
 import {
   CityOption,
@@ -790,8 +791,10 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     if (isDraftRoundTrip && draftRetDate < newD) {
       const newR = shiftDate(newD, 3);
       setDraftRetDate(newR);
-      setAppliedRetDate(newR);
-      onChangeReturnDate?.(newR);
+      if (isAppliedRoundTrip) {
+        setAppliedRetDate(newR);
+        onChangeReturnDate?.(newR);
+      }
     }
   };
 
@@ -801,8 +804,10 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     const targetBase = draftRetDate || shiftDate(draftDepDate, 4);
     const newR = shiftDate(targetBase, -1, draftDepDate);
     setDraftRetDate(newR);
-    setAppliedRetDate(newR);
-    onChangeReturnDate?.(newR);
+    if (isAppliedRoundTrip) {
+      setAppliedRetDate(newR);
+      onChangeReturnDate?.(newR);
+    }
   };
 
   const handleNextReturn = (e: React.MouseEvent) => {
@@ -811,8 +816,10 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     const targetBase = draftRetDate || shiftDate(draftDepDate, 4);
     const newR = shiftDate(targetBase, 1);
     setDraftRetDate(newR);
-    setAppliedRetDate(newR);
-    onChangeReturnDate?.(newR);
+    if (isAppliedRoundTrip) {
+      setAppliedRetDate(newR);
+      onChangeReturnDate?.(newR);
+    }
   };
 
   // Filtered & Sorted Flights (uses applied search state only)
@@ -915,10 +922,50 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     onChangeToCity?.(nextTo);
   };
 
+  const getCabinMultiplier = (cabin: string): number => {
+    switch (cabin) {
+      case 'Premium Eco':
+        return 1.45;
+      case 'Business':
+        return 2.4;
+      case 'First Class':
+        return 3.5;
+      default:
+        return 1;
+    }
+  };
+
+  const hasPendingHeaderChange =
+    draftTravellers !== appliedTravellers ||
+    draftCabinClass !== appliedCabinClass ||
+    draftTripType !== appliedTripType;
+
+  const handleApplyTravellerSearch = () => {
+    setOpenTravellersDropdown(false);
+    setOpenCityPicker(null);
+    setOpenCalendarDropdown(null);
+
+    setAppliedTripType(draftTripType);
+    setAppliedFromCity(draftFromCity);
+    setAppliedToCity(draftToCity);
+    setAppliedDepDate(draftDepDate);
+    setAppliedRetDate(draftRetDate);
+    setAppliedTravellers(draftTravellers);
+    setAppliedCabinClass(draftCabinClass);
+    setAppliedDirectOnly(draftDirectOnly);
+
+    onChangeTripType?.(draftTripType);
+    onChangeReturnDate?.(draftRetDate);
+    onChangeTravellers?.(draftTravellers, draftCabinClass);
+    fetchLiveFlightsData(draftFromCity.code, draftToCity.code, draftDepDate);
+  };
+
   const handleSelectFlight = (flight: SkyscannerFlight, returnFlight?: SkyscannerFlight) => {
-    const totalFare = returnFlight
-      ? (flight.priceInr + returnFlight.priceInr) * appliedTravellers
-      : flight.priceInr * appliedTravellers;
+    const cabinMult = getCabinMultiplier(appliedCabinClass);
+    const baseFare = returnFlight
+      ? flight.priceInr + returnFlight.priceInr
+      : flight.priceInr;
+    const totalFare = Math.round(baseFare * cabinMult) * appliedTravellers;
 
     const itemTitle = returnFlight
       ? `${flight.airline} (${flight.flightNo}) + ${returnFlight.airline} (${returnFlight.flightNo})`
@@ -948,11 +995,14 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
 
   // Best / Cheapest / Fastest values for top summary tabs
   const summaryMetrics = useMemo(() => {
+    const cabinMult = getCabinMultiplier(appliedCabinClass);
+    const scaleFare = (baseInr: number) => Math.round(baseInr * cabinMult) * appliedTravellers;
+
     if (filteredFlights.length === 0) {
       return {
-        best: { price: 3850, duration: '2h 15m avg' },
-        cheapest: { price: 3299, duration: '2h 20m avg' },
-        fastest: { price: 4120, duration: '2h 10m avg' },
+        best: { price: scaleFare(3850), duration: '2h 15m avg' },
+        cheapest: { price: scaleFare(3299), duration: '2h 20m avg' },
+        fastest: { price: scaleFare(4120), duration: '2h 10m avg' },
       };
     }
     const cheapestFlight = [...filteredFlights].sort((a, b) => a.priceInr - b.priceInr)[0];
@@ -960,11 +1010,11 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     const bestFlight = filteredFlights.find((f) => f.isPopular) || filteredFlights[0];
 
     return {
-      best: { price: bestFlight.priceInr, duration: bestFlight.duration },
-      cheapest: { price: cheapestFlight.priceInr, duration: cheapestFlight.duration },
-      fastest: { price: fastestFlight.priceInr, duration: fastestFlight.duration },
+      best: { price: scaleFare(bestFlight.priceInr), duration: bestFlight.duration },
+      cheapest: { price: scaleFare(cheapestFlight.priceInr), duration: cheapestFlight.duration },
+      fastest: { price: scaleFare(fastestFlight.priceInr), duration: fastestFlight.duration },
     };
-  }, [filteredFlights]);
+  }, [filteredFlights, appliedCabinClass, appliedTravellers]);
 
   return (
     <div className="bg-[#f1f5f9] min-h-screen text-slate-800 pb-20 font-sans">
@@ -982,8 +1032,6 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                   type="button"
                   onClick={() => {
                     setDraftTripType('one-way');
-                    setAppliedTripType('one-way');
-                    onChangeTripType?.('one-way');
                   }}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     draftTripType === 'one-way'
@@ -997,13 +1045,9 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                   type="button"
                   onClick={() => {
                     setDraftTripType('round-trip');
-                    setAppliedTripType('round-trip');
-                    onChangeTripType?.('round-trip');
                     if (!draftRetDate || draftRetDate <= draftDepDate) {
                       const nextRet = shiftDate(draftDepDate, 4);
                       setDraftRetDate(nextRet);
-                      setAppliedRetDate(nextRet);
-                      onChangeReturnDate?.(nextRet);
                     }
                   }}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
@@ -1044,8 +1088,6 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                           onClick={() => {
                             const nextCount = Math.max(1, draftTravellers - 1);
                             setDraftTravellers(nextCount);
-                            setAppliedTravellers(nextCount);
-                            onChangeTravellers?.(nextCount, draftCabinClass);
                           }}
                           className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
                         >
@@ -1057,8 +1099,6 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                           onClick={() => {
                             const nextCount = Math.min(9, draftTravellers + 1);
                             setDraftTravellers(nextCount);
-                            setAppliedTravellers(nextCount);
-                            onChangeTravellers?.(nextCount, draftCabinClass);
                           }}
                           className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
                         >
@@ -1076,8 +1116,6 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                             type="button"
                             onClick={() => {
                               setDraftCabinClass(c);
-                              setAppliedCabinClass(c);
-                              onChangeTravellers?.(draftTravellers, c);
                               setOpenTravellersDropdown(false);
                             }}
                             className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors cursor-pointer ${
@@ -1095,6 +1133,21 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                   </>
                 )}
               </div>
+
+              {/* Compact Icon-Only Search Button right after Travellers / Cabin Class */}
+              <button
+                type="button"
+                onClick={handleApplyTravellerSearch}
+                title="Search flights with selected trip type, travelers & cabin class"
+                aria-label="Search flights"
+                className={`w-[34px] h-[34px] rounded-xl flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 ${
+                  hasPendingHeaderChange
+                    ? 'bg-white text-[#05203c] shadow-md ring-2 ring-sky-300/80 hover:bg-blue-50 scale-105'
+                    : 'bg-white hover:bg-blue-50 text-[#05203c] shadow-xs border border-white/80'
+                }`}
+              >
+                <Search className={`w-3.5 h-3.5 stroke-[2.25] ${isLiveLoading ? 'animate-pulse' : ''}`} />
+              </button>
             </div>
 
             {/* Direct Flights Only Checkbox */}
@@ -1113,205 +1166,231 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
             </label>
           </div>
 
-          {/* Glass Outer Search Strip matching One Way / Round Trip container */}
-          <div className="rounded-2xl p-1.5 bg-white/10 border border-white/15 backdrop-blur-xs shadow-lg">
-            <div className="flex flex-col lg:flex-row items-stretch gap-1.5">
-              {/* Route: FROM & TO with overlapping Swap button */}
-              <div className="flex flex-col sm:flex-row items-stretch gap-1.5 relative lg:flex-[2] min-w-0">
-              {/* FROM */}
-              <div className="relative flex-1 min-w-0">
-                <div
-                  onClick={() => setOpenCityPicker(openCityPicker === 'from' ? null : 'from')}
-                  className="px-4 py-2 rounded-xl bg-white hover:bg-blue-50/95 border border-white/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center shadow-md"
-                >
-                  <div className="text-[11px] font-semibold text-slate-500 leading-none">From</div>
-                  <div className="flex items-baseline gap-1.5 mt-1 truncate">
-                    <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftFromCity.city}</span>
-                    <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{draftFromCity.code}</span>
-                  </div>
-                </div>
-
-                <AirportAutocompleteDropdown
-                  label="From"
-                  selectedCity={draftFromCity}
-                  onSelectCity={(c) => {
-                    setDraftFromCity(c);
-                    setAppliedFromCity(c);
-                    onChangeFromCity?.(c);
-                    setOpenCityPicker(null);
-                  }}
-                  isOpen={openCityPicker === 'from'}
-                  onClose={() => setOpenCityPicker(null)}
-                  align="left"
-                />
-              </div>
-
-              {/* Overlapping Swap Button */}
-              <div className="shrink-0 flex items-center justify-center sm:-mx-3.5 z-10">
-                <button
-                  type="button"
-                  onClick={handleSwapCities}
-                  title="Swap From and To"
-                  aria-label="Swap From and To cities"
-                  className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-blue-400 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
-                >
-                  <ArrowLeftRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* TO */}
-              <div className="relative flex-1 min-w-0">
-                <div
-                  onClick={() => setOpenCityPicker(openCityPicker === 'to' ? null : 'to')}
-                  className="px-4 py-2 rounded-xl bg-white hover:bg-blue-50/95 border border-white/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center sm:pl-5 shadow-md"
-                >
-                  <div className="text-[11px] font-semibold text-slate-500 leading-none">To</div>
-                  <div className="flex items-baseline gap-1.5 mt-1 truncate">
-                    <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftToCity.city}</span>
-                    <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{draftToCity.code}</span>
-                  </div>
-                </div>
-
-                <AirportAutocompleteDropdown
-                  label="To"
-                  selectedCity={draftToCity}
-                  onSelectCity={(c) => {
-                    setDraftToCity(c);
-                    setAppliedToCity(c);
-                    onChangeToCity?.(c);
-                    setOpenCityPicker(null);
-                  }}
-                  isOpen={openCityPicker === 'to'}
-                  onClose={() => setOpenCityPicker(null)}
-                  align="left"
-                />
-              </div>
-            </div>
-
-            {/* Dates: Departure (+ Return in Round Trip) — equal 1:1 width with From and To */}
-            <div
-              className={`flex flex-col sm:flex-row items-stretch gap-1.5 min-w-0 ${
-                isDraftRoundTrip ? 'lg:flex-[2]' : 'lg:flex-1'
-              }`}
-            >
-              {/* Departure Date */}
-              <div className="relative flex-1 min-w-0">
-                <div className="flex items-stretch gap-1.5 h-[58px]">
-                  <button
-                    type="button"
-                    onClick={handlePrevDeparture}
-                    title="Previous Day"
-                    aria-label="Previous departure day"
-                    className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenCalendarDropdown(openCalendarDropdown === 'departure' ? null : 'departure');
-                    }}
-                    className="flex-1 min-w-0 h-[58px] px-3 rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 transition-colors cursor-pointer select-none flex items-center justify-center gap-2 hover:text-blue-600 shadow-md"
-                    title="Click to open calendar"
-                  >
-                    <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
-                      {formatDisplayDate(draftDepDate)}
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleNextDeparture}
-                    title="Next Day"
-                    aria-label="Next departure day"
-                    className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {openCalendarDropdown === 'departure' && (
-                  <NormalCalendarDropdown
-                    selectedDate={draftDepDate}
-                    minDate="2026-01-01"
-                    onSelectDate={(newDate) => {
-                      setDraftDepDate(newDate);
-                      setAppliedDepDate(newDate);
-                      onChangeDepartureDate?.(newDate);
-                      if (isDraftRoundTrip && draftRetDate < newDate) {
-                        const nextRet = shiftDate(newDate, 3);
-                        setDraftRetDate(nextRet);
-                        setAppliedRetDate(nextRet);
-                        onChangeReturnDate?.(nextRet);
-                      }
-                      setOpenCalendarDropdown(null);
-                    }}
-                    onClose={() => setOpenCalendarDropdown(null)}
-                    alignRight={false}
-                  />
-                )}
-              </div>
-
-              {/* Return Date (shown in Round Trip mode) */}
-              {isDraftRoundTrip && (
+          {/* Single Unified Greyish-Blue Search Box (Only Arrow Buttons Have Boxes) */}
+          <div className="rounded-2xl p-1.5 bg-[#cfdce9] border border-white/30 shadow-lg">
+            <div className="flex flex-col lg:flex-row items-stretch">
+              {/* Route: FROM & TO with Swap button */}
+              <div className="flex flex-col sm:flex-row items-stretch relative lg:flex-[2] min-w-0">
+                {/* FROM */}
                 <div className="relative flex-1 min-w-0">
-                  <div className="flex items-stretch gap-1.5 h-[58px]">
+                  <div
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      setOpenCalendarDropdown(null);
+                      setOpenTravellersDropdown(false);
+                      setOpenCityPicker(openCityPicker === 'from' ? null : 'from');
+                    }}
+                    className="px-4 py-2 rounded-xl hover:bg-white/35 cursor-pointer transition-colors h-[56px] flex flex-col justify-center"
+                  >
+                    <div className="text-[11px] font-semibold text-slate-600 leading-none">From</div>
+                    <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                      <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftFromCity.city}</span>
+                      <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{draftFromCity.code}</span>
+                    </div>
+                  </div>
+
+                  <AirportAutocompleteDropdown
+                    label="From"
+                    selectedCity={draftFromCity}
+                    onSelectCity={(c) => {
+                      setDraftFromCity(c);
+                      setAppliedFromCity(c);
+                      onChangeFromCity?.(c);
+                      setOpenCityPicker(null);
+                    }}
+                    isOpen={openCityPicker === 'from'}
+                    onClose={() => setOpenCityPicker(null)}
+                    align="left"
+                  />
+                </div>
+
+                {/* Swap Button (no divider line behind it) */}
+                <div className="shrink-0 flex items-center justify-center sm:-mx-3.5 z-10 my-0.5 sm:my-0">
+                  <button
+                    type="button"
+                    onClick={handleSwapCities}
+                    title="Swap From and To"
+                    aria-label="Swap From and To cities"
+                    className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-slate-300/80 text-slate-700 hover:text-blue-700 flex items-center justify-center transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* TO */}
+                <div className="relative flex-1 min-w-0">
+                  <div
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      setOpenCalendarDropdown(null);
+                      setOpenTravellersDropdown(false);
+                      setOpenCityPicker(openCityPicker === 'to' ? null : 'to');
+                    }}
+                    className="px-4 py-2 rounded-xl hover:bg-white/35 cursor-pointer transition-colors h-[56px] flex flex-col justify-center sm:pl-6"
+                  >
+                    <div className="text-[11px] font-semibold text-slate-600 leading-none">To</div>
+                    <div className="flex items-baseline gap-1.5 mt-1 truncate">
+                      <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftToCity.city}</span>
+                      <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{draftToCity.code}</span>
+                    </div>
+                  </div>
+
+                  <AirportAutocompleteDropdown
+                    label="To"
+                    selectedCity={draftToCity}
+                    onSelectCity={(c) => {
+                      setDraftToCity(c);
+                      setAppliedToCity(c);
+                      onChangeToCity?.(c);
+                      setOpenCityPicker(null);
+                    }}
+                    isOpen={openCityPicker === 'to'}
+                    onClose={() => setOpenCityPicker(null)}
+                    align="left"
+                  />
+                </div>
+              </div>
+
+              {/* Divider between Route and Dates */}
+              <div className="h-px lg:h-auto lg:w-px bg-slate-400/45 mx-2 my-1 lg:my-2 lg:mx-1.5 shrink-0" />
+
+              {/* Dates: Departure (+ Return in Round Trip) — equal 1:1 width with From and To */}
+              <div
+                className={`flex flex-col sm:flex-row items-stretch min-w-0 ${
+                  isDraftRoundTrip ? 'lg:flex-[2]' : 'lg:flex-1'
+                }`}
+              >
+                {/* Departure Date */}
+                <div className="relative flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 h-[56px] px-1">
                     <button
                       type="button"
-                      onClick={handlePrevReturn}
+                      onClick={handlePrevDeparture}
                       title="Previous Day"
-                      aria-label="Previous return day"
-                      className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
+                      aria-label="Previous departure day"
+                      className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
 
                     <button
                       type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenCalendarDropdown(openCalendarDropdown === 'return' ? null : 'return');
+                        setOpenCityPicker(null);
+                        setOpenTravellersDropdown(false);
+                        setOpenCalendarDropdown(openCalendarDropdown === 'departure' ? null : 'departure');
                       }}
-                      className="flex-1 min-w-0 h-[58px] px-3 rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 transition-colors cursor-pointer select-none flex items-center justify-center gap-2 hover:text-blue-600 shadow-md"
+                      className="flex-1 min-w-0 h-full px-2 rounded-xl hover:bg-white/35 transition-colors cursor-pointer select-none flex items-center justify-center gap-2 text-slate-900 hover:text-[#072a4f]"
                       title="Click to open calendar"
                     >
-                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                      <Calendar className="w-4 h-4 text-[#072a4f] shrink-0" />
                       <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
-                        {formatDisplayDate(draftRetDate)}
+                        {formatDisplayDate(draftDepDate)}
                       </span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={handleNextReturn}
+                      onClick={handleNextDeparture}
                       title="Next Day"
-                      aria-label="Next return day"
-                      className="w-10 h-[58px] rounded-xl border border-white/80 bg-white hover:bg-blue-50/95 hover:border-blue-300 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-md"
+                      aria-label="Next departure day"
+                      className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
 
-                  {openCalendarDropdown === 'return' && (
+                  {openCalendarDropdown === 'departure' && (
                     <NormalCalendarDropdown
-                      selectedDate={draftRetDate}
-                      minDate={draftDepDate}
+                      selectedDate={draftDepDate}
+                      minDate="2026-01-01"
                       onSelectDate={(newDate) => {
-                        setDraftRetDate(newDate);
-                        setAppliedRetDate(newDate);
-                        onChangeReturnDate?.(newDate);
+                        setDraftDepDate(newDate);
+                        setAppliedDepDate(newDate);
+                        onChangeDepartureDate?.(newDate);
+                        if (isDraftRoundTrip && draftRetDate < newDate) {
+                          const nextRet = shiftDate(newDate, 3);
+                          setDraftRetDate(nextRet);
+                          if (isAppliedRoundTrip) {
+                            setAppliedRetDate(nextRet);
+                            onChangeReturnDate?.(nextRet);
+                          }
+                        }
                         setOpenCalendarDropdown(null);
                       }}
                       onClose={() => setOpenCalendarDropdown(null)}
-                      alignRight={true}
+                      alignRight={false}
                     />
                   )}
                 </div>
-              )}
-            </div>
+
+                {/* Return Date (shown in Round Trip mode) */}
+                {isDraftRoundTrip && (
+                  <>
+                    <div className="h-px sm:h-auto sm:w-px bg-slate-400/45 mx-2 my-1 sm:my-2 sm:mx-1 shrink-0" />
+                    <div className="relative flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 h-[56px] px-1">
+                        <button
+                          type="button"
+                          onClick={handlePrevReturn}
+                          title="Previous Day"
+                          aria-label="Previous return day"
+                          className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCityPicker(null);
+                            setOpenTravellersDropdown(false);
+                            setOpenCalendarDropdown(openCalendarDropdown === 'return' ? null : 'return');
+                          }}
+                          className="flex-1 min-w-0 h-full px-2 rounded-xl hover:bg-white/35 transition-colors cursor-pointer select-none flex items-center justify-center gap-2 text-slate-900 hover:text-[#072a4f]"
+                          title="Click to open calendar"
+                        >
+                          <Calendar className="w-4 h-4 text-[#072a4f] shrink-0" />
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
+                            {formatDisplayDate(draftRetDate)}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleNextReturn}
+                          title="Next Day"
+                          aria-label="Next return day"
+                          className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {openCalendarDropdown === 'return' && (
+                        <NormalCalendarDropdown
+                          selectedDate={draftRetDate}
+                          minDate={draftDepDate}
+                          onSelectDate={(newDate) => {
+                            setDraftRetDate(newDate);
+                            if (isAppliedRoundTrip) {
+                              setAppliedRetDate(newDate);
+                              onChangeReturnDate?.(newDate);
+                            }
+                            setOpenCalendarDropdown(null);
+                          }}
+                          onClose={() => setOpenCalendarDropdown(null)}
+                          alignRight={true}
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1743,9 +1822,10 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                   const returnFlight = isAppliedRoundTrip
                     ? returnPool[idx % returnPool.length]
                     : undefined;
-                  const cardPrice = returnFlight
+                  const baseCardPrice = returnFlight
                     ? flight.priceInr + returnFlight.priceInr
                     : flight.priceInr;
+                  const cardPrice = Math.round(baseCardPrice * getCabinMultiplier(appliedCabinClass));
                   const airlineHeading =
                     returnFlight && returnFlight.airline !== flight.airline
                       ? `${flight.airline} and ${returnFlight.airline}`
@@ -1906,6 +1986,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                             </div>
                             <div className="text-xs text-slate-500 font-medium mt-1.5">
                               {appliedTravellers > 1 ? `Total for ${appliedTravellers} travelers` : 'Total for 1 traveler'}
+                              {appliedCabinClass && appliedCabinClass !== 'Economy' ? ` · ${appliedCabinClass}` : ''}
                             </div>
                             <div className="text-[11px] text-slate-400 mt-0.5">
                               {flight.providersCount} deals

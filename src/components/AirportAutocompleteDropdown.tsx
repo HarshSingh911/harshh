@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Database, Check, AlertCircle, Loader2, X } from 'lucide-react';
+import { Search, MapPin, Check, AlertCircle, Loader2, X } from 'lucide-react';
 import { CityOption, CITIES } from '../data/travelData';
 import { searchSupabaseAirports } from '../services/airportService';
-import { testSupabaseConnection, SupabaseConnectionStatus } from '../lib/supabase';
+import { testSupabaseConnection } from '../lib/supabase';
 
 interface AirportAutocompleteDropdownProps {
   label: string;
@@ -26,15 +26,42 @@ export const AirportAutocompleteDropdown: React.FC<AirportAutocompleteDropdownPr
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CityOption[]>(CITIES);
   const [loading, setLoading] = useState(false);
-  const [connStatus, setConnStatus] = useState<SupabaseConnectionStatus | null>(null);
   const [hasError, setHasError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Close when clicking anywhere outside the dropdown or pressing Escape
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutsideMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        onCloseRef.current();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   // Check connection on first open
   useEffect(() => {
     if (isOpen) {
       testSupabaseConnection().then((st) => {
-        setConnStatus(st);
         if (!st.connected && st.error) {
           setHasError(st.error);
         }
@@ -82,29 +109,13 @@ export const AirportAutocompleteDropdown: React.FC<AirportAutocompleteDropdownPr
 
   return (
     <div
+      ref={dropdownRef}
       data-dropdown-container="true"
       onClick={(e) => e.stopPropagation()}
       className={`absolute ${
         align === 'right' ? 'right-0' : 'left-0'
       } top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3 z-50 animate-in fade-in zoom-in-95 duration-150`}
     >
-      {/* Header with Title and Airport Network Status */}
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-slate-800">Select {label}</span>
-          <span className="text-[10px] text-slate-400">({isStation ? 'Rail/Air' : 'Airport'})</span>
-        </div>
-
-        {/* Airport count indicator */}
-        <div
-          title="Verified international & domestic airport directory"
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-          <span>{connStatus?.totalAirports ? `${connStatus.totalAirports.toLocaleString()} Airports` : '9,000+ Airports'}</span>
-        </div>
-      </div>
-
       {/* Search Input Box */}
       <div className="relative mb-2">
         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -113,7 +124,7 @@ export const AirportAutocompleteDropdown: React.FC<AirportAutocompleteDropdownPr
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search city, airport name, or code (e.g. DEL, JFK, Paris)..."
+          placeholder={label}
           className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white text-xs font-medium text-slate-900 placeholder:text-slate-400 border border-slate-200 focus:border-blue-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
         />
         {query && (

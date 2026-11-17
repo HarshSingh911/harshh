@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface NormalCalendarDropdownProps {
@@ -50,6 +50,30 @@ export const NormalCalendarDropdown: React.FC<NormalCalendarDropdownProps> = ({
   const initial = parseIso(selectedDate);
   const [viewMonth, setViewMonth] = useState<number>(initial.getMonth());
   const [viewYear, setViewYear] = useState<number>(initial.getFullYear());
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const handleOutsideMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (calendarRef.current && !calendarRef.current.contains(target)) {
+        onCloseRef.current();
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const minDateObj = parseIso(minDate);
   minDateObj.setHours(0, 0, 0, 0);
@@ -82,6 +106,7 @@ export const NormalCalendarDropdown: React.FC<NormalCalendarDropdownProps> = ({
 
   return (
     <div
+      ref={calendarRef}
       onClick={(e) => e.stopPropagation()}
       className={`absolute ${
         alignRight ? 'right-0' : 'left-0'
