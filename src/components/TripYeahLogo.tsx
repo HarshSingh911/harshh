@@ -31,17 +31,16 @@ export const TripYeahLogo: React.FC<TripYeahLogoProps> = ({
     <div className="inline-flex items-center select-none group transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
       <svg
         viewBox="0 0 1391 517"
-        className={`${className} overflow-visible block`}
+        className={`${className} overflow-visible block ${
+          isDarkHeader
+            ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+            : "drop-shadow-[0_1px_2px_rgba(11,37,89,0.12)]"
+        }`}
         xmlns="http://www.w3.org/2000/svg"
         shapeRendering="geometricPrecision"
         textRendering="geometricPrecision"
         aria-label="TripYehh"
         role="img"
-        style={{
-          filter: isDarkHeader
-            ? "drop-shadow(0 0 8px rgba(0, 245, 255, 0.45)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))"
-            : "drop-shadow(0 1px 2px rgba(11, 37, 89, 0.12))",
-        }}
       >
         <defs>
           {/* Luminous Neon Cyan Gradient for Yehh */}
@@ -79,7 +78,6 @@ export const TripYeahLogo: React.FC<TripYeahLogoProps> = ({
           <>
             {/* Sparkling star on soaring flight path */}
             <g transform="translate(545, 20) scale(0.75)">
-              <circle cx="0" cy="0" r="10" fill="#00F5FF" opacity="0.75" />
               <path
                 d="M 0 -22 Q 0 0 22 0 Q 0 0 0 22 Q 0 0 -22 0 Q 0 0 0 -22 Z"
                 fill="#FFFFFF"
@@ -89,7 +87,6 @@ export const TripYeahLogo: React.FC<TripYeahLogoProps> = ({
 
             {/* Radiant twinkle near the GPS pin marker */}
             <g transform="translate(935, 16) scale(0.55)">
-              <circle cx="0" cy="0" r="8" fill="#00F5FF" opacity="0.65" />
               <path
                 d="M 0 -18 Q 0 0 18 0 Q 0 0 0 18 Q 0 0 -18 0 Q 0 0 0 -18 Z"
                 fill="#FFFFFF"

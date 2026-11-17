@@ -375,7 +375,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   }}
                   className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer ${
                     isSelected
-                      ? 'bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white shadow-md shadow-blue-600/25'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
                       : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/75 hover:text-slate-900'
                   }`}
                 >
@@ -408,7 +408,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         onClick={() => onChangeTripType(tOpt.id)}
                         className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                           active
-                            ? 'bg-[#2563EB] text-white shadow-xs'
+                            ? 'bg-blue-600 text-white shadow-xs'
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
                         }`}
                       >
@@ -687,7 +687,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       setOpenDropdown(null);
                       onTriggerSearch();
                     }}
-                    className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
+                    className="px-5 sm:px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Search className="w-4 h-4 shrink-0" />
                     <span>{t('hero.searchFlights', 'Search Flights')}</span>
@@ -720,7 +720,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       }}
                       className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         trainMode === m.id
-                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
                       }`}
                     >
@@ -940,7 +940,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   <button
                     type="button"
                     onClick={onTriggerSearch}
-                    className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                    className="px-5 sm:px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Search className="w-4 h-4 shrink-0" />
                     <span>Search</span>
@@ -973,7 +973,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                           `PNR ${pnrInput || '2458916304'}: Train 22436 Vande Bharat Exp (${fromCity.stationCode} → ${toCity.stationCode}) · Coach C4, Berth 32 (Window) · Status: CNF (Confirmed)`
                         )
                       }
-                      className="px-6 py-3 rounded-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white font-semibold text-xs sm:text-sm shadow-md whitespace-nowrap cursor-pointer"
+                      className="px-6 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-sm whitespace-nowrap cursor-pointer transition-colors"
                     >
                       Check PNR Status
                     </button>
@@ -1008,7 +1008,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                           `${liveTrainNo} is running ON TIME · Last crossed Kota Jn 14 mins ago · Expected arrival at ${toCity.city} (${toCity.stationCode}) on Platform 3.`
                         )
                       }
-                      className="px-6 py-3 rounded-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white font-semibold text-xs sm:text-sm shadow-md whitespace-nowrap cursor-pointer"
+                      className="px-6 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-sm whitespace-nowrap cursor-pointer transition-colors"
                     >
                       Check Live Status
                     </button>
@@ -1052,7 +1052,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       }}
                       className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         hotelMode === m.id
-                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : m.id === 'hostels'
                           ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
@@ -1368,7 +1368,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       onTriggerSearch();
                     }
                   }}
-                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                  className="px-5 sm:px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
                   <span>{hotelMode === 'hostels' ? 'Search Hostels' : 'Search'}</span>
@@ -1431,7 +1431,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       }
                       className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         cabMode === cm.id
-                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
                       }`}
                     >
@@ -1768,7 +1768,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <button
                   type="button"
                   onClick={onTriggerSearch}
-                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                  className="px-5 sm:px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
                   <span>Search</span>
@@ -1990,7 +1990,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <button
                   type="button"
                   onClick={onTriggerSearch}
-                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                  className="px-5 sm:px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4 shrink-0" />
                   <span>Search</span>
@@ -2022,7 +2022,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       onClick={() => setExperienceTheme(cat)}
                       className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         experienceTheme === cat
-                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
                       }`}
                     >
@@ -2109,7 +2109,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 <button
                   type="button"
                   onClick={onTriggerSearch}
-                  className="px-5 sm:px-7 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#6D28D9] hover:brightness-105 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-all"
+                  className="px-5 sm:px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm md:text-base shadow-sm flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-all"
                 >
                   <Search className="w-4 h-4 shrink-0" />
                   <span>Search</span>
@@ -2204,7 +2204,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         onClick={() => setGiftAmount(amt)}
                         className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                           giftAmount === amt
-                            ? 'bg-[#2563EB] text-white border-blue-600 shadow-sm'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                             : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
