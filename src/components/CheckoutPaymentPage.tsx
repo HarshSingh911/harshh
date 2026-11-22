@@ -80,6 +80,15 @@ export interface CheckoutItem {
   trainClass?: string;
   hotelName?: string;
   hotelLocation?: string;
+  hotelImage?: string;
+  hotelStars?: number;
+  hotelRating?: number;
+  hotelReviews?: number;
+  hotelPropertyType?: string;
+  hotelLocality?: string;
+  hotelAmenities?: string[];
+  hotelPerks?: string;
+  hotelOriginalPriceInr?: number;
   roomType?: string;
   busOperator?: string;
   busType?: string;

@@ -1,29 +1,41 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-  Building2,
   ArrowLeft,
-  ShieldCheck,
+  ArrowRight,
+  Building2,
+  Calendar,
+  Camera,
+  Car,
+  Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Coffee,
+  Copy,
+  Dumbbell,
   ExternalLink,
+  FileText,
+  Globe,
+  Info,
+  MapPin,
+  Navigation,
+  ShieldCheck,
   Sparkles,
   Star,
-  Check,
-  Clock,
-  MapPin,
-  Utensils,
-  Wifi,
-  Coffee,
-  X,
-  Share2,
-  ArrowRight,
-  Info,
-  Calendar,
   Users,
-  Printer,
-  FileText,
+  Utensils,
+  Waves,
+  Wifi,
+  X,
 } from 'lucide-react';
-import { BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
+import { ASSETS, BookedTrip, CurrencyCode, formatPrice } from '../data/travelData';
 import { CheckoutItem } from './CheckoutPaymentPage';
+import { SafeImage } from './SafeImage';
+import hotelPoolImg from '../assets/images/hotel_gallery_exterior_pool_1795360066864.jpg';
+import hotelLobbyImg from '../assets/images/hotel_gallery_lobby_lounge_1795360057197.jpg';
+import hotelSuiteImg from '../assets/images/hotel_gallery_suite_interior_1795360052553.jpg';
+import hotelDiningImg from '../assets/images/hotel_gallery_dining_terrace_1795360101868.jpg';
 
 interface HotelBookingCheckoutPageProps {
   item: CheckoutItem;
@@ -34,45 +46,14 @@ interface HotelBookingCheckoutPageProps {
   onGoToTrips?: () => void;
 }
 
-export type HotelMealOptionId = 'room-only' | 'breakfast-included' | 'half-board' | 'free-cancellation';
+type HotelSectionId = 'overview' | 'deals' | 'location' | 'information' | 'amenities';
 
-interface HotelMealOption {
-  id: HotelMealOptionId;
-  name: string;
-  badge: string;
-  priceDelta: number;
-  description: string;
-}
-
-const HOTEL_MEAL_OPTIONS: HotelMealOption[] = [
-  {
-    id: 'room-only',
-    name: 'Room Only (EP)',
-    badge: 'Base Rate',
-    priceDelta: 0,
-    description: 'Includes air-conditioned room stay, high-speed Wi-Fi, and access to hotel swimming pool & fitness center.',
-  },
-  {
-    id: 'breakfast-included',
-    name: 'Free Breakfast Buffet Included (CP)',
-    badge: 'Most Popular',
-    priceDelta: 550,
-    description: 'Complimentary morning international and Indian breakfast buffet served daily at the all-day dining restaurant.',
-  },
-  {
-    id: 'half-board',
-    name: 'Breakfast + Dinner Included (MAP)',
-    badge: 'Best Value',
-    priceDelta: 1250,
-    description: 'Includes lavish breakfast buffet plus chef-curated 4-course dinner buffet every evening of your stay.',
-  },
-  {
-    id: 'free-cancellation',
-    name: '100% Refundable Flexible Rate',
-    badge: 'Zero Risk',
-    priceDelta: 300,
-    description: 'Free cancellation with 100% full refund up to 24 hours prior to 02:00 PM check-in time.',
-  },
+const SECTION_TABS: { id: HotelSectionId; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'deals', label: 'Deals' },
+  { id: 'location', label: 'Location' },
+  { id: 'information', label: 'Information' },
+  { id: 'amenities', label: 'Amenities' },
 ];
 
 interface HotelProviderDeal {
@@ -82,7 +63,7 @@ interface HotelProviderDeal {
   logoText: string;
   rating: number;
   reviewsCount: string;
-  perks: string;
+  note: string;
   priceDelta: number;
   isCheapest?: boolean;
   isOfficial?: boolean;
@@ -98,29 +79,73 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
 }) => {
   const hotelName = item.hotelName || item.title || 'Grand Luxury Resort & Spa';
   const location = item.hotelLocation || item.toCity || 'City Center, Near Prime Landmarks';
-  const roomType = item.roomType || 'Deluxe King Room (Air Conditioned, City View)';
-  const checkInDate = item.travelDate || '15 Oct 2026';
-  const checkOutDate = item.returnDate || '18 Oct 2026';
+  const locality = item.hotelLocality || location.split(',')[0]?.trim() || 'Prime District';
+  const propertyType = item.hotelPropertyType || 'Hotel & Resort';
+  const stars = item.hotelStars || 5;
+  const rating = item.hotelRating || 4.8;
+  const reviewsCount = item.hotelReviews || 1240;
+  const checkInDate = item.travelDate || '2026-10-15';
+  const checkOutDate = item.returnDate || '2026-10-18';
   const guests = Math.max(1, item.travellers || 2);
   const basePrice = Math.max(1200, item.priceInr || 4850);
 
-  // Selected Option
-  const [selectedOptionId, setSelectedOptionId] = useState<HotelMealOptionId>('breakfast-included');
+  // Active anchor navigation tab
+  const [activeSection, setActiveSection] = useState<HotelSectionId>('overview');
 
-  // Redirection modal state for "Go to site"
+  // Deals sorting
+  const [dealsSort, setDealsSort] = useState<'price' | 'rating'>('price');
+
+  // Photo Lightbox state
+  const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
+
+  // Partner handoff modal state
   const [redirectingProvider, setRedirectingProvider] = useState<HotelProviderDeal | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState<boolean>(false);
   const [confirmedBookingPnr, setConfirmedBookingPnr] = useState<string>('');
 
-  const activeOption = useMemo(() => {
-    return HOTEL_MEAL_OPTIONS.find((m) => m.id === selectedOptionId) || HOTEL_MEAL_OPTIONS[1];
-  }, [selectedOptionId]);
+  // Build curated hotel photo gallery (leads with the clicked hotel's own photo if available)
+  const galleryPhotos = useMemo(() => {
+    const baseGallery = [
+      {
+        url: hotelPoolImg,
+        caption: `${hotelName} — Exterior & Infinity Pool Deck`,
+      },
+      {
+        url: hotelLobbyImg,
+        caption: 'Grand Reception Lobby & Guest Lounge',
+      },
+      {
+        url: hotelSuiteImg,
+        caption: 'Signature Guest Interior & Balcony View',
+      },
+      {
+        url: hotelDiningImg,
+        caption: 'Courtyard Dining & Evening Terrace',
+      },
+      {
+        url: ASSETS.maldives,
+        caption: 'Scenic Surroundings & Relaxation Grounds',
+      },
+    ];
 
-  const activeOptionDelta = activeOption.priceDelta;
+    if (item.hotelImage && item.hotelImage !== hotelPoolImg) {
+      return [
+        {
+          url: item.hotelImage,
+          caption: `${hotelName} — Property Exterior & View`,
+        },
+        ...baseGallery.slice(0, 4),
+        baseGallery[4],
+      ];
+    }
 
-  // Comparison Sites / Provider Deals list (Trivago / Google Hotels style)
+    return baseGallery;
+  }, [item.hotelImage, hotelName]);
+
+  // Comparison Sites / Provider Deals list
   const providerDeals: HotelProviderDeal[] = useMemo(() => {
-    return [
+    const list: HotelProviderDeal[] = [
       {
         id: 'tripyeah-hotels-direct',
         name: 'TripYeah Hotels Direct',
@@ -128,19 +153,9 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: 'TY',
         rating: 4.9,
         reviewsCount: '24,200+ reviews',
-        perks: 'Best Price Guarantee · Instant Voucher · Zero Convenience Fee · Dedicated 24/7 Concierge',
+        note: 'Best price guarantee · Instant confirmation · Choose room & meal options on site',
         priceDelta: 0,
         isCheapest: true,
-      },
-      {
-        id: 'booking-com',
-        name: 'Booking.com',
-        logoBg: 'bg-[#003580]',
-        logoText: 'BK',
-        rating: 4.8,
-        reviewsCount: '65,000+ reviews',
-        perks: 'Genius 10% Member Rate · Pay at Hotel Available · Free Cancellation Included',
-        priceDelta: 120,
       },
       {
         id: 'agoda',
@@ -149,8 +164,18 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: 'AG',
         rating: 4.7,
         reviewsCount: '42,000+ reviews',
-        perks: 'Agoda VIP Price · Lowest Rate Match Guarantee · Instant Email Confirmation',
+        note: 'Member-only nightly rate · Instant voucher · Select room & add-ons on partner site',
         priceDelta: 80,
+      },
+      {
+        id: 'booking-com',
+        name: 'Booking.com',
+        logoBg: 'bg-[#003580]',
+        logoText: 'BK',
+        rating: 4.8,
+        reviewsCount: '65,000+ reviews',
+        note: 'Flexible booking options · Verified guest reviews · Choose room category on site',
+        priceDelta: 120,
       },
       {
         id: 'makemytrip-hotels',
@@ -159,7 +184,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: 'MMT',
         rating: 4.7,
         reviewsCount: '38,500+ reviews',
-        perks: 'MMT Assured Property · Free Room Upgrade if Available · On-Stay Support',
+        note: 'Verified stay partner · 24/7 travel helpline · Customize stay options during booking',
         priceDelta: 160,
       },
       {
@@ -169,7 +194,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: hotelName.substring(0, 2).toUpperCase(),
         rating: 4.9,
         reviewsCount: 'Property Direct',
-        perks: 'Direct Property Reservation · Early Check-in Priority · Loyalty Points Accrual',
+        note: 'Direct property reservation · Loyalty benefits · Full inventory on official website',
         priceDelta: 190,
         isOfficial: true,
       },
@@ -180,7 +205,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: 'EXP',
         rating: 4.6,
         reviewsCount: '31,000+ reviews',
-        perks: 'Expedia Member Price · Earn OneKey Cash · Zero Cancellation Fee up to 48h',
+        note: 'OneKey member savings · Transparent total pricing · Select room on checkout',
         priceDelta: 210,
       },
       {
@@ -190,7 +215,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: 'H.C',
         rating: 4.6,
         reviewsCount: '19,400+ reviews',
-        perks: 'Collect OneKey Rewards · Price Match Guarantee · Easy Reschedule Option',
+        note: 'Collect reward nights · Price match support · Customize room options on site',
         priceDelta: 240,
       },
       {
@@ -200,18 +225,73 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         logoText: 'GO',
         rating: 4.5,
         reviewsCount: '14,000+ reviews',
-        perks: 'GoStays Certified · Express Mobile Check-in Pass · 24/7 Helpline',
+        note: 'Express mobile check-in · Instant partner voucher · Choose inclusions on site',
         priceDelta: 290,
       },
     ];
-  }, [hotelName]);
+
+    if (dealsSort === 'rating') {
+      return [...list].sort((a, b) => b.rating - a.rating || a.priceDelta - b.priceDelta);
+    }
+    return [...list].sort((a, b) => a.priceDelta - b.priceDelta);
+  }, [hotelName, dealsSort]);
+
+  const lowestDealPrice = useMemo(() => {
+    const minDelta = Math.min(...providerDeals.map((d) => d.priceDelta));
+    return basePrice + minDelta;
+  }, [basePrice, providerDeals]);
+
+  // Smooth scroll to section when clicking horizontal heading tabs
+  const scrollToSection = useCallback((sectionId: HotelSectionId) => {
+    setActiveSection(sectionId);
+    const el = document.getElementById(`hotel-sec-${sectionId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  // Automatically highlight active section tab on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollOffset = window.scrollY + 185;
+      let current: HotelSectionId = 'overview';
+
+      for (const tab of SECTION_TABS) {
+        const el = document.getElementById(`hotel-sec-${tab.id}`);
+        if (el && el.offsetTop <= scrollOffset) {
+          current = tab.id;
+        }
+      }
+      setActiveSection(current);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keyboard navigation in Photo Lightbox
+  useEffect(() => {
+    if (!isGalleryOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsGalleryOpen(false);
+      if (e.key === 'ArrowRight') {
+        setActivePhotoIndex((prev) => (prev + 1) % galleryPhotos.length);
+      }
+      if (e.key === 'ArrowLeft') {
+        setActivePhotoIndex((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGalleryOpen, galleryPhotos.length]);
 
   const handleSelectSite = (provider: HotelProviderDeal) => {
     setRedirectingProvider(provider);
+    setBookingConfirmed(false);
   };
 
   const handleFinalizePartnerBooking = (provider: HotelProviderDeal) => {
-    const finalFare = basePrice + activeOptionDelta + provider.priceDelta;
+    const finalFare = basePrice + provider.priceDelta;
     const generatedRef = `TY-HTL-${Math.floor(100000 + Math.random() * 900000)}`;
     setConfirmedBookingPnr(generatedRef);
 
@@ -220,11 +300,11 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
       bookingId: generatedRef,
       bookingReference: generatedRef,
       category: 'hotels',
-      title: `${hotelName} (${roomType})`,
-      routeSummary: `${location}`,
-      dateSummary: `${checkInDate} - ${checkOutDate} · ${activeOption.name}`,
+      title: hotelName,
+      routeSummary: location,
+      dateSummary: `${formatDisplayDate(checkInDate)} – ${formatDisplayDate(checkOutDate)}`,
       travellers: guests,
-      cabinOrRoom: `${roomType} · ${activeOption.name}`,
+      cabinOrRoom: `Booked via ${provider.name}`,
       totalPaidInr: finalFare,
       studentFareApplied: false,
       status: 'Confirmed',
@@ -240,7 +320,11 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
 
     onConfirmPayment(bookingRecord, 'Verified Guest');
     setBookingConfirmed(true);
-    onNotify('Hotel Booking Confirmed!', `Reserved via ${provider.name}. Confirmation Ref: ${generatedRef}`, 'success');
+    onNotify(
+      'Hotel Booking Confirmed!',
+      `Reserved via ${provider.name}. Confirmation Ref: ${generatedRef}`,
+      'success'
+    );
   };
 
   const formatDisplayDate = (dateStr: string) => {
@@ -263,260 +347,551 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
     }
   };
 
+  const handleCopyAddress = () => {
+    navigator.clipboard?.writeText(`${hotelName}, ${location}`);
+    onNotify('Address Copied', `${hotelName}, ${location} copied to clipboard.`, 'info');
+  };
+
+  // Curated nearby landmarks adapted to the hotel's locality
+  const nearbySpots = useMemo(
+    () => [
+      { category: 'Neighborhood Hub', place: `${locality} Main Promenade & Cafés`, distance: '450 m · 5 min walk' },
+      { category: 'Dining & Shopping', place: `${locality} Culinary & Artisan Market`, distance: '1.2 km · 4 min drive' },
+      { category: 'Cultural Landmark', place: `Historic Heritage Quarter`, distance: '3.6 km · 10 min drive' },
+      { category: 'Transit Hub', place: 'Central Railway & Metro Terminal', distance: '9.4 km · 20 min drive' },
+      { category: 'Airport Access', place: 'International Airport Terminal', distance: '24 km · 35 min drive' },
+    ],
+    [locality]
+  );
+
+  // Featured hotel amenities (filtering out breakfast/meal specific tags so we keep focus clean)
+  const featuredAmenities = useMemo(() => {
+    const incoming = (item.hotelAmenities || []).filter(
+      (am) => !am.toLowerCase().includes('breakfast') && !am.toLowerCase().includes('meal')
+    );
+    if (incoming.length >= 4) return incoming.slice(0, 8);
+    return [
+      'Free High-Speed Wi-Fi',
+      'Swimming Pool',
+      'Air Conditioning',
+      '24-Hour Front Desk',
+      'Fitness Center',
+      'Valet & Self Parking',
+      'Spa & Wellness',
+      'Airport Shuttle',
+    ];
+  }, [item.hotelAmenities]);
+
+  const amenityGroups = [
+    {
+      title: 'Internet & General Comfort',
+      icon: Wifi,
+      items: [
+        'Complimentary High-Speed Wi-Fi across property',
+        'Individually controlled Air Conditioning',
+        'Daily Housekeeping & Linen Service',
+        'Elevator access to all guest floors',
+        'Sound-insulated interiors & blackout drapes',
+      ],
+    },
+    {
+      title: 'Wellness & Leisure',
+      icon: Waves,
+      items: [
+        'Outdoor Temperature-Controlled Swimming Pool',
+        '24/7 Air-Conditioned Fitness Center',
+        'Full-Service Spa & Relaxation Lounge',
+        'Landscaped Courtyard & Sun Terrace',
+        'Poolside Loungers & Towel Service',
+      ],
+    },
+    {
+      title: 'Food & Drink Venues',
+      icon: Utensils,
+      items: [
+        'On-Site Multi-Cuisine Restaurant',
+        'Rooftop / Courtyard Lounge & Bar',
+        'Artisan Coffee Bar & Bakery Corner',
+        '24-Hour In-Room Dining Service',
+        'Special Dietary Preparation on Request',
+      ],
+    },
+    {
+      title: 'Transport & Guest Services',
+      icon: Car,
+      items: [
+        'Complimentary On-Site & Valet Parking',
+        'Airport Pickup & Drop-off Transfers',
+        '24-Hour Front Desk & Travel Concierge',
+        'Secure Luggage Storage & Safety Lockers',
+        'Laundry, Pressing & Dry Cleaning',
+      ],
+    },
+  ];
+
+  const ratingLabel = rating >= 4.8 ? 'Exceptional' : rating >= 4.5 ? 'Wonderful' : 'Very Good';
+
   return (
-    <div className="bg-[#f1f5f9] min-h-screen text-slate-900 pb-20 font-sans">
+    <div className="bg-white min-h-screen text-slate-900 pb-24 font-sans">
       {/* ===================================================================
-          1. SEAMLESS OCEAN-NAVY SECOND HEADER (MATCHING FLIGHTS)
+          1. SEAMLESS OCEAN-NAVY SECOND HEADER (MATCHING APP NAVIGATION)
       =================================================================== */}
       <section className="bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] pt-[74px] pb-6 relative shadow-md">
-        <div className="w-full px-3 sm:px-5 lg:px-6 flex items-start gap-2.5">
-          <button
-            type="button"
-            onClick={onBackToResults}
-            title="Back to hotels"
-            aria-label="Back to hotels"
-            className="-ml-1.5 mt-0.5 p-1 text-white/90 hover:text-sky-200 transition-colors cursor-pointer shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={onBackToResults}
+              title="Back to hotels"
+              aria-label="Back to hotels"
+              className="-ml-1.5 mt-0.5 p-1 text-white/90 hover:text-sky-200 transition-colors cursor-pointer shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
 
-          <div className="min-w-0 space-y-1">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-tight truncate">
-              {hotelName}
-            </h1>
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-tight truncate">
+                {hotelName}
+              </h1>
 
-            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold text-white/90">
-              <span>
-                {guests} Guest{guests > 1 ? 's' : ''}
-              </span>
-              <span className="text-white/40">·</span>
-              <span className="truncate max-w-[260px] sm:max-w-md">{location}</span>
-              <span className="text-white/40">·</span>
-              <span className="inline-flex items-center gap-1.5 text-sky-100">
-                <Calendar className="w-3.5 h-3.5 text-sky-300 shrink-0" />
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-white/90">
                 <span>
-                  {formatDisplayDate(checkInDate)} – {formatDisplayDate(checkOutDate)}
+                  {guests} Guest{guests > 1 ? 's' : ''}
                 </span>
-              </span>
+                <span className="text-white/40" aria-hidden="true">·</span>
+                <span className="truncate max-w-[240px] sm:max-w-md">{location}</span>
+                <span className="text-white/40" aria-hidden="true">·</span>
+                <span className="inline-flex items-center gap-1.5 text-sky-100">
+                  <Calendar className="w-3.5 h-3.5 text-sky-300 shrink-0" />
+                  <span>
+                    {formatDisplayDate(checkInDate)} – {formatDisplayDate(checkOutDate)}
+                  </span>
+                </span>
+              </div>
             </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-3 shrink-0">
+            <div className="text-right">
+              <div className="text-[11px] text-sky-200 font-medium">Best nightly rate</div>
+              <div className="text-lg font-bold text-white tabular-nums">
+                {formatPrice(lowestDealPrice, currency)}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollToSection('deals')}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              View deals
+            </button>
           </div>
         </div>
       </section>
 
-      <main className="w-full px-3 sm:px-5 lg:px-6 py-6 space-y-6">
-        {/* ===================================================================
-            SECTION 1: HOTEL SUMMARY CARD
-        =================================================================== */}
-        <section className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs overflow-hidden">
-          <div className="p-5 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                    <Building2 className="w-4 h-4" />
-                  </div>
-                  <div className="flex items-center gap-1 text-amber-500 text-xs">
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <span className="text-slate-700 font-bold ml-1">5-Star Luxury Stay</span>
-                  </div>
-                </div>
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">{hotelName}</h2>
-                <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  <span>{location}</span>
+      {/* ===================================================================
+          2. TOP HOTEL PHOTO GALLERY (PURE WHITE CANVAS)
+      =================================================================== */}
+      <section className="bg-white pt-6 pb-5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2.5 rounded-2xl overflow-hidden">
+            {/* Large Primary Hero Photo */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setActivePhotoIndex(0);
+                setIsGalleryOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActivePhotoIndex(0);
+                  setIsGalleryOpen(true);
+                }
+              }}
+              className="md:col-span-2 md:row-span-2 relative group cursor-pointer h-[260px] sm:h-[340px] md:h-[420px] overflow-hidden bg-slate-100"
+            >
+              <SafeImage
+                src={galleryPhotos[0].url}
+                alt={galleryPhotos[0].caption}
+                fallbackTitle={hotelName}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              <div className="absolute bottom-4 left-4 right-4 text-white">
+                <p className="text-sm font-semibold drop-shadow-sm line-clamp-1">
+                  {galleryPhotos[0].caption}
                 </p>
               </div>
-
-              <div className="text-right">
-                <div className="text-xs text-slate-500 font-medium">Rates from</div>
-                <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900">
-                  {formatPrice(basePrice, currency)}
-                </div>
-                <div className="text-[10px] text-slate-400">per room / night</div>
-              </div>
             </div>
 
-            {/* Quick Specs Badges */}
-            <div className="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-slate-100 text-xs">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-semibold">
-                <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                <span>Check-in: {formatDisplayDate(checkInDate)}</span>
-              </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-semibold">
-                <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                <span>Check-out: {formatDisplayDate(checkOutDate)}</span>
-              </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-semibold">
-                <Users className="w-3.5 h-3.5 text-blue-600" />
-                <span>{guests} Guest{guests > 1 ? 's' : ''} · 1 Room</span>
-              </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                <Wifi className="w-3.5 h-3.5" />
-                <span>Free High-Speed Wi-Fi</span>
-              </span>
-            </div>
-          </div>
+            {/* 4 Secondary Grid Photos */}
+            {galleryPhotos.slice(1, 5).map((photo, idx) => {
+              const photoIdx = idx + 1;
+              const isLastVisible = idx === 3;
 
-          {/* Room Details Substrip */}
-          <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 shadow-2xs">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="font-bold text-slate-900 text-sm">{roomType}</div>
-                <div className="text-slate-500">King Bed / Twin Beds · City / Pool View · 42 m² · Ensuite Marble Bathroom</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-              <Check className="w-3.5 h-3.5" />
-              <span>Complimentary Welcome Drink &amp; Mineral Water</span>
-            </div>
-          </div>
-        </section>
-
-        {/* ===================================================================
-            SECTION 2: MEAL PLAN & FLEXI-RATE OPTIONS (CUSTOMIZATION)
-        =================================================================== */}
-        <section className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">Choose Room &amp; Meal Package</h2>
-              <p className="text-xs text-slate-500">Pick your preferred meal plan. Partner site rates will automatically recalculate below.</p>
-            </div>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-              Live Rate Calculation
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {HOTEL_MEAL_OPTIONS.map((opt) => {
-              const isSelected = selectedOptionId === opt.id;
               return (
                 <div
-                  key={opt.id}
-                  onClick={() => setSelectedOptionId(opt.id)}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? 'border-blue-600 bg-blue-50/40 shadow-xs'
-                      : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300'
-                  }`}
+                  key={photoIdx}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setActivePhotoIndex(photoIdx);
+                    setIsGalleryOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActivePhotoIndex(photoIdx);
+                      setIsGalleryOpen(true);
+                    }
+                  }}
+                  className="relative group cursor-pointer h-[160px] sm:h-[190px] md:h-[205px] overflow-hidden bg-slate-100"
                 >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                        isSelected ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
-                      }`}>
-                        {opt.badge}
+                  <SafeImage
+                    src={photo.url}
+                    alt={photo.caption}
+                    fallbackTitle={photo.caption}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/25 transition-colors" />
+
+                  {isLastVisible && (
+                    <div className="absolute bottom-3 right-3">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-slate-900 text-xs font-semibold shadow-sm transition-colors">
+                        <Camera className="w-3.5 h-3.5 text-slate-700" />
+                        <span>Show all {galleryPhotos.length} photos</span>
                       </span>
-                      {isSelected && <Check className="w-4 h-4 text-blue-600" />}
                     </div>
-
-                    <h4 className="font-bold text-sm text-slate-900 leading-snug">{opt.name}</h4>
-                    <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">{opt.description}</p>
-                  </div>
-
-                  <div className="pt-3 mt-3 border-t border-slate-200/60 flex items-baseline justify-between">
-                    <span className="text-[11px] font-bold text-slate-500">Rate Difference:</span>
-                    <span className="font-bold text-sm font-mono text-slate-900">
-                      {opt.priceDelta === 0 ? 'Included' : `+${formatPrice(opt.priceDelta, currency)}`}
-                    </span>
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* ===================================================================
+          3. STICKY HORIZONTAL SECTION HEADINGS BAR (BELOW PHOTOS)
+             Overview | Deals | Location | Information | Amenities
+      =================================================================== */}
+      <nav
+        aria-label="Hotel sections"
+        className="sticky top-16 z-20 bg-white border-y border-slate-200"
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
+          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto no-scrollbar">
+            {SECTION_TABS.map((tab) => {
+              const isActive = activeSection === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => scrollToSection(tab.id)}
+                  className={`py-3.5 text-sm whitespace-nowrap shrink-0 border-b-2 transition-colors cursor-pointer ${
+                    isActive
+                      ? 'border-blue-600 text-blue-600 font-semibold'
+                      : 'border-transparent text-slate-600 hover:text-slate-900 font-medium'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hidden md:flex items-center gap-4 shrink-0 py-2">
+            <div className="text-right">
+              <span className="text-xs text-slate-500 mr-1.5">From</span>
+              <span className="text-base font-bold text-slate-900 tabular-nums">
+                {formatPrice(lowestDealPrice, currency)}
+              </span>
+              <span className="text-xs text-slate-500"> / night</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollToSection('deals')}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Compare deals
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ===================================================================
+          4. MAIN CONTENT STACK (PURE WHITE BACKGROUND THROUGHOUT)
+      =================================================================== */}
+      <main className="bg-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 divide-y divide-slate-200">
+        {/* -----------------------------------------------------------------
+            SECTION 1: OVERVIEW
+        ----------------------------------------------------------------- */}
+        <section id="hotel-sec-overview" className="scroll-mt-32 py-10 bg-white">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 pb-8 border-b border-slate-100">
+            <div className="space-y-2.5 max-w-3xl">
+              {/* Quiet unboxed metadata line */}
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="inline-flex items-center gap-0.5 text-amber-500">
+                  {Array.from({ length: stars }).map((_, idx) => (
+                    <Star key={idx} className="w-3.5 h-3.5 fill-current" />
+                  ))}
+                </span>
+                <span>{stars}-Star {propertyType}</span>
+                <span aria-hidden="true">·</span>
+                <span>Verified Property</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-display">
+                {hotelName}
+              </h2>
+
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>{location}</span>
+                </span>
+                <span className="text-slate-300" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('location')}
+                  className="text-blue-600 hover:text-blue-700 font-medium underline-offset-4 hover:underline cursor-pointer"
+                >
+                  Show on map
+                </button>
+              </div>
+            </div>
+
+            {/* Guest Score & Starting Price */}
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-6 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="text-left sm:text-right">
+                  <div className="text-sm font-semibold text-slate-900">{ratingLabel}</div>
+                  <div className="text-xs text-slate-500 tabular-nums">
+                    {reviewsCount.toLocaleString()} verified reviews
+                  </div>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-blue-600 text-white font-bold text-base flex items-center justify-center tabular-nums">
+                  {rating.toFixed(1)}
+                </div>
+              </div>
+
+              <div className="h-10 w-px bg-slate-200 hidden sm:block" />
+
+              <div className="text-right">
+                <div className="text-xs text-slate-500">Nightly rates from</div>
+                <div className="text-2xl font-bold text-slate-900 tabular-nums">
+                  {formatPrice(lowestDealPrice, currency)}
+                </div>
+                <div className="text-[11px] text-slate-500">incl. taxes &amp; fees</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Overview Body: About Property + Stay Summary & Highlights */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8">
+            <div className="lg:col-span-7 space-y-5">
+              <h3 className="text-lg font-semibold text-slate-900">About this property</h3>
+              <p className="text-[15px] text-slate-600 leading-relaxed">
+                Set in {locality}, {hotelName} pairs contemporary architectural design with attentive
+                hospitality for leisure and business travellers alike. Guests enjoy easy access to nearby
+                attractions, dining districts, and city transport while returning to serene common spaces,
+                landscaped leisure decks, and round-the-clock concierge care.
+              </p>
+              <p className="text-[15px] text-slate-600 leading-relaxed">
+                Compare verified partner rates below to secure the best available nightly fare for your
+                dates. Once you click through to your preferred booking site, you can choose your exact
+                room category, bed preference, and meal or cancellation options directly during checkout.
+              </p>
+
+              {/* Stay Search Summary Strip */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3">
+                <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                  <div className="text-xs text-slate-500 font-medium">Check-in</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">
+                    {formatDisplayDate(checkInDate)}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">From 02:00 PM</div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                  <div className="text-xs text-slate-500 font-medium">Check-out</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">
+                    {formatDisplayDate(checkOutDate)}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">Until 11:00 AM</div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                  <div className="text-xs text-slate-500 font-medium">Guests</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1 tabular-nums">
+                    {guests} Guest{guests > 1 ? 's' : ''}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">Standard stay search</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="p-6 rounded-2xl border border-slate-200 bg-white space-y-4">
+                <h3 className="text-base font-semibold text-slate-900">Property highlights</h3>
+                <ul className="space-y-3 text-sm text-slate-700">
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                    <span>
+                      Highly rated by guests for location, cleanliness, and service ({rating.toFixed(1)}/5)
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                    <span>Prime address in {locality} close to dining and landmarks</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                    <span>High-speed Wi-Fi, swimming pool, and 24-hour front desk support</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                    <span>
+                      Compare {providerDeals.length} trusted booking sites in one place with transparent nightly rates
+                    </span>
+                  </li>
+                </ul>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('amenities')}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                  >
+                    See all amenities →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('deals')}
+                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Compare deals
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {/* ===================================================================
-            SECTION 3: COMPARISON SITES LIST (SKYSCANNER / TRIVAGO STYLE)
-        =================================================================== */}
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                Compare &amp; Book on Top Travel Sites ({providerDeals.length} Providers)
-              </h3>
-              <p className="text-xs text-slate-500">
-                Clicking <span className="font-semibold text-blue-600">Go to site</span> securely opens partner rates with your locked price and room selection.
+        {/* -----------------------------------------------------------------
+            SECTION 2: DEALS (COMPARE BOOKING SITES — NO ROOM/BREAKFAST PICKER)
+        ----------------------------------------------------------------- */}
+        <section id="hotel-sec-deals" className="scroll-mt-32 py-10 bg-white">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div className="space-y-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
+                Deals
+              </h2>
+              <p className="text-sm text-slate-600">
+                Compare nightly rates from {providerDeals.length} verified booking sites for{' '}
+                {formatDisplayDate(checkInDate)} – {formatDisplayDate(checkOutDate)}. Choose your room
+                type and meal preferences directly on the booking site.
               </p>
             </div>
-            <span className="text-xs text-slate-500 font-semibold">Sorted by: Best Price First</span>
+
+            {/* Interactive sort segmented control */}
+            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-slate-100 shrink-0 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setDealsSort('price')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  dealsSort === 'price'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Lowest price
+              </button>
+              <button
+                type="button"
+                onClick={() => setDealsSort('rating')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  dealsSort === 'rating'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Highest rated
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">
             {providerDeals.map((provider) => {
-              const totalPrice = basePrice + activeOptionDelta + provider.priceDelta;
+              const nightlyPrice = basePrice + provider.priceDelta;
 
               return (
                 <div
                   key={provider.id}
-                  className={`bg-white rounded-2xl border p-4 sm:p-5 shadow-xs transition-all hover:shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  className={`bg-white rounded-2xl border p-4 sm:p-5 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                     provider.isCheapest
-                      ? 'border-emerald-300 ring-1 ring-emerald-400/30'
-                      : 'border-slate-200/90'
+                      ? 'border-emerald-300'
+                      : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  {/* Left: Provider Brand & Info */}
-                  <div className="flex items-start sm:items-center gap-3.5">
+                  {/* Provider Info */}
+                  <div className="flex items-start sm:items-center gap-4 min-w-0">
                     <div
-                      className={`w-12 h-12 rounded-2xl ${provider.logoBg} text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs`}
+                      className={`w-11 h-11 rounded-xl ${provider.logoBg} text-white font-bold text-xs flex items-center justify-center shrink-0`}
                     >
                       {provider.logoText}
                     </div>
 
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-base text-slate-900">{provider.name}</span>
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                        <span className="font-semibold text-base text-slate-900">
+                          {provider.name}
+                        </span>
                         {provider.isCheapest && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            Lowest Price Deal
+                          <span className="text-xs font-semibold text-emerald-700">
+                            · Lowest price
                           </span>
                         )}
                         {provider.isOfficial && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-800 border border-slate-300">
-                            Official Site
+                          <span className="text-xs font-medium text-slate-500">
+                            · Official site
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span className="font-bold text-amber-500 flex items-center gap-0.5">
-                          <Star className="w-3.5 h-3.5 fill-amber-400" />
-                          <span>{provider.rating}</span>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span className="font-semibold text-slate-700 inline-flex items-center gap-1 tabular-nums">
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                          {provider.rating}
                         </span>
-                        <span>·</span>
+                        <span aria-hidden="true">·</span>
                         <span>{provider.reviewsCount}</span>
-                        <span>·</span>
-                        <span className="text-slate-600 font-medium">Verified Channel</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Verified partner</span>
                       </div>
 
-                      <p className="text-xs text-slate-600 font-medium">{provider.perks}</p>
+                      <p className="text-xs text-slate-600">{provider.note}</p>
                     </div>
                   </div>
 
-                  {/* Right: Price & CTA Button */}
-                  <div className="flex items-center justify-between md:justify-end gap-5 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                  {/* Price & Go to Site CTA */}
+                  <div className="flex items-center justify-between md:justify-end gap-5 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
                     <div className="text-left md:text-right">
-                      <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total per Night</div>
-                      <div className="text-2xl font-black font-mono text-slate-900">
-                        {formatPrice(totalPrice, currency)}
+                      <div className="text-xs text-slate-500">Per night</div>
+                      <div className="text-2xl font-bold text-slate-900 tabular-nums">
+                        {formatPrice(nightlyPrice, currency)}
                       </div>
-                      <div className="text-[10px] text-slate-500">Taxes &amp; fees included</div>
+                      <div className="text-[11px] text-slate-500">Taxes &amp; fees included</div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleSelectSite(provider)}
-                      className={`px-6 py-3 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-2 shrink-0 ${
+                      className={`px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer inline-flex items-center gap-2 whitespace-nowrap shrink-0 ${
                         provider.isCheapest
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
                     >
                       <span>Go to site</span>
@@ -528,54 +903,377 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
             })}
           </div>
         </section>
+
+        {/* -----------------------------------------------------------------
+            SECTION 3: LOCATION
+        ----------------------------------------------------------------- */}
+        <section id="hotel-sec-location" className="scroll-mt-32 py-10 bg-white">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div className="space-y-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
+                Location
+              </h2>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>{location}</span>
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyAddress}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors cursor-pointer self-start sm:self-auto whitespace-nowrap"
+            >
+              <Copy className="w-3.5 h-3.5 text-slate-500" />
+              <span>Copy address</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Visual Map Panel */}
+            <div className="lg:col-span-7 rounded-2xl border border-slate-200 bg-slate-50 relative overflow-hidden min-h-[280px] flex flex-col justify-between p-5">
+              {/* Architectural Map Grid Background */}
+              <div
+                className="absolute inset-0 opacity-30 pointer-events-none"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(to right, #cbd5e1 1px, transparent 1px), linear-gradient(to bottom, #cbd5e1 1px, transparent 1px)',
+                  backgroundSize: '36px 36px',
+                }}
+              />
+              {/* Subtle stylized arterial lines */}
+              <svg
+                className="absolute inset-0 w-full h-full opacity-25 pointer-events-none"
+                viewBox="0 0 600 320"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path d="M0 220 Q180 180 340 200 T600 140" fill="none" stroke="#3b82f6" strokeWidth="6" />
+                <path d="M120 0 Q160 150 260 320" fill="none" stroke="#94a3b8" strokeWidth="3" />
+                <path d="M410 0 Q380 160 470 320" fill="none" stroke="#94a3b8" strokeWidth="3" />
+              </svg>
+
+              <div className="relative z-10 flex items-center justify-between">
+                <span className="bg-white/95 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 shadow-2xs">
+                  {locality} Area Map
+                </span>
+              </div>
+
+              {/* Center Pin */}
+              <div className="relative z-10 my-8 flex flex-col items-center justify-center">
+                <div className="bg-slate-900 text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center gap-2 max-w-xs">
+                  <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
+                  <span className="truncate">{hotelName}</span>
+                </div>
+                <div className="w-3.5 h-3.5 rounded-full bg-blue-600 border-2 border-white shadow-sm -mt-1" />
+              </div>
+
+              <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
+                <span className="bg-white/95 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-600">
+                  Prime neighborhood · Easy cab &amp; airport access
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onNotify(
+                      'Directions Ready',
+                      `Location pinned for ${hotelName} (${location}). Address copied for navigation.`,
+                      'info'
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Get directions</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Nearby Distances List */}
+            <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900 mb-4">What&apos;s nearby</h3>
+                <div className="divide-y divide-slate-100">
+                  {nearbySpots.map((spot) => (
+                    <div key={spot.place} className="py-3 first:pt-0 last:pb-0 flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-xs text-slate-500">{spot.category}</div>
+                        <div className="text-sm font-medium text-slate-900 mt-0.5">{spot.place}</div>
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 tabular-nums whitespace-nowrap shrink-0 mt-1">
+                        {spot.distance}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* -----------------------------------------------------------------
+            SECTION 4: INFORMATION
+        ----------------------------------------------------------------- */}
+        <section id="hotel-sec-information" className="scroll-mt-32 py-10 bg-white">
+          <div className="space-y-1 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
+              Information
+            </h2>
+            <p className="text-sm text-slate-600">
+              Good-to-know details, check-in schedules, and property guidelines before you book.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Check-in & Check-out */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">
+              <div className="flex items-center gap-2 text-slate-900 font-semibold text-base">
+                <Clock className="w-4 h-4 text-blue-600 shrink-0" />
+                <h3>Check-in &amp; Check-out</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-1 text-sm">
+                <div>
+                  <div className="text-xs text-slate-500">Check-in from</div>
+                  <div className="font-semibold text-slate-900 mt-0.5 tabular-nums">02:00 PM</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Check-out until</div>
+                  <div className="font-semibold text-slate-900 mt-0.5 tabular-nums">11:00 AM</div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                24-hour front desk available. Early check-in and late check-out are subject to property
+                availability at arrival.
+              </p>
+            </div>
+
+            {/* Booking Partner Terms */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">
+              <div className="flex items-center gap-2 text-slate-900 font-semibold text-base">
+                <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                <h3>Booking &amp; Stay Preferences</h3>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Exact room categories, bed preferences, meal inclusions, and cancellation or pay-at-hotel
+                terms are displayed and selected directly on the booking partner&apos;s website when you
+                complete your reservation.
+              </p>
+            </div>
+
+            {/* Guest Identification & Age */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">
+              <div className="flex items-center gap-2 text-slate-900 font-semibold text-base">
+                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                <h3>Guest ID &amp; Verification</h3>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                All guests are required to present a valid government-issued photo ID (Passport, Aadhaar,
+                Driving License, or Voter ID) at check-in. Primary guest must be 18 years or older.
+              </p>
+            </div>
+
+            {/* Property Facts & House Policies */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">
+              <div className="flex items-center gap-2 text-slate-900 font-semibold text-base">
+                <Globe className="w-4 h-4 text-blue-600 shrink-0" />
+                <h3>Property Facts &amp; House Rules</h3>
+              </div>
+              <dl className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-sm">
+                <div>
+                  <dt className="text-xs text-slate-500">Property type</dt>
+                  <dd className="font-medium text-slate-900">{stars}-Star {propertyType}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-slate-500">Languages spoken</dt>
+                  <dd className="font-medium text-slate-900">English, Hindi</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-slate-500">Smoking policy</dt>
+                  <dd className="font-medium text-slate-900">Non-smoking interiors</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-slate-500">Children &amp; families</dt>
+                  <dd className="font-medium text-slate-900">All ages welcome</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* -----------------------------------------------------------------
+            SECTION 5: AMENITIES
+        ----------------------------------------------------------------- */}
+        <section id="hotel-sec-amenities" className="scroll-mt-32 py-10 bg-white">
+          <div className="space-y-1 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
+              Amenities
+            </h2>
+            <p className="text-sm text-slate-600">
+              Facilities and services available across the property.
+            </p>
+          </div>
+
+          {/* Popular Highlights Grid (clean unboxed rows, zero pill clutter) */}
+          <div className="pb-8 mb-8 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Most popular facilities</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-3 gap-x-6">
+              {featuredAmenities.map((amenity) => (
+                <div key={amenity} className="flex items-center gap-2 text-sm text-slate-700">
+                  <Check className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>{amenity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Categorized Full Amenities Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {amenityGroups.map((group) => {
+              const IconComponent = group.icon;
+              return (
+                <div key={group.title} className="space-y-3">
+                  <div className="flex items-center gap-2 text-slate-900 font-semibold text-base">
+                    <IconComponent className="w-4 h-4 text-blue-600 shrink-0" />
+                    <h3>{group.title}</h3>
+                  </div>
+                  <ul className="space-y-2.5 text-sm text-slate-600">
+                    {group.items.map((itemText) => (
+                      <li key={itemText} className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        <span>{itemText}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </main>
 
       {/* =====================================================================
-          REDIRECTION & PARTNER HAND-OFF MODAL
+          PHOTO GALLERY LIGHTBOX MODAL
+      ===================================================================== */}
+      {isGalleryOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/95 flex flex-col justify-between p-4 sm:p-6">
+          <div className="flex items-center justify-between text-white pb-3 border-b border-white/10">
+            <div className="min-w-0 pr-4">
+              <h3 className="font-display font-semibold text-base sm:text-lg truncate">
+                {hotelName}
+              </h3>
+              <p className="text-xs text-white/70 truncate">
+                Photo {activePhotoIndex + 1} of {galleryPhotos.length} ·{' '}
+                {galleryPhotos[activePhotoIndex]?.caption}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsGalleryOpen(false)}
+              aria-label="Close photo gallery"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center py-4 relative">
+            <SafeImage
+              src={galleryPhotos[activePhotoIndex]?.url || hotelPoolImg}
+              alt={galleryPhotos[activePhotoIndex]?.caption || hotelName}
+              fallbackTitle={hotelName}
+              className="max-h-[72vh] max-w-full rounded-xl object-contain"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setActivePhotoIndex((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length)
+              }
+              aria-label="Previous photo"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center cursor-pointer transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActivePhotoIndex((prev) => (prev + 1) % galleryPhotos.length)}
+              aria-label="Next photo"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center cursor-pointer transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 overflow-x-auto pt-3 border-t border-white/10">
+            {galleryPhotos.map((img, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActivePhotoIndex(i)}
+                className={`relative shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                  activePhotoIndex === i
+                    ? 'border-blue-500 opacity-100'
+                    : 'border-transparent opacity-55 hover:opacity-90'
+                }`}
+              >
+                <SafeImage
+                  src={img.url}
+                  alt={img.caption}
+                  fallbackTitle={img.caption}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          PARTNER HAND-OFF & CONFIRMATION MODAL
       ===================================================================== */}
       {redirectingProvider && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 sm:p-7 relative text-center space-y-5">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 sm:p-7 relative text-center space-y-5">
             {!bookingConfirmed ? (
               <>
-                <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-inner">
-                  <ExternalLink className="w-8 h-8 animate-pulse" />
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                  <ExternalLink className="w-7 h-7" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <h3 className="text-xl font-black text-slate-900">
-                    Connecting to {redirectingProvider.name}...
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Continue to {redirectingProvider.name}
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    You are being securely directed to partner booking channel with your locked room rate &amp; meal package.
+                  <p className="text-xs text-slate-600">
+                    You&apos;ll choose your preferred room type, meal plan, and cancellation option directly on{' '}
+                    {redirectingProvider.name}.
                   </p>
                 </div>
 
-                {/* Deal Review Box */}
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 text-left space-y-2 text-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                    <span className="font-bold text-slate-800">{hotelName}</span>
-                    <span className="font-mono font-bold text-emerald-600 text-sm">
-                      {formatPrice(basePrice + activeOptionDelta + redirectingProvider.priceDelta, currency)}
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-left space-y-2 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 gap-3">
+                    <span className="font-semibold text-slate-900 truncate">{hotelName}</span>
+                    <span className="font-bold text-emerald-700 text-sm tabular-nums shrink-0">
+                      {formatPrice(basePrice + redirectingProvider.priceDelta, currency)} / night
                     </span>
                   </div>
                   <div className="text-slate-600">
-                    <span className="font-semibold">Room:</span> {roomType}
+                    <span className="font-semibold text-slate-800">Location:</span> {location}
                   </div>
                   <div className="text-slate-600">
-                    <span className="font-semibold">Package:</span> {activeOption.name}
-                  </div>
-                  <div className="text-slate-600">
-                    <span className="font-semibold">Stay:</span> {checkInDate} to {checkOutDate} ({guests} Guests)
+                    <span className="font-semibold text-slate-800">Stay dates:</span>{' '}
+                    {formatDisplayDate(checkInDate)} – {formatDisplayDate(checkOutDate)} ({guests} Guest
+                    {guests > 1 ? 's' : ''})
                   </div>
                 </div>
 
-                {/* Simulated Partner Direct Confirmation CTA */}
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2 pt-1">
                   <button
                     type="button"
                     onClick={() => handleFinalizePartnerBooking(redirectingProvider)}
-                    className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="w-full py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <span>Complete Booking on {redirectingProvider.name}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -584,49 +1282,52 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
                   <button
                     type="button"
                     onClick={() => setRedirectingProvider(null)}
-                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-900 font-medium cursor-pointer"
                   >
-                    Cancel &amp; Compare Other Sites
+                    Cancel &amp; compare other sites
                   </button>
                 </div>
               </>
             ) : (
-              /* Success Confirmation */
-              <div className="space-y-4 py-2 animate-in zoom-in-95">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
-                  <CheckCircle2 className="w-9 h-9" />
+              <div className="space-y-4 py-2">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-8 h-8" />
                 </div>
 
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900">Hotel Booking Confirmed!</h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Your reservation has been confirmed with {redirectingProvider.name}.
+                  <h3 className="text-xl font-bold text-slate-900">Hotel Booking Confirmed</h3>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Your reservation has been recorded with {redirectingProvider.name}.
                   </p>
                 </div>
 
-                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-left space-y-1.5 font-mono">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Confirmation Ref:</span>
-                    <span className="font-bold text-emerald-800">{confirmedBookingPnr}</span>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-left space-y-2">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Confirmation Ref</span>
+                    <span className="font-semibold text-emerald-700 tabular-nums">
+                      {confirmedBookingPnr}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Property:</span>
-                    <span className="font-bold text-slate-900">{hotelName}</span>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Property</span>
+                    <span className="font-semibold text-slate-900 text-right">{hotelName}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Check-in:</span>
-                    <span className="font-bold text-slate-900">{checkInDate} (02:00 PM)</span>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Check-in</span>
+                    <span className="font-semibold text-slate-900">
+                      {formatDisplayDate(checkInDate)} (02:00 PM)
+                    </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2 pt-1">
                   <button
                     type="button"
                     onClick={() => {
                       setRedirectingProvider(null);
                       onGoToTrips?.();
                     }}
-                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-black text-white font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <FileText className="w-4 h-4" />
                     <span>View in My Trips &amp; Hotel Voucher</span>
@@ -638,9 +1339,9 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
                       setRedirectingProvider(null);
                       onBackToResults();
                     }}
-                    className="w-full py-2 text-xs text-slate-600 hover:text-slate-900 font-semibold cursor-pointer"
+                    className="w-full py-2 text-xs text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
                   >
-                    Search More Hotels
+                    Search more hotels
                   </button>
                 </div>
               </div>
