@@ -175,6 +175,16 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
+// Public browser Google Maps JS API key config endpoint
+app.get('/api/maps/config', (_req: Request, res: Response) => {
+  const mapsKey = (
+    process.env.VITE_GOOGLE_MAPS_API_KEY ||
+    process.env.GOOGLE_MAPS_API_KEY ||
+    ''
+  ).trim();
+  res.json({ apiKey: mapsKey });
+});
+
 // ============================================================================
 // AVIATIONSTACK LIVE FLIGHTS API PROXY & REAL-TIME SCHEDULER
 // ============================================================================

@@ -116,6 +116,10 @@ interface CheckoutPaymentPageProps {
   onBackToResults: () => void;
   onNotify: (title: string, detail: string, type?: 'success' | 'info') => void;
   onGoToTrips?: () => void;
+  onGoHome?: () => void;
+  onGoHotels?: () => void;
+  onGoCountry?: (country: string) => void;
+  onGoCity?: (city: string) => void;
 }
 
 const TITLE_OPTIONS = [

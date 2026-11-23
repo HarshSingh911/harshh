@@ -161,6 +161,13 @@ export default function App() {
     useState<boolean>(false);
   // Auth modal only opens on user interaction (e.g. clicking Login button)
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [gmpQuotaExceeded, setGmpQuotaExceeded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleQuotaExceeded = () => setGmpQuotaExceeded(true);
+    window.addEventListener('gmp-quota-exceeded', handleQuotaExceeded);
+    return () => window.removeEventListener('gmp-quota-exceeded', handleQuotaExceeded);
+  }, []);
 
   // Track pending page to open after user logs in (e.g. if unauthenticated user clicks 'My Trips')
   const pendingRedirectRef = useRef<AppPageView | null>(null);
@@ -518,6 +525,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900">
+      {gmpQuotaExceeded && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+          <span>
+            Google Maps Platform quota reached. If you are the app owner, visit{' '}
+            <a
+              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold text-amber-950 hover:text-amber-800"
+            >
+              maps developer site
+            </a>{' '}
+            for instructions to update your account.
+          </span>
+        </div>
+      )}
       {/* Sticky Top Bar with Quick Page Switcher */}
       <Navbar
         activePage={activePage}
@@ -820,6 +843,24 @@ export default function App() {
               });
             }}
             onGoToTrips={() => navigateTo('trips')}
+            onGoHome={() => {
+              navigateTo('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onGoHotels={() => {
+              setActiveCategory('hotels');
+              navigateTo('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onGoCountry={(countryName) => {
+              setActiveCategory('hotels');
+              navigateTo('search-results');
+              handleNotify('Hotels Directory', `Showing verified stays in ${countryName}.`, 'info');
+            }}
+            onGoCity={() => {
+              setActiveCategory('hotels');
+              navigateTo('search-results');
+            }}
             onNotify={handleNotify}
           />
         )}
