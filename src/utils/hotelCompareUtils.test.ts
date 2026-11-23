@@ -120,4 +120,48 @@ test('filterDistinctNearbyPlaces excludes primary hotel and deduplicates repeate
   ]);
 });
 
+test('TRANSIT_OVERLAY_OPTIONS exposes Public Transport, Walking Routes, and Cab/Taxi Availability', async () => {
+  const { TRANSIT_OVERLAY_OPTIONS } = await import('./hotelCompareUtils');
+  assert.deepEqual(
+    TRANSIT_OVERLAY_OPTIONS.map((o) => o.label),
+    ['Public Transport', 'Walking Routes', 'Cab/Taxi Availability']
+  );
+  assert.deepEqual(
+    TRANSIT_OVERLAY_OPTIONS.map((o) => o.id),
+    ['public_transport', 'walking_routes', 'cab_taxi']
+  );
+});
+
+test('formatRouteDurationMillis and formatRouteDistanceMeters format route metrics accurately', async () => {
+  const { formatRouteDurationMillis, formatRouteDistanceMeters } = await import(
+    './hotelCompareUtils'
+  );
+  assert.equal(formatRouteDurationMillis(12 * 60 * 1000), '12 min');
+  assert.equal(formatRouteDurationMillis(30000), '1 min');
+  assert.equal(formatRouteDurationMillis(95 * 60 * 1000), '1 hr 35 min');
+  assert.equal(formatRouteDurationMillis(0), '');
+  assert.equal(formatRouteDurationMillis(null), '');
+
+  assert.equal(formatRouteDistanceMeters(450), '450 m');
+  assert.equal(formatRouteDistanceMeters(1850), '1.9 km');
+  assert.equal(formatRouteDistanceMeters(undefined), '');
+});
+
+test('deriveCabPickupSummary formats real taxi stand and traffic status text without fabricating data', async () => {
+  const { deriveCabPickupSummary } = await import('./hotelCompareUtils');
+  assert.equal(
+    deriveCabPickupSummary({
+      taxiStandCount: 3,
+      nearestStandName: 'Calangute Taxi Stand',
+      nearestDriveDuration: '6 min',
+    }),
+    'Nearest stand: Calangute Taxi Stand (6 min drive) · Live road traffic overlay active'
+  );
+  assert.equal(
+    deriveCabPickupSummary({ taxiStandCount: 0 }),
+    'Live Google Maps traffic overlay active · Showing nearest transit & airport cab pickup points'
+  );
+});
+
+
 

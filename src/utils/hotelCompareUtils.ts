@@ -364,3 +364,64 @@ export function filterDistinctNearbyPlaces<T extends { id: string; name: string 
   return out;
 }
 
+export type TransitOverlayMode = 'public_transport' | 'walking_routes' | 'cab_taxi';
+
+export interface TransitOverlayOption {
+  id: TransitOverlayMode;
+  label: string;
+  shortHint: string;
+}
+
+export const TRANSIT_OVERLAY_OPTIONS: TransitOverlayOption[] = [
+  {
+    id: 'public_transport',
+    label: 'Public Transport',
+    shortHint: 'Live transit lines & stations',
+  },
+  {
+    id: 'walking_routes',
+    label: 'Walking Routes',
+    shortHint: 'Walkable paths & times',
+  },
+  {
+    id: 'cab_taxi',
+    label: 'Cab/Taxi Availability',
+    shortHint: 'Taxi stands & live traffic',
+  },
+];
+
+export function formatRouteDurationMillis(durationMillis?: number | null): string {
+  if (typeof durationMillis !== 'number' || !Number.isFinite(durationMillis) || durationMillis <= 0) {
+    return '';
+  }
+  const totalMinutes = Math.max(1, Math.round(durationMillis / 60000));
+  if (totalMinutes < 60) {
+    return `${totalMinutes} min`;
+  }
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  return mins > 0 ? `${hours} hr ${mins} min` : `${hours} hr`;
+}
+
+export function formatRouteDistanceMeters(distanceMeters?: number | null): string {
+  if (typeof distanceMeters !== 'number' || !Number.isFinite(distanceMeters) || distanceMeters <= 0) {
+    return '';
+  }
+  return formatDistanceLabel(distanceMeters / 1000);
+}
+
+export function deriveCabPickupSummary(params: {
+  taxiStandCount: number;
+  nearestDriveDuration?: string;
+  nearestStandName?: string;
+}): string {
+  const { taxiStandCount, nearestDriveDuration, nearestStandName } = params;
+  if (taxiStandCount > 0 && nearestStandName) {
+    return nearestDriveDuration
+      ? `Nearest stand: ${nearestStandName} (${nearestDriveDuration} drive) · Live road traffic overlay active`
+      : `${taxiStandCount} nearby taxi stand${taxiStandCount > 1 ? 's' : ''} found · Live road traffic overlay active`;
+  }
+  return 'Live Google Maps traffic overlay active · Showing nearest transit & airport cab pickup points';
+}
+
+

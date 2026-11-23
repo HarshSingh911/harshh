@@ -17,7 +17,10 @@ import {
   ArrowLeft,
   BedDouble,
   Building2,
+  CarTaxiFront,
   Compass,
+  Footprints,
+  Layers,
   MapPin,
   Plane,
   Star,
@@ -26,9 +29,14 @@ import {
 } from 'lucide-react';
 import {
   calculateHaversineDistanceKm,
+  deriveCabPickupSummary,
   filterDistinctNearbyPlaces,
   formatDistanceLabel,
+  formatRouteDistanceMeters,
+  formatRouteDurationMillis,
   resolveCountryRegionCode,
+  TRANSIT_OVERLAY_OPTIONS,
+  TransitOverlayMode,
 } from '../utils/hotelCompareUtils';
 
 export interface ResolvedPlacePin {
@@ -41,7 +49,12 @@ export interface ResolvedPlacePin {
   rating?: number;
   userRatingCount?: number;
   typeLabel?: string;
-  category: 'hotel' | 'nearby_hotel' | 'attraction' | 'transit' | 'airport';
+  category: 'hotel' | 'nearby_hotel' | 'attraction' | 'transit' | 'airport' | 'taxi';
+}
+
+export interface RouteMetricInfo {
+  durationText: string;
+  distanceText: string;
 }
 
 export interface HotelMapsState {
@@ -52,6 +65,7 @@ export interface HotelMapsState {
   attractions: ResolvedPlacePin[];
   transit: ResolvedPlacePin[];
   airports: ResolvedPlacePin[];
+  taxiStands: ResolvedPlacePin[];
   isSearching: boolean;
   selectedPinId: string | null;
   setSelectedPinId: (id: string | null) => void;
@@ -67,6 +81,7 @@ const HotelMapsContext = createContext<HotelMapsState>({
   attractions: [],
   transit: [],
   airports: [],
+  taxiStands: [],
   isSearching: false,
   selectedPinId: null,
   setSelectedPinId: () => {},
@@ -172,7 +187,7 @@ const HotelPlacesLoader: React.FC<{
 
         const toPins = (
           placesList: google.maps.places.Place[],
-          category: 'nearby_hotel' | 'attraction' | 'transit' | 'airport',
+          category: 'nearby_hotel' | 'attraction' | 'transit' | 'airport' | 'taxi',
           limit: number
         ): ResolvedPlacePin[] => {
           const mapped: ResolvedPlacePin[] = [];
@@ -210,7 +225,7 @@ const HotelPlacesLoader: React.FC<{
         };
 
         const fetchCategory = async (
-          category: 'nearby_hotel' | 'attraction' | 'transit' | 'airport',
+          category: 'nearby_hotel' | 'attraction' | 'transit' | 'airport' | 'taxi',
           includedPrimaryTypes: string[],
           radiusMeters: number,
           fallbackTextQuery: string,
@@ -272,7 +287,7 @@ const HotelPlacesLoader: React.FC<{
           }
         };
 
-        const [nearbyHotelPins, attrPins, transitPins, airportPins] = await Promise.all([
+        const [nearbyHotelPins, attrPins, transitPins, airportPins, taxiPins] = await Promise.all([
           fetchCategory(
             'nearby_hotel',
             ['hotel', 'resort_hotel'],
@@ -303,6 +318,13 @@ const HotelPlacesLoader: React.FC<{
             `airport near ${city} ${country}`,
             2
           ),
+          fetchCategory(
+            'taxi',
+            ['taxi_stand'],
+            10000,
+            `taxi stand cab pickup near ${city} ${country}`,
+            5
+          ),
         ]);
 
         if (!cancelled) {
@@ -311,6 +333,7 @@ const HotelPlacesLoader: React.FC<{
             attractions: attrPins,
             transit: transitPins,
             airports: airportPins,
+            taxiStands: taxiPins,
           });
         }
       } catch {
@@ -345,6 +368,7 @@ export const HotelMapsProvider: React.FC<{
   const [attractions, setAttractions] = useState<ResolvedPlacePin[]>([]);
   const [transit, setTransit] = useState<ResolvedPlacePin[]>([]);
   const [airports, setAirports] = useState<ResolvedPlacePin[]>([]);
+  const [taxiStands, setTaxiStands] = useState<ResolvedPlacePin[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
 
@@ -377,6 +401,7 @@ export const HotelMapsProvider: React.FC<{
     if ('attractions' in patch && patch.attractions) setAttractions(patch.attractions);
     if ('transit' in patch && patch.transit) setTransit(patch.transit);
     if ('airports' in patch && patch.airports) setAirports(patch.airports);
+    if ('taxiStands' in patch && patch.taxiStands) setTaxiStands(patch.taxiStands);
     if ('isSearching' in patch && typeof patch.isSearching === 'boolean') {
       setIsSearching(patch.isSearching);
     }
@@ -394,6 +419,7 @@ export const HotelMapsProvider: React.FC<{
       attractions,
       transit,
       airports,
+      taxiStands,
       isSearching,
       selectedPinId,
       setSelectedPinId,
@@ -406,6 +432,7 @@ export const HotelMapsProvider: React.FC<{
       attractions,
       transit,
       airports,
+      taxiStands,
       isSearching,
       selectedPinId,
     ]
@@ -419,7 +446,7 @@ export const HotelMapsProvider: React.FC<{
     <HotelMapsContext.Provider value={contextValue}>
       <APIProvider
         apiKey={apiKey}
-        libraries={['places', 'marker']}
+        libraries={['places', 'marker', 'routes', 'maps']}
         language="en"
         region={regionCode}
       >
@@ -456,6 +483,8 @@ const PinWithInfoWindow: React.FC<{
         return { background: '#2563eb', borderColor: '#ffffff', glyphColor: '#ffffff' };
       case 'transit':
         return { background: '#0f766e', borderColor: '#ffffff', glyphColor: '#ffffff' };
+      case 'taxi':
+        return { background: '#eab308', borderColor: '#ffffff', glyphColor: '#0f172a' };
       case 'attraction':
       default:
         return { background: '#d97706', borderColor: '#ffffff', glyphColor: '#ffffff' };
@@ -533,12 +562,183 @@ const CameraPanner: React.FC<{
   return null;
 };
 
+const TransitMapOverlayController: React.FC<{
+  mode: TransitOverlayMode | null;
+  hotelPin: ResolvedPlacePin | null;
+  targets: ResolvedPlacePin[];
+  selectedPinId: string | null;
+  onRouteMetricsChange?: (metrics: Record<string, RouteMetricInfo>, isLoading: boolean) => void;
+}> = ({ mode, hotelPin, targets, selectedPinId, onRouteMetricsChange }) => {
+  const map = useMap();
+  const mapsLib = useMapsLibrary('maps');
+  const routesLib = useMapsLibrary('routes');
+  const [computedRoutes, setComputedRoutes] = useState<
+    Array<{ targetId: string; mode: 'walking_routes' | 'cab_taxi'; route: google.maps.routes.Route }>
+  >([]);
+
+  useEffect(() => {
+    if (!map || !mapsLib || !mode) {
+      return;
+    }
+
+    let activeLayer: google.maps.TransitLayer | google.maps.TrafficLayer | null = null;
+    if (mode === 'public_transport') {
+      const transitLayer = new mapsLib.TransitLayer();
+      transitLayer.setMap(map);
+      activeLayer = transitLayer;
+    } else if (mode === 'cab_taxi') {
+      const trafficLayer = new mapsLib.TrafficLayer({ autoRefresh: true });
+      trafficLayer.setMap(map);
+      activeLayer = trafficLayer;
+    }
+
+    return () => {
+      if (activeLayer) {
+        activeLayer.setMap(null);
+      }
+    };
+  }, [map, mapsLib, mode]);
+
+  useEffect(() => {
+    if (!routesLib || !hotelPin || (mode !== 'walking_routes' && mode !== 'cab_taxi')) {
+      setComputedRoutes([]);
+      onRouteMetricsChange?.({}, false);
+      return;
+    }
+
+    const targetsToRoute = targets.slice(0, 6);
+    if (targetsToRoute.length === 0) {
+      setComputedRoutes([]);
+      onRouteMetricsChange?.({}, false);
+      return;
+    }
+
+    let cancelled = false;
+    onRouteMetricsChange?.({}, true);
+
+    const computeAllRoutes = async () => {
+      const metricsMap: Record<string, RouteMetricInfo> = {};
+      const nextRoutes: Array<{
+        targetId: string;
+        mode: 'walking_routes' | 'cab_taxi';
+        route: google.maps.routes.Route;
+      }> = [];
+      const travelMode =
+        mode === 'walking_routes'
+          ? google.maps.TravelMode.WALKING
+          : google.maps.TravelMode.DRIVING;
+
+      const results = await Promise.all(
+        targetsToRoute.map(async (target) => {
+          try {
+            const response = await routesLib.Route.computeRoutes({
+              origin: { lat: hotelPin.lat, lng: hotelPin.lng },
+              destination: { lat: target.lat, lng: target.lng },
+              travelMode,
+              ...(mode === 'cab_taxi'
+                ? { routingPreference: routesLib.RoutingPreference.TRAFFIC_AWARE }
+                : {}),
+              fields: ['path', 'durationMillis', 'distanceMeters', 'localizedValues'],
+            });
+            return { target, route: response.routes?.[0] ?? null };
+          } catch (err) {
+            if (isQuotaError(err)) {
+              window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
+            }
+            return { target, route: null };
+          }
+        })
+      );
+
+      if (cancelled) return;
+
+      results.forEach(({ target, route }) => {
+        if (!route) return;
+        const durationText =
+          route.localizedValues?.duration || formatRouteDurationMillis(route.durationMillis);
+        const distanceText =
+          route.localizedValues?.distance || formatRouteDistanceMeters(route.distanceMeters);
+
+        if (durationText || distanceText) {
+          metricsMap[target.id] = {
+            durationText: durationText || '',
+            distanceText: distanceText || target.distanceLabel || '',
+          };
+        }
+        nextRoutes.push({ targetId: target.id, mode, route });
+      });
+
+      setComputedRoutes(nextRoutes);
+      onRouteMetricsChange?.(metricsMap, false);
+    };
+
+    void computeAllRoutes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [routesLib, hotelPin, mode, targets, onRouteMetricsChange]);
+
+  useEffect(() => {
+    if (!map || computedRoutes.length === 0 || (mode !== 'walking_routes' && mode !== 'cab_taxi')) {
+      return;
+    }
+
+    const polylines: google.maps.Polyline[] = [];
+    const selectedTargetIndex = computedRoutes.findIndex((item) => item.targetId === selectedPinId);
+    const primaryIndex = selectedTargetIndex >= 0 ? selectedTargetIndex : 0;
+
+    computedRoutes.forEach(({ route, mode: routeMode }, idx) => {
+      if (routeMode !== mode) return;
+      const isPrimary = idx === primaryIndex;
+      const created = route.createPolylines({
+        polylineOptions:
+          mode === 'walking_routes'
+            ? {
+                strokeColor: isPrimary ? '#0284c7' : '#38bdf8',
+                strokeOpacity: isPrimary ? 0.92 : 0.45,
+                strokeWeight: isPrimary ? 5 : 3,
+                zIndex: isPrimary ? 20 : 8,
+              }
+            : {
+                strokeColor: isPrimary ? '#b45309' : '#f59e0b',
+                strokeOpacity: isPrimary ? 0.9 : 0.4,
+                strokeWeight: isPrimary ? 5 : 3,
+                zIndex: isPrimary ? 20 : 8,
+              },
+      });
+
+      created.forEach((poly) => {
+        poly.setMap(map);
+        polylines.push(poly);
+      });
+    });
+
+    return () => {
+      polylines.forEach((poly) => poly.setMap(null));
+    };
+  }, [map, computedRoutes, selectedPinId, mode]);
+
+  return null;
+};
+
 const MapInnerSurface: React.FC<{
   stars?: number;
   pins: ResolvedPlacePin[];
   selectedPinId: string | null;
   onSelectPin: (id: string | null) => void;
-}> = ({ stars, pins, selectedPinId, onSelectPin }) => {
+  transitOverlay?: TransitOverlayMode | null;
+  overlayTargets?: ResolvedPlacePin[];
+  onRouteMetricsChange?: (metrics: Record<string, RouteMetricInfo>, isLoading: boolean) => void;
+}> = ({
+  stars,
+  pins,
+  selectedPinId,
+  onSelectPin,
+  transitOverlay = null,
+  overlayTargets = [],
+  onRouteMetricsChange,
+}) => {
   const isLoaded = useApiIsLoaded();
   const status = useApiLoadingStatus();
   const { hotelPin } = useHotelMapsState();
@@ -561,6 +761,8 @@ const MapInnerSurface: React.FC<{
   const zoom = hotelPin
     ? selectedPinId && selectedPinId !== hotelPin.id
       ? 15
+      : transitOverlay === 'walking_routes' || transitOverlay === 'cab_taxi'
+      ? 14
       : pins.some((p) => p.category === 'nearby_hotel')
       ? 14
       : 15
@@ -595,6 +797,13 @@ const MapInnerSurface: React.FC<{
         lat={activePin ? activePin.lat : null}
         lng={activePin ? activePin.lng : null}
         zoom={zoom}
+      />
+      <TransitMapOverlayController
+        mode={transitOverlay}
+        hotelPin={hotelPin}
+        targets={overlayTargets}
+        selectedPinId={selectedPinId}
+        onRouteMetricsChange={onRouteMetricsChange}
       />
       {pins.map((pin) => (
         <PinWithInfoWindow
@@ -763,9 +972,21 @@ export const HotelAddressMapModal: React.FC<{
   propertyType,
   formattedPrice,
 }) => {
-  const { apiKey, hotelPin, nearbyHotels, transit, isSearching } = useHotelMapsState();
+  const {
+    apiKey,
+    hotelPin,
+    nearbyHotels,
+    transit,
+    attractions,
+    airports,
+    taxiStands,
+    isSearching,
+  } = useHotelMapsState();
   const [sidebarTab, setSidebarTab] = useState<'hotels' | 'transit'>('hotels');
+  const [transitOverlay, setTransitOverlay] = useState<TransitOverlayMode>('public_transport');
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
+  const [routeMetrics, setRouteMetrics] = useState<Record<string, RouteMetricInfo>>({});
+  const [isComputingRoutes, setIsComputingRoutes] = useState<boolean>(false);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -784,7 +1005,9 @@ export const HotelAddressMapModal: React.FC<{
   useEffect(() => {
     if (!isOpen) return;
     setSidebarTab('hotels');
+    setTransitOverlay('public_transport');
     setSelectedPinId(hotelPin?.id || null);
+    setRouteMetrics({});
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
@@ -797,20 +1020,89 @@ export const HotelAddressMapModal: React.FC<{
     setSelectedPinId(hotelPin?.id || null);
   };
 
+  const handleTransitOverlayChange = (nextMode: TransitOverlayMode) => {
+    setTransitOverlay(nextMode);
+    setSelectedPinId(hotelPin?.id || null);
+  };
+
+  const handleRouteMetricsChange = useCallback(
+    (metrics: Record<string, RouteMetricInfo>, loading: boolean) => {
+      setRouteMetrics(metrics);
+      setIsComputingRoutes(loading);
+    },
+    []
+  );
+
+  const walkingDestinations = useMemo(
+    () =>
+      filterDistinctNearbyPlaces(
+        [...transit, ...attractions],
+        hotelPin?.id,
+        hotelName,
+        6
+      ),
+    [transit, attractions, hotelPin?.id, hotelName]
+  );
+
+  const cabPickupDestinations = useMemo(
+    () =>
+      filterDistinctNearbyPlaces(
+        taxiStands.length > 0 ? [...taxiStands, ...airports] : [...transit.slice(0, 3), ...airports],
+        hotelPin?.id,
+        hotelName,
+        6
+      ),
+    [taxiStands, transit, airports, hotelPin?.id, hotelName]
+  );
+
+  const activeTransitItems = useMemo(() => {
+    switch (transitOverlay) {
+      case 'walking_routes':
+        return walkingDestinations;
+      case 'cab_taxi':
+        return cabPickupDestinations;
+      case 'public_transport':
+      default:
+        return transit;
+    }
+  }, [transitOverlay, walkingDestinations, cabPickupDestinations, transit]);
+
   const fullPagePins = useMemo(() => {
     const base: ResolvedPlacePin[] = [];
     if (hotelPin) base.push(hotelPin);
     if (sidebarTab === 'hotels') {
       base.push(...nearbyHotels);
     } else {
-      base.push(...transit);
+      base.push(...activeTransitItems);
     }
     return base;
-  }, [hotelPin, sidebarTab, nearbyHotels, transit]);
+  }, [hotelPin, sidebarTab, nearbyHotels, activeTransitItems]);
 
   if (!isOpen) return null;
 
-  const activeItems = sidebarTab === 'hotels' ? nearbyHotels : transit;
+  const activeItems = sidebarTab === 'hotels' ? nearbyHotels : activeTransitItems;
+  const activeOverlayForMap: TransitOverlayMode | null =
+    sidebarTab === 'transit' ? transitOverlay : null;
+
+  const nearestCabStand = taxiStands[0];
+  const nearestCabMetric = nearestCabStand ? routeMetrics[nearestCabStand.id] : undefined;
+  const cabSummaryText = deriveCabPickupSummary({
+    taxiStandCount: taxiStands.length,
+    nearestStandName: nearestCabStand?.name,
+    nearestDriveDuration: nearestCabMetric?.durationText,
+  });
+
+  const getOverlayIcon = (mode: TransitOverlayMode) => {
+    switch (mode) {
+      case 'walking_routes':
+        return Footprints;
+      case 'cab_taxi':
+        return CarTaxiFront;
+      case 'public_transport':
+      default:
+        return TrainFront;
+    }
+  };
 
   return (
     <div
@@ -956,26 +1248,123 @@ export const HotelAddressMapModal: React.FC<{
           </button>
         </div>
 
-        {/* Scrollable Nearby Hotels or Transit List */}
+        {/* Transit Map Overlay Filter Section */}
+        {sidebarTab === 'transit' ? (
+          <section
+            aria-label="Transit map overlay filters"
+            data-testid="transit-overlay-filter-section"
+            className="px-4 py-3 border-b border-slate-200 bg-slate-50/80 space-y-2.5 shrink-0"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
+                <Layers className="w-3.5 h-3.5 text-[#072a4f]" />
+                <span>Map Overlays</span>
+              </div>
+              <span className="text-[11px] font-medium text-slate-500">
+                {transitOverlay === 'public_transport'
+                  ? 'Transit Layer'
+                  : transitOverlay === 'walking_routes'
+                  ? isComputingRoutes
+                    ? 'Calculating routes...'
+                    : 'Pedestrian Paths'
+                  : isComputingRoutes
+                  ? 'Checking traffic...'
+                  : 'Traffic & Cab Hubs'}
+              </span>
+            </div>
+
+            <div
+              role="group"
+              aria-label="Toggle Google Maps transit overlays"
+              className="grid grid-cols-3 gap-1.5"
+            >
+              {TRANSIT_OVERLAY_OPTIONS.map((option) => {
+                const Icon = getOverlayIcon(option.id);
+                const isActive = transitOverlay === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    data-testid={`transit-filter-${option.id}`}
+                    aria-pressed={isActive}
+                    onClick={() => handleTransitOverlayChange(option.id)}
+                    className={`rounded-lg px-2 py-2 text-left border transition-all cursor-pointer flex flex-col gap-1 ${
+                      isActive
+                        ? 'bg-[#072a4f] text-white border-[#072a4f] shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon
+                      className={`w-4 h-4 shrink-0 ${
+                        isActive ? 'text-white' : 'text-[#072a4f]'
+                      }`}
+                    />
+                    <span className="text-[11px] font-semibold leading-tight">
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p
+              data-testid="transit-overlay-status-summary"
+              className="text-[11px] text-slate-600 leading-snug bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5"
+            >
+              {transitOverlay === 'public_transport'
+                ? 'Google Maps Transit Layer active — displaying rail, metro & bus corridors.'
+                : transitOverlay === 'walking_routes'
+                ? `Showing walking routes & estimated walk times from ${hotelName}.`
+                : cabSummaryText}
+            </p>
+          </section>
+        ) : null}
+
+        {/* Scrollable Nearby Hotels or Transit Overlay List */}
         <div
           data-testid="hotel-fullpage-sidebar-list"
           className="flex-1 overflow-y-auto divide-y divide-slate-100 bg-white"
         >
           {isSearching && activeItems.length === 0 ? (
             <div className="p-6 text-xs sm:text-sm text-slate-500 text-center">
-              Loading {sidebarTab === 'hotels' ? 'nearby hotels' : 'transit stations'} from Google Maps...
+              Loading {sidebarTab === 'hotels' ? 'nearby hotels' : 'transit places'} from Google Maps...
             </div>
           ) : activeItems.length === 0 ? (
             <div className="p-6 text-xs sm:text-sm text-slate-500 text-center">
               {apiKey
                 ? sidebarTab === 'hotels'
                   ? 'No nearby hotels returned in this area.'
+                  : transitOverlay === 'cab_taxi'
+                  ? 'No nearby taxi stands or pickup hubs returned in this area.'
                   : 'No nearby transit stations returned in this area.'
                 : 'Google Maps API key is not configured in this environment.'}
             </div>
           ) : (
             activeItems.map((place) => {
               const isSelected = selectedPinId === place.id;
+              const metric = sidebarTab === 'transit' ? routeMetrics[place.id] : undefined;
+              const ItemIcon =
+                sidebarTab === 'hotels'
+                  ? Building2
+                  : place.category === 'taxi'
+                  ? CarTaxiFront
+                  : place.category === 'airport'
+                  ? Plane
+                  : place.category === 'attraction'
+                  ? Compass
+                  : TrainFront;
+
+              const iconColorClass =
+                sidebarTab === 'hotels'
+                  ? 'text-indigo-600'
+                  : place.category === 'taxi'
+                  ? 'text-amber-600'
+                  : place.category === 'airport'
+                  ? 'text-blue-600'
+                  : place.category === 'attraction'
+                  ? 'text-amber-700'
+                  : 'text-teal-700';
+
               return (
                 <button
                   key={place.id}
@@ -989,11 +1378,7 @@ export const HotelAddressMapModal: React.FC<{
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-start gap-2">
-                      {sidebarTab === 'transit' ? (
-                        <TrainFront className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" />
-                      ) : (
-                        <Building2 className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                      )}
+                      <ItemIcon className={`w-4 h-4 ${iconColorClass} shrink-0 mt-0.5`} />
                       <span className="text-sm font-semibold text-slate-900 leading-snug">
                         {place.name}
                       </span>
@@ -1025,11 +1410,25 @@ export const HotelAddressMapModal: React.FC<{
                     ) : null}
                   </div>
 
-                  {place.distanceLabel ? (
-                    <span className="text-xs font-bold text-[#072a4f] tabular-nums whitespace-nowrap shrink-0 pt-0.5">
-                      {place.distanceLabel}
-                    </span>
-                  ) : null}
+                  <div className="flex flex-col items-end gap-0.5 shrink-0 pt-0.5">
+                    {metric?.durationText ? (
+                      <span className="text-xs font-bold text-[#072a4f] tabular-nums whitespace-nowrap">
+                        {metric.durationText}{' '}
+                        {transitOverlay === 'walking_routes' ? 'walk' : 'drive'}
+                      </span>
+                    ) : null}
+                    {metric?.distanceText || place.distanceLabel ? (
+                      <span
+                        className={`tabular-nums whitespace-nowrap ${
+                          metric?.durationText
+                            ? 'text-[11px] font-medium text-slate-500'
+                            : 'text-xs font-bold text-[#072a4f]'
+                        }`}
+                      >
+                        {metric?.distanceText || place.distanceLabel}
+                      </span>
+                    ) : null}
+                  </div>
                 </button>
               );
             })
@@ -1048,6 +1447,9 @@ export const HotelAddressMapModal: React.FC<{
             pins={fullPagePins}
             selectedPinId={selectedPinId}
             onSelectPin={setSelectedPinId}
+            transitOverlay={activeOverlayForMap}
+            overlayTargets={activeTransitItems}
+            onRouteMetricsChange={handleRouteMetricsChange}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-sm text-slate-600 p-6 text-center">
