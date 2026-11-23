@@ -37,6 +37,12 @@ import hotelLobbyImg from '../assets/images/hotel_gallery_lobby_lounge_179536005
 import hotelSuiteImg from '../assets/images/hotel_gallery_suite_interior_1795360052553.jpg';
 import hotelDiningImg from '../assets/images/hotel_gallery_dining_terrace_1795360101868.jpg';
 
+import {
+  buildHotelProviderDeals,
+  getLowestHotelDealPrice,
+  type HotelProviderDeal,
+} from '../utils/hotelCompareUtils';
+
 interface HotelBookingCheckoutPageProps {
   item: CheckoutItem;
   currency: CurrencyCode;
@@ -50,24 +56,11 @@ type HotelSectionId = 'overview' | 'deals' | 'location' | 'information' | 'ameni
 
 const SECTION_TABS: { id: HotelSectionId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
-  { id: 'deals', label: 'Deals' },
+  { id: 'deals', label: 'Compare prices' },
   { id: 'location', label: 'Location' },
   { id: 'information', label: 'Information' },
   { id: 'amenities', label: 'Amenities' },
 ];
-
-interface HotelProviderDeal {
-  id: string;
-  name: string;
-  logoBg: string;
-  logoText: string;
-  rating: number;
-  reviewsCount: string;
-  note: string;
-  priceDelta: number;
-  isCheapest?: boolean;
-  isOfficial?: boolean;
-}
 
 export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> = ({
   item,
@@ -144,102 +137,15 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
   }, [item.hotelImage, hotelName]);
 
   // Comparison Sites / Provider Deals list
-  const providerDeals: HotelProviderDeal[] = useMemo(() => {
-    const list: HotelProviderDeal[] = [
-      {
-        id: 'tripyeah-hotels-direct',
-        name: 'TripYeah Hotels Direct',
-        logoBg: 'bg-blue-600',
-        logoText: 'TY',
-        rating: 4.9,
-        reviewsCount: '24,200+ reviews',
-        note: 'Best price guarantee · Instant confirmation · Choose room & meal options on site',
-        priceDelta: 0,
-        isCheapest: true,
-      },
-      {
-        id: 'agoda',
-        name: 'Agoda',
-        logoBg: 'bg-[#0b7c7b]',
-        logoText: 'AG',
-        rating: 4.7,
-        reviewsCount: '42,000+ reviews',
-        note: 'Member-only nightly rate · Instant voucher · Select room & add-ons on partner site',
-        priceDelta: 80,
-      },
-      {
-        id: 'booking-com',
-        name: 'Booking.com',
-        logoBg: 'bg-[#003580]',
-        logoText: 'BK',
-        rating: 4.8,
-        reviewsCount: '65,000+ reviews',
-        note: 'Flexible booking options · Verified guest reviews · Choose room category on site',
-        priceDelta: 120,
-      },
-      {
-        id: 'makemytrip-hotels',
-        name: 'MakeMyTrip Hotels',
-        logoBg: 'bg-[#ea2330]',
-        logoText: 'MMT',
-        rating: 4.7,
-        reviewsCount: '38,500+ reviews',
-        note: 'Verified stay partner · 24/7 travel helpline · Customize stay options during booking',
-        priceDelta: 160,
-      },
-      {
-        id: 'hotel-official',
-        name: `${hotelName.split(' ')[0]} Official Site`,
-        logoBg: 'bg-slate-900',
-        logoText: hotelName.substring(0, 2).toUpperCase(),
-        rating: 4.9,
-        reviewsCount: 'Property Direct',
-        note: 'Direct property reservation · Loyalty benefits · Full inventory on official website',
-        priceDelta: 190,
-        isOfficial: true,
-      },
-      {
-        id: 'expedia',
-        name: 'Expedia',
-        logoBg: 'bg-[#ffc72c] text-slate-900',
-        logoText: 'EXP',
-        rating: 4.6,
-        reviewsCount: '31,000+ reviews',
-        note: 'OneKey member savings · Transparent total pricing · Select room on checkout',
-        priceDelta: 210,
-      },
-      {
-        id: 'hotels-com',
-        name: 'Hotels.com',
-        logoBg: 'bg-[#d4111e]',
-        logoText: 'H.C',
-        rating: 4.6,
-        reviewsCount: '19,400+ reviews',
-        note: 'Collect reward nights · Price match support · Customize room options on site',
-        priceDelta: 240,
-      },
-      {
-        id: 'goibibo-hotels',
-        name: 'Goibibo',
-        logoBg: 'bg-[#f4511e]',
-        logoText: 'GO',
-        rating: 4.5,
-        reviewsCount: '14,000+ reviews',
-        note: 'Express mobile check-in · Instant partner voucher · Choose inclusions on site',
-        priceDelta: 290,
-      },
-    ];
+  const providerDeals: HotelProviderDeal[] = useMemo(
+    () => buildHotelProviderDeals(hotelName, dealsSort),
+    [hotelName, dealsSort]
+  );
 
-    if (dealsSort === 'rating') {
-      return [...list].sort((a, b) => b.rating - a.rating || a.priceDelta - b.priceDelta);
-    }
-    return [...list].sort((a, b) => a.priceDelta - b.priceDelta);
-  }, [hotelName, dealsSort]);
-
-  const lowestDealPrice = useMemo(() => {
-    const minDelta = Math.min(...providerDeals.map((d) => d.priceDelta));
-    return basePrice + minDelta;
-  }, [basePrice, providerDeals]);
+  const lowestDealPrice = useMemo(
+    () => getLowestHotelDealPrice(basePrice, providerDeals),
+    [basePrice, providerDeals]
+  );
 
   // Smooth scroll to section when clicking horizontal heading tabs
   const scrollToSection = useCallback((sectionId: HotelSectionId) => {
@@ -253,7 +159,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
   // Automatically highlight active section tab on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const scrollOffset = window.scrollY + 185;
+      const scrollOffset = window.scrollY + 80;
       let current: HotelSectionId = 'overview';
 
       for (const tab of SECTION_TABS) {
@@ -437,7 +343,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
           1. SEAMLESS OCEAN-NAVY SECOND HEADER (MATCHING APP NAVIGATION)
       =================================================================== */}
       <section className="bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] pt-[74px] pb-6 relative shadow-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-start justify-between gap-4">
+        <div className="w-full px-3 sm:px-5 lg:px-6 flex items-start justify-between gap-4">
           <div className="flex items-start gap-2.5 min-w-0">
             <button
               type="button"
@@ -483,152 +389,101 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
               onClick={() => scrollToSection('deals')}
               className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
-              View deals
+              Compare prices
             </button>
           </div>
         </div>
       </section>
 
       {/* ===================================================================
-          2. TOP HOTEL PHOTO GALLERY (PURE WHITE CANVAS)
+          2. OVERVIEW — EDGE-TO-EDGE CORNER-TO-CORNER IMAGES ONLY
+      =================================================================== */}
+      <section id="hotel-sec-overview" className="scroll-mt-14 w-full bg-white">
+        <div className="w-full grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-1.5 overflow-hidden">
+          {/* Large Primary Hero Photo */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={`Open photo gallery: ${galleryPhotos[0].caption}`}
+            onClick={() => {
+              setActivePhotoIndex(0);
+              setIsGalleryOpen(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActivePhotoIndex(0);
+                setIsGalleryOpen(true);
+              }
+            }}
+            className="md:col-span-2 md:row-span-2 relative group cursor-pointer h-[280px] sm:h-[360px] md:h-[440px] overflow-hidden bg-slate-100"
+          >
+            <SafeImage
+              src={galleryPhotos[0].url}
+              alt={galleryPhotos[0].caption}
+              fallbackTitle={hotelName}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div className="absolute bottom-4 left-4 right-4 text-white">
+              <p className="text-sm font-semibold drop-shadow-sm line-clamp-1">
+                {galleryPhotos[0].caption}
+              </p>
+            </div>
+          </div>
+
+          {/* 4 Secondary Grid Photos */}
+          {galleryPhotos.slice(1, 5).map((photo, idx) => {
+            const photoIdx = idx + 1;
+            const isLastVisible = idx === 3;
+
+            return (
+              <div
+                key={photoIdx}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open photo ${photoIdx + 1}: ${photo.caption}`}
+                onClick={() => {
+                  setActivePhotoIndex(photoIdx);
+                  setIsGalleryOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActivePhotoIndex(photoIdx);
+                    setIsGalleryOpen(true);
+                  }
+                }}
+                className="relative group cursor-pointer h-[160px] sm:h-[190px] md:h-[217px] overflow-hidden bg-slate-100"
+              >
+                <SafeImage
+                  src={photo.url}
+                  alt={photo.caption}
+                  fallbackTitle={photo.caption}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/25 transition-colors" />
+
+                {isLastVisible && (
+                  <div className="absolute bottom-3 right-3">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-slate-900 text-xs font-semibold shadow-sm transition-colors">
+                      <Camera className="w-3.5 h-3.5 text-slate-700" />
+                      <span>Show all {galleryPhotos.length} photos</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ===================================================================
+          3. HOTEL NAME HEADER (BELOW IMAGES, ABOVE THE OVERVIEW ROW)
       =================================================================== */}
       <section className="bg-white pt-6 pb-5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2.5 rounded-2xl overflow-hidden">
-            {/* Large Primary Hero Photo */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                setActivePhotoIndex(0);
-                setIsGalleryOpen(true);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setActivePhotoIndex(0);
-                  setIsGalleryOpen(true);
-                }
-              }}
-              className="md:col-span-2 md:row-span-2 relative group cursor-pointer h-[260px] sm:h-[340px] md:h-[420px] overflow-hidden bg-slate-100"
-            >
-              <SafeImage
-                src={galleryPhotos[0].url}
-                alt={galleryPhotos[0].caption}
-                fallbackTitle={hotelName}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <p className="text-sm font-semibold drop-shadow-sm line-clamp-1">
-                  {galleryPhotos[0].caption}
-                </p>
-              </div>
-            </div>
-
-            {/* 4 Secondary Grid Photos */}
-            {galleryPhotos.slice(1, 5).map((photo, idx) => {
-              const photoIdx = idx + 1;
-              const isLastVisible = idx === 3;
-
-              return (
-                <div
-                  key={photoIdx}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    setActivePhotoIndex(photoIdx);
-                    setIsGalleryOpen(true);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setActivePhotoIndex(photoIdx);
-                      setIsGalleryOpen(true);
-                    }
-                  }}
-                  className="relative group cursor-pointer h-[160px] sm:h-[190px] md:h-[205px] overflow-hidden bg-slate-100"
-                >
-                  <SafeImage
-                    src={photo.url}
-                    alt={photo.caption}
-                    fallbackTitle={photo.caption}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                  />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/25 transition-colors" />
-
-                  {isLastVisible && (
-                    <div className="absolute bottom-3 right-3">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-slate-900 text-xs font-semibold shadow-sm transition-colors">
-                        <Camera className="w-3.5 h-3.5 text-slate-700" />
-                        <span>Show all {galleryPhotos.length} photos</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ===================================================================
-          3. STICKY HORIZONTAL SECTION HEADINGS BAR (BELOW PHOTOS)
-             Overview | Deals | Location | Information | Amenities
-      =================================================================== */}
-      <nav
-        aria-label="Hotel sections"
-        className="sticky top-16 z-20 bg-white border-y border-slate-200"
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
-          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto no-scrollbar">
-            {SECTION_TABS.map((tab) => {
-              const isActive = activeSection === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => scrollToSection(tab.id)}
-                  className={`py-3.5 text-sm whitespace-nowrap shrink-0 border-b-2 transition-colors cursor-pointer ${
-                    isActive
-                      ? 'border-blue-600 text-blue-600 font-semibold'
-                      : 'border-transparent text-slate-600 hover:text-slate-900 font-medium'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="hidden md:flex items-center gap-4 shrink-0 py-2">
-            <div className="text-right">
-              <span className="text-xs text-slate-500 mr-1.5">From</span>
-              <span className="text-base font-bold text-slate-900 tabular-nums">
-                {formatPrice(lowestDealPrice, currency)}
-              </span>
-              <span className="text-xs text-slate-500"> / night</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => scrollToSection('deals')}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
-            >
-              Compare deals
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ===================================================================
-          4. MAIN CONTENT STACK (PURE WHITE BACKGROUND THROUGHOUT)
-      =================================================================== */}
-      <main className="bg-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 divide-y divide-slate-200">
-        {/* -----------------------------------------------------------------
-            SECTION 1: OVERVIEW
-        ----------------------------------------------------------------- */}
-        <section id="hotel-sec-overview" className="scroll-mt-32 py-10 bg-white">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 pb-8 border-b border-slate-100">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="space-y-2.5 max-w-3xl">
               {/* Quiet unboxed metadata line */}
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium">
@@ -687,106 +542,69 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Overview Body: About Property + Stay Summary & Highlights */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8">
-            <div className="lg:col-span-7 space-y-5">
-              <h3 className="text-lg font-semibold text-slate-900">About this property</h3>
-              <p className="text-[15px] text-slate-600 leading-relaxed">
-                Set in {locality}, {hotelName} pairs contemporary architectural design with attentive
-                hospitality for leisure and business travellers alike. Guests enjoy easy access to nearby
-                attractions, dining districts, and city transport while returning to serene common spaces,
-                landscaped leisure decks, and round-the-clock concierge care.
-              </p>
-              <p className="text-[15px] text-slate-600 leading-relaxed">
-                Compare verified partner rates below to secure the best available nightly fare for your
-                dates. Once you click through to your preferred booking site, you can choose your exact
-                room category, bed preference, and meal or cancellation options directly during checkout.
-              </p>
-
-              {/* Stay Search Summary Strip */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3">
-                <div className="p-4 rounded-xl border border-slate-200 bg-white">
-                  <div className="text-xs text-slate-500 font-medium">Check-in</div>
-                  <div className="text-sm font-semibold text-slate-900 mt-1">
-                    {formatDisplayDate(checkInDate)}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-0.5">From 02:00 PM</div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 bg-white">
-                  <div className="text-xs text-slate-500 font-medium">Check-out</div>
-                  <div className="text-sm font-semibold text-slate-900 mt-1">
-                    {formatDisplayDate(checkOutDate)}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-0.5">Until 11:00 AM</div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 bg-white">
-                  <div className="text-xs text-slate-500 font-medium">Guests</div>
-                  <div className="text-sm font-semibold text-slate-900 mt-1 tabular-nums">
-                    {guests} Guest{guests > 1 ? 's' : ''}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-0.5">Standard stay search</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-5">
-              <div className="p-6 rounded-2xl border border-slate-200 bg-white space-y-4">
-                <h3 className="text-base font-semibold text-slate-900">Property highlights</h3>
-                <ul className="space-y-3 text-sm text-slate-700">
-                  <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                    <span>
-                      Highly rated by guests for location, cleanliness, and service ({rating.toFixed(1)}/5)
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                    <span>Prime address in {locality} close to dining and landmarks</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                    <span>High-speed Wi-Fi, swimming pool, and 24-hour front desk support</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                    <span>
-                      Compare {providerDeals.length} trusted booking sites in one place with transparent nightly rates
-                    </span>
-                  </li>
-                </ul>
-
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection('amenities')}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                  >
-                    See all amenities →
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection('deals')}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer"
-                  >
-                    Compare deals
-                  </button>
-                </div>
-              </div>
-            </div>
+      {/* ===================================================================
+          4. HORIZONTAL SECTION HEADINGS BAR (STICKS AT TOP WHEN SCROLLED)
+             Overview | Compare prices | Location | Information | Amenities
+      =================================================================== */}
+      <nav
+        aria-label="Hotel sections"
+        className="sticky top-0 z-30 bg-white border-y border-slate-200 shadow-2xs"
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
+          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto no-scrollbar">
+            {SECTION_TABS.map((tab) => {
+              const isActive = activeSection === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => scrollToSection(tab.id)}
+                  className={`py-3.5 text-sm whitespace-nowrap shrink-0 border-b-2 transition-colors cursor-pointer ${
+                    isActive
+                      ? 'border-blue-600 text-blue-600 font-semibold'
+                      : 'border-transparent text-slate-600 hover:text-slate-900 font-medium'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
-        </section>
 
-        {/* -----------------------------------------------------------------
-            SECTION 2: DEALS (COMPARE BOOKING SITES — NO ROOM/BREAKFAST PICKER)
-        ----------------------------------------------------------------- */}
-        <section id="hotel-sec-deals" className="scroll-mt-32 py-10 bg-white">
+          <div className="hidden md:flex items-center gap-4 shrink-0 py-2">
+            <div className="text-right">
+              <span className="text-xs text-slate-500 mr-1.5">From</span>
+              <span className="text-base font-bold text-slate-900 tabular-nums">
+                {formatPrice(lowestDealPrice, currency)}
+              </span>
+              <span className="text-xs text-slate-500"> / night</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollToSection('deals')}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Compare prices
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ===================================================================
+          SECTION 2: COMPARE PRICES (GREYISH BACKGROUND ONLY FOR THIS BLOCK)
+      =================================================================== */}
+      <section
+        id="hotel-sec-deals"
+        className="scroll-mt-14 w-full bg-[#eef2f6] border-y border-slate-200/80 py-10"
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div className="space-y-1">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
-                Deals
+                Compare prices
               </h2>
               <p className="text-sm text-slate-600">
                 Compare nightly rates from {providerDeals.length} verified booking sites for{' '}
@@ -796,7 +614,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
             </div>
 
             {/* Interactive sort segmented control */}
-            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-slate-100 shrink-0 self-start sm:self-auto">
+            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-slate-200/80 shrink-0 self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => setDealsSort('price')}
@@ -822,17 +640,21 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
             </div>
           </div>
 
-          <div className="space-y-3">
+          {/* Single unified block containing all booking sites */}
+          <div
+            data-testid="compare-prices-sites-block"
+            className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-200 overflow-hidden"
+          >
             {providerDeals.map((provider) => {
               const nightlyPrice = basePrice + provider.priceDelta;
 
               return (
                 <div
                   key={provider.id}
-                  className={`bg-white rounded-2xl border p-4 sm:p-5 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  className={`p-4 sm:p-5 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                     provider.isCheapest
-                      ? 'border-emerald-300'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'bg-emerald-50/35 hover:bg-emerald-50/55'
+                      : 'bg-white hover:bg-slate-50/80'
                   }`}
                 >
                   {/* Provider Info */}
@@ -902,12 +724,18 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
               );
             })}
           </div>
-        </section>
+        </div>
+      </section>
+
+      {/* ===================================================================
+          MAIN CONTENT STACK (PURE WHITE BACKGROUND FOR LOCATION, INFO, AMENITIES)
+      =================================================================== */}
+      <main className="bg-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 divide-y divide-slate-200">
 
         {/* -----------------------------------------------------------------
             SECTION 3: LOCATION
         ----------------------------------------------------------------- */}
-        <section id="hotel-sec-location" className="scroll-mt-32 py-10 bg-white">
+        <section id="hotel-sec-location" className="scroll-mt-14 py-10 bg-white">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div className="space-y-1">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
@@ -1014,7 +842,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         {/* -----------------------------------------------------------------
             SECTION 4: INFORMATION
         ----------------------------------------------------------------- */}
-        <section id="hotel-sec-information" className="scroll-mt-32 py-10 bg-white">
+        <section id="hotel-sec-information" className="scroll-mt-14 py-10 bg-white">
           <div className="space-y-1 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
               Information
@@ -1103,7 +931,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         {/* -----------------------------------------------------------------
             SECTION 5: AMENITIES
         ----------------------------------------------------------------- */}
-        <section id="hotel-sec-amenities" className="scroll-mt-32 py-10 bg-white">
+        <section id="hotel-sec-amenities" className="scroll-mt-14 py-10 bg-white">
           <div className="space-y-1 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
               Amenities
