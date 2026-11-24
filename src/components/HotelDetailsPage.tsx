@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { CurrencyCode, formatPrice, ASSETS } from '../data/travelData';
 import { SafeImage } from './SafeImage';
+import { HotelAmenitiesSection } from './HotelAmenitiesSection';
 
 export interface RoomOption {
   id: string;
@@ -841,121 +842,9 @@ export const HotelDetailsPage: React.FC<HotelDetailsPageProps> = ({
               </div>
             </section>
 
-            {/* SECTION B: FACILITIES & AMENITIES ("facilties") */}
+            {/* SECTION B: FACILITIES & AMENITIES */}
             <section id="hotel-sec-amenities" className="scroll-mt-28">
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-xs">
-                <div className="mb-6">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
-                    Facilities &amp; Luxury Amenities
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Category 1: Popular Highlights */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                    <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
-                      Popular Highlights
-                    </h3>
-                    <div className="space-y-2 text-xs text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <Waves className="w-4 h-4 text-blue-600" />
-                        <span>Infinity Swimming Pool with Shallow Kids Section</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Wifi className="w-4 h-4 text-emerald-600" />
-                        <span>Complimentary High-Speed Wi-Fi 6 across resort</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Car className="w-4 h-4 text-indigo-600" />
-                        <span>Complimentary Valet Parking &amp; EV Charging Station</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Plane className="w-4 h-4 text-purple-600" />
-                        <span>Airport Shuttle &amp; Luxury Cab on Demand</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Category 2: Dining & Bar */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                    <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2 mb-3">
-                      <Utensils className="w-4 h-4 text-rose-500" />
-                      Dining &amp; Beverages
-                    </h3>
-                    <div className="space-y-2 text-xs text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>The Palm Court: Multi-Cuisine All-Day Restaurant</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Azure Sunset Beach Bar &amp; Live Cocktails</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>24-Hour In-Room Dining &amp; Chef Special Menus</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Kid-friendly meals &amp; specialized Jain / Vegan choices</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Category 3: Wellness & Spa */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                    <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2 mb-3">
-                      <Heart className="w-4 h-4 text-rose-500" />
-                      Wellness, Spa &amp; Fitness
-                    </h3>
-                    <div className="space-y-2 text-xs text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Ayurvedic Holistic Spa &amp; Aromatherapy Centre</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Steam Room, Sauna &amp; Hydrotherapy Jacuzzis</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>24/7 Air-Conditioned Fitness Studio (Technogym)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Morning Beachside Yoga &amp; Meditation Sessions</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Category 4: Services & Front Desk */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                    <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2 mb-3">
-                      <ShieldCheck className="w-4 h-4 text-blue-600" />
-                      Services &amp; Security
-                    </h3>
-                    <div className="space-y-2 text-xs text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-blue-600" />
-                        <span>24-Hour Front Desk &amp; Travel Concierge</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Daily Housekeeping &amp; Evening Turndown Service</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Luggage Storage &amp; Secure Safety Deposit Lockers</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Doctor on Call &amp; First-Aid Certified Staff</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <HotelAmenitiesSection amenities={hotel.amenities} variant="details" />
             </section>
 
             {/* SECTION C: LOCATION & NEARBY ATTRACTIONS ("location") */}

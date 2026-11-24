@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   ArrowRight,
   BedDouble,
+  Building2,
   Calendar,
   Camera,
   Car,
@@ -51,6 +52,7 @@ import {
   HotelLocationBlocksPanel,
   HotelMapsProvider,
 } from './HotelGoogleMapSection';
+import { HotelAmenitiesSection } from './HotelAmenitiesSection';
 
 interface HotelBookingCheckoutPageProps {
   item: CheckoutItem;
@@ -348,71 +350,6 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
     onNotify('Address Copied', `${hotelName}, ${location} copied to clipboard.`, 'info');
   };
 
-  // Featured hotel amenities (filtering out breakfast/meal specific tags so we keep focus clean)
-  const featuredAmenities = useMemo(() => {
-    const incoming = (item.hotelAmenities || []).filter(
-      (am) => !am.toLowerCase().includes('breakfast') && !am.toLowerCase().includes('meal')
-    );
-    if (incoming.length >= 4) return incoming.slice(0, 8);
-    return [
-      'Free High-Speed Wi-Fi',
-      'Swimming Pool',
-      'Air Conditioning',
-      '24-Hour Front Desk',
-      'Fitness Center',
-      'Valet & Self Parking',
-      'Spa & Wellness',
-      'Airport Shuttle',
-    ];
-  }, [item.hotelAmenities]);
-
-  const amenityGroups = [
-    {
-      title: 'Internet & General Comfort',
-      icon: Wifi,
-      items: [
-        'Complimentary High-Speed Wi-Fi across property',
-        'Individually controlled Air Conditioning',
-        'Daily Housekeeping & Linen Service',
-        'Elevator access to all guest floors',
-        'Sound-insulated interiors & blackout drapes',
-      ],
-    },
-    {
-      title: 'Wellness & Leisure',
-      icon: Waves,
-      items: [
-        'Outdoor Temperature-Controlled Swimming Pool',
-        '24/7 Air-Conditioned Fitness Center',
-        'Full-Service Spa & Relaxation Lounge',
-        'Landscaped Courtyard & Sun Terrace',
-        'Poolside Loungers & Towel Service',
-      ],
-    },
-    {
-      title: 'Food & Drink Venues',
-      icon: Utensils,
-      items: [
-        'On-Site Multi-Cuisine Restaurant',
-        'Rooftop / Courtyard Lounge & Bar',
-        'Artisan Coffee Bar & Bakery Corner',
-        '24-Hour In-Room Dining Service',
-        'Special Dietary Preparation on Request',
-      ],
-    },
-    {
-      title: 'Transport & Guest Services',
-      icon: Car,
-      items: [
-        'Complimentary On-Site & Valet Parking',
-        'Airport Pickup & Drop-off Transfers',
-        '24-Hour Front Desk & Travel Concierge',
-        'Secure Luggage Storage & Safety Lockers',
-        'Laundry, Pressing & Dry Cleaning',
-      ],
-    },
-  ];
-
   const ratingLabel = rating >= 4.8 ? 'Exceptional' : rating >= 4.5 ? 'Wonderful' : 'Very Good';
 
   return (
@@ -675,36 +612,140 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5">
-            <div>
+            <div className="space-y-1">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
                 Compare prices
               </h2>
+              <p className="text-sm text-slate-600">
+                We check multiple booking sites so you get the best deal
+              </p>
             </div>
 
-            {/* Interactive sort segmented control */}
-            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-slate-200/80 shrink-0 self-start sm:self-auto">
-              <button
-                type="button"
-                onClick={() => setDealsSort('price')}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                  dealsSort === 'price'
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+            <div className="inline-flex flex-col items-stretch gap-2 w-fit max-w-full shrink-0">
+              {/* Circular logos row for all available hotel booking sites */}
+              <div
+                data-testid="compare-sites-logo-strip"
+                className="flex items-center flex-wrap gap-1.5"
+                aria-label="Available booking websites"
               >
-                Lowest price
-              </button>
-              <button
-                type="button"
-                onClick={() => setDealsSort('rating')}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                  dealsSort === 'rating'
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                {providerDeals.map((provider) => {
+                  const scrollToSite = () => {
+                    const target = document.getElementById(`hotel-deal-site-${provider.id}`);
+                    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  };
+
+                  const renderCircleMark = () => {
+                    switch (provider.id) {
+                      case 'tripyeah-hotels-direct':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#05203c] to-[#2563eb] text-white ring-1 ring-white shadow-xs inline-flex items-center justify-center text-[10px] font-extrabold tracking-tight font-display">
+                            TY
+                          </span>
+                        );
+                      case 'agoda':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-white border border-slate-200 shadow-xs inline-flex flex-col items-center justify-center leading-none">
+                            <span className="text-[11px] font-extrabold text-slate-900 -mb-[1px] font-display">
+                              a
+                            </span>
+                            <span className="flex items-center gap-[1.5px]" aria-hidden="true">
+                              <span className="w-[3px] h-[3px] rounded-full bg-[#e12d39]" />
+                              <span className="w-[3px] h-[3px] rounded-full bg-[#f59e0b]" />
+                              <span className="w-[3px] h-[3px] rounded-full bg-[#10b981]" />
+                              <span className="w-[3px] h-[3px] rounded-full bg-[#8b5cf6]" />
+                              <span className="w-[3px] h-[3px] rounded-full bg-[#06b6d4]" />
+                            </span>
+                          </span>
+                        );
+                      case 'booking-com':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-[#003580] ring-1 ring-white shadow-xs inline-flex items-center justify-center text-[12px] font-extrabold leading-none font-display">
+                            <span className="text-white">B</span>
+                            <span className="text-[#009fe3]">.</span>
+                          </span>
+                        );
+                      case 'makemytrip-hotels':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-[#eb2026] text-white ring-1 ring-white shadow-xs inline-flex items-center justify-center text-[11px] font-extrabold italic tracking-tight font-display">
+                            my
+                          </span>
+                        );
+                      case 'hotel-official':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-slate-900 text-amber-300 ring-1 ring-white shadow-xs inline-flex items-center justify-center">
+                            <Building2 className="w-3.5 h-3.5" aria-hidden="true" />
+                          </span>
+                        );
+                      case 'expedia':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-[#001959] ring-1 ring-white shadow-xs inline-flex items-center justify-center gap-0.5">
+                            <span className="w-[5px] h-[5px] rounded-full bg-[#febb02] shrink-0" aria-hidden="true" />
+                            <span className="text-[10px] font-extrabold text-white leading-none font-display">
+                              E
+                            </span>
+                          </span>
+                        );
+                      case 'hotels-com':
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-[#d32f2f] text-white ring-1 ring-white shadow-xs inline-flex items-center justify-center text-[11px] font-extrabold leading-none font-display">
+                            H.
+                          </span>
+                        );
+                      case 'goibibo-hotels':
+                      default:
+                        return (
+                          <span className="w-7 h-7 rounded-full bg-white border border-slate-200 shadow-xs inline-flex items-center justify-center text-[10px] font-extrabold leading-none font-display">
+                            <span className="text-[#ff6d38]">g</span>
+                            <span className="text-[#2276e3]">o</span>
+                          </span>
+                        );
+                    }
+                  };
+
+                  return (
+                    <button
+                      key={provider.id}
+                      type="button"
+                      onClick={scrollToSite}
+                      title={provider.name}
+                      aria-label={provider.name}
+                      data-testid={`compare-site-circle-${provider.id}`}
+                      className="rounded-full transition-transform duration-150 hover:scale-110 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer shrink-0"
+                    >
+                      {renderCircleMark()}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Interactive sort segmented control */}
+              <div
+                data-testid="compare-sort-toggle"
+                className="grid grid-cols-2 items-center gap-1 p-1 rounded-lg bg-slate-200/80 w-full"
               >
-                Highest rated
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setDealsSort('price')}
+                  className={`w-full px-3 py-1.5 rounded-md text-xs font-medium text-center transition-colors cursor-pointer whitespace-nowrap ${
+                    dealsSort === 'price'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Lowest price
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDealsSort('rating')}
+                  className={`w-full px-3 py-1.5 rounded-md text-xs font-medium text-center transition-colors cursor-pointer whitespace-nowrap ${
+                    dealsSort === 'rating'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Highest rated
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1007,7 +1048,8 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
               return (
                 <div
                   key={provider.id}
-                  className="p-4 sm:p-5 bg-white hover:bg-slate-50/80 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  id={`hotel-deal-site-${provider.id}`}
+                  className="scroll-mt-20 p-4 sm:p-5 bg-white hover:bg-slate-50/80 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   {/* Site Logo Wordmark, Room/Bed Type & 2-3 Policy Points */}
                   <div className="space-y-2 min-w-0">
@@ -1242,50 +1284,7 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
             SECTION 5: AMENITIES
         ----------------------------------------------------------------- */}
         <section id="hotel-sec-amenities" className="scroll-mt-14 py-10 bg-white">
-          <div className="space-y-1 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
-              Amenities
-            </h2>
-            <p className="text-sm text-slate-600">
-              Facilities and services available across the property.
-            </p>
-          </div>
-
-          {/* Popular Highlights Grid (clean unboxed rows, zero pill clutter) */}
-          <div className="pb-8 mb-8 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Most popular facilities</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-3 gap-x-6">
-              {featuredAmenities.map((amenity) => (
-                <div key={amenity} className="flex items-center gap-2 text-sm text-slate-700">
-                  <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>{amenity}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Categorized Full Amenities Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {amenityGroups.map((group) => {
-              const IconComponent = group.icon;
-              return (
-                <div key={group.title} className="space-y-3">
-                  <div className="flex items-center gap-2 text-slate-900 font-semibold text-base">
-                    <IconComponent className="w-4 h-4 text-blue-600 shrink-0" />
-                    <h3>{group.title}</h3>
-                  </div>
-                  <ul className="space-y-2.5 text-sm text-slate-600">
-                    {group.items.map((itemText) => (
-                      <li key={itemText} className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                        <span>{itemText}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
+          <HotelAmenitiesSection amenities={item.hotelAmenities} variant="checkout" />
         </section>
       </main>
 

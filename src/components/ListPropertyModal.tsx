@@ -18,6 +18,10 @@ import {
 } from 'lucide-react';
 import { CurrencyCode, CURRENCY_RATES } from '../data/travelData';
 import { submitPropertyListing, PropertyListing } from '../services/propertyService';
+import {
+  MAIN_AMENITY_OPTIONS,
+  SPECIFIC_AMENITY_OPTIONS,
+} from '../utils/hotelAmenitiesUtils';
 
 interface ListPropertyModalProps {
   isOpen: boolean;
@@ -60,9 +64,9 @@ export const ListPropertyModal: React.FC<ListPropertyModalProps> = ({
 
   // Amenities
   const [amenities, setAmenities] = useState<string[]>([
-    'Free High-Speed Wi-Fi',
+    'Free Wi-Fi',
     'Air Conditioning',
-    'Free Breakfast',
+    'Parking',
     '24/7 Front Desk',
   ]);
 
@@ -72,21 +76,6 @@ export const ListPropertyModal: React.FC<ListPropertyModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string>('');
 
   if (!isOpen) return null;
-
-  const AVAILABLE_AMENITIES = [
-    'Free High-Speed Wi-Fi',
-    'Air Conditioning',
-    'Free Breakfast',
-    'Swimming Pool',
-    'Parking Available',
-    '24/7 Front Desk',
-    'Balcony / Scenic View',
-    'Pet Friendly',
-    'Power Backup',
-    'Restaurant / Room Service',
-    'Airport Shuttle',
-    'Daily Housekeeping',
-  ];
 
   const PHOTO_PRESETS = [
     {
@@ -535,35 +524,69 @@ export const ListPropertyModal: React.FC<ListPropertyModalProps> = ({
             </div>
 
             {/* 5. Amenities */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            <div className="space-y-4">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 5. Amenities Available
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {AVAILABLE_AMENITIES.map((item) => {
-                  const isChecked = amenities.includes(item);
-                  return (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => toggleAmenity(item)}
-                      className={`flex items-center gap-2 p-2 rounded-xl border text-xs text-left transition-colors cursor-pointer ${
-                        isChecked
-                          ? 'border-blue-600 bg-blue-50/80 text-blue-900 font-medium'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-                          isChecked ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+
+              <div>
+                <h4 className="text-xs font-semibold text-slate-800 mb-2">Main Amenities</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {MAIN_AMENITY_OPTIONS.map((item) => {
+                    const isChecked = amenities.includes(item);
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => toggleAmenity(item)}
+                        className={`flex items-center gap-2 p-2 rounded-xl border text-xs text-left transition-colors cursor-pointer ${
+                          isChecked
+                            ? 'border-blue-600 bg-blue-50/80 text-blue-900 font-medium'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                       >
-                        {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}
-                      </div>
-                      <span className="truncate">{item}</span>
-                    </button>
-                  );
-                })}
+                        <div
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                            isChecked ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+                          }`}
+                        >
+                          {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </div>
+                        <span className="truncate">{item}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-semibold text-slate-800 mb-2">Specific Amenities</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {SPECIFIC_AMENITY_OPTIONS.map((item) => {
+                    const isChecked = amenities.includes(item);
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => toggleAmenity(item)}
+                        className={`flex items-center gap-2 p-2 rounded-xl border text-xs text-left transition-colors cursor-pointer ${
+                          isChecked
+                            ? 'border-blue-600 bg-blue-50/80 text-blue-900 font-medium'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                            isChecked ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+                          }`}
+                        >
+                          {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </div>
+                        <span className="truncate">{item}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 

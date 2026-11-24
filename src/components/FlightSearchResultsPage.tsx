@@ -75,6 +75,13 @@ import { CheckoutItem } from './CheckoutPaymentPage';
 import { ListPropertyModal } from './ListPropertyModal';
 import { fetchApprovedProperties, PropertyListing } from '../services/propertyService';
 import { CabLocationAutocompleteModal, CabPlace } from './CabLocationAutocompleteModal';
+import { HotelCardPhotoCarousel } from './HotelCardPhotoCarousel';
+import { HotelSidebarMapCard } from './HotelSidebarMapCard';
+import { buildHotelCardPhotos, getHotelReviewSummaryLabel } from '../utils/hotelResultsUtils';
+import hotelPoolImg from '../assets/images/hotel_gallery_exterior_pool_1795360066864.jpg';
+import hotelLobbyImg from '../assets/images/hotel_gallery_lobby_lounge_1795360057197.jpg';
+import hotelSuiteImg from '../assets/images/hotel_gallery_suite_interior_1795360052553.jpg';
+import hotelDiningImg from '../assets/images/hotel_gallery_dining_terrace_1795360101868.jpg';
 
 interface FlightSearchResultsPageProps {
   activeCategory: BookingCategory;
@@ -563,6 +570,7 @@ export interface HotelResult {
   priceInr: number;
   originalPriceInr: number;
   image: string;
+  gallery?: string[];
   tag: string;
 }
 
@@ -754,6 +762,7 @@ export function mapPropertyToHotelResult(p: PropertyListing): HotelResult {
     priceInr: p.basePriceInr,
     originalPriceInr: Math.round(p.basePriceInr * 1.3),
     image: p.photos && p.photos.length > 0 ? p.photos[0] : ASSETS.bali,
+    gallery: Array.isArray(p.photos) ? p.photos : undefined,
     tag: `${p.category} · Verified`,
   };
 }
@@ -1469,6 +1478,38 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [sortBy, setSortBy] = useState<'cheapest' | 'fastest' | 'rating' | 'departure'>('cheapest');
   const [codeCopied, setCodeCopied] = useState<boolean>(false);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+  const leftSidebarRef = React.useRef<HTMLElement>(null);
+  const filtersHeaderRef = React.useRef<HTMLDivElement>(null);
+  const [highlightFiltersJump, setHighlightFiltersJump] = useState<boolean>(false);
+
+  const handleJumpToFilters = () => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+    if (!isDesktop && !showMobileFilters) {
+      setShowMobileFilters(true);
+    }
+    setHighlightFiltersJump(true);
+    setTimeout(() => setHighlightFiltersJump(false), 1400);
+
+    setTimeout(() => {
+      const sidebarEl = leftSidebarRef.current;
+      const filtersEl = filtersHeaderRef.current;
+      if (!filtersEl) return;
+
+      if (isDesktop && sidebarEl) {
+        sidebarEl.scrollTo({
+          top: Math.max(0, filtersEl.offsetTop - 10),
+          behavior: 'smooth',
+        });
+        const sidebarRect = sidebarEl.getBoundingClientRect();
+        if (sidebarRect.top < 72 || sidebarRect.top > window.innerHeight - 160) {
+          const targetWinY = Math.max(0, window.scrollY + sidebarRect.top - 76);
+          window.scrollTo({ top: targetWinY, behavior: 'smooth' });
+        }
+      } else {
+        filtersEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, isDesktop ? 0 : 80);
+  };
 
   // --- FILTERS STATE PER CATEGORY ---
   // 1. Flights
@@ -1508,6 +1549,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [hotelSelectedAmenities, setHotelSelectedAmenities] = useState<string[]>([]);
   const [hotelBeachfrontOnly, setHotelBeachfrontOnly] = useState<boolean>(false);
   const [hotelTripYeahAssuredOnly, setHotelTripYeahAssuredOnly] = useState<boolean>(false);
+  const [hotelFreeCancellationOnly, setHotelFreeCancellationOnly] = useState<boolean>(false);
 
   // 4. Buses (redBus / MakeMyTrip Style)
   const [busSearchQuery, setBusSearchQuery] = useState<string>('');
@@ -1697,6 +1739,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setHotelSelectedAmenities([]);
     setHotelBeachfrontOnly(false);
     setHotelTripYeahAssuredOnly(false);
+    setHotelFreeCancellationOnly(false);
 
     setBusSearchQuery('');
     setBusMaxPrice(3000);
@@ -2023,6 +2066,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       // TripYeah Assured
       if (hotelTripYeahAssuredOnly && !h.isTripYeahAssured) return false;
 
+      // Free cancellation
+      if (hotelFreeCancellationOnly && !h.freeCancellation) return false;
+
       return true;
     });
 
@@ -2057,6 +2103,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     hotelSelectedAmenities,
     hotelBeachfrontOnly,
     hotelTripYeahAssuredOnly,
+    hotelFreeCancellationOnly,
     sortBy,
   ]);
 
@@ -2435,6 +2482,17 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                         </>
                       )}
                     </div>
+
+                    {/* Compact Icon-Only White Search Button Matching Flights Second Header */}
+                    <button
+                      type="button"
+                      onClick={handleApplyModifySearch}
+                      title="Search hotels with selected destination, dates & guests"
+                      aria-label="Search hotels"
+                      className="w-[34px] h-[34px] rounded-xl bg-white hover:bg-blue-50 text-[#05203c] shadow-xs border border-white/80 flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95"
+                    >
+                      <Search className="w-3.5 h-3.5 stroke-[2.25]" />
+                    </button>
                   </>
                 ) : (
                   <>
@@ -2530,31 +2588,59 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 )}
               </div>
 
-              {/* Mobile Filters Trigger */}
-              <button
-                type="button"
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
-              >
-                <Filter className="w-3.5 h-3.5" />
-                <span>Filters</span>
-              </button>
+              <div className="flex items-center gap-3">
+                {currentCategory === 'hotels' && (
+                  <label className="flex items-center gap-2 text-xs font-semibold text-white/90 hover:text-white cursor-pointer select-none whitespace-nowrap shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={hotelFreeCancellationOnly}
+                      onChange={(e) => setHotelFreeCancellationOnly(e.target.checked)}
+                      className="w-4 h-4 rounded text-blue-500 focus:ring-blue-400 accent-blue-500 cursor-pointer"
+                    />
+                    <span>Free cancellation</span>
+                  </label>
+                )}
+
+                {/* Mobile Filters Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  <span>Filters</span>
+                </button>
+              </div>
             </div>
 
-            {/* Unified Clean White Search Strip Matching Flights */}
-            <div className="bg-white rounded-2xl p-1.5 shadow-xl border border-white/15">
+            {/* Unified Search Strip (Greyish-Blue Box Matching Flights for Hotels; White for Cabs) */}
+            <div
+              className={
+                currentCategory === 'hotels'
+                  ? 'rounded-2xl p-1.5 bg-[#cfdce9] border border-white/30 shadow-lg'
+                  : 'bg-white rounded-2xl p-1.5 shadow-xl border border-white/15'
+              }
+            >
               {currentCategory === 'hotels' ? (
-                <div className="flex flex-col lg:flex-row items-stretch gap-1.5">
+                <div
+                  data-testid="hotels-second-header-bar"
+                  className="flex flex-col lg:flex-row items-stretch"
+                >
                   {/* Destination */}
-                  <div className="relative flex-1 lg:flex-[1.2] min-w-0">
+                  <div className="relative flex-1 lg:flex-[1.6] min-w-0">
                     <div
-                      onClick={() => setOpenCityPicker(openCityPicker === 'hotel-dest' ? null : 'hotel-dest')}
-                      className="px-4 py-2 rounded-xl bg-slate-50/75 hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 cursor-pointer transition-colors h-[58px] flex flex-col justify-center"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => {
+                        setOpenCalendarDropdown(null);
+                        setOpenModTravellers(false);
+                        setOpenCityPicker(openCityPicker === 'hotel-dest' ? null : 'hotel-dest');
+                      }}
+                      className="px-4 py-2 rounded-xl hover:bg-white/35 cursor-pointer transition-colors h-[56px] flex flex-col justify-center"
                     >
-                      <div className="text-[11px] font-semibold text-slate-500 leading-none">Where to</div>
+                      <div className="text-[11px] font-semibold text-slate-600 leading-none">Where to</div>
                       <div className="flex items-baseline gap-1.5 mt-1 truncate">
                         <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{modToCity.city}</span>
-                        <span className="font-bold text-xs font-mono text-slate-500 shrink-0">{modToCity.country}</span>
+                        <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{modToCity.country}</span>
                       </div>
                     </div>
 
@@ -2563,6 +2649,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       selectedCity={modToCity}
                       onSelectCity={(c) => {
                         setModToCity(c);
+                        setCurrentToCity(c);
+                        onChangeToCity?.(c);
                         setOpenCityPicker(null);
                       }}
                       isOpen={openCityPicker === 'hotel-dest'}
@@ -2571,40 +2659,53 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     />
                   </div>
 
-                  {/* Check-in Date */}
-                  <div className="relative flex-1 min-w-0 dropdown-field-container">
-                    <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
-                      <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
-                        Check-in
-                      </div>
-                      <div className="flex items-center justify-between gap-1">
+                  {/* Subtle Vertical Divider between Destination and Dates */}
+                  <div className="h-px lg:h-auto lg:w-px bg-slate-400/45 mx-2 my-1 lg:my-2 lg:mx-1.5 shrink-0" />
+
+                  {/* Check-in & Check-out Dates Matching Flights Date Controls */}
+                  <div className="flex flex-col sm:flex-row items-stretch min-w-0 lg:flex-[2]">
+                    {/* Check-in Date */}
+                    <div className="relative flex-1 min-w-0 dropdown-field-container">
+                      <div className="flex items-center gap-1.5 h-[56px] px-1">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setModDepDate(shiftIsoDate(modDepDate || currentDepDate, -1));
+                            const newD = shiftIsoDate(modDepDate || currentDepDate, -1);
+                            setModDepDate(newD);
+                            setCurrentDepDate(newD);
+                            onChangeDepartureDate?.(newD);
                           }}
                           title="Previous Day"
                           aria-label="Previous check-in day"
-                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                          className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
                         >
-                          <ChevronLeft className="w-3.5 h-3.5" />
+                          <ChevronLeft className="w-4 h-4" />
                         </button>
 
-                        <div
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.stopPropagation()}
                           onClick={(e) => {
                             e.stopPropagation();
+                            setOpenCityPicker(null);
+                            setOpenModTravellers(false);
                             setOpenCalendarDropdown(openCalendarDropdown === 'mod-dep' ? null : 'mod-dep');
                           }}
-                          className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
+                          className="flex-1 min-w-0 h-full px-2 rounded-xl hover:bg-white/35 transition-colors cursor-pointer select-none flex flex-col items-center justify-center leading-tight text-slate-900 hover:text-[#072a4f]"
                           title="Click to open calendar"
                         >
-                          <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
-                            {formatHeaderDisplayDate(modDepDate || currentDepDate)}
+                          <span className="text-[10px] font-semibold text-slate-600 leading-none mb-0.5">
+                            Check-in
                           </span>
-                        </div>
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-[#072a4f] shrink-0" />
+                            <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
+                              {formatHeaderDisplayDate(modDepDate || currentDepDate)}
+                            </span>
+                          </span>
+                        </button>
 
                         <button
                           type="button"
@@ -2613,112 +2714,125 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             e.stopPropagation();
                             const newD = shiftIsoDate(modDepDate || currentDepDate, 1);
                             setModDepDate(newD);
+                            setCurrentDepDate(newD);
+                            onChangeDepartureDate?.(newD);
                             if (modRetDate && modRetDate <= newD) {
-                              setModRetDate(shiftIsoDate(newD, 2));
+                              const nextRet = shiftIsoDate(newD, 2);
+                              setModRetDate(nextRet);
+                              setCurrentRetDate(nextRet);
+                              onChangeReturnDate?.(nextRet);
                             }
                           }}
                           title="Next Day"
                           aria-label="Next check-in day"
-                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                          className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
                         >
-                          <ChevronRight className="w-3.5 h-3.5" />
+                          <ChevronRight className="w-4 h-4" />
                         </button>
                       </div>
+
+                      {openCalendarDropdown === 'mod-dep' && (
+                        <NormalCalendarDropdown
+                          selectedDate={modDepDate || currentDepDate}
+                          minDate="2026-01-01"
+                          onSelectDate={(newDate) => {
+                            setModDepDate(newDate);
+                            setCurrentDepDate(newDate);
+                            onChangeDepartureDate?.(newDate);
+                            if (modRetDate && modRetDate <= newDate) {
+                              const nextRet = shiftIsoDate(newDate, 2);
+                              setModRetDate(nextRet);
+                              setCurrentRetDate(nextRet);
+                              onChangeReturnDate?.(nextRet);
+                            }
+                            setOpenCalendarDropdown(null);
+                          }}
+                          onClose={() => setOpenCalendarDropdown(null)}
+                          alignRight={false}
+                        />
+                      )}
                     </div>
 
-                    {openCalendarDropdown === 'mod-dep' && (
-                      <NormalCalendarDropdown
-                        selectedDate={modDepDate || currentDepDate}
-                        minDate="2026-01-01"
-                        onSelectDate={(newDate) => {
-                          setModDepDate(newDate);
-                          if (modRetDate && modRetDate <= newDate) {
-                            setModRetDate(shiftIsoDate(newDate, 2));
-                          }
-                          setOpenCalendarDropdown(null);
-                        }}
-                        onClose={() => setOpenCalendarDropdown(null)}
-                        alignRight={false}
-                      />
-                    )}
-                  </div>
+                    {/* Subtle Divider between Check-in and Check-out */}
+                    <div className="h-px sm:h-auto sm:w-px bg-slate-400/45 mx-2 my-1 sm:my-2 sm:mx-1 shrink-0" />
 
-                  {/* Check-out Date */}
-                  <div className="relative flex-1 min-w-0 dropdown-field-container">
-                    <div className="px-2.5 py-2 rounded-xl border border-slate-200/80 bg-slate-50/75 hover:bg-blue-50/50 hover:border-blue-300 transition-colors h-[58px] flex flex-col justify-center">
-                      <div className="text-[11px] font-semibold text-slate-500 leading-none px-1 mb-1">
-                        Check-out
-                      </div>
-                      <div className="flex items-center justify-between gap-1">
+                    {/* Check-out Date */}
+                    <div className="relative flex-1 min-w-0 dropdown-field-container">
+                      <div className="flex items-center gap-1.5 h-[56px] px-1">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             const minCheckOut = shiftIsoDate(modDepDate || currentDepDate, 1);
-                            setModRetDate(shiftIsoDate(modRetDate || currentRetDate, -1, minCheckOut));
+                            const nextRet = shiftIsoDate(modRetDate || currentRetDate, -1, minCheckOut);
+                            setModRetDate(nextRet);
+                            setCurrentRetDate(nextRet);
+                            onChangeReturnDate?.(nextRet);
                           }}
                           title="Previous Day"
                           aria-label="Previous check-out day"
-                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                          className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
                         >
-                          <ChevronLeft className="w-3.5 h-3.5" />
+                          <ChevronLeft className="w-4 h-4" />
                         </button>
 
-                        <div
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.stopPropagation()}
                           onClick={(e) => {
                             e.stopPropagation();
+                            setOpenCityPicker(null);
+                            setOpenModTravellers(false);
                             setOpenCalendarDropdown(openCalendarDropdown === 'mod-ret' ? null : 'mod-ret');
                           }}
-                          className="flex-1 text-center cursor-pointer select-none truncate px-1 flex items-center justify-center gap-1.5 hover:text-blue-600"
+                          className="flex-1 min-w-0 h-full px-2 rounded-xl hover:bg-white/35 transition-colors cursor-pointer select-none flex flex-col items-center justify-center leading-tight text-slate-900 hover:text-[#072a4f]"
                           title="Click to open calendar"
                         >
-                          <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap">
-                            {formatHeaderDisplayDate(modRetDate || currentRetDate)}
+                          <span className="text-[10px] font-semibold text-slate-600 leading-none mb-0.5">
+                            Check-out
                           </span>
-                        </div>
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-[#072a4f] shrink-0" />
+                            <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums whitespace-nowrap truncate">
+                              {formatHeaderDisplayDate(modRetDate || currentRetDate)}
+                            </span>
+                          </span>
+                        </button>
 
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setModRetDate(shiftIsoDate(modRetDate || currentRetDate, 1));
+                            const nextRet = shiftIsoDate(modRetDate || currentRetDate, 1);
+                            setModRetDate(nextRet);
+                            setCurrentRetDate(nextRet);
+                            onChangeReturnDate?.(nextRet);
                           }}
                           title="Next Day"
                           aria-label="Next check-out day"
-                          className="w-6 h-6 rounded-md hover:bg-white text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                          className="w-9 h-10 sm:w-10 sm:h-11 rounded-xl border border-slate-300/75 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-700 hover:text-[#072a4f] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs"
                         >
-                          <ChevronRight className="w-3.5 h-3.5" />
+                          <ChevronRight className="w-4 h-4" />
                         </button>
                       </div>
+
+                      {openCalendarDropdown === 'mod-ret' && (
+                        <NormalCalendarDropdown
+                          selectedDate={modRetDate || currentRetDate}
+                          minDate={modDepDate || currentDepDate}
+                          onSelectDate={(newDate) => {
+                            setModRetDate(newDate);
+                            setCurrentRetDate(newDate);
+                            onChangeReturnDate?.(newDate);
+                            setOpenCalendarDropdown(null);
+                          }}
+                          onClose={() => setOpenCalendarDropdown(null)}
+                          alignRight={true}
+                        />
+                      )}
                     </div>
-
-                    {openCalendarDropdown === 'mod-ret' && (
-                      <NormalCalendarDropdown
-                        selectedDate={modRetDate || currentRetDate}
-                        minDate={modDepDate || currentDepDate}
-                        onSelectDate={(newDate) => {
-                          setModRetDate(newDate);
-                          setOpenCalendarDropdown(null);
-                        }}
-                        onClose={() => setOpenCalendarDropdown(null)}
-                        alignRight={true}
-                      />
-                    )}
-                  </div>
-
-                  {/* Search CTA Button */}
-                  <div className="shrink-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={handleApplyModifySearch}
-                      className="w-full lg:w-auto px-7 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer h-[58px] lg:min-w-[132px] whitespace-nowrap shrink-0"
-                    >
-                      <Search className="w-4 h-4" />
-                      <span>Search</span>
-                    </button>
                   </div>
                 </div>
               ) : (
@@ -4848,11 +4962,41 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               LEFT COLUMN: UNIFIED FILTER SIDEBAR
           =================================================================== */}
           <aside
-            className={`w-full lg:w-72 xl:w-80 shrink-0 bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5 sticky top-16 z-10 ${
-              showMobileFilters ? 'block mb-4' : 'hidden lg:block'
-            }`}
+            ref={leftSidebarRef}
+            data-testid="search-results-sidebar"
+            className={`w-full lg:w-72 xl:w-80 shrink-0 bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5 relative z-10 ${
+              currentCategory === 'hotels'
+                ? 'lg:max-h-[430px] xl:max-h-[460px] lg:overflow-y-auto'
+                : 'sticky top-16'
+            } ${showMobileFilters ? 'block mb-4' : 'hidden lg:block'}`}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            {currentCategory === 'hotels' && (
+              <HotelSidebarMapCard
+                city={currentToCity.city}
+                country={currentToCity.country}
+                currency={currency}
+                hotels={processedHotels}
+                onSelectHotelCard={(hotelId) => {
+                  const cardEl = document.querySelector(`[data-testid="hotel-list-card-${hotelId}"]`);
+                  if (cardEl) {
+                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+                onOpenHotelDetails={(hotelId) => {
+                  const found = processedHotels.find((h) => h.id === hotelId);
+                  if (found) onSelectHotelForDetails?.(found);
+                }}
+              />
+            )}
+
+            <div
+              id="hotel-filters-block"
+              ref={filtersHeaderRef}
+              data-testid="filters-block-header"
+              className={`flex items-center justify-between pb-3 border-b border-slate-100 transition-all duration-300 ${
+                highlightFiltersJump ? 'rounded-lg bg-blue-50/90 ring-2 ring-blue-500/40 px-2 pt-2 -mx-2' : ''
+              }`}
+            >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-blue-600" />
                 <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
@@ -6586,7 +6730,16 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    <SlidersHorizontal className="w-4 h-4 text-slate-600" />
+                    <button
+                      type="button"
+                      onClick={handleJumpToFilters}
+                      data-testid="sort-by-filters-button"
+                      title="Jump to Filters"
+                      aria-label="Jump to Filters"
+                      className="p-1.5 -m-1 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                    </button>
                     <span>Sort By:</span>
                   </div>
                 )}
@@ -6594,7 +6747,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   {currentCategory === 'buses' && (
                     <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
-                      <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                      <button
+                        type="button"
+                        onClick={handleJumpToFilters}
+                        title="Jump to Filters"
+                        aria-label="Jump to Filters"
+                        className="p-1 -m-0.5 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                      >
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                      </button>
                       <span>Sort by:</span>
                     </span>
                   )}
@@ -7737,114 +7898,81 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     const discountPercent = Math.round(
                       ((hotel.originalPriceInr - hotel.priceInr) / hotel.originalPriceInr) * 100
                     );
+                    const hotelPhotos = buildHotelCardPhotos(hotel.image, hotel.gallery, [
+                      hotelPoolImg,
+                      hotelLobbyImg,
+                      hotelSuiteImg,
+                      hotelDiningImg,
+                    ]);
 
                     return (
                       <div
                         key={hotel.id}
-                        className={`bg-white rounded-2xl border overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col md:flex-row group ${
+                        data-testid={`hotel-list-card-${hotel.id}`}
+                        className={`bg-white rounded-2xl border overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col md:flex-row group/hotel ${
                           hIdx === 0 && sortBy === 'cheapest' ? 'border-emerald-500/80 ring-1 ring-emerald-500/25' : 'border-slate-200/90'
                         }`}
                       >
-                        {/* Image with Badges */}
-                        <div
-                          onClick={() => onSelectHotelForDetails?.(hotel)}
-                          className="w-full md:w-80 h-56 md:h-auto relative shrink-0 overflow-hidden bg-slate-100 cursor-pointer"
-                        >
-                          <SafeImage
-                            src={hotel.image}
-                            alt={hotel.name}
-                            fallbackTitle={hotel.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-                            {hIdx === 0 && sortBy === 'cheapest' ? (
-                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white backdrop-blur-xs shadow-xs flex items-center gap-1">
-                                <Sparkles className="w-3 h-3 text-emerald-200" />
-                                Lowest Price Stay
-                              </span>
-                            ) : (
-                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900/85 text-white backdrop-blur-xs shadow-xs">
-                                {hotel.tag}
-                              </span>
-                            )}
-                            {hotel.isTripYeahAssured && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white shadow-xs">
-                                <ShieldCheck className="w-3 h-3" />
-                                ASSURED
-                              </span>
-                            )}
-                          </div>
+                        {/* Clean Image Carousel (Zero Text Overlay + Prev/Next Photo Controls) */}
+                        <HotelCardPhotoCarousel
+                          images={hotelPhotos}
+                          hotelName={hotel.name}
+                          onOpenDetails={() => onSelectHotelForDetails?.(hotel)}
+                        />
 
-                          {hotel.isCoupleFriendly && (
-                            <span className="absolute bottom-3 left-3 px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/95 text-purple-700 shadow-xs border border-purple-200">
-                              Couple Friendly
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Hotel Details */}
-                        <div className="p-5 flex-1 flex flex-col justify-between">
+                        {/* Hotel Details (Strict Order: Name -> Stars -> Address -> Reviews -> 2-3 Amenities) */}
+                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <div className="flex items-center gap-1.5 text-amber-500 mb-1">
-                                  <div className="flex items-center">
-                                    {Array.from({ length: hotel.stars }).map((_, i) => (
-                                      <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                                    ))}
-                                  </div>
-                                  <span className="text-[11px] font-bold text-slate-600">
-                                    {hotel.stars}-Star {hotel.propertyType}
-                                  </span>
-                                </div>
-                                <h3
-                                  onClick={() => onSelectHotelForDetails?.(hotel)}
-                                  className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors cursor-pointer"
-                                >
-                                  {hotel.name}
-                                </h3>
-                                <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                  <span>{hotel.location}</span>
-                                </p>
-                              </div>
+                            {/* 1. Hotel Name */}
+                            <h3
+                              onClick={() => onSelectHotelForDetails?.(hotel)}
+                              className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover/hotel:text-blue-600 transition-colors cursor-pointer leading-snug"
+                            >
+                              {hotel.name}
+                            </h3>
 
-                              {/* Rating Card */}
-                              <div className="text-right shrink-0">
-                                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-600 text-white font-extrabold text-xs shadow-xs">
-                                  <span>{hotel.rating}</span>
-                                  <Star className="w-3 h-3 fill-current" />
-                                </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5 font-medium">
-                                  {hotel.reviews} reviews
-                                </div>
+                            {/* 2. Stars */}
+                            <div className="flex items-center gap-1.5 text-amber-500 mt-1">
+                              <div className="flex items-center" aria-label={`${hotel.stars} star hotel`}>
+                                {Array.from({ length: hotel.stars }).map((_, i) => (
+                                  <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                                ))}
                               </div>
+                              <span className="text-xs font-semibold text-slate-600">
+                                {hotel.stars}-Star {hotel.propertyType}
+                              </span>
                             </div>
 
-                            {/* Room Type & Highlights */}
-                            <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-100/90">
-                              <div className="text-xs font-bold text-slate-800">{hotel.roomType}</div>
-                              <div className="text-[11px] text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                                <span>{hotel.perks}</span>
-                              </div>
+                            {/* 3. Address */}
+                            <p className="text-xs text-slate-600 flex items-center gap-1 mt-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>{hotel.location}</span>
+                            </p>
+
+                            {/* 4. Reviews */}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#05203c] text-white font-bold text-xs shadow-2xs">
+                                <span>{hotel.rating}</span>
+                                <Star className="w-3 h-3 fill-current" />
+                              </span>
+                              <span className="text-xs font-semibold text-slate-800">
+                                {getHotelReviewSummaryLabel(hotel.rating)}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                ({hotel.reviews.toLocaleString()} reviews)
+                              </span>
                             </div>
 
-                            {/* Amenity Badges */}
-                            <div className="flex flex-wrap gap-1.5 mt-2.5">
-                              {hotel.amenities.slice(0, 4).map((am) => (
+                            {/* 5. 2-3 Amenities */}
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {hotel.amenities.slice(0, 3).map((am) => (
                                 <span
                                   key={am}
-                                  className="text-[10px] font-semibold bg-slate-100 hover:bg-slate-200/80 text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-200"
+                                  className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/80"
                                 >
                                   {am}
                                 </span>
                               ))}
-                              {hotel.amenities.length > 4 && (
-                                <span className="text-[10px] font-medium text-slate-400 px-1 py-0.5">
-                                  +{hotel.amenities.length - 4} more
-                                </span>
-                              )}
                             </div>
                           </div>
 
