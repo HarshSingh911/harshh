@@ -89,6 +89,7 @@ export interface CheckoutItem {
   hotelAmenities?: string[];
   hotelPerks?: string;
   hotelOriginalPriceInr?: number;
+  hotelPartnerUrls?: Partial<Record<string, string>>;
   roomType?: string;
   busOperator?: string;
   busType?: string;

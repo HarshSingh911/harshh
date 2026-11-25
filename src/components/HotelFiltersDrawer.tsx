@@ -1,6 +1,15 @@
-import React, { useEffect } from 'react';
-import { RotateCcw, Search, ShieldCheck, SlidersHorizontal, Star, X } from 'lucide-react';
-import { CurrencyCode, formatPrice } from '../data/travelData';
+import React, { useEffect, useState } from 'react';
+import { RotateCcw, Search, SlidersHorizontal, Star, X } from 'lucide-react';
+import { CurrencyCode } from '../data/travelData';
+import {
+  ALL_HOTEL_STARS,
+  DEFAULT_HOTEL_MAX_PRICE,
+  formatHotelPriceBracketLabel,
+  formatHotelStarOptionLabel,
+  HOTEL_PRICE_BRACKETS,
+  HotelPriceDisplayMode,
+  parseMinMaxPriceInputs,
+} from '../utils/hotelResultsUtils';
 
 export interface HotelFiltersDrawerProps {
   isOpen: boolean;
@@ -9,12 +18,12 @@ export interface HotelFiltersDrawerProps {
   currency: CurrencyCode;
   matchedCount: number;
   activeFilterCount: number;
-  hotelSearchQuery: string;
-  setHotelSearchQuery: (val: string) => void;
-  hotelTripYeahAssuredOnly: boolean;
-  setHotelTripYeahAssuredOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  stayNights: number;
+  priceDisplayMode: HotelPriceDisplayMode;
+  setPriceDisplayMode: (mode: HotelPriceDisplayMode) => void;
+  hotelMinPrice: number;
   hotelMaxPrice: number;
-  setHotelMaxPrice: (val: number) => void;
+  onApplyMinMaxPrice: (minPrice: number, maxPrice: number) => void;
   hotelPriceBracket: string;
   setHotelPriceBracket: (val: string) => void;
   hotelStars: number[];
@@ -26,21 +35,6 @@ export interface HotelFiltersDrawerProps {
   hotelSelectedAmenities: string[];
   setHotelSelectedAmenities: React.Dispatch<React.SetStateAction<string[]>>;
 }
-
-const PRICE_BUCKETS = [
-  { id: 'all', label: 'All Budgets' },
-  { id: 'under-2500', label: 'Budget (Under ₹2,500)' },
-  { id: '2500-5000', label: 'Value (₹2,500 - ₹5,000)' },
-  { id: '5000-9000', label: 'Premium (₹5,000 - ₹9,000)' },
-  { id: '9000-15000', label: 'Luxury (₹9,000 - ₹15,000)' },
-  { id: 'above-15000', label: 'Ultra Luxury (₹15,000+)' },
-];
-
-const STAR_OPTIONS = [
-  { star: 5, subtitle: 'Luxury Resorts & Palaces' },
-  { star: 4, subtitle: 'Premium Stays' },
-  { star: 3, subtitle: 'Standard & Budget' },
-];
 
 const RATING_OPTIONS = [
   { val: 0, label: 'Any Rating' },
@@ -70,12 +64,12 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
   currency,
   matchedCount,
   activeFilterCount,
-  hotelSearchQuery,
-  setHotelSearchQuery,
-  hotelTripYeahAssuredOnly,
-  setHotelTripYeahAssuredOnly,
+  stayNights,
+  priceDisplayMode,
+  setPriceDisplayMode,
+  hotelMinPrice,
   hotelMaxPrice,
-  setHotelMaxPrice,
+  onApplyMinMaxPrice,
   hotelPriceBracket,
   setHotelPriceBracket,
   hotelStars,
@@ -87,6 +81,17 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
   hotelSelectedAmenities,
   setHotelSelectedAmenities,
 }) => {
+  const [minDraft, setMinDraft] = useState<string>(hotelMinPrice > 0 ? String(hotelMinPrice) : '');
+  const [maxDraft, setMaxDraft] = useState<string>(
+    hotelMaxPrice !== DEFAULT_HOTEL_MAX_PRICE ? String(hotelMaxPrice) : ''
+  );
+
+  // Sync draft inputs whenever external min/max resets or updates
+  useEffect(() => {
+    setMinDraft(hotelMinPrice > 0 ? String(hotelMinPrice) : '');
+    setMaxDraft(hotelMaxPrice !== DEFAULT_HOTEL_MAX_PRICE ? String(hotelMaxPrice) : '');
+  }, [hotelMinPrice, hotelMaxPrice]);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -97,6 +102,16 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  const handleSubmitPriceRange = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const { minPrice, maxPrice } = parseMinMaxPriceInputs(
+      minDraft,
+      maxDraft,
+      DEFAULT_HOTEL_MAX_PRICE
+    );
+    onApplyMinMaxPrice(minPrice, maxPrice);
+  };
 
   return (
     <div
@@ -159,95 +174,123 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
 
         {/* Drawer Scrollable Filters Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5 text-xs">
-          {/* 1. Quick Search Box */}
-          <div>
-            <label
-              htmlFor="hotel-drawer-search-input"
-              className="font-bold text-slate-800 block mb-1.5"
-            >
-              Search Hotel / Locality
-            </label>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="hotel-drawer-search-input"
-                type="text"
-                value={hotelSearchQuery}
-                onChange={(e) => setHotelSearchQuery(e.target.value)}
-                placeholder="e.g. Taj, Calangute, Villa..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-7 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors"
-              />
-              {hotelSearchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setHotelSearchQuery('')}
-                  aria-label="Clear hotel search"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
+          {/* 1. View Price As (Per night / Total stay) */}
+          <div data-testid="hotel-view-price-as-section">
+            <span className="font-bold text-slate-800 block mb-2">View price as</span>
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 border border-slate-200/80">
+              <button
+                type="button"
+                data-testid="price-mode-per-night"
+                aria-pressed={priceDisplayMode === 'per-night'}
+                onClick={() => setPriceDisplayMode('per-night')}
+                className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  priceDisplayMode === 'per-night'
+                    ? 'bg-white text-[#05203c] font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Per night
+              </button>
+              <button
+                type="button"
+                data-testid="price-mode-total-stay"
+                aria-pressed={priceDisplayMode === 'total-stay'}
+                onClick={() => setPriceDisplayMode('total-stay')}
+                className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  priceDisplayMode === 'total-stay'
+                    ? 'bg-white text-[#05203c] font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Total stay
+              </button>
             </div>
+            {priceDisplayMode === 'total-stay' && (
+              <p className="text-[11px] text-slate-500 mt-1.5">
+                Showing total price for {stayNights} {stayNights === 1 ? 'night' : 'nights'}
+              </p>
+            )}
           </div>
 
-          {/* 2. TripYeah Assured Special Filter */}
-          <label
-            className={`p-3 rounded-xl border transition-colors cursor-pointer select-none flex items-start gap-2.5 ${
-              hotelTripYeahAssuredOnly
-                ? 'bg-blue-50 border-blue-400 text-blue-900 shadow-2xs'
-                : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-700'
-            }`}
-          >
-            <input
-              type="checkbox"
-              checked={hotelTripYeahAssuredOnly}
-              onChange={(e) => setHotelTripYeahAssuredOnly(e.target.checked)}
-              className="w-4 h-4 mt-0.5 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-            />
-            <div>
-              <div className="flex items-center gap-1.5 font-bold text-xs text-blue-900">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                <span>TripYeah Assured Stays</span>
-              </div>
-              <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                Verified photos, 24/7 concierge &amp; 100% money-back check-in guarantee
-              </p>
-            </div>
-          </label>
-
-          {/* 3. Price per Night Range & Brackets */}
+          {/* 2. Price Range (Min / Max Number Inputs + Compact Search Button) & Numbered Brackets */}
           <div className="pt-3 border-t border-slate-100">
-            <div className="flex items-center justify-between font-semibold text-slate-800 mb-1.5">
-              <label htmlFor="hotel-drawer-max-price">Max Price per Night</label>
-              <span className="font-bold text-blue-600 font-mono tabular-nums">
-                {formatPrice(hotelMaxPrice, currency)}
-              </span>
-            </div>
-            <input
-              id="hotel-drawer-max-price"
-              type="range"
-              min={1500}
-              max={25000}
-              step={500}
-              value={hotelMaxPrice}
-              onChange={(e) => {
-                setHotelMaxPrice(Number(e.target.value));
-                setHotelPriceBracket('all');
-              }}
-              className="w-full accent-blue-600 cursor-pointer"
-            />
-            <div className="flex justify-between text-[10px] text-slate-400 font-mono tabular-nums mt-0.5">
-              <span>₹1,500</span>
-              <span>₹25,000+</span>
-            </div>
+            <span className="font-bold text-slate-800 block mb-2.5">
+              {priceDisplayMode === 'total-stay' ? 'Price (Total stay)' : 'Price (Per night)'}
+            </span>
 
-            {/* Quick Price Buckets */}
-            <div className="mt-3 space-y-2">
-              {PRICE_BUCKETS.map((bracket) => {
+            <form
+              onSubmit={handleSubmitPriceRange}
+              data-testid="hotel-price-minmax-form"
+              className="flex items-end gap-2"
+            >
+              <div className="flex-1 min-w-0">
+                <label
+                  htmlFor="hotel-drawer-min-price"
+                  className="block text-[11px] font-semibold text-slate-500 mb-1"
+                >
+                  Min
+                </label>
+                <input
+                  id="hotel-drawer-min-price"
+                  data-testid="hotel-min-price-input"
+                  type="number"
+                  min={0}
+                  step={100}
+                  inputMode="numeric"
+                  value={minDraft}
+                  onChange={(e) => setMinDraft(e.target.value)}
+                  placeholder="0"
+                  className="w-full h-[34px] bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs font-semibold text-slate-900 placeholder-slate-400 tabular-nums focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors"
+                />
+              </div>
+
+              <span className="pb-2 text-slate-400 font-semibold select-none">–</span>
+
+              <div className="flex-1 min-w-0">
+                <label
+                  htmlFor="hotel-drawer-max-price"
+                  className="block text-[11px] font-semibold text-slate-500 mb-1"
+                >
+                  Max
+                </label>
+                <input
+                  id="hotel-drawer-max-price"
+                  data-testid="hotel-max-price-input"
+                  type="number"
+                  min={0}
+                  step={100}
+                  inputMode="numeric"
+                  value={maxDraft}
+                  onChange={(e) => setMaxDraft(e.target.value)}
+                  placeholder="25000"
+                  className="w-full h-[34px] bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs font-semibold text-slate-900 placeholder-slate-400 tabular-nums focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors"
+                />
+              </div>
+
+              {/* Compact Icon-Only Search Button Matching Second Header Search Button */}
+              <button
+                type="submit"
+                data-testid="hotel-price-apply-search-btn"
+                title="Apply Min & Max price"
+                aria-label="Apply min and max price"
+                className="w-[34px] h-[34px] rounded-xl bg-[#05203c] hover:bg-[#0a3666] text-white shadow-xs border border-[#05203c] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95"
+              >
+                <Search className="w-3.5 h-3.5 stroke-[2.25]" />
+              </button>
+            </form>
+
+            {/* Numbered Budget Brackets (All Budgets, ₹0 - ₹2,000, ₹2,000 - ₹5,000, ...) */}
+            <div
+              data-testid="hotel-price-brackets-list"
+              className="mt-3.5 space-y-2"
+            >
+              {HOTEL_PRICE_BRACKETS.map((bracket) => {
                 const isSelected = hotelPriceBracket === bracket.id;
+                const label = formatHotelPriceBracketLabel(bracket, currency);
                 return (
                   <label
                     key={bracket.id}
+                    data-testid={`hotel-price-bracket-${bracket.id}`}
                     className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
                   >
                     <input
@@ -257,8 +300,8 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
                       onChange={() => setHotelPriceBracket(bracket.id)}
                       className="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-0 cursor-pointer accent-blue-600"
                     />
-                    <span className={isSelected ? 'font-bold text-blue-700' : ''}>
-                      {bracket.label}
+                    <span className={`tabular-nums ${isSelected ? 'font-bold text-blue-700' : 'font-medium'}`}>
+                      {label}
                     </span>
                   </label>
                 );
@@ -266,31 +309,39 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
             </div>
           </div>
 
-          {/* 4. Hotel Star Rating */}
-          <div className="pt-3 border-t border-slate-100">
+          {/* 3. Hotel Star Rating (5 Stars down to 1 Star with exact star icons) */}
+          <div className="pt-3 border-t border-slate-100" data-testid="hotel-star-rating-section">
             <span className="font-bold text-slate-800 block mb-2.5">Hotel Star Rating</span>
-            <div className="space-y-2">
-              {STAR_OPTIONS.map(({ star, subtitle }) => {
+            <div className="space-y-2.5">
+              {ALL_HOTEL_STARS.map((star) => {
                 const checked = hotelStars.includes(star);
+                const starLabel = formatHotelStarOptionLabel(star);
                 return (
                   <label
                     key={star}
-                    className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
+                    data-testid={`hotel-star-option-${star}`}
+                    className="flex items-center justify-between gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() =>
-                        setHotelStars((prev) =>
-                          checked ? prev.filter((s) => s !== star) : [...prev, star]
-                        )
-                      }
-                      className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                    />
-                    <span className="flex items-center gap-1 text-xs">
-                      <span className="font-semibold tabular-nums">{star}</span>
-                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                      <span className="text-slate-500 text-[11px]">{subtitle}</span>
+                    <span className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() =>
+                          setHotelStars((prev) =>
+                            checked ? prev.filter((s) => s !== star) : [...prev, star]
+                          )
+                        }
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
+                      />
+                      <span
+                        className="inline-flex items-center gap-0.5 text-amber-500"
+                        aria-hidden="true"
+                      >
+                        {Array.from({ length: star }).map((_, idx) => (
+                          <Star key={idx} className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                        ))}
+                      </span>
+                      <span className="font-semibold text-xs text-slate-800">{starLabel}</span>
                     </span>
                   </label>
                 );
@@ -298,7 +349,7 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
             </div>
           </div>
 
-          {/* 5. Guest Review Rating */}
+          {/* 4. Guest Review Rating */}
           <div className="pt-3 border-t border-slate-100">
             <span className="font-bold text-slate-800 block mb-2.5">Guest Review Rating</span>
             <div className="grid grid-cols-2 gap-2">
@@ -322,7 +373,7 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
             </div>
           </div>
 
-          {/* 6. Property Type */}
+          {/* 5. Property Type */}
           <div className="pt-3 border-t border-slate-100">
             <span className="font-bold text-slate-800 block mb-2.5">Property Type</span>
             <div className="grid grid-cols-2 gap-2">
@@ -350,7 +401,7 @@ export const HotelFiltersDrawer: React.FC<HotelFiltersDrawerProps> = ({
             </div>
           </div>
 
-          {/* 7. Amenities & Freebies */}
+          {/* 6. Amenities & Freebies */}
           <div className="pt-3 border-t border-slate-100">
             <span className="font-bold text-slate-800 block mb-2.5">Amenities &amp; Freebies</span>
             <div className="space-y-2">

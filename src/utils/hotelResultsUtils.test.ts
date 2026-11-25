@@ -1,15 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ALL_HOTEL_STARS,
   buildHotelCardPhotos,
   countActiveHotelFilters,
+  DEFAULT_HOTEL_MAX_PRICE,
   formatCompactMapPrice,
   formatHotelCountLabel,
+  formatHotelPriceBracketLabel,
+  formatHotelResultsStatusLabel,
+  formatHotelStarOptionLabel,
   formatPlacesPriceLevelLabel,
   getAdjacentPhotoIndex,
+  getDisplayedHotelPrice,
   getHotelReviewSummaryLabel,
+  HOTEL_PRICE_BRACKETS,
+  HOTEL_SKELETON_CARD_COUNT,
   HOTEL_SORT_OPTIONS,
+  matchesHotelPriceBracket,
   normalizeHotelMatchKey,
+  parseMinMaxPriceInputs,
   sortHotelsForDisplay,
 } from './hotelResultsUtils.ts';
 
@@ -70,9 +80,11 @@ test('normalizeHotelMatchKey strips filler words for duplicate detection', () =>
 test('countActiveHotelFilters returns 0 for defaults and counts active criteria accurately', () => {
   const defaults = {
     searchQuery: '',
-    maxPrice: 20000,
+    minPrice: 0,
+    maxPrice: DEFAULT_HOTEL_MAX_PRICE,
+    defaultMaxPrice: DEFAULT_HOTEL_MAX_PRICE,
     priceBracket: 'all',
-    stars: [5, 4, 3],
+    stars: [...ALL_HOTEL_STARS],
     minRating: 0,
     propertyTypes: [],
     amenities: [],
@@ -86,14 +98,13 @@ test('countActiveHotelFilters returns 0 for defaults and counts active criteria 
   assert.equal(
     countActiveHotelFilters({
       ...defaults,
-      searchQuery: 'Taj',
-      assuredOnly: true,
+      minPrice: 1500,
       minRating: 4.5,
       stars: [5],
       propertyTypes: ['Resort'],
       amenities: ['Free WiFi', 'Swimming Pool'],
     }),
-    7
+    6
   );
 
   assert.equal(
@@ -108,10 +119,42 @@ test('countActiveHotelFilters returns 0 for defaults and counts active criteria 
     countActiveHotelFilters({
       ...defaults,
       maxPrice: 12000,
-      priceBracket: '5000-9000',
+      priceBracket: '5000-8000',
     }),
     1
   );
+});
+
+test('hotel price display mode, numbered brackets, min/max parser, and star labels behave accurately', () => {
+  assert.equal(getDisplayedHotelPrice(2000, 'per-night', 4), 2000);
+  assert.equal(getDisplayedHotelPrice(2000, 'total-stay', 4), 8000);
+
+  assert.deepEqual(
+    HOTEL_PRICE_BRACKETS.map((b) => formatHotelPriceBracketLabel(b, 'INR')),
+    [
+      'All Budgets',
+      '₹0 - ₹2,000',
+      '₹2,000 - ₹5,000',
+      '₹5,000 - ₹8,000',
+      '₹8,000 - ₹12,000',
+      '₹12,000 - ₹20,000',
+      '₹20,000+',
+    ]
+  );
+
+  assert.equal(matchesHotelPriceBracket(1500, '0-2000'), true);
+  assert.equal(matchesHotelPriceBracket(2500, '0-2000'), false);
+  assert.equal(matchesHotelPriceBracket(4500, '2000-5000'), true);
+  assert.equal(matchesHotelPriceBracket(22000, '20000-plus'), true);
+  assert.equal(matchesHotelPriceBracket(500, 'all'), true);
+
+  assert.deepEqual(parseMinMaxPriceInputs('1000', '5000'), { minPrice: 1000, maxPrice: 5000 });
+  assert.deepEqual(parseMinMaxPriceInputs('8000', '3000'), { minPrice: 3000, maxPrice: 8000 });
+  assert.deepEqual(parseMinMaxPriceInputs('', ''), { minPrice: 0, maxPrice: DEFAULT_HOTEL_MAX_PRICE });
+
+  assert.equal(formatHotelStarOptionLabel(5), '5 Stars');
+  assert.equal(formatHotelStarOptionLabel(2), '2 Stars');
+  assert.equal(formatHotelStarOptionLabel(1), '1 Star');
 });
 
 test('HOTEL_SORT_OPTIONS exposes Recommended first, Lowest Price second, and omits Earliest Departure', () => {
@@ -128,6 +171,15 @@ test('formatHotelCountLabel handles singular, plural, and zero counts cleanly', 
   assert.equal(formatHotelCountLabel(1), '1 hotel');
   assert.equal(formatHotelCountLabel(0), '0 hotels');
   assert.equal(formatHotelCountLabel(-4), '0 hotels');
+});
+
+test('formatHotelResultsStatusLabel returns Searching... while loading and hotel count when loaded', () => {
+  assert.equal(formatHotelResultsStatusLabel(9, true), 'Searching...');
+  assert.equal(formatHotelResultsStatusLabel(0, true), 'Searching...');
+  assert.equal(formatHotelResultsStatusLabel(9, false), '9 hotels');
+  assert.equal(formatHotelResultsStatusLabel(1, false), '1 hotel');
+  assert.equal(formatHotelResultsStatusLabel(0, false), '0 hotels');
+  assert.equal(HOTEL_SKELETON_CARD_COUNT, 4);
 });
 
 test('sortHotelsForDisplay orders hotels deterministically across all 4 sort modes without mutating input', () => {

@@ -8,6 +8,7 @@ import {
   calculateStayNights,
   getCheapestHotelProviderDeal,
   getLowestHotelDealPrice,
+  isExternalHotelProvider,
   resolveHotelCountryAndCity,
 } from './hotelCompareUtils';
 
@@ -110,6 +111,39 @@ test('buildHotelProviderBookingUrl builds exact hotel deep-link URLs with cleane
   });
   assert.ok(directOverrideUrl.startsWith('https://www.booking.com/hotel/in/taj-exotica-goa.html?'));
   assert.ok(directOverrideUrl.includes('checkin=2026-10-15'));
+
+  const hotelsComUrl = buildHotelProviderBookingUrl({
+    providerId: 'hotels-com',
+    hotelName: 'Taj Fort Aguada Resort',
+    city: 'Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-18',
+    rooms: 2,
+    adults: 4,
+  });
+  assert.ok(hotelsComUrl.startsWith('https://in.hotels.com/Hotel-Search?destination='));
+  assert.ok(hotelsComUrl.includes('hotelName=Taj%20Fort%20Aguada%20Resort'));
+  assert.ok(hotelsComUrl.includes('rooms=2'));
+  assert.ok(hotelsComUrl.includes('adults=4'));
+
+  const officialUrl = buildHotelProviderBookingUrl({
+    providerId: 'hotel-official',
+    hotelName: 'Taj Fort Aguada Resort',
+    city: 'Goa',
+  });
+  assert.ok(officialUrl.startsWith('https://www.google.com/search?q='));
+  assert.ok(officialUrl.includes('Taj%20Fort%20Aguada%20Resort'));
+});
+
+test('isExternalHotelProvider separates external booking partners from TripYeah direct', () => {
+  assert.equal(isExternalHotelProvider('agoda'), true);
+  assert.equal(isExternalHotelProvider('booking-com'), true);
+  assert.equal(isExternalHotelProvider('makemytrip-hotels'), true);
+  assert.equal(isExternalHotelProvider('expedia'), true);
+  assert.equal(isExternalHotelProvider('hotels-com'), true);
+  assert.equal(isExternalHotelProvider('goibibo-hotels'), true);
+  assert.equal(isExternalHotelProvider('hotel-official'), true);
+  assert.equal(isExternalHotelProvider('tripyeah-hotels-direct'), false);
 });
 
 test('buildHotelProviderDeals sorts by highest rating when requested', () => {

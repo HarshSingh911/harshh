@@ -12,7 +12,7 @@ import {
   useMap,
   useMapsLibrary,
 } from '@vis.gl/react-google-maps';
-import { ExternalLink, Star } from 'lucide-react';
+import { ExternalLink, Loader2, Star } from 'lucide-react';
 import { CurrencyCode } from '../data/travelData';
 import {
   formatCompactMapPrice,
@@ -215,9 +215,19 @@ const SidebarMapInner: React.FC<{
   regionCode: string;
   currency: CurrencyCode;
   hotels: SidebarMapHotelInput[];
+  isSearching?: boolean;
   onSelectHotelCard?: (hotelId: string) => void;
   onOpenHotelDetails?: (hotelId: string) => void;
-}> = ({ city, country, regionCode, currency, hotels, onSelectHotelCard, onOpenHotelDetails }) => {
+}> = ({
+  city,
+  country,
+  regionCode,
+  currency,
+  hotels,
+  isSearching = false,
+  onSelectHotelCard,
+  onOpenHotelDetails,
+}) => {
   const isLoaded = useApiIsLoaded();
   const status = useApiLoadingStatus();
   const placesLib = useMapsLibrary('places');
@@ -533,11 +543,7 @@ const SidebarMapInner: React.FC<{
   }
 
   if (!isLoaded) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-500 text-xs">
-        Loading hotel map...
-      </div>
-    );
+    return <MapSearchingState />;
   }
 
   return (
@@ -554,37 +560,74 @@ const SidebarMapInner: React.FC<{
         className="w-full h-full"
       >
         <SidebarBoundsController pins={combinedPins} fallbackCenter={cityCenter} />
-        {combinedPins.map((pin) => (
-          <SidebarPricePinMarker
-            key={pin.pinId}
-            pin={pin}
-            isSelected={selectedPinId === pin.pinId}
-            onSelect={() => setSelectedPinId(pin.pinId)}
-            onClose={() => setSelectedPinId(null)}
-            onFocusHotelCard={onSelectHotelCard}
-            onOpenHotelDetails={onOpenHotelDetails}
-          />
-        ))}
+        {!isSearching &&
+          combinedPins.map((pin) => (
+            <SidebarPricePinMarker
+              key={pin.pinId}
+              pin={pin}
+              isSelected={selectedPinId === pin.pinId}
+              onSelect={() => setSelectedPinId(pin.pinId)}
+              onClose={() => setSelectedPinId(null)}
+              onFocusHotelCard={onSelectHotelCard}
+              onOpenHotelDetails={onOpenHotelDetails}
+            />
+          ))}
       </GoogleMap>
 
-      {isLoadingPins && combinedPins.length === 0 && (
-        <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-white/90 px-2 py-1 text-[10px] font-semibold text-slate-700 shadow-xs border border-slate-200">
-          Locating hotels &amp; prices...
+      {(isSearching || (isLoadingPins && combinedPins.length === 0)) && (
+        <div
+          data-testid="hotel-map-searching-state"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center p-4"
+        >
+          <div
+            data-testid="hotel-map-searching-label"
+            className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs sm:text-[13px] font-semibold text-slate-700 shadow-md border border-slate-200/90"
+          >
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#072a4f]" aria-hidden="true" />
+            <span>Searching...</span>
+          </div>
         </div>
       )}
     </div>
   );
 };
 
+const MapSearchingState: React.FC = () => (
+  <div
+    data-testid="hotel-map-searching-state"
+    aria-busy="true"
+    aria-label="Searching hotels on map"
+    className="w-full h-full bg-slate-50 flex items-center justify-center p-4 select-none"
+  >
+    <div
+      data-testid="hotel-map-searching-label"
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200/90 shadow-xs text-xs sm:text-[13px] font-semibold text-slate-700"
+    >
+      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#072a4f]" aria-hidden="true" />
+      <span>Searching...</span>
+    </div>
+  </div>
+);
+
 export const HotelSidebarMapCard: React.FC<{
   city: string;
   country: string;
   currency: CurrencyCode;
   hotels: SidebarMapHotelInput[];
+  isSearching?: boolean;
   onSelectHotelCard?: (hotelId: string) => void;
   onOpenHotelDetails?: (hotelId: string) => void;
   className?: string;
-}> = ({ city, country, currency, hotels, onSelectHotelCard, onOpenHotelDetails, className }) => {
+}> = ({
+  city,
+  country,
+  currency,
+  hotels,
+  isSearching = false,
+  onSelectHotelCard,
+  onOpenHotelDetails,
+  className,
+}) => {
   const [apiKey, setApiKey] = useState<string>(() => readViteMapsKey());
   const [keyChecked, setKeyChecked] = useState<boolean>(() => Boolean(readViteMapsKey()));
 
@@ -624,13 +667,15 @@ export const HotelSidebarMapCard: React.FC<{
       <div className="relative w-full flex-1 min-h-0">
         <div className="absolute inset-0">
           {!keyChecked ? (
-            <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
-              Loading map...
-            </div>
+            <MapSearchingState />
           ) : !apiKey ? (
-            <div className="w-full h-full flex items-center justify-center text-xs text-slate-600 p-4 text-center">
-              Google Maps API key is not configured in this environment.
-            </div>
+            isSearching ? (
+              <MapSearchingState />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-xs text-slate-600 p-4 text-center">
+                Google Maps API key is not configured in this environment.
+              </div>
+            )
           ) : (
             <APIProvider
               apiKey={apiKey}
@@ -644,6 +689,7 @@ export const HotelSidebarMapCard: React.FC<{
                 regionCode={regionCode}
                 currency={currency}
                 hotels={hotels}
+                isSearching={isSearching}
                 onSelectHotelCard={onSelectHotelCard}
                 onOpenHotelDetails={onOpenHotelDetails}
               />

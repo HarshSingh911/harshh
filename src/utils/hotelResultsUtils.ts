@@ -96,8 +96,91 @@ export function normalizeHotelMatchKey(name: string): string {
     .trim();
 }
 
+export type HotelPriceDisplayMode = 'per-night' | 'total-stay';
+
+export const DEFAULT_HOTEL_MAX_PRICE = 25000;
+export const ALL_HOTEL_STARS: ReadonlyArray<number> = [5, 4, 3, 2, 1];
+
+export interface HotelPriceBracketOption {
+  id: string;
+  min: number;
+  max: number | null;
+}
+
+export const HOTEL_PRICE_BRACKETS: ReadonlyArray<HotelPriceBracketOption> = [
+  { id: 'all', min: 0, max: null },
+  { id: '0-2000', min: 0, max: 2000 },
+  { id: '2000-5000', min: 2000, max: 5000 },
+  { id: '5000-8000', min: 5000, max: 8000 },
+  { id: '8000-12000', min: 8000, max: 12000 },
+  { id: '12000-20000', min: 12000, max: 20000 },
+  { id: '20000-plus', min: 20000, max: null },
+];
+
+export function getDisplayedHotelPrice(
+  nightlyPriceInr: number,
+  mode: HotelPriceDisplayMode,
+  stayNights: number
+): number {
+  const safePrice = Math.max(0, Math.round(nightlyPriceInr));
+  const safeNights = Math.max(1, Math.floor(stayNights));
+  return mode === 'total-stay' ? safePrice * safeNights : safePrice;
+}
+
+export function matchesHotelPriceBracket(priceInr: number, bracketId: string): boolean {
+  if (!bracketId || bracketId === 'all') return true;
+  const found = HOTEL_PRICE_BRACKETS.find((b) => b.id === bracketId);
+  if (!found) return true;
+  if (found.max === null) {
+    return priceInr >= found.min;
+  }
+  return priceInr >= found.min && priceInr <= found.max;
+}
+
+export function formatHotelPriceBracketLabel(
+  bracket: HotelPriceBracketOption,
+  currency: string = 'INR'
+): string {
+  if (bracket.id === 'all') return 'All Budgets';
+  if (bracket.max === null) {
+    return `${formatCompactMapPrice(bracket.min, currency)}+`;
+  }
+  const minLabel =
+    bracket.min === 0
+      ? `${(CURRENCY_CONFIG[currency] || CURRENCY_CONFIG.INR).symbol}0`
+      : formatCompactMapPrice(bracket.min, currency);
+  return `${minLabel} - ${formatCompactMapPrice(bracket.max, currency)}`;
+}
+
+export function parseMinMaxPriceInputs(
+  minRaw: string,
+  maxRaw: string,
+  defaultMax: number = DEFAULT_HOTEL_MAX_PRICE
+): { minPrice: number; maxPrice: number } {
+  const parsedMin = minRaw.trim() === '' ? 0 : Math.max(0, Math.floor(Number(minRaw)));
+  const parsedMax =
+    maxRaw.trim() === '' ? defaultMax : Math.max(0, Math.floor(Number(maxRaw)));
+
+  const safeMin = Number.isFinite(parsedMin) ? parsedMin : 0;
+  const safeMax = Number.isFinite(parsedMax) ? parsedMax : defaultMax;
+
+  if (maxRaw.trim() === '') {
+    return { minPrice: safeMin, maxPrice: defaultMax };
+  }
+  if (safeMin > safeMax) {
+    return { minPrice: safeMax, maxPrice: safeMin };
+  }
+  return { minPrice: safeMin, maxPrice: safeMax };
+}
+
+export function formatHotelStarOptionLabel(star: number): string {
+  const safeStar = Math.max(1, Math.min(5, Math.floor(star)));
+  return `${safeStar} ${safeStar === 1 ? 'Star' : 'Stars'}`;
+}
+
 export interface HotelFilterCriteria {
   searchQuery: string;
+  minPrice?: number;
   maxPrice: number;
   defaultMaxPrice?: number;
   priceBracket: string;
@@ -111,7 +194,8 @@ export interface HotelFilterCriteria {
 }
 
 export function countActiveHotelFilters(filters: HotelFilterCriteria): number {
-  const defaultMax = filters.defaultMaxPrice ?? 20000;
+  const defaultMax = filters.defaultMaxPrice ?? DEFAULT_HOTEL_MAX_PRICE;
+  const minPrice = filters.minPrice ?? 0;
   let count = 0;
 
   if (filters.searchQuery.trim().length > 0) count += 1;
@@ -119,17 +203,15 @@ export function countActiveHotelFilters(filters: HotelFilterCriteria): number {
   if (filters.freeCancellationOnly) count += 1;
   if (filters.priceBracket !== 'all') {
     count += 1;
-  } else if (filters.maxPrice < defaultMax) {
+  } else if (minPrice > 0 || filters.maxPrice !== defaultMax) {
     count += 1;
   }
 
-  const normalizedStars = Array.from(new Set(filters.stars)).sort();
-  if (
-    normalizedStars.length !== 3 ||
-    normalizedStars[0] !== 3 ||
-    normalizedStars[1] !== 4 ||
-    normalizedStars[2] !== 5
-  ) {
+  const normalizedStars = Array.from(new Set(filters.stars)).sort((a, b) => a - b);
+  const isAllStarsSelected =
+    normalizedStars.length === ALL_HOTEL_STARS.length &&
+    normalizedStars.every((val, idx) => val === idx + 1);
+  if (!isAllStarsSelected) {
     count += 1;
   }
 
@@ -157,9 +239,16 @@ export const HOTEL_SORT_OPTIONS: ReadonlyArray<{
   { id: 'highest-rated', label: 'Highest Rated' },
 ];
 
+export const HOTEL_SKELETON_CARD_COUNT = 4;
+
 export function formatHotelCountLabel(count: number): string {
   const safeCount = Math.max(0, Math.floor(count));
   return `${safeCount} ${safeCount === 1 ? 'hotel' : 'hotels'}`;
+}
+
+export function formatHotelResultsStatusLabel(count: number, isSearching: boolean): string {
+  if (isSearching) return 'Searching...';
+  return formatHotelCountLabel(count);
 }
 
 export interface SortableHotelItem {

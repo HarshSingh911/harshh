@@ -39,10 +39,12 @@ import hotelDiningImg from '../assets/images/hotel_gallery_dining_terrace_179536
 
 import {
   addDaysToIsoDate,
+  buildHotelProviderBookingUrl,
   buildHotelProviderDeals,
   calculateStayAdjustedNightlyPrice,
   calculateStayNights,
   getLowestHotelDealPrice,
+  isExternalHotelProvider,
   resolveHotelCountryAndCity,
   type HotelProviderDeal,
 } from '../utils/hotelCompareUtils';
@@ -512,19 +514,23 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="space-y-2.5 max-w-3xl">
-              {/* Quiet unboxed metadata line */}
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium">
-                <span className="inline-flex items-center gap-0.5 text-amber-500">
+              <div
+                data-testid="hotel-checkout-title-row"
+                className="flex flex-wrap items-center gap-x-2.5 gap-y-1"
+              >
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-display">
+                  {hotelName}
+                </h2>
+                <span
+                  data-testid="hotel-checkout-stars"
+                  className="inline-flex items-center gap-0.5 text-amber-500 shrink-0"
+                  aria-label={`${stars} star hotel`}
+                >
                   {Array.from({ length: stars }).map((_, idx) => (
-                    <Star key={idx} className="w-3.5 h-3.5 fill-current" />
+                    <Star key={idx} className="w-4 h-4 fill-current" />
                   ))}
                 </span>
-                <span>{stars}-Star {propertyType}</span>
               </div>
-
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-display">
-                {hotelName}
-              </h2>
 
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-600">
                 <button
@@ -969,6 +975,20 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
           >
             {providerDeals.map((provider) => {
               const nightlyPrice = adjustedBasePrice + provider.priceDelta;
+              const isExternalSite = isExternalHotelProvider(provider.id);
+              const providerBookingUrl = isExternalSite
+                ? buildHotelProviderBookingUrl({
+                    providerId: provider.id,
+                    hotelName,
+                    city,
+                    locality,
+                    checkIn: activeCheckIn,
+                    checkOut: activeCheckOut,
+                    rooms: activeRooms,
+                    adults: activeAdults,
+                    partnerUrls: item.hotelPartnerUrls,
+                  })
+                : '';
 
               return (
                 <div
@@ -1021,14 +1041,30 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
                       <div className="text-[11px] text-slate-500">per night</div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleSelectSite(provider)}
-                      className="px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] hover:from-[#072a4f] hover:via-[#093461] hover:to-[#0d437c] text-white shadow-sm shadow-[#05203c]/25 hover:shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center gap-2 whitespace-nowrap shrink-0"
-                    >
-                      <span>Go to site</span>
-                      <ExternalLink className="w-4 h-4" />
-                    </button>
+                    {isExternalSite ? (
+                      <a
+                        href={providerBookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid={`hotel-go-to-site-${provider.id}`}
+                        data-provider-id={provider.id}
+                        aria-label={`Go to ${provider.name} for ${hotelName}`}
+                        className="px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] hover:from-[#072a4f] hover:via-[#093461] hover:to-[#0d437c] text-white shadow-sm shadow-[#05203c]/25 hover:shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0"
+                      >
+                        Go to site
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSite(provider)}
+                        data-testid={`hotel-go-to-site-${provider.id}`}
+                        data-provider-id={provider.id}
+                        aria-label={`Go to ${provider.name} for ${hotelName}`}
+                        className="px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-b from-[#05203c] via-[#072a4f] to-[#0a3666] hover:from-[#072a4f] hover:via-[#093461] hover:to-[#0d437c] text-white shadow-sm shadow-[#05203c]/25 hover:shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0"
+                      >
+                        Go to site
+                      </button>
+                    )}
                   </div>
                 </div>
               );

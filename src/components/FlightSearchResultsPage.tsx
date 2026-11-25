@@ -81,15 +81,22 @@ import { HotelSidebarMapCard } from './HotelSidebarMapCard';
 import { HotelFiltersDrawer } from './HotelFiltersDrawer';
 import { HotelProviderWordmark } from './HotelProviderWordmark';
 import { HotelSortBar } from './HotelSortBar';
+import { HotelResultsSkeleton } from './HotelResultsSkeleton';
 import {
+  ALL_HOTEL_STARS,
   buildHotelCardPhotos,
   countActiveHotelFilters,
+  DEFAULT_HOTEL_MAX_PRICE,
+  getDisplayedHotelPrice,
   getHotelReviewSummaryLabel,
+  HotelPriceDisplayMode,
   HotelSortOption,
+  matchesHotelPriceBracket,
   sortHotelsForDisplay,
 } from '../utils/hotelResultsUtils';
 import {
   buildHotelProviderBookingUrl,
+  calculateStayNights,
   getCheapestHotelProviderDeal,
 } from '../utils/hotelCompareUtils';
 import hotelPoolImg from '../assets/images/hotel_gallery_exterior_pool_1795360066864.jpg';
@@ -1143,7 +1150,10 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [currentHotelMode, setCurrentHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
   const [modHotelMode, setModHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>(initialHotelMode);
   const [realHotels, setRealHotels] = useState<HotelResult[]>(HOTEL_RESULTS);
-  const [isLoadingProperties, setIsLoadingProperties] = useState<boolean>(false);
+  const [isLoadingProperties, setIsLoadingProperties] = useState<boolean>(
+    initialActiveCategory === 'hotels'
+  );
+  const [hotelSearchVersion, setHotelSearchVersion] = useState<number>(0);
   const [showListPropertyModal, setShowListPropertyModal] = useState<boolean>(false);
 
   // Cabs Pickup / Drop Grounded State
@@ -1181,33 +1191,45 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setActiveCabModal(null);
   };
 
-  // Fetch approved properties from Supabase / verified partner storage
+  // Fetch approved properties from Supabase / verified partner storage with smooth shimmer loading
   useEffect(() => {
+    if (currentCategory !== 'hotels') return;
     let isMounted = true;
     setIsLoadingProperties(true);
-    fetchApprovedProperties({ city: currentToCity.city, hotelMode: currentHotelMode })
-      .then((props) => {
-        if (isMounted) {
-          const mapped = props.map(mapPropertyToHotelResult);
-          if (mapped.length > 0) {
-            setRealHotels(mapped);
-          } else {
-            setRealHotels(HOTEL_RESULTS);
-          }
-          setIsLoadingProperties(false);
+
+    const minShimmerDelay = new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 1100);
+    });
+
+    Promise.all([
+      fetchApprovedProperties({ city: currentToCity.city, hotelMode: currentHotelMode }).catch(
+        (err) => {
+          console.error('Failed to load approved properties', err);
+          return null;
         }
-      })
-      .catch((err) => {
-        console.error('Failed to load approved properties', err);
-        if (isMounted) {
-          setRealHotels(HOTEL_RESULTS);
-          setIsLoadingProperties(false);
-        }
-      });
+      ),
+      minShimmerDelay,
+    ]).then(([props]) => {
+      if (!isMounted) return;
+      if (Array.isArray(props) && props.length > 0) {
+        setRealHotels(props.map(mapPropertyToHotelResult));
+      } else {
+        setRealHotels(HOTEL_RESULTS);
+      }
+      setIsLoadingProperties(false);
+    });
+
     return () => {
       isMounted = false;
     };
-  }, [currentToCity.city, currentHotelMode]);
+  }, [
+    currentCategory,
+    currentToCity.city,
+    currentHotelMode,
+    currentDepDate,
+    currentRetDate,
+    hotelSearchVersion,
+  ]);
 
   useEffect(() => {
     if (initialHotelMode) {
@@ -1420,6 +1442,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     onChangeHotelMode?.(modHotelMode);
     if (activeCat === 'hotels') {
       setHotelSortBy('recommended');
+      setHotelSearchVersion((v) => v + 1);
     }
 
     if (modDepDate && modDepDate.includes('-')) {
@@ -1563,36 +1586,41 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [trainPantryOnly, setTrainPantryOnly] = useState<boolean>(false);
 
   // 3. Hotels
-  const [hotelSearchQuery, setHotelSearchQuery] = useState<string>('');
-  const [hotelMaxPrice, setHotelMaxPrice] = useState<number>(20000);
+  const [hotelPriceDisplayMode, setHotelPriceDisplayMode] = useState<HotelPriceDisplayMode>('per-night');
+  const [hotelMaxPrice, setHotelMaxPrice] = useState<number>(DEFAULT_HOTEL_MAX_PRICE);
   const [hotelMinPrice, setHotelMinPrice] = useState<number>(0);
   const [hotelPriceBracket, setHotelPriceBracket] = useState<string>('all');
-  const [hotelStars, setHotelStars] = useState<number[]>([5, 4, 3]);
+  const [hotelStars, setHotelStars] = useState<number[]>([...ALL_HOTEL_STARS]);
   const [hotelMinRating, setHotelMinRating] = useState<number>(0);
   const [hotelSelectedLocalities, setHotelSelectedLocalities] = useState<string[]>([]);
   const [hotelSelectedPropertyTypes, setHotelSelectedPropertyTypes] = useState<string[]>([]);
   const [hotelSelectedAmenities, setHotelSelectedAmenities] = useState<string[]>([]);
   const [hotelBeachfrontOnly, setHotelBeachfrontOnly] = useState<boolean>(false);
-  const [hotelTripYeahAssuredOnly, setHotelTripYeahAssuredOnly] = useState<boolean>(false);
   const [hotelFreeCancellationOnly, setHotelFreeCancellationOnly] = useState<boolean>(false);
+
+  const hotelStayNights = useMemo(
+    () => calculateStayNights(currentDepDate, currentRetDate),
+    [currentDepDate, currentRetDate]
+  );
 
   const activeHotelFilterCount = useMemo(
     () =>
       countActiveHotelFilters({
-        searchQuery: hotelSearchQuery,
+        searchQuery: '',
+        minPrice: hotelMinPrice,
         maxPrice: hotelMaxPrice,
-        defaultMaxPrice: 20000,
+        defaultMaxPrice: DEFAULT_HOTEL_MAX_PRICE,
         priceBracket: hotelPriceBracket,
         stars: hotelStars,
         minRating: hotelMinRating,
         propertyTypes: hotelSelectedPropertyTypes,
         amenities: hotelSelectedAmenities,
         localities: hotelSelectedLocalities,
-        assuredOnly: hotelTripYeahAssuredOnly,
+        assuredOnly: false,
         freeCancellationOnly: hotelFreeCancellationOnly,
       }),
     [
-      hotelSearchQuery,
+      hotelMinPrice,
       hotelMaxPrice,
       hotelPriceBracket,
       hotelStars,
@@ -1600,7 +1628,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       hotelSelectedPropertyTypes,
       hotelSelectedAmenities,
       hotelSelectedLocalities,
-      hotelTripYeahAssuredOnly,
       hotelFreeCancellationOnly,
     ]
   );
@@ -1625,6 +1652,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       hotelAmenities: hotel.amenities,
       hotelPerks: hotel.perks,
       hotelOriginalPriceInr: hotel.originalPriceInr,
+      hotelPartnerUrls: (hotel as { partnerUrls?: Partial<Record<string, string>> }).partnerUrls,
+      toCity: currentToCity.city,
       travelDate: currentDepDate,
       returnDate: currentRetDate,
       travellers: currentHotelGuests,
@@ -1809,17 +1838,16 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setTrainSelectedArrStations([]);
     setTrainPantryOnly(false);
 
-    setHotelSearchQuery('');
-    setHotelMaxPrice(20000);
+    setHotelPriceDisplayMode('per-night');
+    setHotelMaxPrice(DEFAULT_HOTEL_MAX_PRICE);
     setHotelMinPrice(0);
     setHotelPriceBracket('all');
-    setHotelStars([5, 4, 3]);
+    setHotelStars([...ALL_HOTEL_STARS]);
     setHotelMinRating(0);
     setHotelSelectedLocalities([]);
     setHotelSelectedPropertyTypes([]);
     setHotelSelectedAmenities([]);
     setHotelBeachfrontOnly(false);
-    setHotelTripYeahAssuredOnly(false);
     setHotelFreeCancellationOnly(false);
 
     setBusSearchQuery('');
@@ -2106,25 +2134,20 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   // 3. Filtered Hotels
   const processedHotels = useMemo(() => {
     let list = realHotels.filter((h) => {
-      // Search query filter (hotel name or location/locality)
-      if (hotelSearchQuery.trim()) {
-        const q = hotelSearchQuery.toLowerCase().trim();
-        const matchesName = h.name.toLowerCase().includes(q);
-        const matchesLoc = h.location.toLowerCase().includes(q) || h.locality.toLowerCase().includes(q);
-        if (!matchesName && !matchesLoc) return false;
-      }
+      const displayPrice = getDisplayedHotelPrice(
+        h.priceInr,
+        hotelPriceDisplayMode,
+        hotelStayNights
+      );
 
-      // Price slider
-      if (h.priceInr > hotelMaxPrice || h.priceInr < hotelMinPrice) return false;
+      // Min / Max numeric price filter (DEFAULT_HOTEL_MAX_PRICE represents no upper cap)
+      if (hotelMinPrice > 0 && displayPrice < hotelMinPrice) return false;
+      if (hotelMaxPrice !== DEFAULT_HOTEL_MAX_PRICE && displayPrice > hotelMaxPrice) return false;
 
-      // Quick price bracket
-      if (hotelPriceBracket === 'under-2500' && h.priceInr > 2500) return false;
-      if (hotelPriceBracket === '2500-5000' && (h.priceInr < 2500 || h.priceInr > 5000)) return false;
-      if (hotelPriceBracket === '5000-9000' && (h.priceInr < 5000 || h.priceInr > 9000)) return false;
-      if (hotelPriceBracket === '9000-15000' && (h.priceInr < 9000 || h.priceInr > 15000)) return false;
-      if (hotelPriceBracket === 'above-15000' && h.priceInr < 15000) return false;
+      // Numbered budget bracket filter
+      if (!matchesHotelPriceBracket(displayPrice, hotelPriceBracket)) return false;
 
-      // Hotel Star Category
+      // Hotel Star Category (5 Stars down to 1 Star)
       if (hotelStars.length > 0 && !hotelStars.includes(h.stars)) return false;
 
       // User Rating
@@ -2144,9 +2167,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       // Beachfront only
       if (hotelBeachfrontOnly && !h.isBeachfront) return false;
 
-      // TripYeah Assured
-      if (hotelTripYeahAssuredOnly && !h.isTripYeahAssured) return false;
-
       // Free cancellation
       if (hotelFreeCancellationOnly && !h.freeCancellation) return false;
 
@@ -2157,7 +2177,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   }, [
     realHotels,
     currentHotelMode,
-    hotelSearchQuery,
+    hotelPriceDisplayMode,
+    hotelStayNights,
     hotelMaxPrice,
     hotelMinPrice,
     hotelPriceBracket,
@@ -2167,7 +2188,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     hotelSelectedPropertyTypes,
     hotelSelectedAmenities,
     hotelBeachfrontOnly,
-    hotelTripYeahAssuredOnly,
     hotelFreeCancellationOnly,
     hotelSortBy,
   ]);
@@ -5051,7 +5071,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   city={currentToCity.city}
                   country={currentToCity.country}
                   currency={currency}
-                  hotels={processedHotels}
+                  hotels={processedHotels.map((h) => ({
+                    ...h,
+                    priceInr: getDisplayedHotelPrice(
+                      h.priceInr,
+                      hotelPriceDisplayMode,
+                      hotelStayNights
+                    ),
+                  }))}
+                  isSearching={isLoadingProperties}
                   onSelectHotelCard={(hotelId) => {
                     const cardEl = document.querySelector(`[data-testid="hotel-list-card-${hotelId}"]`);
                     if (cardEl) {
@@ -6585,6 +6613,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 isFiltersOpen={isHotelFiltersOpen}
                 activeFilterCount={activeHotelFilterCount}
                 onOpenFilters={handleJumpToFilters}
+                isLoading={isLoadingProperties}
               />
             )}
 
@@ -7572,41 +7601,57 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               <div className="space-y-4">
                 {/* Backpacker Hostels & Dorms Banner */}
                 {onOpenHostelsPage && (
-                  <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-amber-500/10 border border-amber-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0">
-                        🎒
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-slate-900 text-sm">Looking for Backpacker Hostels &amp; Social Dorms?</h4>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-900 uppercase">
-                            The Hosteller · goSTOPS · Zostel
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          Explore verified bunk beds starting ₹449 with 100+ Mbps Wi-Fi, cafes, female-only dorms &amp; community events.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={onOpenHostelsPage}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  isLoadingProperties ? (
+                    <div
+                      data-testid="hotel-promo-banner-skeleton"
+                      aria-hidden="true"
+                      className="bg-white border border-slate-200/90 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs"
                     >
-                      <span>Explore Hostels Page</span>
-                      <Sparkles className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-3 flex-1 min-w-[220px]">
+                        <div className="w-10 h-10 rounded-xl hotel-skeleton-shimmer shrink-0" />
+                        <div className="space-y-2 flex-1 max-w-md">
+                          <div className="flex items-center gap-2">
+                            <span className="h-4 w-56 rounded hotel-skeleton-shimmer" />
+                            <span className="h-4 w-28 rounded-full hotel-skeleton-shimmer hidden sm:inline-block" />
+                          </div>
+                          <div className="h-3 w-4/5 rounded hotel-skeleton-shimmer" />
+                        </div>
+                      </div>
+                      <div className="w-36 h-9 rounded-xl hotel-skeleton-shimmer shrink-0" />
+                    </div>
+                  ) : (
+                    <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-amber-500/10 border border-amber-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0">
+                          🎒
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-slate-900 text-sm">Looking for Backpacker Hostels &amp; Social Dorms?</h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-900 uppercase">
+                              The Hosteller · goSTOPS · Zostel
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5">
+                            Explore verified bunk beds starting ₹449 with 100+ Mbps Wi-Fi, cafes, female-only dorms &amp; community events.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={onOpenHostelsPage}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span>Explore Hostels Page</span>
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )
                 )}
 
                 {/* Hotel Cards List */}
                 {isLoadingProperties ? (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
-                    <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                    <h4 className="font-bold text-base text-slate-800">Loading verified properties...</h4>
-                    <p className="text-xs text-slate-500">Querying live database for {currentToCity.city} accommodations.</p>
-                  </div>
+                  <HotelResultsSkeleton count={4} />
                 ) : processedHotels.length === 0 ? (
                   <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center shadow-xs space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-amber-700">
@@ -7759,23 +7804,45 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             className="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3"
                           >
                             <div className="flex flex-wrap items-center gap-3">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-slate-400 line-through font-mono">
-                                    {formatPrice(hotel.originalPriceInr, currency)}
-                                  </span>
-                                  {discountPercent > 0 && (
-                                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                      {discountPercent}% OFF
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
-                                  {formatPrice(hotel.priceInr, currency)}
-                                  <span className="text-xs font-normal text-slate-500 font-sans"> / night</span>
-                                </div>
-                                <div className="text-[10px] text-slate-400">+ ₹{Math.round(hotel.priceInr * 0.12)} taxes &amp; fees</div>
-                              </div>
+                              {(() => {
+                                const displayedPriceInr = getDisplayedHotelPrice(
+                                  hotel.priceInr,
+                                  hotelPriceDisplayMode,
+                                  hotelStayNights
+                                );
+                                const displayedOriginalPriceInr = getDisplayedHotelPrice(
+                                  hotel.originalPriceInr,
+                                  hotelPriceDisplayMode,
+                                  hotelStayNights
+                                );
+                                const priceUnitLabel =
+                                  hotelPriceDisplayMode === 'total-stay'
+                                    ? ` / ${hotelStayNights} ${hotelStayNights === 1 ? 'night' : 'nights'}`
+                                    : ' / night';
+                                return (
+                                  <div data-testid={`hotel-card-price-${hotel.id}`}>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-slate-400 line-through font-mono">
+                                        {formatPrice(displayedOriginalPriceInr, currency)}
+                                      </span>
+                                      {discountPercent > 0 && (
+                                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                          {discountPercent}% OFF
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+                                      {formatPrice(displayedPriceInr, currency)}
+                                      <span className="text-xs font-normal text-slate-500 font-sans">
+                                        {priceUnitLabel}
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-400">
+                                      + ₹{Math.round(displayedPriceInr * 0.12)} taxes &amp; fees
+                                    </div>
+                                  </div>
+                                );
+                              })()}
 
                               <a
                                 href={cheapestBookingUrl}
@@ -8889,14 +8956,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           currency={currency}
           matchedCount={processedHotels.length}
           activeFilterCount={activeHotelFilterCount}
-          hotelSearchQuery={hotelSearchQuery}
-          setHotelSearchQuery={setHotelSearchQuery}
-          hotelTripYeahAssuredOnly={hotelTripYeahAssuredOnly}
-          setHotelTripYeahAssuredOnly={setHotelTripYeahAssuredOnly}
+          stayNights={hotelStayNights}
+          priceDisplayMode={hotelPriceDisplayMode}
+          setPriceDisplayMode={setHotelPriceDisplayMode}
+          hotelMinPrice={hotelMinPrice}
           hotelMaxPrice={hotelMaxPrice}
-          setHotelMaxPrice={setHotelMaxPrice}
+          onApplyMinMaxPrice={(minP, maxP) => {
+            setHotelMinPrice(minP);
+            setHotelMaxPrice(maxP);
+            setHotelPriceBracket('all');
+          }}
           hotelPriceBracket={hotelPriceBracket}
-          setHotelPriceBracket={setHotelPriceBracket}
+          setHotelPriceBracket={(val) => {
+            setHotelPriceBracket(val);
+            setHotelMinPrice(0);
+            setHotelMaxPrice(DEFAULT_HOTEL_MAX_PRICE);
+          }}
           hotelStars={hotelStars}
           setHotelStars={setHotelStars}
           hotelMinRating={hotelMinRating}

@@ -159,6 +159,10 @@ export function getCheapestHotelProviderDeal(hotelName: string): HotelProviderDe
   return buildHotelProviderDeals(hotelName, 'price')[0];
 }
 
+export function isExternalHotelProvider(providerId: string): boolean {
+  return providerId !== 'tripyeah-hotels-direct';
+}
+
 export function cleanHotelNameForPartnerLookup(hotelName: string): string {
   return (hotelName || 'Hotel')
     .replace(/\([^)]*[★☆][^)]*\)/g, '')

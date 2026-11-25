@@ -76,13 +76,13 @@ export default function App() {
   const [hotelMode, setHotelMode] = useState<'overnight' | 'hourly' | 'villas' | 'hostels'>('overnight');
 
   // Cab Specific Pickup & Drop Points (Google Maps Grounded)
-  const [cabPickupPoint, setCabPickupPoint] = useState<string>('Indira Gandhi International Airport (Terminal 3)');
-  const [cabDropPoint, setCabDropPoint] = useState<string>('Connaught Place (Inner & Outer Circle)');
+  const [cabPickupPoint, setCabPickupPoint] = useState<string>('New Delhi');
+  const [cabDropPoint, setCabDropPoint] = useState<string>('Jaipur');
   const [cabPickupMapsUrl, setCabPickupMapsUrl] = useState<string>(
-    'https://www.google.com/maps/search/?api=1&query=Indira+Gandhi+International+Airport+Terminal+3+New+Delhi'
+    'https://www.google.com/maps/search/?api=1&query=New+Delhi'
   );
   const [cabDropMapsUrl, setCabDropMapsUrl] = useState<string>(
-    'https://www.google.com/maps/search/?api=1&query=Connaught+Place+New+Delhi'
+    'https://www.google.com/maps/search/?api=1&query=Jaipur'
   );
 
   // Display & User State

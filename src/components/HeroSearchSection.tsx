@@ -213,16 +213,16 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
   const [cabPickupTime, setCabPickupTime] = useState<string>('10:00 AM');
   const [cabHourlyPkg, setCabHourlyPkg] = useState<string>('8 Hrs / 80 km');
   const [localCabPickup, setLocalCabPickup] = useState<string>(
-    propCabPickupPoint || 'Indira Gandhi International Airport (Terminal 3)'
+    propCabPickupPoint || 'New Delhi'
   );
   const [localCabDrop, setLocalCabDrop] = useState<string>(
-    propCabDropPoint || 'Connaught Place (Inner & Outer Circle)'
+    propCabDropPoint || 'Jaipur'
   );
   const [localCabPickupMapsUrl, setLocalCabPickupMapsUrl] = useState<string>(
-    propCabPickupMapsUrl || 'https://www.google.com/maps/search/?api=1&query=Indira+Gandhi+International+Airport+Terminal+3+New+Delhi'
+    propCabPickupMapsUrl || 'https://www.google.com/maps/search/?api=1&query=New+Delhi'
   );
   const [localCabDropMapsUrl, setLocalCabDropMapsUrl] = useState<string>(
-    propCabDropMapsUrl || 'https://www.google.com/maps/search/?api=1&query=Connaught+Place+New+Delhi'
+    propCabDropMapsUrl || 'https://www.google.com/maps/search/?api=1&query=Jaipur'
   );
   const [activeCabModal, setActiveCabModal] = useState<'pickup' | 'drop' | null>(null);
 
@@ -284,6 +284,17 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
     const parsed = new Date(dateStr + 'T00:00:00');
     if (isNaN(parsed.getTime())) return fallback;
     return formatDateWithLocale(dateStr, i18n.language);
+  };
+
+  const formatDisplayWeekday = (dateStr: string) => {
+    if (!dateStr) return '';
+    const parsed = new Date(dateStr + 'T00:00:00');
+    if (isNaN(parsed.getTime())) return '';
+    try {
+      return new Intl.DateTimeFormat(i18n.language || 'en-US', { weekday: 'long' }).format(parsed);
+    } catch {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(parsed);
+    }
   };
 
   // Reusable City/Station Picker Popover (Connected to Supabase)
@@ -520,7 +531,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
               </div>
 
               {/* Row 3: Landscape Flight Search Row (Return only shown in Round Trip!) */}
-              <div className="flex items-stretch gap-2 w-full">
+              <div className="flex items-stretch gap-2 w-full min-h-[75px] sm:min-h-[79px]">
                 {/* From ⇄ To */}
                 <div className="flex-[2.2] min-w-0 grid grid-cols-2 gap-2 relative">
                   <div className="relative min-w-0 dropdown-field-container" data-dropdown-container="true">
@@ -530,7 +541,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         e.stopPropagation();
                         setOpenDropdown(openDropdown === 'from' ? null : 'from');
                       }}
-                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
+                      className="w-full h-full text-left px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer flex flex-col justify-center"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
                         {t('hero.from', 'From')}
@@ -563,7 +574,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         e.stopPropagation();
                         setOpenDropdown(openDropdown === 'to' ? null : 'to');
                       }}
-                      className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer"
+                      className="w-full h-full text-left pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 transition-colors cursor-pointer flex flex-col justify-center"
                     >
                       <span className="block text-[11px] text-slate-500 font-medium">
                         {t('hero.to', 'To')}
@@ -602,9 +613,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(departureDate)}
                       </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        {tripType === 'round-trip' ? t('hero.roundTrip', 'Round Trip') : t('hero.oneWay', 'One Way')}
-                      </span>
+                      {formatDisplayWeekday(departureDate) && (
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          {formatDisplayWeekday(departureDate)}
+                        </span>
+                      )}
                     </div>
                     <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs">
                       <Calendar className="w-4 h-4" />
@@ -655,9 +668,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                           {formatDisplayDate(returnDate, t('hero.return', 'Select Return'))}
                         </span>
-                        <span className="block text-[11px] truncate text-indigo-500">
-                          {t('hero.roundTrip', 'Round Trip')}
-                        </span>
+                        {formatDisplayWeekday(returnDate) && (
+                          <span className="block text-[11px] text-indigo-500 truncate">
+                            {formatDisplayWeekday(returnDate)}
+                          </span>
+                        )}
                       </div>
                       <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs bg-indigo-100/80 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white">
                         <Calendar className="w-4 h-4" />
@@ -1076,8 +1091,8 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-stretch gap-2 w-full">
-                {/* City, Property Name or Location */}
+              <div className="flex items-stretch gap-2 w-full min-h-[75px] sm:min-h-[79px]">
+                {/* Where to? */}
                 <div className="flex-[1.6] min-w-0 relative dropdown-field-container" data-dropdown-container="true">
                   <button
                     type="button"
@@ -1085,20 +1100,13 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       e.stopPropagation();
                       setOpenDropdown(openDropdown === 'to' ? null : 'to');
                     }}
-                    className="w-full h-full text-left px-3.5 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer"
+                    className="w-full h-full text-left px-3.5 sm:px-4 py-2.5 rounded-2xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 cursor-pointer flex flex-col justify-center"
                   >
                     <span className="block text-[11px] text-slate-500 font-medium">
-                      City, Property Name or Location
+                      Where to?
                     </span>
-                    <span className="block text-sm sm:text-base font-bold text-slate-900 truncate">
+                    <span className="block text-sm sm:text-base font-bold text-slate-900 truncate mt-0.5">
                       {toCity.city}, {toCity.country}
-                    </span>
-                    <span className="block text-[11px] text-slate-500 truncate">
-                      {hotelMode === 'hostels'
-                        ? 'The Hosteller, goSTOPS, Zostel & Dorms'
-                        : hotelMode === 'hourly'
-                        ? 'Micro-stays & Day-use Rooms'
-                        : '320+ Verified Properties'}
                     </span>
                   </button>
                   {renderCityDropdown('to', toCity, onChangeToCity)}
@@ -1126,9 +1134,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(departureDate, 'Select Check-In')}
                       </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        From 14:00
-                      </span>
+                      {formatDisplayWeekday(departureDate) && (
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          {formatDisplayWeekday(departureDate)}
+                        </span>
+                      )}
                     </div>
                     <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
                       <Calendar className="w-4 h-4" />
@@ -1222,9 +1232,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                           {formatDisplayDate(returnDate, 'Select Check-Out')}
                         </span>
-                        <span className="block text-[11px] text-slate-400 truncate">
-                          Until 12:00
-                        </span>
+                        {formatDisplayWeekday(returnDate) && (
+                          <span className="block text-[11px] text-slate-400 truncate">
+                            {formatDisplayWeekday(returnDate)}
+                          </span>
+                        )}
                       </div>
                       <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
                         <Calendar className="w-4 h-4" />
@@ -1260,9 +1272,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       </span>
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {hotelRooms} {hotelRooms === 1 ? 'Room' : 'Rooms'}, {hotelGuests} Guests
-                      </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        {hotelPriceFilter}
                       </span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
@@ -1442,7 +1451,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
 
               </div>
 
-              <div className="flex items-stretch gap-2 w-full">
+              <div className="flex items-stretch gap-2 w-full min-h-[75px] sm:min-h-[79px]">
                 {/* Pickup & Drop (or Hourly City + Package) */}
                 {cabMode === 'hourly' ? (
                   <div className="flex-[2.4] min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-2 relative">
@@ -1647,9 +1656,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(departureDate)}
                       </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        Zero Surge
-                      </span>
+                      {formatDisplayWeekday(departureDate) && (
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          {formatDisplayWeekday(departureDate)}
+                        </span>
+                      )}
                     </div>
                     <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
                       <Calendar className="w-4 h-4" />
@@ -1696,9 +1707,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                           {formatDisplayDate(returnDate, 'Select Return')}
                         </span>
-                        <span className="block text-[11px] text-indigo-500 truncate">
-                          Round-Trip Cab
-                        </span>
+                        {formatDisplayWeekday(returnDate) && (
+                          <span className="block text-[11px] text-indigo-500 truncate">
+                            {formatDisplayWeekday(returnDate)}
+                          </span>
+                        )}
                       </div>
                       <div className="w-8 h-8 rounded-xl bg-indigo-100/80 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white flex items-center justify-center shrink-0 ml-1 transition-colors shadow-2xs">
                         <Calendar className="w-4 h-4" />
@@ -1734,9 +1747,6 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       </span>
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {cabPickupTime}
-                      </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        45m Free Wait
                       </span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
@@ -2086,9 +2096,11 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                       <span className="block text-xs sm:text-sm font-bold text-slate-900 truncate mt-0.5">
                         {formatDisplayDate(departureDate, 'Select Visit Date')}
                       </span>
-                      <span className="block text-[11px] text-slate-400 truncate">
-                        Flexible Reschedule Available
-                      </span>
+                      {formatDisplayWeekday(departureDate) && (
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          {formatDisplayWeekday(departureDate)}
+                        </span>
+                      )}
                     </div>
                     <div className="w-8 h-8 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 ml-1.5 transition-colors shadow-2xs">
                       <Calendar className="w-4 h-4" />
