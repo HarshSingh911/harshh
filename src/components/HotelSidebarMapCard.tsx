@@ -615,9 +615,9 @@ export const HotelSidebarMapCard: React.FC<{
   return (
     <div
       data-testid="hotel-sidebar-map"
-      className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 shadow-2xs"
+      className="w-full h-[360px] lg:h-[430px] xl:h-[460px] rounded-2xl border border-slate-200/90 overflow-hidden bg-slate-50 shadow-xs flex flex-col"
     >
-      <div className="px-3 py-2 bg-white border-b border-slate-200 flex items-center justify-between gap-2">
+      <div className="shrink-0 px-3.5 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
           <span className="text-xs font-bold text-slate-900 truncate">
@@ -636,33 +636,35 @@ export const HotelSidebarMapCard: React.FC<{
         </div>
       </div>
 
-      <div className="w-full h-[290px]">
-        {!keyChecked ? (
-          <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
-            Loading map...
-          </div>
-        ) : !apiKey ? (
-          <div className="w-full h-full flex items-center justify-center text-xs text-slate-600 p-4 text-center">
-            Google Maps API key is not configured in this environment.
-          </div>
-        ) : (
-          <APIProvider
-            apiKey={apiKey}
-            libraries={['places', 'marker', 'core']}
-            language="en"
-            region={regionCode}
-          >
-            <SidebarMapInner
-              city={city}
-              country={country}
-              regionCode={regionCode}
-              currency={currency}
-              hotels={hotels}
-              onSelectHotelCard={onSelectHotelCard}
-              onOpenHotelDetails={onOpenHotelDetails}
-            />
-          </APIProvider>
-        )}
+      <div className="relative w-full flex-1 min-h-0">
+        <div className="absolute inset-0">
+          {!keyChecked ? (
+            <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
+              Loading map...
+            </div>
+          ) : !apiKey ? (
+            <div className="w-full h-full flex items-center justify-center text-xs text-slate-600 p-4 text-center">
+              Google Maps API key is not configured in this environment.
+            </div>
+          ) : (
+            <APIProvider
+              apiKey={apiKey}
+              libraries={['places', 'marker', 'core']}
+              language="en"
+              region={regionCode}
+            >
+              <SidebarMapInner
+                city={city}
+                country={country}
+                regionCode={regionCode}
+                currency={currency}
+                hotels={hotels}
+                onSelectHotelCard={onSelectHotelCard}
+                onOpenHotelDetails={onOpenHotelDetails}
+              />
+            </APIProvider>
+          )}
+        </div>
       </div>
     </div>
   );

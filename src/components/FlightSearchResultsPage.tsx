@@ -1478,6 +1478,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [sortBy, setSortBy] = useState<'cheapest' | 'fastest' | 'rating' | 'departure'>('cheapest');
   const [codeCopied, setCodeCopied] = useState<boolean>(false);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+  const [isHotelFiltersOpen, setIsHotelFiltersOpen] = useState<boolean>(false);
   const leftSidebarRef = React.useRef<HTMLElement>(null);
   const filtersHeaderRef = React.useRef<HTMLDivElement>(null);
   const [highlightFiltersJump, setHighlightFiltersJump] = useState<boolean>(false);
@@ -1486,6 +1487,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
     if (!isDesktop && !showMobileFilters) {
       setShowMobileFilters(true);
+    }
+    if (isDesktop && currentCategory === 'hotels' && !isHotelFiltersOpen) {
+      setIsHotelFiltersOpen(true);
     }
     setHighlightFiltersJump(true);
     setTimeout(() => setHighlightFiltersJump(false), 1400);
@@ -1500,15 +1504,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           top: Math.max(0, filtersEl.offsetTop - 10),
           behavior: 'smooth',
         });
-        const sidebarRect = sidebarEl.getBoundingClientRect();
-        if (sidebarRect.top < 72 || sidebarRect.top > window.innerHeight - 160) {
-          const targetWinY = Math.max(0, window.scrollY + sidebarRect.top - 76);
-          window.scrollTo({ top: targetWinY, behavior: 'smooth' });
+        if (currentCategory === 'hotels') {
+          const filtersRect = filtersEl.getBoundingClientRect();
+          if (filtersRect.top < 16 || filtersRect.top > window.innerHeight - 120) {
+            filtersEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else {
+          const sidebarRect = sidebarEl.getBoundingClientRect();
+          if (sidebarRect.top < 72 || sidebarRect.top > window.innerHeight - 160) {
+            const targetWinY = Math.max(0, window.scrollY + sidebarRect.top - 76);
+            window.scrollTo({ top: targetWinY, behavior: 'smooth' });
+          }
         }
       } else {
         filtersEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, isDesktop ? 0 : 80);
+    }, isDesktop ? (currentCategory === 'hotels' ? 60 : 0) : 80);
   };
 
   // --- FILTERS STATE PER CATEGORY ---
@@ -4959,16 +4970,19 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       <div className={`w-full ${isOceanHeaderCategory ? 'px-3 sm:px-5 lg:px-6' : 'px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12'} pt-5`}>
         <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-start w-full">
           {/* =================================================================
-              LEFT COLUMN: UNIFIED FILTER SIDEBAR
+              LEFT COLUMN: STICKY MAP (HOTELS) + UNIFIED FILTER SIDEBAR
           =================================================================== */}
-          <aside
-            ref={leftSidebarRef}
-            data-testid="search-results-sidebar"
-            className={`w-full lg:w-72 xl:w-80 shrink-0 bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5 relative z-10 ${
+          <div
+            data-testid={currentCategory === 'hotels' ? 'hotel-left-sticky-column' : undefined}
+            className={
               currentCategory === 'hotels'
-                ? 'lg:max-h-[430px] xl:max-h-[460px] lg:overflow-y-auto'
-                : 'sticky top-16'
-            } ${showMobileFilters ? 'block mb-4' : 'hidden lg:block'}`}
+                ? `w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-4 relative z-10 flex flex-col gap-3 ${
+                    showMobileFilters ? 'mb-4' : 'hidden lg:flex'
+                  }`
+                : `w-full lg:w-72 xl:w-80 shrink-0 sticky top-16 relative z-10 ${
+                    showMobileFilters ? 'block mb-4' : 'hidden lg:block'
+                  }`
+            }
           >
             {currentCategory === 'hotels' && (
               <HotelSidebarMapCard
@@ -4989,20 +5003,58 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               />
             )}
 
+            <aside
+              ref={leftSidebarRef}
+              data-testid="search-results-sidebar"
+              className={
+                currentCategory === 'hotels'
+                  ? `w-full bg-white rounded-2xl border border-slate-200/90 shadow-xs ${
+                      isHotelFiltersOpen
+                        ? 'p-4 sm:p-5 space-y-5 lg:max-h-[max(200px,calc(100vh-520px))] xl:max-h-[max(200px,calc(100vh-550px))] lg:overflow-y-auto custom-scrollbar'
+                        : 'p-4 sm:p-5 space-y-5 lg:px-4 lg:py-3 lg:space-y-0'
+                    }`
+                  : 'w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5'
+              }
+            >
+
             <div
               id="hotel-filters-block"
               ref={filtersHeaderRef}
               data-testid="filters-block-header"
-              className={`flex items-center justify-between pb-3 border-b border-slate-100 transition-all duration-300 ${
+              className={`flex items-center justify-between transition-all duration-300 ${
+                currentCategory === 'hotels' && !isHotelFiltersOpen
+                  ? 'pb-3 border-b border-slate-100 lg:pb-0 lg:border-b-0'
+                  : 'pb-3 border-b border-slate-100'
+              } ${
                 highlightFiltersJump ? 'rounded-lg bg-blue-50/90 ring-2 ring-blue-500/40 px-2 pt-2 -mx-2' : ''
               }`}
             >
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-blue-600" />
-                <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                  Filters
-                </h3>
-              </div>
+              {currentCategory === 'hotels' ? (
+                <button
+                  type="button"
+                  onClick={() => setIsHotelFiltersOpen((prev) => !prev)}
+                  aria-expanded={isHotelFiltersOpen}
+                  data-testid="toggle-hotel-filters-button"
+                  className="flex items-center gap-2 text-left cursor-pointer group"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-blue-600" />
+                  <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                    Filters
+                  </h3>
+                  <ChevronDown
+                    className={`hidden lg:inline-block w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-transform duration-200 ${
+                      isHotelFiltersOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-blue-600" />
+                  <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                    Filters
+                  </h3>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={handleResetFilters}
@@ -5596,7 +5648,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
             {/* --- HOTELS FILTERS (MakeMyTrip Style Left Sidebar) --- */}
             {currentCategory === 'hotels' && (
-              <div className="space-y-4 text-xs">
+              <div className={`space-y-4 text-xs ${isHotelFiltersOpen ? 'block' : 'block lg:hidden'}`}>
                 {/* 1. Quick Search Box */}
                 <div>
                   <span className="font-bold text-slate-800 block mb-1.5">Search Hotel / Locality</span>
@@ -6563,7 +6615,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 </div>
               </div>
             )}
-          </aside>
+            </aside>
+          </div>
 
           {/* =================================================================
               RIGHT COLUMN: SORT BAR & LIVE RESULTS
