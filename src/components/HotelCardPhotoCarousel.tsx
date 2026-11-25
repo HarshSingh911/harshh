@@ -28,13 +28,13 @@ export const HotelCardPhotoCarousel: React.FC<HotelCardPhotoCarouselProps> = ({
     <div
       onClick={onOpenDetails}
       data-testid="hotel-card-photo-carousel"
-      className="w-full md:w-64 h-44 md:h-auto min-h-[180px] relative shrink-0 overflow-hidden bg-slate-100 cursor-pointer select-none"
+      className="w-full md:w-64 h-44 md:h-auto min-h-[180px] relative shrink-0 overflow-hidden bg-slate-900 cursor-pointer select-none"
     >
       <SafeImage
         src={activeSrc}
         alt={hotelName}
         fallbackTitle={hotelName}
-        className="w-full h-full object-cover transition-transform duration-300 group-hover/hotel:scale-[1.03]"
+        className="block w-full h-full object-cover"
       />
 
       {safeImages.length > 1 && (
@@ -44,9 +44,9 @@ export const HotelCardPhotoCarousel: React.FC<HotelCardPhotoCarouselProps> = ({
             onClick={(e) => handleStep(e, 'prev')}
             aria-label={`Previous photo of ${hotelName}`}
             data-testid="hotel-photo-prev"
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 backdrop-blur-md border border-white/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.3)] flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 z-10 opacity-0 pointer-events-none group-hover/hotel:opacity-100 group-hover/hotel:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/45 hover:bg-slate-950/65 text-white shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 z-10 opacity-0 pointer-events-none group-hover/hotel:opacity-100 group-hover/hotel:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto"
           >
-            <ChevronLeft className="w-4 h-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
 
           <button
@@ -54,9 +54,9 @@ export const HotelCardPhotoCarousel: React.FC<HotelCardPhotoCarouselProps> = ({
             onClick={(e) => handleStep(e, 'next')}
             aria-label={`Next photo of ${hotelName}`}
             data-testid="hotel-photo-next"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 backdrop-blur-md border border-white/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.3)] flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 z-10 opacity-0 pointer-events-none group-hover/hotel:opacity-100 group-hover/hotel:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/45 hover:bg-slate-950/65 text-white shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 z-10 opacity-0 pointer-events-none group-hover/hotel:opacity-100 group-hover/hotel:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto"
           >
-            <ChevronRight className="w-4 h-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]" />
+            <ChevronRight className="w-4 h-4" />
           </button>
 
           <div

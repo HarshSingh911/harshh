@@ -12,7 +12,7 @@ import {
   useMap,
   useMapsLibrary,
 } from '@vis.gl/react-google-maps';
-import { ExternalLink, MapPin, Star } from 'lucide-react';
+import { ExternalLink, Star } from 'lucide-react';
 import { CurrencyCode } from '../data/travelData';
 import {
   formatCompactMapPrice,
@@ -583,7 +583,8 @@ export const HotelSidebarMapCard: React.FC<{
   hotels: SidebarMapHotelInput[];
   onSelectHotelCard?: (hotelId: string) => void;
   onOpenHotelDetails?: (hotelId: string) => void;
-}> = ({ city, country, currency, hotels, onSelectHotelCard, onOpenHotelDetails }) => {
+  className?: string;
+}> = ({ city, country, currency, hotels, onSelectHotelCard, onOpenHotelDetails, className }) => {
   const [apiKey, setApiKey] = useState<string>(() => readViteMapsKey());
   const [keyChecked, setKeyChecked] = useState<boolean>(() => Boolean(readViteMapsKey()));
 
@@ -615,27 +616,11 @@ export const HotelSidebarMapCard: React.FC<{
   return (
     <div
       data-testid="hotel-sidebar-map"
-      className="w-full h-[360px] lg:h-[430px] xl:h-[460px] rounded-2xl border border-slate-200/90 overflow-hidden bg-slate-50 shadow-xs flex flex-col"
+      className={
+        className ||
+        'w-full h-full rounded-none border-0 lg:border-r border-slate-200/90 overflow-hidden bg-slate-50 flex flex-col'
+      }
     >
-      <div className="shrink-0 px-3.5 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-          <span className="text-xs font-bold text-slate-900 truncate">
-            {city} Hotels Map
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-[10px] font-semibold shrink-0">
-          <span className="inline-flex items-center gap-1 text-[#05203c]">
-            <span className="w-2 h-2 rounded-full bg-[#05203c]" />
-            <span>Listed</span>
-          </span>
-          <span className="inline-flex items-center gap-1 text-slate-600">
-            <span className="w-2 h-2 rounded-full bg-white border border-slate-400" />
-            <span>Nearby</span>
-          </span>
-        </div>
-      </div>
-
       <div className="relative w-full flex-1 min-h-0">
         <div className="absolute inset-0">
           {!keyChecked ? (

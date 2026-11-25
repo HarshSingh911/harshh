@@ -8,7 +8,6 @@ import { CountryFlag } from './CountryFlag';
 export type AppPageView =
   | 'home'
   | 'search-results'
-  | 'hotel-details'
   | 'checkout'
   | 'trips'
   | 'account'
@@ -56,11 +55,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   userRole = 'user',
 }) => {
   const isSeamlessOceanHeader =
-    ((activePage === 'search-results' || activePage === 'checkout') &&
-      ((activeCategory as string) === 'flights' ||
-        (activeCategory as string) === 'hotels' ||
-        (activeCategory as string) === 'cabs')) ||
-    activePage === 'hotel-details';
+    (activePage === 'search-results' || activePage === 'checkout') &&
+    ((activeCategory as string) === 'flights' ||
+      (activeCategory as string) === 'hotels' ||
+      (activeCategory as string) === 'cabs');
 
   // Front page (home), international planner, explore, influencers, trips, account, support, and ocean-header results/checkout have dark/scenic backgrounds behind the navbar
   const isDarkHeader =

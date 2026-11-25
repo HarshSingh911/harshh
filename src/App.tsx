@@ -42,7 +42,6 @@ import { useTranslation } from 'react-i18next';
 import { applyDocumentLanguageAndDir } from './i18n/formatters';
 import { ListPropertyModal } from './components/ListPropertyModal';
 import { TravelInsuranceModal } from './components/TravelInsuranceModal';
-import { HotelDetailsPage } from './components/HotelDetailsPage';
 import { ExplorePage } from './components/ExplorePage';
 import { InfluencersPage } from './components/InfluencersPage';
 import { DiningClubPage } from './components/DiningClubPage';
@@ -58,9 +57,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { saveTripToFirestore, subscribeToUserTrips } from './services/tripService';
 
 export default function App() {
-  // Active Multi-Page View ('home' | 'search-results' | 'hotel-details' | 'checkout' | 'trips' | 'account' | 'experience-checkout')
+  // Active Multi-Page View ('home' | 'search-results' | 'checkout' | 'trips' | 'account' | 'experience-checkout')
   const [activePage, setActivePage] = useState<AppPageView>('home');
-  const [selectedHotelForDetails, setSelectedHotelForDetails] = useState<any>(null);
   const [selectedExperienceForCheckout, setSelectedExperienceForCheckout] = useState<ExperienceItem | null>(null);
   const [selectedHolidayPackageForCheckout, setSelectedHolidayPackageForCheckout] = useState<HolidayPackageDetails | null>(null);
 
@@ -588,7 +586,7 @@ export default function App() {
       )}
 
       {/* Main View Router */}
-      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support' || activePage === 'hostels' || ((activePage === 'search-results' || activePage === 'checkout') && ((activeCategory as string) === 'flights' || (activeCategory as string) === 'hotels' || (activeCategory as string) === 'cabs')) || activePage === 'hotel-details') ? '-mt-16' : ''}`}>
+      <main className={`flex-1 ${(activePage === 'home' || activePage === 'international-planner' || activePage === 'influencers' || activePage === 'explore' || activePage === 'dining-club' || activePage === 'trips' || activePage === 'account' || activePage === 'support' || activePage === 'hostels' || ((activePage === 'search-results' || activePage === 'checkout') && ((activeCategory as string) === 'flights' || (activeCategory as string) === 'hotels' || (activeCategory as string) === 'cabs'))) ? '-mt-16' : ''}`}>
         {activePage === 'home' && (
           <>
             <HeroSearchSection
@@ -748,45 +746,6 @@ export default function App() {
                 isRoundTrip: isRT,
                 travellers: item.travellers || travellers,
                 cabinClass: item.cabinClass || cabinClass,
-              });
-              navigateTo('checkout');
-            }}
-            onSelectHotelForDetails={(hotel) => {
-              setSelectedHotelForDetails(hotel);
-              navigateTo('hotel-details');
-            }}
-            onNotify={handleNotify}
-          />
-        )}
-
-        {/* HOTEL DETAILS & ROOM SELECTION PAGE */}
-        {activePage === 'hotel-details' && (
-          <HotelDetailsPage
-            hotel={selectedHotelForDetails}
-            currency={currency}
-            checkInDate={departureDate}
-            checkOutDate={returnDate}
-            travellers={travellers}
-            cabinClass={cabinClass}
-            onBack={() => navigateTo('search-results')}
-            onSelectRoomForCheckout={(selectedRoom, hotelItem, mealPlan) => {
-              setCheckoutItem({
-                title: `${hotelItem.name} (${selectedRoom.name})`,
-                code: `${hotelItem.id}-${selectedRoom.id}`,
-                depTime: 'Check-in: 02:00 PM',
-                arrTime: 'Check-out: 11:00 AM',
-                duration: '1 Night Stay',
-                priceInr: selectedRoom.priceInr,
-                category: 'hotels',
-                hotelName: hotelItem.name,
-                hotelLocation: hotelItem.location,
-                roomType: `${selectedRoom.name} (${selectedRoom.bedType} · ${mealPlan})`,
-                fromCity: `${fromCity.city} (${fromCity.code})`,
-                toCity: `${toCity.city} (${toCity.code})`,
-                travelDate: departureDate,
-                returnDate: returnDate,
-                travellers: travellers,
-                cabinClass: cabinClass,
               });
               navigateTo('checkout');
             }}

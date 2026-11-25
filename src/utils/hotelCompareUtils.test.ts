@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   addDaysToIsoDate,
+  buildHotelProviderBookingUrl,
   buildHotelProviderDeals,
   calculateStayAdjustedNightlyPrice,
   calculateStayNights,
+  getCheapestHotelProviderDeal,
   getLowestHotelDealPrice,
   resolveHotelCountryAndCity,
 } from './hotelCompareUtils';
@@ -12,8 +14,10 @@ import {
 test('buildHotelProviderDeals returns all 8 comparison sites sorted by lowest price by default', () => {
   const deals = buildHotelProviderDeals('Taj Fort Aguada Resort', 'price');
   assert.equal(deals.length, 8);
-  assert.equal(deals[0].id, 'tripyeah-hotels-direct');
   assert.equal(deals[0].priceDelta, 0);
+  assert.equal(deals[0].isCheapest, true);
+  assert.notEqual(deals[0].id, 'tripyeah-hotels-direct');
+  assert.equal(getCheapestHotelProviderDeal('Taj Fort Aguada Resort').id, deals[0].id);
   for (let i = 1; i < deals.length; i++) {
     assert.ok(deals[i].priceDelta >= deals[i - 1].priceDelta);
   }
@@ -33,6 +37,44 @@ test('buildHotelProviderDeals returns all 8 comparison sites sorted by lowest pr
       `Did not expect Instant confirmation or Direct booking on ${deal.id}`
     );
   }
+});
+
+test('buildHotelProviderBookingUrl builds valid external partner URLs with encoded stay parameters', () => {
+  const agodaUrl = buildHotelProviderBookingUrl({
+    providerId: 'agoda',
+    hotelName: 'Goa Palms Heritage Boutique Resort & Pool',
+    city: 'Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-19',
+    rooms: 1,
+    adults: 2,
+  });
+  assert.ok(agodaUrl.startsWith('https://www.agoda.com/search?text='));
+  assert.ok(agodaUrl.includes('checkIn=2026-10-15'));
+  assert.ok(agodaUrl.includes('checkOut=2026-10-19'));
+
+  const bookingUrl = buildHotelProviderBookingUrl({
+    providerId: 'booking-com',
+    hotelName: 'Casa Bella Villa',
+    city: 'Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-19',
+  });
+  assert.ok(bookingUrl.startsWith('https://www.booking.com/searchresults.html?ss='));
+
+  const mmtUrl = buildHotelProviderBookingUrl({
+    providerId: 'makemytrip-hotels',
+    hotelName: 'Casa Bella Villa',
+    city: 'Goa',
+  });
+  assert.ok(mmtUrl.startsWith('https://www.makemytrip.com/hotels/hotel-listing/'));
+
+  const goibiboUrl = buildHotelProviderBookingUrl({
+    providerId: 'goibibo-hotels',
+    hotelName: 'Casa Bella Villa',
+    city: 'North Goa',
+  });
+  assert.ok(goibiboUrl.startsWith('https://www.goibibo.com/hotels/find-hotels-in-north-goa/'));
 });
 
 test('buildHotelProviderDeals sorts by highest rating when requested', () => {

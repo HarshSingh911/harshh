@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildHotelCardPhotos,
+  countActiveHotelFilters,
   formatCompactMapPrice,
   formatPlacesPriceLevelLabel,
   getAdjacentPhotoIndex,
@@ -62,4 +63,52 @@ test('normalizeHotelMatchKey strips filler words for duplicate detection', () =>
     'lemon tree amarante'
   );
 });
+
+test('countActiveHotelFilters returns 0 for defaults and counts active criteria accurately', () => {
+  const defaults = {
+    searchQuery: '',
+    maxPrice: 20000,
+    priceBracket: 'all',
+    stars: [5, 4, 3],
+    minRating: 0,
+    propertyTypes: [],
+    amenities: [],
+    localities: [],
+    assuredOnly: false,
+    freeCancellationOnly: false,
+  };
+
+  assert.equal(countActiveHotelFilters(defaults), 0);
+
+  assert.equal(
+    countActiveHotelFilters({
+      ...defaults,
+      searchQuery: 'Taj',
+      assuredOnly: true,
+      minRating: 4.5,
+      stars: [5],
+      propertyTypes: ['Resort'],
+      amenities: ['Free WiFi', 'Swimming Pool'],
+    }),
+    7
+  );
+
+  assert.equal(
+    countActiveHotelFilters({
+      ...defaults,
+      maxPrice: 12000,
+    }),
+    1
+  );
+
+  assert.equal(
+    countActiveHotelFilters({
+      ...defaults,
+      maxPrice: 12000,
+      priceBracket: '5000-9000',
+    }),
+    1
+  );
+});
+
 

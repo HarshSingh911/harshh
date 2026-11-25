@@ -19,6 +19,7 @@ import {
   CreditCard,
   Crown,
   DollarSign,
+  ExternalLink,
   Eye,
   Filter,
   Flame,
@@ -77,7 +78,17 @@ import { fetchApprovedProperties, PropertyListing } from '../services/propertySe
 import { CabLocationAutocompleteModal, CabPlace } from './CabLocationAutocompleteModal';
 import { HotelCardPhotoCarousel } from './HotelCardPhotoCarousel';
 import { HotelSidebarMapCard } from './HotelSidebarMapCard';
-import { buildHotelCardPhotos, getHotelReviewSummaryLabel } from '../utils/hotelResultsUtils';
+import { HotelFiltersDrawer } from './HotelFiltersDrawer';
+import { HotelProviderWordmark } from './HotelProviderWordmark';
+import {
+  buildHotelCardPhotos,
+  countActiveHotelFilters,
+  getHotelReviewSummaryLabel,
+} from '../utils/hotelResultsUtils';
+import {
+  buildHotelProviderBookingUrl,
+  getCheapestHotelProviderDeal,
+} from '../utils/hotelCompareUtils';
 import hotelPoolImg from '../assets/images/hotel_gallery_exterior_pool_1795360066864.jpg';
 import hotelLobbyImg from '../assets/images/hotel_gallery_lobby_lounge_1795360057197.jpg';
 import hotelSuiteImg from '../assets/images/hotel_gallery_suite_interior_1795360052553.jpg';
@@ -111,7 +122,6 @@ interface FlightSearchResultsPageProps {
   onModifySearch?: () => void;
   onSelectFlightOrStayForCheckout: (summary: CheckoutItem) => void;
   onSelectHolidayForCheckout?: (pkg: any) => void;
-  onSelectHotelForDetails?: (hotel: any) => void;
   onOpenHostelsPage?: () => void;
   hotelMode?: 'overnight' | 'hourly' | 'villas' | 'hostels';
   onChangeHotelMode?: (mode: 'overnight' | 'hourly' | 'villas' | 'hostels') => void;
@@ -1113,7 +1123,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   onModifySearch,
   onSelectFlightOrStayForCheckout,
   onSelectHolidayForCheckout,
-  onSelectHotelForDetails,
   onOpenHostelsPage,
   onNotify,
 }) => {
@@ -1484,12 +1493,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [highlightFiltersJump, setHighlightFiltersJump] = useState<boolean>(false);
 
   const handleJumpToFilters = () => {
+    if (currentCategory === 'hotels') {
+      setIsHotelFiltersOpen((prev) => !prev);
+      return;
+    }
+
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
     if (!isDesktop && !showMobileFilters) {
       setShowMobileFilters(true);
-    }
-    if (isDesktop && currentCategory === 'hotels' && !isHotelFiltersOpen) {
-      setIsHotelFiltersOpen(true);
     }
     setHighlightFiltersJump(true);
     setTimeout(() => setHighlightFiltersJump(false), 1400);
@@ -1504,22 +1515,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           top: Math.max(0, filtersEl.offsetTop - 10),
           behavior: 'smooth',
         });
-        if (currentCategory === 'hotels') {
-          const filtersRect = filtersEl.getBoundingClientRect();
-          if (filtersRect.top < 16 || filtersRect.top > window.innerHeight - 120) {
-            filtersEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-        } else {
-          const sidebarRect = sidebarEl.getBoundingClientRect();
-          if (sidebarRect.top < 72 || sidebarRect.top > window.innerHeight - 160) {
-            const targetWinY = Math.max(0, window.scrollY + sidebarRect.top - 76);
-            window.scrollTo({ top: targetWinY, behavior: 'smooth' });
-          }
+        const sidebarRect = sidebarEl.getBoundingClientRect();
+        if (sidebarRect.top < 72 || sidebarRect.top > window.innerHeight - 160) {
+          const targetWinY = Math.max(0, window.scrollY + sidebarRect.top - 76);
+          window.scrollTo({ top: targetWinY, behavior: 'smooth' });
         }
       } else {
         filtersEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, isDesktop ? (currentCategory === 'hotels' ? 60 : 0) : 80);
+    }, isDesktop ? 0 : 80);
   };
 
   // --- FILTERS STATE PER CATEGORY ---
@@ -1561,6 +1565,61 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const [hotelBeachfrontOnly, setHotelBeachfrontOnly] = useState<boolean>(false);
   const [hotelTripYeahAssuredOnly, setHotelTripYeahAssuredOnly] = useState<boolean>(false);
   const [hotelFreeCancellationOnly, setHotelFreeCancellationOnly] = useState<boolean>(false);
+
+  const activeHotelFilterCount = useMemo(
+    () =>
+      countActiveHotelFilters({
+        searchQuery: hotelSearchQuery,
+        maxPrice: hotelMaxPrice,
+        defaultMaxPrice: 20000,
+        priceBracket: hotelPriceBracket,
+        stars: hotelStars,
+        minRating: hotelMinRating,
+        propertyTypes: hotelSelectedPropertyTypes,
+        amenities: hotelSelectedAmenities,
+        localities: hotelSelectedLocalities,
+        assuredOnly: hotelTripYeahAssuredOnly,
+        freeCancellationOnly: hotelFreeCancellationOnly,
+      }),
+    [
+      hotelSearchQuery,
+      hotelMaxPrice,
+      hotelPriceBracket,
+      hotelStars,
+      hotelMinRating,
+      hotelSelectedPropertyTypes,
+      hotelSelectedAmenities,
+      hotelSelectedLocalities,
+      hotelTripYeahAssuredOnly,
+      hotelFreeCancellationOnly,
+    ]
+  );
+
+  const handleOpenHotelBooking = (hotel: HotelResult) => {
+    onSelectFlightOrStayForCheckout({
+      title: hotel.name,
+      code: hotel.id,
+      depTime: 'Check-in: 02:00 PM',
+      arrTime: 'Check-out: 11:00 AM',
+      duration: '1 Night Stay',
+      priceInr: hotel.priceInr,
+      category: 'hotels',
+      hotelName: hotel.name,
+      hotelLocation: hotel.location,
+      hotelImage: hotel.image,
+      hotelStars: hotel.stars,
+      hotelRating: hotel.rating,
+      hotelReviews: hotel.reviews,
+      hotelPropertyType: hotel.propertyType,
+      hotelLocality: hotel.locality,
+      hotelAmenities: hotel.amenities,
+      hotelPerks: hotel.perks,
+      hotelOriginalPriceInr: hotel.originalPriceInr,
+      travelDate: currentDepDate,
+      returnDate: currentRetDate,
+      travellers: currentHotelGuests,
+    });
+  };
 
   // 4. Buses (redBus / MakeMyTrip Style)
   const [busSearchQuery, setBusSearchQuery] = useState<string>('');
@@ -2378,7 +2437,11 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   const isOceanHeaderCategory = currentCategory === 'hotels' || currentCategory === 'cabs';
 
   return (
-    <div className={`${isOceanHeaderCategory ? 'bg-[#f1f5f9]' : 'bg-slate-100'} min-h-screen pb-16`}>
+    <div
+      className={`${isOceanHeaderCategory ? 'bg-[#f1f5f9]' : 'bg-slate-100'} min-h-screen ${
+        currentCategory === 'hotels' ? 'pb-0' : 'pb-16'
+      }`}
+    >
       {/* ===================================================================
           1. SECOND HEADER (OCEAN-NAVY FOR HOTELS & CABS MATCHING FLIGHTS;
              COMPACT INLINE BAR FOR TRAINS, BUSES, HOLIDAYS)
@@ -2615,11 +2678,22 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                 {/* Mobile Filters Trigger */}
                 <button
                   type="button"
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  onClick={() => {
+                    if (currentCategory === 'hotels') {
+                      setIsHotelFiltersOpen((prev) => !prev);
+                    } else {
+                      setShowMobileFilters(!showMobileFilters);
+                    }
+                  }}
                   className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
                 >
                   <Filter className="w-3.5 h-3.5" />
                   <span>Filters</span>
+                  {currentCategory === 'hotels' && activeHotelFilterCount > 0 && (
+                    <span className="ml-0.5 text-[11px] font-bold text-sky-200 tabular-nums">
+                      ({activeHotelFilterCount})
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -4967,94 +5041,73 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       {/* ===================================================================
           2. TWO-COLUMN LAYOUT: LEFT FILTERS SIDEBAR + RIGHT MAIN RESULTS (Full-Width Corner to Corner)
       =================================================================== */}
-      <div className={`w-full ${isOceanHeaderCategory ? 'px-3 sm:px-5 lg:px-6' : 'px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12'} pt-5`}>
-        <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-start w-full">
+      <div
+        className={
+          currentCategory === 'hotels'
+            ? 'w-full px-0 pt-0'
+            : `w-full ${isOceanHeaderCategory ? 'px-3 sm:px-5 lg:px-6' : 'px-3 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12'} pt-5`
+        }
+      >
+        <div
+          className={
+            currentCategory === 'hotels'
+              ? 'flex flex-col lg:flex-row lg:gap-6 items-stretch w-full min-h-[calc(100vh-204px)]'
+              : 'flex flex-col lg:flex-row gap-5 xl:gap-6 items-start w-full'
+          }
+        >
           {/* =================================================================
-              LEFT COLUMN: STICKY MAP (HOTELS) + UNIFIED FILTER SIDEBAR
+              LEFT COLUMN: FULL-EDGE STICKY MAP (HOTELS) OR UNIFIED FILTER SIDEBAR
           =================================================================== */}
+          {currentCategory === 'hotels' ? (
+            <div
+              data-testid="hotel-left-sticky-column"
+              className="w-full lg:w-[340px] xl:w-[380px] shrink-0 lg:self-stretch relative z-10"
+            >
+              <div className="w-full h-[320px] sm:h-[360px] lg:sticky lg:top-0 lg:h-screen">
+                <HotelSidebarMapCard
+                  city={currentToCity.city}
+                  country={currentToCity.country}
+                  currency={currency}
+                  hotels={processedHotels}
+                  onSelectHotelCard={(hotelId) => {
+                    const cardEl = document.querySelector(`[data-testid="hotel-list-card-${hotelId}"]`);
+                    if (cardEl) {
+                      cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
+                  onOpenHotelDetails={(hotelId) => {
+                    const found = processedHotels.find((h) => h.id === hotelId);
+                    if (found) handleOpenHotelBooking(found);
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
           <div
-            data-testid={currentCategory === 'hotels' ? 'hotel-left-sticky-column' : undefined}
-            className={
-              currentCategory === 'hotels'
-                ? `w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-4 relative z-10 flex flex-col gap-3 ${
-                    showMobileFilters ? 'mb-4' : 'hidden lg:flex'
-                  }`
-                : `w-full lg:w-72 xl:w-80 shrink-0 sticky top-16 relative z-10 ${
-                    showMobileFilters ? 'block mb-4' : 'hidden lg:block'
-                  }`
-            }
+            className={`w-full lg:w-72 xl:w-80 shrink-0 sticky top-16 relative z-10 ${
+              showMobileFilters ? 'block mb-4' : 'hidden lg:block'
+            }`}
           >
-            {currentCategory === 'hotels' && (
-              <HotelSidebarMapCard
-                city={currentToCity.city}
-                country={currentToCity.country}
-                currency={currency}
-                hotels={processedHotels}
-                onSelectHotelCard={(hotelId) => {
-                  const cardEl = document.querySelector(`[data-testid="hotel-list-card-${hotelId}"]`);
-                  if (cardEl) {
-                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }}
-                onOpenHotelDetails={(hotelId) => {
-                  const found = processedHotels.find((h) => h.id === hotelId);
-                  if (found) onSelectHotelForDetails?.(found);
-                }}
-              />
-            )}
-
             <aside
               ref={leftSidebarRef}
               data-testid="search-results-sidebar"
-              className={
-                currentCategory === 'hotels'
-                  ? `w-full bg-white rounded-2xl border border-slate-200/90 shadow-xs ${
-                      isHotelFiltersOpen
-                        ? 'p-4 sm:p-5 space-y-5 lg:max-h-[max(200px,calc(100vh-520px))] xl:max-h-[max(200px,calc(100vh-550px))] lg:overflow-y-auto custom-scrollbar'
-                        : 'p-4 sm:p-5 space-y-5 lg:px-4 lg:py-3 lg:space-y-0'
-                    }`
-                  : 'w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5'
-              }
+              className="w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-5"
             >
 
             <div
               id="hotel-filters-block"
               ref={filtersHeaderRef}
               data-testid="filters-block-header"
-              className={`flex items-center justify-between transition-all duration-300 ${
-                currentCategory === 'hotels' && !isHotelFiltersOpen
-                  ? 'pb-3 border-b border-slate-100 lg:pb-0 lg:border-b-0'
-                  : 'pb-3 border-b border-slate-100'
-              } ${
+              className={`flex items-center justify-between transition-all duration-300 pb-3 border-b border-slate-100 ${
                 highlightFiltersJump ? 'rounded-lg bg-blue-50/90 ring-2 ring-blue-500/40 px-2 pt-2 -mx-2' : ''
               }`}
             >
-              {currentCategory === 'hotels' ? (
-                <button
-                  type="button"
-                  onClick={() => setIsHotelFiltersOpen((prev) => !prev)}
-                  aria-expanded={isHotelFiltersOpen}
-                  data-testid="toggle-hotel-filters-button"
-                  className="flex items-center gap-2 text-left cursor-pointer group"
-                >
-                  <SlidersHorizontal className="w-4 h-4 text-blue-600" />
-                  <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                    Filters
-                  </h3>
-                  <ChevronDown
-                    className={`hidden lg:inline-block w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-transform duration-200 ${
-                      isHotelFiltersOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-blue-600" />
-                  <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                    Filters
-                  </h3>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-blue-600" />
+                <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                  Filters
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={handleResetFilters}
@@ -5646,246 +5699,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               </div>
             )}
 
-            {/* --- HOTELS FILTERS (MakeMyTrip Style Left Sidebar) --- */}
-            {currentCategory === 'hotels' && (
-              <div className={`space-y-4 text-xs ${isHotelFiltersOpen ? 'block' : 'block lg:hidden'}`}>
-                {/* 1. Quick Search Box */}
-                <div>
-                  <span className="font-bold text-slate-800 block mb-1.5">Search Hotel / Locality</span>
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={hotelSearchQuery}
-                      onChange={(e) => setHotelSearchQuery(e.target.value)}
-                      placeholder="e.g. Taj, Calangute, Villa..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-7 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors"
-                    />
-                    {hotelSearchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setHotelSearchQuery('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. TripYeah Assured Special Filter Banner */}
-                <div
-                  onClick={() => setHotelTripYeahAssuredOnly((prev) => !prev)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer select-none flex items-start gap-2.5 ${
-                    hotelTripYeahAssuredOnly
-                      ? 'bg-blue-50 border-blue-400 text-blue-900 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-700'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={hotelTripYeahAssuredOnly}
-                    onChange={() => {}}
-                    className="w-4 h-4 mt-0.5 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-blue-900">
-                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                      <span>TripYeah Assured Stays</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                      Verified photos, 24/7 concierge &amp; 100% money-back check-in guarantee
-                    </p>
-                  </div>
-                </div>
-
-                {/* 3. Price per Night Range & Brackets */}
-                <div className="pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between font-semibold text-slate-800 mb-1.5">
-                    <span>Max Price per Night</span>
-                    <span className="font-bold text-blue-600 font-mono">
-                      {formatPrice(hotelMaxPrice, currency)}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={1500}
-                    max={25000}
-                    step={500}
-                    value={hotelMaxPrice}
-                    onChange={(e) => {
-                      setHotelMaxPrice(Number(e.target.value));
-                      setHotelPriceBracket('all');
-                    }}
-                    className="w-full accent-blue-600 cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-0.5">
-                    <span>₹1,500</span>
-                    <span>₹25,000+</span>
-                  </div>
-
-                  {/* Quick Price Buckets */}
-                  <div className="mt-2.5 space-y-1.5">
-                    {[
-                      { id: 'all', label: 'All Budgets' },
-                      { id: 'under-2500', label: 'Budget (Under ₹2,500)' },
-                      { id: '2500-5000', label: 'Value (₹2,500 - ₹5,000)' },
-                      { id: '5000-9000', label: 'Premium (₹5,000 - ₹9,000)' },
-                      { id: '9000-15000', label: 'Luxury (₹9,000 - ₹15,000)' },
-                      { id: 'above-15000', label: 'Ultra Luxury (₹15,000+)' },
-                    ].map((bracket) => {
-                      const isSelected = hotelPriceBracket === bracket.id;
-                      return (
-                        <label
-                          key={bracket.id}
-                          className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                        >
-                          <input
-                            type="radio"
-                            name="hotelPriceBracket"
-                            checked={isSelected}
-                            onChange={() => setHotelPriceBracket(bracket.id)}
-                            className="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-0 cursor-pointer accent-blue-600"
-                          />
-                          <span className={isSelected ? 'font-bold text-blue-700' : ''}>
-                            {bracket.label}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 4. Hotel Star Rating */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Hotel Star Rating</span>
-                  <div className="space-y-2">
-                    {[
-                      { star: 5, label: '5 Star (Luxury Resorts & Palaces)' },
-                      { star: 4, label: '4 Star (Premium Stays)' },
-                      { star: 3, label: '3 Star (Standard & Budget)' },
-                    ].map(({ star, label }) => {
-                      const checked = hotelStars.includes(star);
-                      return (
-                        <label key={star} className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setHotelStars((prev) =>
-                                checked ? prev.filter((s) => s !== star) : [...prev, star]
-                              )
-                            }
-                            className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                          />
-                          <span className="flex items-center gap-1 text-[11px]">
-                            <span className="font-semibold">{star}</span>
-                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                            <span className="text-slate-500 text-[10px]">{label.split('(')[1]?.replace(')', '')}</span>
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 5. User Review Rating */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Guest Review Rating</span>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { val: 0, label: 'Any Rating' },
-                      { val: 4.0, label: '4.0+ Very Good' },
-                      { val: 4.5, label: '4.5+ Excellent' },
-                      { val: 4.8, label: '4.8+ Top Rated' },
-                    ].map((item) => {
-                      const isActive = hotelMinRating === item.val;
-                      return (
-                        <button
-                          key={item.val}
-                          type="button"
-                          onClick={() => setHotelMinRating(item.val)}
-                          className={`py-1.5 px-2 rounded-lg text-center border font-semibold text-[11px] transition-colors cursor-pointer ${
-                            isActive
-                              ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-2xs'
-                              : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-
-                {/* 7. Property Type */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Property Type</span>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['Resort', 'Hotel', 'Villa', 'Heritage'].map((type) => {
-                      const active = hotelSelectedPropertyTypes.includes(type);
-                      return (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() =>
-                            setHotelSelectedPropertyTypes((prev) =>
-                              active ? prev.filter((t) => t !== type) : [...prev, type]
-                            )
-                          }
-                          className={`py-1.5 px-2 rounded-lg text-center border font-semibold text-[11px] transition-colors cursor-pointer ${
-                            active
-                              ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold'
-                              : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
-                          }`}
-                        >
-                          {type}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 8. Amenities & Freebies */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-800 block mb-2">Amenities &amp; Freebies</span>
-                  <div className="space-y-1.5">
-                    {[
-                      { id: 'Free Breakfast', label: 'Free Breakfast Included' },
-                      { id: 'Swimming Pool', label: 'Swimming Pool' },
-                      { id: 'Free WiFi', label: 'Free High-Speed WiFi' },
-                      { id: 'Couple Friendly', label: 'Couple Friendly (Unmarried Welcome)' },
-                      { id: 'Beachfront / Sea View', label: 'Beachfront / Sea View' },
-                      { id: 'Free Cancellation', label: 'Free Cancellation Available' },
-                      { id: 'Pay at Hotel', label: 'Pay at Hotel (₹0 Prepayment)' },
-                      { id: 'Spa & Wellness', label: 'Spa & Wellness Centre' },
-                      { id: 'Airport Shuttle', label: 'Airport Transfer / Shuttle' },
-                    ].map((amenity) => {
-                      const checked = hotelSelectedAmenities.includes(amenity.id);
-                      return (
-                        <label
-                          key={amenity.id}
-                          className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setHotelSelectedAmenities((prev) =>
-                                checked ? prev.filter((a) => a !== amenity.id) : [...prev, amenity.id]
-                              )
-                            }
-                            className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer accent-blue-600"
-                          />
-                          <span className="text-[11px]">{amenity.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Hotels filters are rendered in the slide-over HotelFiltersDrawer */}
 
             {/* --- BUSES FILTERS (redBus & MakeMyTrip Style Left Sidebar) --- */}
             {currentCategory === 'buses' && (
@@ -6617,11 +6431,18 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
             )}
             </aside>
           </div>
+          )}
 
           {/* =================================================================
               RIGHT COLUMN: SORT BAR & LIVE RESULTS
           =================================================================== */}
-          <main className="flex-1 min-w-0 w-full space-y-4">
+          <main
+            className={
+              currentCategory === 'hotels'
+                ? 'flex-1 min-w-0 w-full space-y-4 px-3 sm:px-5 lg:pl-0 lg:pr-6 pt-5 pb-16'
+                : 'flex-1 min-w-0 w-full space-y-4'
+            }
+          >
             {/* Bus Specific Header: Cities Route & Horizontal Date Carousel with Left/Right Buttons */}
             {currentCategory === 'buses' && (
               <div className="space-y-3">
@@ -6787,11 +6608,24 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       type="button"
                       onClick={handleJumpToFilters}
                       data-testid="sort-by-filters-button"
-                      title="Jump to Filters"
-                      aria-label="Jump to Filters"
-                      className="p-1.5 -m-1 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+                      title={currentCategory === 'hotels' ? 'Open Filters' : 'Jump to Filters'}
+                      aria-label={currentCategory === 'hotels' ? 'Open hotel filters' : 'Jump to Filters'}
+                      aria-expanded={currentCategory === 'hotels' ? isHotelFiltersOpen : undefined}
+                      className={`relative p-1.5 -m-1 rounded-lg transition-colors cursor-pointer ${
+                        currentCategory === 'hotels' && (isHotelFiltersOpen || activeHotelFilterCount > 0)
+                          ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                          : 'text-slate-600 hover:text-blue-700 hover:bg-blue-50'
+                      }`}
                     >
                       <SlidersHorizontal className="w-4 h-4" />
+                      {currentCategory === 'hotels' && activeHotelFilterCount > 0 && (
+                        <span
+                          data-testid="hotel-active-filter-count"
+                          className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold leading-4 text-center tabular-nums"
+                        >
+                          {activeHotelFilterCount}
+                        </span>
+                      )}
                     </button>
                     <span>Sort By:</span>
                   </div>
@@ -7784,107 +7618,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   </div>
                 )}
 
-                {/* Active Hotel Filters & Result Count Strip */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm sm:text-base">
-                      {processedHotels.length} Properties Found
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      in {currentToCity.city}
-                    </span>
-                  </div>
-
-                  {/* Active Filters Quick Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {hotelSearchQuery && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                        "{hotelSearchQuery}"
-                        <button
-                          type="button"
-                          onClick={() => setHotelSearchQuery('')}
-                          className="hover:text-blue-900 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {hotelTripYeahAssuredOnly && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
-                        <ShieldCheck className="w-3 h-3 text-blue-600" />
-                        Assured Stays
-                        <button
-                          type="button"
-                          onClick={() => setHotelTripYeahAssuredOnly(false)}
-                          className="hover:text-blue-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {hotelPriceBracket !== 'all' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
-                        {hotelPriceBracket === 'under-2500' && 'Under ₹2,500'}
-                        {hotelPriceBracket === '2500-5000' && '₹2,500 - ₹5,000'}
-                        {hotelPriceBracket === '5000-9000' && '₹5,000 - ₹9,000'}
-                        {hotelPriceBracket === '9000-15000' && '₹9,000 - ₹15,000'}
-                        {hotelPriceBracket === 'above-15000' && '₹15,000+'}
-                        <button
-                          type="button"
-                          onClick={() => setHotelPriceBracket('all')}
-                          className="hover:text-slate-900 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {hotelMinRating > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        {hotelMinRating}+ Rating
-                        <button
-                          type="button"
-                          onClick={() => setHotelMinRating(0)}
-                          className="hover:text-emerald-950 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {hotelSelectedAmenities.length > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        {hotelSelectedAmenities.length} Amenities
-                        <button
-                          type="button"
-                          onClick={() => setHotelSelectedAmenities([])}
-                          className="hover:text-indigo-900 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-
-                    {(hotelSearchQuery ||
-                      hotelTripYeahAssuredOnly ||
-                      hotelPriceBracket !== 'all' ||
-                      hotelMinRating > 0 ||
-                      hotelSelectedAmenities.length > 0 ||
-                      hotelSelectedLocalities.length > 0 ||
-                      hotelSelectedPropertyTypes.length > 0) && (
-                      <button
-                        type="button"
-                        onClick={handleResetFilters}
-                        className="text-xs font-bold text-rose-600 hover:text-rose-700 underline pl-1 cursor-pointer"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                  </div>
-                </div>
-
                 {/* Hotel Cards List */}
                 {isLoadingProperties ? (
                   <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
@@ -7947,7 +7680,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                     </div>
                   </div>
                 ) : (
-                  processedHotels.map((hotel, hIdx) => {
+                  processedHotels.map((hotel) => {
                     const discountPercent = Math.round(
                       ((hotel.originalPriceInr - hotel.priceInr) / hotel.originalPriceInr) * 100
                     );
@@ -7957,20 +7690,28 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       hotelSuiteImg,
                       hotelDiningImg,
                     ]);
+                    const cheapestDeal = getCheapestHotelProviderDeal(hotel.name);
+                    const cheapestBookingUrl = buildHotelProviderBookingUrl({
+                      providerId: cheapestDeal.id,
+                      hotelName: hotel.name,
+                      city: currentToCity.city,
+                      checkIn: currentDepDate,
+                      checkOut: currentRetDate,
+                      rooms: 1,
+                      adults: currentHotelGuests,
+                    });
 
                     return (
                       <div
                         key={hotel.id}
                         data-testid={`hotel-list-card-${hotel.id}`}
-                        className={`bg-white rounded-2xl border overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col md:flex-row group/hotel ${
-                          hIdx === 0 && sortBy === 'cheapest' ? 'border-emerald-500/80 ring-1 ring-emerald-500/25' : 'border-slate-200/90'
-                        }`}
+                        className="bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(15,23,42,0.06),0_0_0_1px_rgba(15,23,42,0.08)] hover:shadow-[0_14px_34px_-6px_rgba(15,23,42,0.20),0_4px_14px_-2px_rgba(15,23,42,0.09)] transition-shadow duration-200 flex flex-col md:flex-row group/hotel"
                       >
                         {/* Clean Image Carousel (Zero Text Overlay + Prev/Next Photo Controls) */}
                         <HotelCardPhotoCarousel
                           images={hotelPhotos}
                           hotelName={hotel.name}
-                          onOpenDetails={() => onSelectHotelForDetails?.(hotel)}
+                          onOpenDetails={() => handleOpenHotelBooking(hotel)}
                         />
 
                         {/* Hotel Details (Strict Order: Name -> Stars -> Address -> Reviews -> 2-3 Amenities) */}
@@ -7978,8 +7719,8 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                           <div>
                             {/* 1. Hotel Name */}
                             <h3
-                              onClick={() => onSelectHotelForDetails?.(hotel)}
-                              className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover/hotel:text-blue-600 transition-colors cursor-pointer leading-snug"
+                              onClick={() => handleOpenHotelBooking(hotel)}
+                              className="font-display font-bold text-slate-900 text-base sm:text-lg cursor-pointer leading-snug"
                             >
                               {hotel.name}
                             </h3>
@@ -8029,63 +7770,50 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             </div>
                           </div>
 
-                          {/* Price & Booking Action */}
-                          <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-slate-400 line-through font-mono">
-                                  {formatPrice(hotel.originalPriceInr, currency)}
-                                </span>
-                                {discountPercent > 0 && (
-                                  <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                    {discountPercent}% OFF
+                          {/* Price, Cheapest Partner Direct Link & Booking Action */}
+                          <div className="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-slate-400 line-through font-mono">
+                                    {formatPrice(hotel.originalPriceInr, currency)}
                                   </span>
-                                )}
+                                  {discountPercent > 0 && (
+                                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                      {discountPercent}% OFF
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+                                  {formatPrice(hotel.priceInr, currency)}
+                                  <span className="text-xs font-normal text-slate-500 font-sans"> / night</span>
+                                </div>
+                                <div className="text-[10px] text-slate-400">+ ₹{Math.round(hotel.priceInr * 0.12)} taxes &amp; fees</div>
                               </div>
-                              <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
-                                {formatPrice(hotel.priceInr, currency)}
-                                <span className="text-xs font-normal text-slate-500 font-sans"> / night</span>
-                              </div>
-                              <div className="text-[10px] text-slate-400">+ ₹{Math.round(hotel.priceInr * 0.12)} taxes &amp; fees</div>
+
+                              <a
+                                href={cheapestBookingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-testid={`hotel-cheapest-provider-link-${hotel.id}`}
+                                data-provider-id={cheapestDeal.id}
+                                title={`Book directly on ${cheapestDeal.name} at the lowest price`}
+                                aria-label={`Book ${hotel.name} directly on ${cheapestDeal.name}`}
+                                className="group/site inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-colors cursor-pointer"
+                              >
+                                <HotelProviderWordmark
+                                  providerId={cheapestDeal.id}
+                                  hotelName={hotel.name}
+                                  size="sm"
+                                />
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover/site:text-slate-700 transition-colors shrink-0" />
+                              </a>
                             </div>
 
                             <div className="flex items-center gap-3">
-                              {onSelectHotelForDetails && (
-                                <button
-                                  type="button"
-                                  onClick={() => onSelectHotelForDetails(hotel)}
-                                  className="text-xs text-slate-500 hover:text-blue-600 font-semibold cursor-pointer underline decoration-dotted hidden sm:inline-block"
-                                >
-                                  Photos &amp; Amenities
-                                </button>
-                              )}
                               <button
                                 type="button"
-                                onClick={() => {
-                                  onSelectFlightOrStayForCheckout({
-                                    title: hotel.name,
-                                    code: hotel.id,
-                                    depTime: 'Check-in: 02:00 PM',
-                                    arrTime: 'Check-out: 11:00 AM',
-                                    duration: '1 Night Stay',
-                                    priceInr: hotel.priceInr,
-                                    category: 'hotels',
-                                    hotelName: hotel.name,
-                                    hotelLocation: hotel.location,
-                                    hotelImage: hotel.image,
-                                    hotelStars: hotel.stars,
-                                    hotelRating: hotel.rating,
-                                    hotelReviews: hotel.reviews,
-                                    hotelPropertyType: hotel.propertyType,
-                                    hotelLocality: hotel.locality,
-                                    hotelAmenities: hotel.amenities,
-                                    hotelPerks: hotel.perks,
-                                    hotelOriginalPriceInr: hotel.originalPriceInr,
-                                    travelDate: currentDepDate,
-                                    returnDate: currentRetDate,
-                                    travellers: currentHotelGuests,
-                                  });
-                                }}
+                                onClick={() => handleOpenHotelBooking(hotel)}
                                 className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
                               >
                                 <span>Compare Rates &amp; Book</span>
@@ -9162,6 +8890,33 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
           initialQuery={activeCabModal === 'pickup' ? activeCabPickup : activeCabDrop}
           cityContext={activeCabModal === 'pickup' ? currentFromCity.city : currentToCity.city}
           onSelectPlace={handleSelectCabLocation}
+        />
+      )}
+      {/* Slide-Over Hotel Filters Side Panel */}
+      {currentCategory === 'hotels' && (
+        <HotelFiltersDrawer
+          isOpen={isHotelFiltersOpen}
+          onClose={() => setIsHotelFiltersOpen(false)}
+          onResetFilters={handleResetFilters}
+          currency={currency}
+          matchedCount={processedHotels.length}
+          activeFilterCount={activeHotelFilterCount}
+          hotelSearchQuery={hotelSearchQuery}
+          setHotelSearchQuery={setHotelSearchQuery}
+          hotelTripYeahAssuredOnly={hotelTripYeahAssuredOnly}
+          setHotelTripYeahAssuredOnly={setHotelTripYeahAssuredOnly}
+          hotelMaxPrice={hotelMaxPrice}
+          setHotelMaxPrice={setHotelMaxPrice}
+          hotelPriceBracket={hotelPriceBracket}
+          setHotelPriceBracket={setHotelPriceBracket}
+          hotelStars={hotelStars}
+          setHotelStars={setHotelStars}
+          hotelMinRating={hotelMinRating}
+          setHotelMinRating={setHotelMinRating}
+          hotelSelectedPropertyTypes={hotelSelectedPropertyTypes}
+          setHotelSelectedPropertyTypes={setHotelSelectedPropertyTypes}
+          hotelSelectedAmenities={hotelSelectedAmenities}
+          setHotelSelectedAmenities={setHotelSelectedAmenities}
         />
       )}
     </div>

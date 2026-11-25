@@ -13,25 +13,32 @@ export interface HotelProviderDeal {
   isOfficial?: boolean;
 }
 
+const EXTERNAL_CHEAPEST_CANDIDATE_IDS = [
+  'agoda',
+  'booking-com',
+  'makemytrip-hotels',
+  'expedia',
+  'goibibo-hotels',
+  'hotels-com',
+] as const;
+
+export function selectCheapestExternalProviderId(hotelName: string): string {
+  const normalized = (hotelName || '').trim().toLowerCase();
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    hash = (hash * 31 + normalized.charCodeAt(i)) >>> 0;
+  }
+  return EXTERNAL_CHEAPEST_CANDIDATE_IDS[hash % EXTERNAL_CHEAPEST_CANDIDATE_IDS.length];
+}
+
 export function buildHotelProviderDeals(
   hotelName: string,
   sortBy: 'price' | 'rating' = 'price'
 ): HotelProviderDeal[] {
   const shortBrand = hotelName.split(' ')[0] || 'Hotel';
-  const list: HotelProviderDeal[] = [
-    {
-      id: 'tripyeah-hotels-direct',
-      name: 'TripYeah Hotels Direct',
-      logoBg: 'bg-blue-600',
-      logoText: 'TY',
-      rating: 4.9,
-      reviewsCount: '24,200+ reviews',
-      roomType: 'Studio King Room',
-      policies: ['Non-refundable', 'Meals not included'],
-      note: 'Best price guarantee · Choose room & meal options on site',
-      priceDelta: 0,
-      isCheapest: true,
-    },
+  const cheapestProviderId = selectCheapestExternalProviderId(hotelName);
+
+  const rawList: Omit<HotelProviderDeal, 'priceDelta' | 'isCheapest'>[] = [
     {
       id: 'agoda',
       name: 'agoda',
@@ -42,7 +49,6 @@ export function buildHotelProviderDeals(
       roomType: 'Deluxe Studio',
       policies: ['Non-refundable', 'Meals not included'],
       note: 'Member-only nightly rate · Instant voucher · Select room & add-ons on partner site',
-      priceDelta: 80,
     },
     {
       id: 'booking-com',
@@ -54,7 +60,6 @@ export function buildHotelProviderDeals(
       roomType: 'Superior Double Room',
       policies: ['Refundable', 'Meals not included', 'Pay at hotel'],
       note: 'Flexible booking options · Verified guest reviews · Choose room category on site',
-      priceDelta: 120,
     },
     {
       id: 'makemytrip-hotels',
@@ -66,7 +71,17 @@ export function buildHotelProviderDeals(
       roomType: 'Executive Twin Room',
       policies: ['Refundable', 'Meals included'],
       note: 'Verified stay partner · 24/7 travel helpline · Customize stay options during booking',
-      priceDelta: 160,
+    },
+    {
+      id: 'tripyeah-hotels-direct',
+      name: 'TripYeah Hotels Direct',
+      logoBg: 'bg-blue-600',
+      logoText: 'TY',
+      rating: 4.9,
+      reviewsCount: '24,200+ reviews',
+      roomType: 'Studio King Room',
+      policies: ['Non-refundable', 'Meals not included'],
+      note: 'Best price guarantee · Choose room & meal options on site',
     },
     {
       id: 'hotel-official',
@@ -78,7 +93,6 @@ export function buildHotelProviderDeals(
       roomType: 'Premier King Suite',
       policies: ['Refundable', 'Meals included'],
       note: 'Property reservation · Loyalty benefits · Full inventory on official website',
-      priceDelta: 190,
       isOfficial: true,
     },
     {
@@ -91,7 +105,6 @@ export function buildHotelProviderDeals(
       roomType: 'Classic Studio',
       policies: ['Non-refundable', 'Meals included'],
       note: 'OneKey member savings · Transparent total pricing · Select room on checkout',
-      priceDelta: 210,
     },
     {
       id: 'hotels-com',
@@ -103,7 +116,6 @@ export function buildHotelProviderDeals(
       roomType: 'Deluxe Queen Room',
       policies: ['Refundable', 'Meals not included', 'Free Wi-Fi'],
       note: 'Collect reward nights · Price match support · Customize room options on site',
-      priceDelta: 240,
     },
     {
       id: 'goibibo-hotels',
@@ -115,14 +127,89 @@ export function buildHotelProviderDeals(
       roomType: 'Club King Studio',
       policies: ['Refundable', 'Meals included'],
       note: 'Express mobile check-in · Instant partner voucher · Choose inclusions on site',
-      priceDelta: 290,
     },
   ];
+
+  const otherDeltas = [65, 110, 145, 180, 210, 245, 290];
+  let deltaIndex = 0;
+
+  const list: HotelProviderDeal[] = rawList.map((item) => {
+    if (item.id === cheapestProviderId) {
+      return {
+        ...item,
+        priceDelta: 0,
+        isCheapest: true,
+      };
+    }
+    const assignedDelta = otherDeltas[deltaIndex] ?? 290 + deltaIndex * 30;
+    deltaIndex += 1;
+    return {
+      ...item,
+      priceDelta: assignedDelta,
+    };
+  });
 
   if (sortBy === 'rating') {
     return [...list].sort((a, b) => b.rating - a.rating || a.priceDelta - b.priceDelta);
   }
   return [...list].sort((a, b) => a.priceDelta - b.priceDelta);
+}
+
+export function getCheapestHotelProviderDeal(hotelName: string): HotelProviderDeal {
+  return buildHotelProviderDeals(hotelName, 'price')[0];
+}
+
+export function buildHotelProviderBookingUrl(params: {
+  providerId: string;
+  hotelName: string;
+  city?: string;
+  checkIn?: string;
+  checkOut?: string;
+  rooms?: number;
+  adults?: number;
+}): string {
+  const hotelName = (params.hotelName || 'Hotel').trim();
+  const city = (params.city || '').trim();
+  const query = city ? `${hotelName}, ${city}` : hotelName;
+  const encodedQuery = encodeURIComponent(query);
+  const encodedHotel = encodeURIComponent(hotelName);
+  const checkIn = params.checkIn || '';
+  const checkOut = params.checkOut || '';
+  const rooms = Math.max(1, params.rooms || 1);
+  const adults = Math.max(1, params.adults || 2);
+
+  switch (params.providerId) {
+    case 'agoda':
+      return `https://www.agoda.com/search?text=${encodedQuery}${
+        checkIn ? `&checkIn=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&checkOut=${encodeURIComponent(checkOut)}` : ''}&rooms=${rooms}&adults=${adults}`;
+    case 'booking-com':
+      return `https://www.booking.com/searchresults.html?ss=${encodedQuery}${
+        checkIn ? `&checkin=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&checkout=${encodeURIComponent(checkOut)}` : ''}&group_adults=${adults}&no_rooms=${rooms}`;
+    case 'makemytrip-hotels':
+      return `https://www.makemytrip.com/hotels/hotel-listing/?searchText=${encodedQuery}${
+        checkIn ? `&checkin=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&checkout=${encodeURIComponent(checkOut)}` : ''}`;
+    case 'expedia':
+      return `https://www.expedia.com/Hotel-Search?destination=${encodedQuery}${
+        checkIn ? `&startDate=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&endDate=${encodeURIComponent(checkOut)}` : ''}&adults=${adults}&rooms=${rooms}`;
+    case 'hotels-com':
+      return `https://www.hotels.com/Hotel-Search?destination=${encodedQuery}${
+        checkIn ? `&startDate=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&endDate=${encodeURIComponent(checkOut)}` : ''}&adults=${adults}&rooms=${rooms}`;
+    case 'goibibo-hotels': {
+      const citySlug = (city || 'india')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'india';
+      return `https://www.goibibo.com/hotels/find-hotels-in-${encodeURIComponent(citySlug)}/?searchText=${encodedHotel}`;
+    }
+    case 'hotel-official':
+    default:
+      return `https://www.google.com/search?q=${encodeURIComponent(`${query} official website book hotel`)}`;
+  }
 }
 
 export function getLowestHotelDealPrice(basePrice: number, deals: HotelProviderDeal[]): number {

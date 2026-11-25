@@ -53,6 +53,7 @@ import {
   HotelMapsProvider,
 } from './HotelGoogleMapSection';
 import { HotelAmenitiesSection } from './HotelAmenitiesSection';
+import { HotelProviderWordmark } from './HotelProviderWordmark';
 
 interface HotelBookingCheckoutPageProps {
   item: CheckoutItem;
@@ -968,82 +969,6 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
           >
             {providerDeals.map((provider) => {
               const nightlyPrice = adjustedBasePrice + provider.priceDelta;
-              const shortBrand = hotelName.split(' ')[0] || 'Hotel';
-
-              const renderWordmark = () => {
-                switch (provider.id) {
-                  case 'agoda':
-                    return (
-                      <div className="inline-flex flex-col items-start select-none" aria-label="agoda">
-                        <span className="text-[23px] font-extrabold tracking-tight text-slate-900 leading-none font-display">
-                          agoda
-                        </span>
-                        <span className="flex items-center gap-1 mt-1" aria-hidden="true">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#e12d39]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#06b6d4]" />
-                        </span>
-                      </div>
-                    );
-                  case 'booking-com':
-                    return (
-                      <span className="text-[20px] font-extrabold tracking-tight leading-none font-display select-none">
-                        <span className="text-[#003580]">Booking</span>
-                        <span className="text-[#009fe3]">.com</span>
-                      </span>
-                    );
-                  case 'makemytrip-hotels':
-                    return (
-                      <span className="text-[20px] font-extrabold tracking-tight leading-none font-display select-none">
-                        <span className="text-[#05203c]">make</span>
-                        <span className="text-[#eb2026] italic">my</span>
-                        <span className="text-[#05203c]">trip</span>
-                      </span>
-                    );
-                  case 'tripyeah-hotels-direct':
-                    return (
-                      <span className="inline-flex items-baseline gap-1.5 leading-none font-display select-none">
-                        <span className="text-[20px] font-extrabold tracking-tight">
-                          <span className="text-[#05203c]">Trip</span>
-                          <span className="text-blue-600">Yeah</span>
-                        </span>
-                        <span className="text-xs font-semibold text-slate-500">Hotels</span>
-                      </span>
-                    );
-                  case 'expedia':
-                    return (
-                      <span className="inline-flex items-center gap-1.5 text-[20px] font-extrabold tracking-tight text-[#001959] leading-none font-display select-none">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#febb02] inline-block shrink-0" aria-hidden="true" />
-                        <span>Expedia</span>
-                      </span>
-                    );
-                  case 'hotels-com':
-                    return (
-                      <span className="text-[20px] font-extrabold tracking-tight text-[#d32f2f] leading-none font-display select-none">
-                        Hotels.com
-                      </span>
-                    );
-                  case 'goibibo-hotels':
-                    return (
-                      <span className="text-[21px] font-extrabold tracking-tight leading-none font-display select-none">
-                        <span className="text-[#ff6d38]">go</span>
-                        <span className="text-[#2276e3]">ibibo</span>
-                      </span>
-                    );
-                  case 'hotel-official':
-                  default:
-                    return (
-                      <span className="inline-flex items-baseline gap-2 leading-none select-none">
-                        <span className="font-serif text-[19px] font-bold tracking-tight text-slate-900">
-                          {shortBrand}
-                        </span>
-                        <span className="text-xs font-medium text-slate-500">Official Site</span>
-                      </span>
-                    );
-                }
-              };
 
               return (
                 <div
@@ -1053,7 +978,13 @@ export const HotelBookingCheckoutPage: React.FC<HotelBookingCheckoutPageProps> =
                 >
                   {/* Site Logo Wordmark, Room/Bed Type & 2-3 Policy Points */}
                   <div className="space-y-2 min-w-0">
-                    <div>{renderWordmark()}</div>
+                    <div>
+                      <HotelProviderWordmark
+                        providerId={provider.id}
+                        hotelName={hotelName}
+                        size="md"
+                      />
+                    </div>
 
                     <div className="text-sm font-semibold text-slate-900">
                       {provider.roomType}

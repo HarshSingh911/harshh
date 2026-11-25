@@ -96,3 +96,49 @@ export function normalizeHotelMatchKey(name: string): string {
     .trim();
 }
 
+export interface HotelFilterCriteria {
+  searchQuery: string;
+  maxPrice: number;
+  defaultMaxPrice?: number;
+  priceBracket: string;
+  stars: number[];
+  minRating: number;
+  propertyTypes: string[];
+  amenities: string[];
+  localities: string[];
+  assuredOnly: boolean;
+  freeCancellationOnly: boolean;
+}
+
+export function countActiveHotelFilters(filters: HotelFilterCriteria): number {
+  const defaultMax = filters.defaultMaxPrice ?? 20000;
+  let count = 0;
+
+  if (filters.searchQuery.trim().length > 0) count += 1;
+  if (filters.assuredOnly) count += 1;
+  if (filters.freeCancellationOnly) count += 1;
+  if (filters.priceBracket !== 'all') {
+    count += 1;
+  } else if (filters.maxPrice < defaultMax) {
+    count += 1;
+  }
+
+  const normalizedStars = Array.from(new Set(filters.stars)).sort();
+  if (
+    normalizedStars.length !== 3 ||
+    normalizedStars[0] !== 3 ||
+    normalizedStars[1] !== 4 ||
+    normalizedStars[2] !== 5
+  ) {
+    count += 1;
+  }
+
+  if (filters.minRating > 0) count += 1;
+  if (filters.propertyTypes.length > 0) count += filters.propertyTypes.length;
+  if (filters.amenities.length > 0) count += filters.amenities.length;
+  if (filters.localities.length > 0) count += filters.localities.length;
+
+  return count;
+}
+
+
