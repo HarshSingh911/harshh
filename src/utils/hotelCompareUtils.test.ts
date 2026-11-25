@@ -39,7 +39,7 @@ test('buildHotelProviderDeals returns all 8 comparison sites sorted by lowest pr
   }
 });
 
-test('buildHotelProviderBookingUrl builds valid external partner URLs with encoded stay parameters', () => {
+test('buildHotelProviderBookingUrl builds exact hotel deep-link URLs with cleaned names and partner stay parameters', () => {
   const agodaUrl = buildHotelProviderBookingUrl({
     providerId: 'agoda',
     hotelName: 'Goa Palms Heritage Boutique Resort & Pool',
@@ -49,32 +49,67 @@ test('buildHotelProviderBookingUrl builds valid external partner URLs with encod
     rooms: 1,
     adults: 2,
   });
-  assert.ok(agodaUrl.startsWith('https://www.agoda.com/search?text='));
+  assert.ok(agodaUrl.startsWith('https://www.agoda.com/en-in/search?textToSearch='));
   assert.ok(agodaUrl.includes('checkIn=2026-10-15'));
-  assert.ok(agodaUrl.includes('checkOut=2026-10-19'));
+  assert.ok(agodaUrl.includes('los=4'));
 
   const bookingUrl = buildHotelProviderBookingUrl({
     providerId: 'booking-com',
-    hotelName: 'Casa Bella Villa',
+    hotelName: 'Taj Exotica Resort & Spa Goa (5★ Luxury Icon)',
     city: 'Goa',
     checkIn: '2026-10-15',
     checkOut: '2026-10-19',
   });
   assert.ok(bookingUrl.startsWith('https://www.booking.com/searchresults.html?ss='));
+  assert.ok(bookingUrl.includes('dest_type=hotel'));
+  assert.ok(!bookingUrl.includes('Luxury%20Icon'), 'Marketing tags should be stripped for accurate hotel match');
+
+  const expediaUrl = buildHotelProviderBookingUrl({
+    providerId: 'expedia',
+    hotelName: 'Casa Bella Seaview Private Pool Villa',
+    city: 'Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-19',
+  });
+  assert.ok(expediaUrl.startsWith('https://www.expedia.co.in/Hotel-Search?destination='));
+  assert.ok(expediaUrl.includes('hotelName=Casa%20Bella%20Seaview%20Private%20Pool%20Villa'));
 
   const mmtUrl = buildHotelProviderBookingUrl({
     providerId: 'makemytrip-hotels',
     hotelName: 'Casa Bella Villa',
     city: 'Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-19',
   });
   assert.ok(mmtUrl.startsWith('https://www.makemytrip.com/hotels/hotel-listing/'));
+  assert.ok(mmtUrl.includes('checkin=10152026'));
+  assert.ok(mmtUrl.includes('locusType=hotel'));
 
   const goibiboUrl = buildHotelProviderBookingUrl({
     providerId: 'goibibo-hotels',
     hotelName: 'Casa Bella Villa',
     city: 'North Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-19',
   });
   assert.ok(goibiboUrl.startsWith('https://www.goibibo.com/hotels/find-hotels-in-north-goa/'));
+  assert.ok(goibiboUrl.includes('ci=20261015'));
+  assert.ok(goibiboUrl.includes('hotelName=Casa%20Bella%20Villa'));
+
+  const directOverrideUrl = buildHotelProviderBookingUrl({
+    providerId: 'booking-com',
+    hotelName: 'Taj Exotica Resort & Spa Goa',
+    city: 'Goa',
+    checkIn: '2026-10-15',
+    checkOut: '2026-10-19',
+    rooms: 1,
+    adults: 2,
+    partnerUrls: {
+      'booking-com': 'https://www.booking.com/hotel/in/taj-exotica-goa.html',
+    },
+  });
+  assert.ok(directOverrideUrl.startsWith('https://www.booking.com/hotel/in/taj-exotica-goa.html?'));
+  assert.ok(directOverrideUrl.includes('checkin=2026-10-15'));
 });
 
 test('buildHotelProviderDeals sorts by highest rating when requested', () => {
@@ -203,6 +238,33 @@ test('deriveCabPickupSummary formats real taxi stand and traffic status text wit
     deriveCabPickupSummary({ taxiStandCount: 0 }),
     'Live Google Maps traffic overlay active · Showing nearest transit & airport cab pickup points'
   );
+});
+
+test('buildHotelPriceComparisonChartData returns sorted top providers matching lowest deal', async () => {
+  const { buildHotelPriceComparisonChartData, getCheapestHotelProviderDeal } = await import(
+    './hotelCompareUtils'
+  );
+  const hotelName = 'Goa Palms Heritage Boutique Resort & Pool';
+  const points = buildHotelPriceComparisonChartData(hotelName, 1950, 5);
+  assert.equal(points.length, 5);
+  assert.equal(points[0].providerId, getCheapestHotelProviderDeal(hotelName).id);
+  assert.equal(points[0].priceInr, 1950);
+  assert.equal(points[0].isCheapest, true);
+  assert.equal(points[0].deltaFromLowestInr, 0);
+  for (let i = 1; i < points.length; i++) {
+    assert.ok(points[i].priceInr >= points[i - 1].priceInr);
+    assert.equal(points[i].isCheapest, false);
+    assert.ok(points[i].shortLabel.length > 0 && points[i].shortLabel.length <= 10);
+  }
+});
+
+test('computeCompactPriceChartDomain produces tight non-negative domain for readable bar contrast', async () => {
+  const { computeCompactPriceChartDomain } = await import('./hotelCompareUtils');
+  const [minY, maxY] = computeCompactPriceChartDomain([1950, 2015, 2060, 2095, 2130]);
+  assert.ok(minY >= 0 && minY < 1950);
+  assert.ok(maxY > 2130);
+  assert.ok(minY > 1500, 'Expected tight baseline so bar height differences are visually clear');
+  assert.deepEqual(computeCompactPriceChartDomain([]), [0, 100]);
 });
 
 

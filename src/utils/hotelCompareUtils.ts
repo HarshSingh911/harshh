@@ -159,52 +159,107 @@ export function getCheapestHotelProviderDeal(hotelName: string): HotelProviderDe
   return buildHotelProviderDeals(hotelName, 'price')[0];
 }
 
+export function cleanHotelNameForPartnerLookup(hotelName: string): string {
+  return (hotelName || 'Hotel')
+    .replace(/\([^)]*[★☆][^)]*\)/g, '')
+    .replace(/\((?:verified|couple friendly|luxury icon|best seller|top rated)\)/gi, '')
+    .replace(/[★☆]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function formatIsoToMmDdYyyy(isoDate?: string): string {
+  if (!isoDate) return '';
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return '';
+  const [yyyy, mm, dd] = parts;
+  return `${mm}${dd}${yyyy}`;
+}
+
+function formatIsoToYyyyMmDd(isoDate?: string): string {
+  if (!isoDate) return '';
+  return isoDate.replace(/-/g, '');
+}
+
 export function buildHotelProviderBookingUrl(params: {
   providerId: string;
   hotelName: string;
   city?: string;
+  locality?: string;
   checkIn?: string;
   checkOut?: string;
   rooms?: number;
   adults?: number;
+  partnerUrls?: Partial<Record<string, string>>;
 }): string {
-  const hotelName = (params.hotelName || 'Hotel').trim();
+  const cleanedHotel = cleanHotelNameForPartnerLookup(params.hotelName);
   const city = (params.city || '').trim();
-  const query = city ? `${hotelName}, ${city}` : hotelName;
+  const query = city ? `${cleanedHotel}, ${city}` : cleanedHotel;
   const encodedQuery = encodeURIComponent(query);
-  const encodedHotel = encodeURIComponent(hotelName);
+  const encodedHotel = encodeURIComponent(cleanedHotel);
   const checkIn = params.checkIn || '';
   const checkOut = params.checkOut || '';
   const rooms = Math.max(1, params.rooms || 1);
   const adults = Math.max(1, params.adults || 2);
+  const nights = checkIn && checkOut ? calculateStayNights(checkIn, checkOut) : 1;
+
+  // If a direct property-page partner URL is supplied for this hotel & provider, use it directly
+  const directOverride = params.partnerUrls?.[params.providerId];
+  if (directOverride && /^https?:\/\//i.test(directOverride)) {
+    try {
+      const url = new URL(directOverride);
+      if (checkIn && !url.searchParams.has('checkin') && !url.searchParams.has('checkIn')) {
+        url.searchParams.set('checkin', checkIn);
+      }
+      if (checkOut && !url.searchParams.has('checkout') && !url.searchParams.has('checkOut')) {
+        url.searchParams.set('checkout', checkOut);
+      }
+      if (!url.searchParams.has('adults')) {
+        url.searchParams.set('adults', String(adults));
+      }
+      if (!url.searchParams.has('rooms')) {
+        url.searchParams.set('rooms', String(rooms));
+      }
+      return url.toString();
+    } catch {
+      return directOverride;
+    }
+  }
 
   switch (params.providerId) {
     case 'agoda':
-      return `https://www.agoda.com/search?text=${encodedQuery}${
-        checkIn ? `&checkIn=${encodeURIComponent(checkIn)}` : ''
-      }${checkOut ? `&checkOut=${encodeURIComponent(checkOut)}` : ''}&rooms=${rooms}&adults=${adults}`;
+      return `https://www.agoda.com/en-in/search?textToSearch=${encodedQuery}&searchText=${encodedQuery}${
+        checkIn ? `&checkIn=${encodeURIComponent(checkIn)}&los=${nights}` : ''
+      }&rooms=${rooms}&adults=${adults}&children=0`;
     case 'booking-com':
-      return `https://www.booking.com/searchresults.html?ss=${encodedQuery}${
+      return `https://www.booking.com/searchresults.html?ss=${encodedQuery}&dest_type=hotel&src=index${
         checkIn ? `&checkin=${encodeURIComponent(checkIn)}` : ''
-      }${checkOut ? `&checkout=${encodeURIComponent(checkOut)}` : ''}&group_adults=${adults}&no_rooms=${rooms}`;
-    case 'makemytrip-hotels':
-      return `https://www.makemytrip.com/hotels/hotel-listing/?searchText=${encodedQuery}${
-        checkIn ? `&checkin=${encodeURIComponent(checkIn)}` : ''
-      }${checkOut ? `&checkout=${encodeURIComponent(checkOut)}` : ''}`;
+      }${checkOut ? `&checkout=${encodeURIComponent(checkOut)}` : ''}&group_adults=${adults}&no_rooms=${rooms}&group_children=0`;
+    case 'makemytrip-hotels': {
+      const mmtIn = formatIsoToMmDdYyyy(checkIn);
+      const mmtOut = formatIsoToMmDdYyyy(checkOut);
+      return `https://www.makemytrip.com/hotels/hotel-listing/?${
+        mmtIn ? `checkin=${mmtIn}&` : ''
+      }${mmtOut ? `checkout=${mmtOut}&` : ''}roomStayQualifier=${adults}e0e&locusType=hotel&reference=hotel&type=hotel&searchText=${encodedQuery}`;
+    }
     case 'expedia':
-      return `https://www.expedia.com/Hotel-Search?destination=${encodedQuery}${
-        checkIn ? `&startDate=${encodeURIComponent(checkIn)}` : ''
-      }${checkOut ? `&endDate=${encodeURIComponent(checkOut)}` : ''}&adults=${adults}&rooms=${rooms}`;
+      return `https://www.expedia.co.in/Hotel-Search?destination=${encodedQuery}&hotelName=${encodedHotel}${
+        checkIn ? `&startDate=${encodeURIComponent(checkIn)}&d1=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&endDate=${encodeURIComponent(checkOut)}&d2=${encodeURIComponent(checkOut)}` : ''}&adults=${adults}&rooms=${rooms}`;
     case 'hotels-com':
-      return `https://www.hotels.com/Hotel-Search?destination=${encodedQuery}${
-        checkIn ? `&startDate=${encodeURIComponent(checkIn)}` : ''
-      }${checkOut ? `&endDate=${encodeURIComponent(checkOut)}` : ''}&adults=${adults}&rooms=${rooms}`;
+      return `https://in.hotels.com/Hotel-Search?destination=${encodedQuery}&hotelName=${encodedHotel}${
+        checkIn ? `&startDate=${encodeURIComponent(checkIn)}&d1=${encodeURIComponent(checkIn)}` : ''
+      }${checkOut ? `&endDate=${encodeURIComponent(checkOut)}&d2=${encodeURIComponent(checkOut)}` : ''}&adults=${adults}&rooms=${rooms}`;
     case 'goibibo-hotels': {
       const citySlug = (city || 'india')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '') || 'india';
-      return `https://www.goibibo.com/hotels/find-hotels-in-${encodeURIComponent(citySlug)}/?searchText=${encodedHotel}`;
+      const ci = formatIsoToYyyyMmDd(checkIn);
+      const co = formatIsoToYyyyMmDd(checkOut);
+      return `https://www.goibibo.com/hotels/find-hotels-in-${encodeURIComponent(citySlug)}/?${
+        ci ? `ci=${ci}&` : ''
+      }${co ? `co=${co}&` : ''}r=${rooms}-${adults}-0&searchText=${encodedHotel}&hotelName=${encodedHotel}`;
     }
     case 'hotel-official':
     default:
@@ -216,6 +271,63 @@ export function getLowestHotelDealPrice(basePrice: number, deals: HotelProviderD
   if (!deals.length) return basePrice;
   const minDelta = Math.min(...deals.map((d) => d.priceDelta));
   return basePrice + minDelta;
+}
+
+export interface HotelPriceChartPoint {
+  providerId: string;
+  name: string;
+  shortLabel: string;
+  priceInr: number;
+  isCheapest: boolean;
+  deltaFromLowestInr: number;
+}
+
+const PROVIDER_SHORT_CHART_LABELS: Record<string, string> = {
+  agoda: 'Agoda',
+  'booking-com': 'Booking',
+  'makemytrip-hotels': 'MMT',
+  'tripyeah-hotels-direct': 'TripYeah',
+  'hotel-official': 'Direct',
+  expedia: 'Expedia',
+  'hotels-com': 'Hotels',
+  'goibibo-hotels': 'Goibibo',
+};
+
+export function getShortProviderChartLabel(providerId: string, fallbackName: string): string {
+  return PROVIDER_SHORT_CHART_LABELS[providerId] || fallbackName.split(' ')[0] || 'Site';
+}
+
+export function buildHotelPriceComparisonChartData(
+  hotelName: string,
+  basePriceInr: number,
+  maxProviders = 5
+): HotelPriceChartPoint[] {
+  const safeBase = Math.max(100, Math.round(basePriceInr));
+  const deals = buildHotelProviderDeals(hotelName, 'price').slice(0, Math.max(2, maxProviders));
+  const lowestPrice = deals.length > 0 ? safeBase + deals[0].priceDelta : safeBase;
+
+  return deals.map((deal, idx) => {
+    const priceInr = safeBase + deal.priceDelta;
+    return {
+      providerId: deal.id,
+      name: deal.name,
+      shortLabel: getShortProviderChartLabel(deal.id, deal.name),
+      priceInr,
+      isCheapest: idx === 0,
+      deltaFromLowestInr: Math.max(0, priceInr - lowestPrice),
+    };
+  });
+}
+
+export function computeCompactPriceChartDomain(prices: number[]): [number, number] {
+  const valid = prices.filter((p) => Number.isFinite(p) && p >= 0);
+  if (valid.length === 0) return [0, 100];
+  const minPrice = Math.min(...valid);
+  const maxPrice = Math.max(...valid);
+  const spread = Math.max(50, maxPrice - minPrice);
+  const lowerBound = Math.max(0, Math.floor(minPrice - spread * 0.55));
+  const upperBound = Math.ceil(maxPrice + spread * 0.22);
+  return [lowerBound, upperBound];
 }
 
 const CITY_TO_COUNTRY: Record<string, string> = {

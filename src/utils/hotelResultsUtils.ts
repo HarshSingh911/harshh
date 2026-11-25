@@ -141,4 +141,99 @@ export function countActiveHotelFilters(filters: HotelFilterCriteria): number {
   return count;
 }
 
+export type HotelSortOption =
+  | 'recommended'
+  | 'lowest-price'
+  | 'best-value'
+  | 'highest-rated';
+
+export const HOTEL_SORT_OPTIONS: ReadonlyArray<{
+  id: HotelSortOption;
+  label: string;
+}> = [
+  { id: 'recommended', label: 'Recommended' },
+  { id: 'lowest-price', label: 'Lowest Price' },
+  { id: 'best-value', label: 'Best Value' },
+  { id: 'highest-rated', label: 'Highest Rated' },
+];
+
+export function formatHotelCountLabel(count: number): string {
+  const safeCount = Math.max(0, Math.floor(count));
+  return `${safeCount} ${safeCount === 1 ? 'hotel' : 'hotels'}`;
+}
+
+export interface SortableHotelItem {
+  id: string;
+  priceInr: number;
+  rating: number;
+  reviews: number;
+  stars: number;
+  propertyType?: string;
+  isTripYeahAssured?: boolean;
+  freeCancellation?: boolean;
+}
+
+function getHotelRecommendedScore(hotel: SortableHotelItem): number {
+  const assuredBonus = hotel.isTripYeahAssured ? 8 : 0;
+  const freeCancelBonus = hotel.freeCancellation ? 2 : 0;
+  const reviewSignal = Math.min(hotel.reviews, 1000) * 0.015;
+  const pricePenalty = Math.min(hotel.priceInr, 25000) * 0.0005;
+  return hotel.rating * 25 + reviewSignal + hotel.stars * 3 + assuredBonus + freeCancelBonus - pricePenalty;
+}
+
+function getHotelBestValueScore(hotel: SortableHotelItem): number {
+  const quality = hotel.rating * 22 + hotel.stars * 4 + (hotel.freeCancellation ? 2 : 0);
+  const priceLog = Math.log10(Math.max(hotel.priceInr, 500));
+  return quality / priceLog;
+}
+
+export function sortHotelsForDisplay<T extends SortableHotelItem>(
+  hotels: readonly T[],
+  sortBy: HotelSortOption,
+  hotelMode?: string
+): T[] {
+  const copy = [...hotels];
+
+  if (sortBy === 'lowest-price') {
+    return copy.sort(
+      (a, b) =>
+        a.priceInr - b.priceInr ||
+        b.rating - a.rating ||
+        b.reviews - a.reviews
+    );
+  }
+
+  if (sortBy === 'highest-rated') {
+    return copy.sort(
+      (a, b) =>
+        b.rating - a.rating ||
+        b.reviews - a.reviews ||
+        a.priceInr - b.priceInr
+    );
+  }
+
+  if (sortBy === 'best-value') {
+    return copy.sort(
+      (a, b) =>
+        getHotelBestValueScore(b) - getHotelBestValueScore(a) ||
+        a.priceInr - b.priceInr
+    );
+  }
+
+  // Default: 'recommended'
+  return copy.sort((a, b) => {
+    if (hotelMode === 'villas') {
+      const aIsVR = a.propertyType === 'Villa' || a.propertyType === 'Resort';
+      const bIsVR = b.propertyType === 'Villa' || b.propertyType === 'Resort';
+      if (aIsVR && !bIsVR) return -1;
+      if (!aIsVR && bIsVR) return 1;
+    }
+    return (
+      getHotelRecommendedScore(b) - getHotelRecommendedScore(a) ||
+      b.rating - a.rating ||
+      a.priceInr - b.priceInr
+    );
+  });
+}
+
 

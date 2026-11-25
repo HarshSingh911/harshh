@@ -4,10 +4,13 @@ import {
   buildHotelCardPhotos,
   countActiveHotelFilters,
   formatCompactMapPrice,
+  formatHotelCountLabel,
   formatPlacesPriceLevelLabel,
   getAdjacentPhotoIndex,
   getHotelReviewSummaryLabel,
+  HOTEL_SORT_OPTIONS,
   normalizeHotelMatchKey,
+  sortHotelsForDisplay,
 } from './hotelResultsUtils.ts';
 
 test('buildHotelCardPhotos leads with primary image, preserves unique gallery items, and fills fallbacks', () => {
@@ -109,6 +112,72 @@ test('countActiveHotelFilters returns 0 for defaults and counts active criteria 
     }),
     1
   );
+});
+
+test('HOTEL_SORT_OPTIONS exposes Recommended first, Lowest Price second, and omits Earliest Departure', () => {
+  assert.deepEqual(
+    HOTEL_SORT_OPTIONS.map((o) => o.label),
+    ['Recommended', 'Lowest Price', 'Best Value', 'Highest Rated']
+  );
+  assert.equal(HOTEL_SORT_OPTIONS[0].id, 'recommended');
+});
+
+test('formatHotelCountLabel handles singular, plural, and zero counts cleanly', () => {
+  assert.equal(formatHotelCountLabel(9), '9 hotels');
+  assert.equal(formatHotelCountLabel(3), '3 hotels');
+  assert.equal(formatHotelCountLabel(1), '1 hotel');
+  assert.equal(formatHotelCountLabel(0), '0 hotels');
+  assert.equal(formatHotelCountLabel(-4), '0 hotels');
+});
+
+test('sortHotelsForDisplay orders hotels deterministically across all 4 sort modes without mutating input', () => {
+  const sample = [
+    {
+      id: 'budget',
+      priceInr: 1200,
+      rating: 4.3,
+      reviews: 210,
+      stars: 3,
+      propertyType: 'Hotel',
+      isTripYeahAssured: false,
+      freeCancellation: true,
+    },
+    {
+      id: 'luxury-icon',
+      priceInr: 14500,
+      rating: 4.95,
+      reviews: 950,
+      stars: 5,
+      propertyType: 'Resort',
+      isTripYeahAssured: true,
+      freeCancellation: true,
+    },
+    {
+      id: 'sweet-spot',
+      priceInr: 2200,
+      rating: 4.85,
+      reviews: 820,
+      stars: 4,
+      propertyType: 'Resort',
+      isTripYeahAssured: true,
+      freeCancellation: true,
+    },
+  ];
+  const originalOrder = sample.map((h) => h.id);
+
+  assert.deepEqual(
+    sortHotelsForDisplay(sample, 'lowest-price').map((h) => h.id),
+    ['budget', 'sweet-spot', 'luxury-icon']
+  );
+  assert.deepEqual(
+    sortHotelsForDisplay(sample, 'highest-rated').map((h) => h.id),
+    ['luxury-icon', 'sweet-spot', 'budget']
+  );
+  assert.equal(sortHotelsForDisplay(sample, 'best-value')[0].id, 'sweet-spot');
+  assert.equal(sortHotelsForDisplay(sample, 'recommended')[0].id, 'luxury-icon');
+
+  // Ensure input array was never mutated
+  assert.deepEqual(sample.map((h) => h.id), originalOrder);
 });
 
 

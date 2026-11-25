@@ -80,10 +80,13 @@ import { HotelCardPhotoCarousel } from './HotelCardPhotoCarousel';
 import { HotelSidebarMapCard } from './HotelSidebarMapCard';
 import { HotelFiltersDrawer } from './HotelFiltersDrawer';
 import { HotelProviderWordmark } from './HotelProviderWordmark';
+import { HotelSortBar } from './HotelSortBar';
 import {
   buildHotelCardPhotos,
   countActiveHotelFilters,
   getHotelReviewSummaryLabel,
+  HotelSortOption,
+  sortHotelsForDisplay,
 } from '../utils/hotelResultsUtils';
 import {
   buildHotelProviderBookingUrl,
@@ -1217,6 +1220,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   useEffect(() => {
     setCurrentCategory(initialActiveCategory);
     setModCategory(initialActiveCategory);
+    if (initialActiveCategory === 'hotels') {
+      setHotelSortBy('recommended');
+    }
   }, [initialActiveCategory]);
 
   useEffect(() => {
@@ -1412,6 +1418,9 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     setCurrentHotelGuests(modHotelGuests);
     setCurrentCabTime(modCabTime);
     onChangeHotelMode?.(modHotelMode);
+    if (activeCat === 'hotels') {
+      setHotelSortBy('recommended');
+    }
 
     if (modDepDate && modDepDate.includes('-')) {
       const parts = modDepDate.split('T')[0].split('-');
@@ -1485,6 +1494,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
 
   // Common Sort state
   const [sortBy, setSortBy] = useState<'cheapest' | 'fastest' | 'rating' | 'departure'>('cheapest');
+  const [hotelSortBy, setHotelSortBy] = useState<HotelSortOption>('recommended');
   const [codeCopied, setCodeCopied] = useState<boolean>(false);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
   const [isHotelFiltersOpen, setIsHotelFiltersOpen] = useState<boolean>(false);
@@ -1775,6 +1785,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   // Reset all filters function
   const handleResetFilters = () => {
     setSortBy('cheapest');
+    setHotelSortBy('recommended');
     setFlightMaxPrice(10000);
     setFlightSelectedAirlines(['IndiGo', 'Air India', 'Vistara', 'Akasa Air']);
     setFlightNonStopOnly(false);
@@ -2142,23 +2153,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
       return true;
     });
 
-    if (sortBy !== 'cheapest' && currentHotelMode === 'villas' && hotelSelectedPropertyTypes.length === 0) {
-      list = [...list].sort((a, b) => {
-        const aIsVR = a.propertyType === 'Villa' || a.propertyType === 'Resort';
-        const bIsVR = b.propertyType === 'Villa' || b.propertyType === 'Resort';
-        if (aIsVR && !bIsVR) return -1;
-        if (!aIsVR && bIsVR) return 1;
-        return a.priceInr - b.priceInr;
-      });
-    }
-
-    return list.sort((a, b) => {
-      if (sortBy === 'cheapest') return a.priceInr - b.priceInr;
-      if (sortBy === 'fastest') return (b.rating - a.rating) || (a.priceInr - b.priceInr); // best value
-      if (sortBy === 'rating') return (b.rating - a.rating) || (a.priceInr - b.priceInr);
-      if (sortBy === 'departure') return (b.stars - a.stars) || (a.priceInr - b.priceInr); // star rating
-      return a.priceInr - b.priceInr;
-    });
+    return sortHotelsForDisplay(list, hotelSortBy, currentHotelMode);
   }, [
     realHotels,
     currentHotelMode,
@@ -2174,7 +2169,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
     hotelBeachfrontOnly,
     hotelTripYeahAssuredOnly,
     hotelFreeCancellationOnly,
-    sortBy,
+    hotelSortBy,
   ]);
 
   // 4. Filtered Buses (redBus / MakeMyTrip Style)
@@ -2663,18 +2658,6 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               </div>
 
               <div className="flex items-center gap-3">
-                {currentCategory === 'hotels' && (
-                  <label className="flex items-center gap-2 text-xs font-semibold text-white/90 hover:text-white cursor-pointer select-none whitespace-nowrap shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={hotelFreeCancellationOnly}
-                      onChange={(e) => setHotelFreeCancellationOnly(e.target.checked)}
-                      className="w-4 h-4 rounded text-blue-500 focus:ring-blue-400 accent-blue-500 cursor-pointer"
-                    />
-                    <span>Free cancellation</span>
-                  </label>
-                )}
-
                 {/* Mobile Filters Trigger */}
                 <button
                   type="button"
@@ -6593,8 +6576,20 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
               </div>
             )}
 
-            {/* MakeMyTrip Style Horizontal Quick Sort Bar (Flights, Trains, Hotels, Buses) */}
-            {currentCategory !== 'holidays' && !isFlightRoundTrip && (
+            {/* Hotel Partitioned Sort Bar + Grey-Page Taxes/Count Metadata Row */}
+            {currentCategory === 'hotels' && (
+              <HotelSortBar
+                sortBy={hotelSortBy}
+                onChangeSort={setHotelSortBy}
+                hotelCount={processedHotels.length}
+                isFiltersOpen={isHotelFiltersOpen}
+                activeFilterCount={activeHotelFilterCount}
+                onOpenFilters={handleJumpToFilters}
+              />
+            )}
+
+            {/* MakeMyTrip Style Horizontal Quick Sort Bar (Flights, Trains, Buses) */}
+            {currentCategory !== 'holidays' && currentCategory !== 'hotels' && !isFlightRoundTrip && (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
                 {currentCategory === 'buses' ? (
                   <div className="flex items-center gap-2">
@@ -6608,24 +6603,11 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       type="button"
                       onClick={handleJumpToFilters}
                       data-testid="sort-by-filters-button"
-                      title={currentCategory === 'hotels' ? 'Open Filters' : 'Jump to Filters'}
-                      aria-label={currentCategory === 'hotels' ? 'Open hotel filters' : 'Jump to Filters'}
-                      aria-expanded={currentCategory === 'hotels' ? isHotelFiltersOpen : undefined}
-                      className={`relative p-1.5 -m-1 rounded-lg transition-colors cursor-pointer ${
-                        currentCategory === 'hotels' && (isHotelFiltersOpen || activeHotelFilterCount > 0)
-                          ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                          : 'text-slate-600 hover:text-blue-700 hover:bg-blue-50'
-                      }`}
+                      title="Jump to Filters"
+                      aria-label="Jump to Filters"
+                      className="relative p-1.5 -m-1 rounded-lg transition-colors cursor-pointer text-slate-600 hover:text-blue-700 hover:bg-blue-50"
                     >
                       <SlidersHorizontal className="w-4 h-4" />
-                      {currentCategory === 'hotels' && activeHotelFilterCount > 0 && (
-                        <span
-                          data-testid="hotel-active-filter-count"
-                          className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold leading-4 text-center tabular-nums"
-                        >
-                          {activeHotelFilterCount}
-                        </span>
-                      )}
                     </button>
                     <span>Sort By:</span>
                   </div>
@@ -6648,7 +6630,7 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                   )}
                   {[
                     { id: 'cheapest', label: 'Cheapest First' },
-                    { id: 'fastest', label: currentCategory === 'hotels' ? 'Best Value' : 'Fastest Duration' },
+                    { id: 'fastest', label: 'Fastest Duration' },
                     { id: 'rating', label: 'Highest Rated' },
                     { id: 'departure', label: 'Earliest Departure' },
                   ].map((s) => {
@@ -7695,10 +7677,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                       providerId: cheapestDeal.id,
                       hotelName: hotel.name,
                       city: currentToCity.city,
+                      locality: hotel.locality,
                       checkIn: currentDepDate,
                       checkOut: currentRetDate,
                       rooms: 1,
                       adults: currentHotelGuests,
+                      partnerUrls: (hotel as { partnerUrls?: Partial<Record<string, string>> }).partnerUrls,
                     });
 
                     return (
@@ -7725,16 +7709,15 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               {hotel.name}
                             </h3>
 
-                            {/* 2. Stars */}
-                            <div className="flex items-center gap-1.5 text-amber-500 mt-1">
-                              <div className="flex items-center" aria-label={`${hotel.stars} star hotel`}>
-                                {Array.from({ length: hotel.stars }).map((_, i) => (
-                                  <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                                ))}
-                              </div>
-                              <span className="text-xs font-semibold text-slate-600">
-                                {hotel.stars}-Star {hotel.propertyType}
-                              </span>
+                            {/* 2. Stars Only */}
+                            <div
+                              data-testid={`hotel-stars-only-${hotel.id}`}
+                              className="flex items-center text-amber-500 mt-1"
+                              aria-label={`${hotel.stars} star hotel`}
+                            >
+                              {Array.from({ length: hotel.stars }).map((_, i) => (
+                                <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                              ))}
                             </div>
 
                             {/* 3. Address */}
@@ -7770,9 +7753,12 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                             </div>
                           </div>
 
-                          {/* Price, Cheapest Partner Direct Link & Booking Action */}
-                          <div className="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                          {/* Price & Cheapest Partner Direct Link (Left) · Compare Prices CTA (Right) */}
+                          <div
+                            data-testid={`hotel-card-footer-${hotel.id}`}
+                            className="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3"
+                          >
+                            <div className="flex flex-wrap items-center gap-3">
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-slate-400 line-through font-mono">
@@ -7795,11 +7781,13 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                                 href={cheapestBookingUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 data-testid={`hotel-cheapest-provider-link-${hotel.id}`}
                                 data-provider-id={cheapestDeal.id}
-                                title={`Book directly on ${cheapestDeal.name} at the lowest price`}
+                                data-hotel-name={hotel.name}
+                                title={`Open ${hotel.name} on ${cheapestDeal.name}`}
                                 aria-label={`Book ${hotel.name} directly on ${cheapestDeal.name}`}
-                                className="group/site inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-colors cursor-pointer"
+                                className="group/site inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-colors cursor-pointer"
                               >
                                 <HotelProviderWordmark
                                   providerId={cheapestDeal.id}
@@ -7810,14 +7798,14 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
                               </a>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center">
                               <button
                                 type="button"
                                 onClick={() => handleOpenHotelBooking(hotel)}
-                                className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5"
+                                data-testid={`hotel-compare-prices-btn-${hotel.id}`}
+                                className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95 whitespace-nowrap"
                               >
-                                <span>Compare Rates &amp; Book</span>
-                                <span>→</span>
+                                <span>Compare Prices</span>
                               </button>
                             </div>
                           </div>
