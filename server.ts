@@ -4,6 +4,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
+import {
+  getRouteFlightEstimate,
+  isInternationalAirportCode,
+} from './src/utils/internationalFlightRoutes';
 
 dotenv.config();
 
@@ -326,26 +330,17 @@ const AIRLINE_METADATA: Record<string, { badgeCode: string; badgeBg: string; rat
 
 // Generates route-specific base fare based on airport codes
 function estimateRouteBaseFare(depIata: string, arrIata: string): number {
-  const internationalHubs = ['LHR', 'JFK', 'DXB', 'SIN', 'DPS', 'BKK', 'HND', 'NRT', 'FRA', 'CDG'];
-  const isDepIntl = internationalHubs.includes(depIata.toUpperCase());
-  const isArrIntl = internationalHubs.includes(arrIata.toUpperCase());
-
-  if (isDepIntl && isArrIntl) {
-    return 31500; // e.g. LHR to JFK
-  } else if (isDepIntl || isArrIntl) {
-    return 21800; // e.g. DEL to DXB or LHR
-  }
-  return 4250; // Domestic e.g. DEL to BOM
+  return getRouteFlightEstimate(depIata, arrIata).baseFareInr;
 }
 
 // Generate realistic verified schedule when Aviationstack key is absent or quota limited
 function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightDate?: string): NormalizedAviationFlight[] {
   const dep = depIata.toUpperCase();
   const arr = arrIata.toUpperCase();
-  const baseFare = estimateRouteBaseFare(dep, arr);
+  const routeEstimate = getRouteFlightEstimate(dep, arr);
+  const baseFare = routeEstimate.baseFareInr;
 
-  const isInternational = ['LHR', 'JFK', 'DXB', 'SIN', 'DPS', 'BKK', 'HND', 'NRT', 'FRA', 'CDG'].includes(dep) ||
-    ['LHR', 'JFK', 'DXB', 'SIN', 'DPS', 'BKK', 'HND', 'NRT', 'FRA', 'CDG'].includes(arr);
+  const isInternational = isInternationalAirportCode(dep) || isInternationalAirportCode(arr);
 
   const domesticHubPool = [
     { code: 'BOM', name: 'Mumbai' },
@@ -356,14 +351,22 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
   const hub1 = domesticHubPool.find((h) => h.code !== dep && h.code !== arr) || { code: 'BOM', name: 'Mumbai' };
   const hub2 = domesticHubPool.find((h) => h.code !== dep && h.code !== arr && h.code !== hub1.code) || { code: 'BLR', name: 'Bengaluru' };
 
+  const formatDuration = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${String(m).padStart(2, '0')}m`;
+  };
+
+  const baseDurMins = routeEstimate.durationMins;
+
   const carriers = isInternational
     ? [
-        { name: 'British Airways', code: 'BA', flight: '178', aircraft: 'Boeing 777-300ER', depT: '08:30', arrT: '11:35', dur: '8h 05m', durMins: 485, direct: true, mult: 1.05 },
-        { name: 'Virgin Atlantic', code: 'VS', flight: '45', aircraft: 'Airbus A350-1000', depT: '10:45', arrT: '13:40', dur: '7h 55m', durMins: 475, direct: true, mult: 1.12 },
-        { name: 'Emirates', code: 'EK', flight: '511', aircraft: 'Boeing 777-300ER', depT: '13:10', arrT: '16:25', dur: '8h 15m', durMins: 495, direct: true, mult: 0.95 },
-        { name: 'Delta Air Lines', code: 'DL', flight: '108', aircraft: 'Airbus A330-900neo', depT: '06:15', arrT: '11:45', dur: '10h 30m', durMins: 630, direct: false, mult: 0.92, layover: 'Amsterdam (AMS) · 1h 20m layover' },
-        { name: 'Lufthansa', code: 'LH', flight: '761', aircraft: 'Boeing 747-8 Intercontinental', depT: '14:20', arrT: '19:55', dur: '11h 10m', durMins: 670, direct: false, mult: 0.98, layover: 'Frankfurt (FRA) · 1h 45m layover' },
-        { name: 'Air India', code: 'AI', flight: '161', aircraft: 'Boeing 787-8 Dreamliner', depT: '18:20', arrT: '06:25', dur: '7h 05m', durMins: 425, direct: true, mult: 1.02 },
+        { name: 'Emirates', code: 'EK', flight: '511', aircraft: 'Boeing 777-300ER', depT: '13:10', arrT: '18:25', dur: formatDuration(baseDurMins), durMins: baseDurMins, direct: routeEstimate.isDirect, mult: 0.85 },
+        { name: 'Air India', code: 'AI', flight: '161', aircraft: 'Boeing 787-8 Dreamliner', depT: '18:20', arrT: '06:25', dur: formatDuration(baseDurMins + 15), durMins: baseDurMins + 15, direct: routeEstimate.isDirect, mult: 0.92 },
+        { name: 'British Airways', code: 'BA', flight: '178', aircraft: 'Boeing 777-300ER', depT: '08:30', arrT: '13:35', dur: formatDuration(baseDurMins + 25), durMins: baseDurMins + 25, direct: true, mult: 1.02 },
+        { name: 'Virgin Atlantic', code: 'VS', flight: '45', aircraft: 'Airbus A350-1000', depT: '10:45', arrT: '15:40', dur: formatDuration(baseDurMins + 10), durMins: baseDurMins + 10, direct: true, mult: 1.09 },
+        { name: 'Delta Air Lines', code: 'DL', flight: '108', aircraft: 'Airbus A330-900neo', depT: '06:15', arrT: '14:45', dur: formatDuration(baseDurMins + 135), durMins: baseDurMins + 135, direct: false, mult: 0.9, layover: 'Amsterdam (AMS) · 1h 20m layover' },
+        { name: 'Lufthansa', code: 'LH', flight: '761', aircraft: 'Boeing 747-8 Intercontinental', depT: '14:20', arrT: '22:55', dur: formatDuration(baseDurMins + 160), durMins: baseDurMins + 160, direct: false, mult: 0.98, layover: 'Frankfurt (FRA) · 1h 45m layover' },
       ]
     : [
         { name: 'IndiGo', code: '6E', flight: '2042', aircraft: 'Airbus A321neo', depT: '06:00', arrT: '08:15', dur: '2h 15m', durMins: 135, direct: true, mult: 0.92 },
@@ -414,7 +417,7 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
       stopAirport: (c as any).layover,
       priceInr: price,
       rating: meta.rating,
-      tags: idx === 0 ? ['Best Fare', 'Direct Flight'] : idx === 1 ? ['Popular choice', 'Fastest'] : ['Top Rated'],
+      tags: idx === 0 ? ['Best Fare', c.direct ? 'Direct Flight' : 'Best Value'] : idx === 1 ? ['Popular choice', 'Fastest'] : ['Top Rated'],
       baggage: meta.baggage,
       co2Reduction: idx % 2 === 0 ? '-14% CO₂' : undefined,
       co2Eco: idx % 2 === 0,

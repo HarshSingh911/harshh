@@ -43,6 +43,10 @@ import {
 import { CheckoutItem } from './CheckoutPaymentPage';
 import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
+import {
+  getDisplayLocationCode,
+  hasCityOptionChanged,
+} from '../utils/internationalFlightRoutes';
 
 export interface SkyscannerFlight {
   id: string;
@@ -590,12 +594,12 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
   useEffect(() => {
     setDraftFromCity(fromCity);
     setAppliedFromCity(fromCity);
-  }, [fromCity.code, fromCity.city]);
+  }, [fromCity.code, fromCity.city, fromCity.isCountry]);
 
   useEffect(() => {
     setDraftToCity(toCity);
     setAppliedToCity(toCity);
-  }, [toCity.code, toCity.city]);
+  }, [toCity.code, toCity.city, toCity.isCountry]);
 
   useEffect(() => {
     setDraftTravellers(travellers);
@@ -609,12 +613,14 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
 
   // Interactive Filter States matching Skyscanner (Sidebar)
   const [selectedStops, setSelectedStops] = useState<string[]>(['direct', '1-stop']);
-  const [selectedDepTimes, setSelectedDepTimes] = useState<string[]>(['afternoon']);
+  const [selectedDepTimes, setSelectedDepTimes] = useState<string[]>([]);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([
     'British Airways',
     'Virgin Atlantic',
     'Delta Air Lines',
     'Norse Atlantic',
+    'Emirates',
+    'Lufthansa',
     'IndiGo',
     'Air India',
     'Vistara',
@@ -670,8 +676,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
         }
       }
       const elapsed = Date.now() - startedAt;
-      if (elapsed < 220) {
-        await new Promise((resolve) => setTimeout(resolve, 220 - elapsed));
+      if (elapsed < 700) {
+        await new Promise((resolve) => setTimeout(resolve, 700 - elapsed));
       }
     } catch (err) {
       console.warn('Live flights API request error:', err);
@@ -840,8 +846,12 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
         if (!matchDir && !matchOne && !matchTwo) return false;
       }
 
-      // Airlines filter
-      if (selectedAirlines.length > 0 && !selectedAirlines.includes(fl.airline)) {
+      // Airlines filter (only filter airlines present in sidebar list, or all if user unchecks)
+      const sidebarAirlines = ['British Airways', 'Virgin Atlantic', 'Delta Air Lines', 'Norse Atlantic', 'Emirates', 'Lufthansa', 'IndiGo', 'Air India', 'Vistara', 'Akasa Air', 'SpiceJet'];
+      if (selectedAirlines.length === 0) {
+        return false;
+      }
+      if (sidebarAirlines.includes(fl.airline) && !selectedAirlines.includes(fl.airline)) {
         return false;
       }
 
@@ -901,6 +911,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
       'Virgin Atlantic',
       'Delta Air Lines',
       'Norse Atlantic',
+      'Emirates',
+      'Lufthansa',
       'IndiGo',
       'Air India',
       'Vistara',
@@ -916,10 +928,6 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     const nextTo = draftFromCity;
     setDraftFromCity(nextFrom);
     setDraftToCity(nextTo);
-    setAppliedFromCity(nextFrom);
-    setAppliedToCity(nextTo);
-    onChangeFromCity?.(nextFrom);
-    onChangeToCity?.(nextTo);
   };
 
   const getCabinMultiplier = (cabin: string): number => {
@@ -936,6 +944,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
   };
 
   const hasPendingHeaderChange =
+    hasCityOptionChanged(draftFromCity, appliedFromCity) ||
+    hasCityOptionChanged(draftToCity, appliedToCity) ||
     draftTravellers !== appliedTravellers ||
     draftCabinClass !== appliedCabinClass ||
     draftTripType !== appliedTripType;
@@ -944,6 +954,9 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     setOpenTravellersDropdown(false);
     setOpenCityPicker(null);
     setOpenCalendarDropdown(null);
+
+    const fromChanged = hasCityOptionChanged(draftFromCity, appliedFromCity);
+    const toChanged = hasCityOptionChanged(draftToCity, appliedToCity);
 
     setAppliedTripType(draftTripType);
     setAppliedFromCity(draftFromCity);
@@ -954,10 +967,18 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     setAppliedCabinClass(draftCabinClass);
     setAppliedDirectOnly(draftDirectOnly);
 
+    if (fromChanged) {
+      onChangeFromCity?.(draftFromCity);
+    }
+    if (toChanged) {
+      onChangeToCity?.(draftToCity);
+    }
     onChangeTripType?.(draftTripType);
     onChangeReturnDate?.(draftRetDate);
     onChangeTravellers?.(draftTravellers, draftCabinClass);
-    fetchLiveFlightsData(draftFromCity.code, draftToCity.code, draftDepDate);
+    if (!draftFromCity.isCountry && !draftToCity.isCountry) {
+      fetchLiveFlightsData(draftFromCity.code, draftToCity.code, draftDepDate);
+    }
   };
 
   const handleSelectFlight = (flight: SkyscannerFlight, returnFlight?: SkyscannerFlight) => {
@@ -1185,7 +1206,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                     <div className="text-[11px] font-semibold text-slate-600 leading-none">From</div>
                     <div className="flex items-baseline gap-1.5 mt-1 truncate">
                       <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftFromCity.city}</span>
-                      <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{draftFromCity.code}</span>
+                      <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{getDisplayLocationCode(draftFromCity)}</span>
                     </div>
                   </div>
 
@@ -1194,13 +1215,12 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                     selectedCity={draftFromCity}
                     onSelectCity={(c) => {
                       setDraftFromCity(c);
-                      setAppliedFromCity(c);
-                      onChangeFromCity?.(c);
                       setOpenCityPicker(null);
                     }}
                     isOpen={openCityPicker === 'from'}
                     onClose={() => setOpenCityPicker(null)}
                     align="left"
+                    allowCountrySelection={true}
                   />
                 </div>
 
@@ -1231,7 +1251,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                     <div className="text-[11px] font-semibold text-slate-600 leading-none">To</div>
                     <div className="flex items-baseline gap-1.5 mt-1 truncate">
                       <span className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">{draftToCity.city}</span>
-                      <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{draftToCity.code}</span>
+                      <span className="font-bold text-xs font-mono text-slate-600 shrink-0">{getDisplayLocationCode(draftToCity)}</span>
                     </div>
                   </div>
 
@@ -1240,13 +1260,12 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                     selectedCity={draftToCity}
                     onSelectCity={(c) => {
                       setDraftToCity(c);
-                      setAppliedToCity(c);
-                      onChangeToCity?.(c);
                       setOpenCityPicker(null);
                     }}
                     isOpen={openCityPicker === 'to'}
                     onClose={() => setOpenCityPicker(null)}
                     align="left"
+                    allowCountrySelection={true}
                   />
                 </div>
               </div>
@@ -1536,6 +1555,8 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                 </span>
                 <div className="space-y-2 text-xs">
                   {[
+                    { name: 'Emirates', price: 24900 },
+                    { name: 'Lufthansa', price: 29800 },
                     { name: 'British Airways', price: 32250 },
                     { name: 'Virgin Atlantic', price: 34700 },
                     { name: 'Delta Air Lines', price: 29150 },
@@ -1767,36 +1788,36 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
 
             {/* Flights Cards List */}
             {isLiveLoading || isReturnLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-4" data-testid="flight-results-skeleton-list" aria-busy="true">
                 {[0, 1, 2].map((skeletonIdx) => (
                   <div
                     key={skeletonIdx}
-                    className="bg-white rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-7 sm:py-6 shadow-xs animate-pulse"
+                    className="bg-white rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-7 sm:py-6 shadow-xs"
                   >
-                    <div className="h-3.5 w-28 bg-slate-200 rounded mb-4" />
+                    <div className="h-3.5 w-28 hotel-skeleton-shimmer rounded mb-4" />
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                       <div className="flex-1 flex items-center gap-4 sm:gap-5">
-                        <div className="w-11 h-11 rounded-xl bg-slate-200 shrink-0" />
+                        <div className="w-11 h-11 rounded-xl hotel-skeleton-shimmer shrink-0" />
                         <div className="w-16 space-y-2">
-                          <div className="h-5 bg-slate-200 rounded" />
-                          <div className="h-3 w-10 bg-slate-100 rounded" />
+                          <div className="h-5 hotel-skeleton-shimmer rounded" />
+                          <div className="h-3 w-10 hotel-skeleton-shimmer rounded" />
                         </div>
                         <div className="flex-1 max-w-[340px] space-y-2 flex flex-col items-center">
-                          <div className="h-3 w-12 bg-slate-100 rounded" />
-                          <div className="h-0.5 w-full bg-slate-200 rounded" />
-                          <div className="h-3 w-16 bg-slate-100 rounded" />
+                          <div className="h-3 w-12 hotel-skeleton-shimmer rounded" />
+                          <div className="h-0.5 w-full hotel-skeleton-shimmer rounded" />
+                          <div className="h-3 w-16 hotel-skeleton-shimmer rounded" />
                         </div>
                         <div className="w-16 space-y-2">
-                          <div className="h-5 bg-slate-200 rounded" />
-                          <div className="h-3 w-10 bg-slate-100 rounded ml-auto" />
+                          <div className="h-5 hotel-skeleton-shimmer rounded" />
+                          <div className="h-3 w-10 hotel-skeleton-shimmer rounded ml-auto" />
                         </div>
                       </div>
                       <div className="md:w-[310px] lg:w-[335px] flex items-center justify-between md:justify-end gap-5 md:border-l border-slate-100 md:pl-7">
                         <div className="space-y-2">
-                          <div className="h-7 w-24 bg-slate-200 rounded" />
-                          <div className="h-3 w-28 bg-slate-100 rounded" />
+                          <div className="h-7 w-24 hotel-skeleton-shimmer rounded" />
+                          <div className="h-3 w-28 hotel-skeleton-shimmer rounded" />
                         </div>
-                        <div className="h-11 w-24 bg-slate-200 rounded-xl" />
+                        <div className="h-11 w-24 hotel-skeleton-shimmer rounded-xl" />
                       </div>
                     </div>
                   </div>

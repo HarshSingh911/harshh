@@ -316,6 +316,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
         onClose={() => setOpenDropdown(null)}
         align={which === 'to' ? 'right' : 'left'}
         isStation={isStation}
+        allowCountrySelection={activeCategory === 'flights' && !isStation}
       />
     );
   };
@@ -382,6 +383,16 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                   type="button"
                   onClick={() => {
                     setOpenDropdown(null);
+                    if (tab.id !== 'flights') {
+                      if (fromCity.isCountry) {
+                        const fallbackFrom = CITIES.find((c) => c.country.toLowerCase() === fromCity.country.toLowerCase()) || CITIES[0];
+                        onChangeFromCity(fallbackFrom);
+                      }
+                      if (toCity.isCountry) {
+                        const fallbackTo = CITIES.find((c) => c.country.toLowerCase() === toCity.country.toLowerCase()) || CITIES[1];
+                        onChangeToCity(fallbackTo);
+                      }
+                    }
                     onSelectCategory(tab.id);
                   }}
                   className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer ${
@@ -550,7 +561,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         {fromCity.city}
                       </span>
                       <span className="block text-[11px] font-mono-tabular text-slate-500 truncate">
-                        {fromCity.code}
+                        {fromCity.isCountry ? 'All Cities · Country' : fromCity.code}
                       </span>
                     </button>
                     {renderCityDropdown('from', fromCity, onChangeFromCity)}
@@ -583,7 +594,7 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({
                         {toCity.city}
                       </span>
                       <span className="block text-[11px] font-mono-tabular text-slate-500 truncate">
-                        {toCity.code}
+                        {toCity.isCountry ? 'All Cities · Country' : toCity.code}
                       </span>
                     </button>
                     {renderCityDropdown('to', toCity, onChangeToCity)}

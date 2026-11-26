@@ -11,6 +11,9 @@ export interface CityOption {
   country: string;
   airportName: string;
   popularTag: string;
+  isCountry?: boolean;
+  countryIso2?: string;
+  flagEmoji?: string;
 }
 
 export interface DestinationPlace {

@@ -72,6 +72,8 @@ import { TripDatePickerModal } from './TripDatePickerModal';
 import { NormalCalendarDropdown } from './NormalCalendarDropdown';
 import { AirportAutocompleteDropdown } from './AirportAutocompleteDropdown';
 import { SkyscannerFlightSearchResults } from './SkyscannerFlightSearchResults';
+import { InternationalCitySelectorPage } from './InternationalCitySelectorPage';
+import { isCountryOption } from '../utils/internationalFlightRoutes';
 import { CheckoutItem } from './CheckoutPaymentPage';
 import { ListPropertyModal } from './ListPropertyModal';
 import { fetchApprovedProperties, PropertyListing } from '../services/propertyService';
@@ -2397,6 +2399,53 @@ export const FlightSearchResultsPage: React.FC<FlightSearchResultsPageProps> = (
   };
 
   const isFlightsView = (currentCategory as any) === 'flights';
+  if (isFlightsView && (isCountryOption(currentFromCity) || isCountryOption(currentToCity))) {
+    return (
+      <InternationalCitySelectorPage
+        fromCity={currentFromCity}
+        toCity={currentToCity}
+        departureDate={currentDepDate}
+        returnDate={currentRetDate}
+        tripType={currentTripType}
+        travellers={currentTravellers}
+        cabinClass={currentCabinClass}
+        currency={currency}
+        onChangeFromCity={(c) => {
+          setCurrentFromCity(c);
+          onChangeFromCity?.(c);
+        }}
+        onChangeToCity={(c) => {
+          setCurrentToCity(c);
+          onChangeToCity?.(c);
+        }}
+        onChangeDepartureDate={(d) => {
+          setCurrentDepDate(d);
+          onChangeDepartureDate?.(d);
+        }}
+        onChangeReturnDate={(d) => {
+          setCurrentRetDate(d);
+          onChangeReturnDate?.(d);
+        }}
+        onChangeTripType={(t) => {
+          setCurrentTripType(t);
+          onChangeTripType?.(t);
+        }}
+        onChangeTravellers={(count, cabin) => {
+          setCurrentTravellers(count);
+          setCurrentCabinClass(cabin);
+          onChangeTravellers?.(count, cabin);
+        }}
+        onCompleteCitySelection={(resolvedFrom, resolvedTo) => {
+          setCurrentFromCity(resolvedFrom);
+          setCurrentToCity(resolvedTo);
+          onChangeFromCity?.(resolvedFrom);
+          onChangeToCity?.(resolvedTo);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onBackToHome={onModifySearch}
+      />
+    );
+  }
   if (isFlightsView) {
     return (
       <SkyscannerFlightSearchResults
