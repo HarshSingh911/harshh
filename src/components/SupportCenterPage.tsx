@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   ChevronRight,
@@ -26,6 +26,7 @@ export interface SupportCenterPageProps {
   onOpenOffers?: () => void;
   onOpenAuth?: () => void;
   onNotify?: (title: string, message: string, type?: 'success' | 'info') => void;
+  focusFaqRequest?: { faqId: string; nonce: number } | null;
 }
 
 type FaqCategory =
@@ -100,6 +101,13 @@ const FAQS_DATA: FaqItem[] = [
     answer:
       'Yes. Our "Go Global" international planner provides country-wise visa guidelines, processing times, and document checklists for destinations worldwide. Comprehensive travel insurance covers flight delays, baggage loss, and cashless international medical emergencies.',
   },
+  {
+    id: 't-3',
+    category: 'Travel Assistance',
+    question: 'What is a self-transfer flight and why do I need to re-check my baggage?',
+    answer:
+      'A self-transfer occurs when your journey combines two separate flights or airlines that do not share an automatic baggage transfer agreement. During your layover, you must collect your checked baggage from the arrival carousel, pass through customs/immigration if required, check in again at the next airline counter, and re-clear airport security. Because separate tickets are not protected by a single airline, always allow extra connection time and keep required transit or entry visas ready.',
+  },
 ];
 
 export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
@@ -112,11 +120,29 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
   onOpenOffers,
   onOpenAuth,
   onNotify,
+  focusFaqRequest,
 }) => {
   // Search query in hero & FAQ
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFaqCategory, setActiveFaqCategory] = useState<FaqCategory>('all');
-  const [expandedFaqId, setExpandedFaqId] = useState<string | null>('b-1');
+  const [expandedFaqId, setExpandedFaqId] = useState<string | null>(
+    focusFaqRequest?.faqId || 'b-1'
+  );
+
+  useEffect(() => {
+    if (!focusFaqRequest?.faqId) return;
+    setSearchQuery('');
+    setActiveFaqCategory('all');
+    setExpandedFaqId(focusFaqRequest.faqId);
+
+    const timer = window.setTimeout(() => {
+      const targetEl = document.getElementById(`faq-${focusFaqRequest.faqId}`);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [focusFaqRequest]);
 
   // Filter FAQs based on category & search query
   const filteredFaqs = useMemo(() => {
@@ -325,8 +351,16 @@ export const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
               {filteredFaqs.length > 0 ? (
                 filteredFaqs.map((faq) => {
                   const isExpanded = expandedFaqId === faq.id;
+                  const isFocused = focusFaqRequest?.faqId === faq.id && isExpanded;
                   return (
-                    <div key={faq.id} className="transition-colors hover:bg-slate-50/50">
+                    <div
+                      key={faq.id}
+                      id={`faq-${faq.id}`}
+                      data-testid={`faq-item-${faq.id}`}
+                      className={`transition-colors hover:bg-slate-50/50 ${
+                        isFocused ? 'bg-blue-50/40 ring-1 ring-inset ring-blue-300' : ''
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() =>

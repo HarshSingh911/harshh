@@ -119,6 +119,8 @@ interface CheckoutPaymentPageProps {
   onGoToTrips?: () => void;
   onGoHome?: () => void;
   onGoHotels?: () => void;
+  onGoFlights?: () => void;
+  onOpenSupportFaq?: (faqId: string) => void;
   onGoCountry?: (country: string) => void;
   onGoCity?: (city: string) => void;
 }

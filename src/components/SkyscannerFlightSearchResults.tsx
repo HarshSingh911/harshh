@@ -32,6 +32,7 @@ import {
   RefreshCw,
   Activity,
   Search,
+  Briefcase,
 } from 'lucide-react';
 import {
   CityOption,
@@ -47,10 +48,18 @@ import {
   getDisplayLocationCode,
   hasCityOptionChanged,
 } from '../utils/internationalFlightRoutes';
+import {
+  classifyFlightBaggage,
+  countFlightsByFareMode,
+  FlightFareToggleMode,
+  matchesFareToggleMode,
+  matchesSidebarBaggageFilters,
+} from '../utils/flightResultsFilterUtils';
 
 export interface SkyscannerFlight {
   id: string;
   airline: string;
+  operatedBy?: string;
   flightNo: string;
   badgeCode: string;
   badgeBg: string;
@@ -62,6 +71,7 @@ export interface SkyscannerFlight {
   stops: string;
   stopsCount: number;
   stopAirport?: string;
+  selfTransfer?: boolean;
   arrTime: string;
   arrTerminal: string;
   daysLater?: number;
@@ -199,6 +209,7 @@ const SKY_FLIGHT_CATALOG: SkyscannerFlight[] = [
   {
     id: 'sky-delta-dl47',
     airline: 'Delta Air Lines',
+    operatedBy: 'KLM Royal Dutch Airlines',
     flightNo: 'DL-47',
     badgeCode: 'DL',
     badgeBg: 'bg-blue-800',
@@ -210,6 +221,7 @@ const SKY_FLIGHT_CATALOG: SkyscannerFlight[] = [
     stops: '1 stop (AMS)',
     stopsCount: 1,
     stopAirport: 'Amsterdam (AMS) · 1h 20m layover',
+    selfTransfer: true,
     arrTime: '11:45',
     arrTerminal: 'Terminal 4',
     priceInr: 29150,
@@ -299,6 +311,7 @@ const SKY_FLIGHT_CATALOG: SkyscannerFlight[] = [
   {
     id: 'sky-vistara-uk995',
     airline: 'Vistara',
+    operatedBy: 'Air India',
     flightNo: 'UK-995',
     badgeCode: 'UK',
     badgeBg: 'bg-purple-800',
@@ -339,7 +352,7 @@ const SKY_FLIGHT_CATALOG: SkyscannerFlight[] = [
     priceInr: 3499,
     rating: 4.3,
     tags: ['Evening Flight', 'Budget Friendly'],
-    baggage: '7 kg Cabin + 15 kg Checked',
+    baggage: '7 kg Cabin bag only',
     providersCount: 8,
     primaryProvider: 'EaseMyTrip',
     amenities: { wifi: false, meal: false, seatPitch: '29 in', power: false, entertainment: false },
@@ -458,6 +471,7 @@ const SKY_RETURN_FLIGHT_CATALOG: SkyscannerFlight[] = [
     stops: '1 stop (AMS)',
     stopsCount: 1,
     stopAirport: 'Amsterdam (AMS) · 1h 30m layover',
+    selfTransfer: true,
     arrTime: '08:55',
     arrTerminal: 'Terminal 4',
     daysLater: 1,
@@ -629,6 +643,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
   ]);
   const [greenerOnly, setGreenerOnly] = useState<boolean>(false);
   const [selectedBaggage, setSelectedBaggage] = useState<string[]>([]);
+  const [fareToggleMode, setFareToggleMode] = useState<FlightFareToggleMode>('all');
   const [priceAlertsActive, setPriceAlertsActive] = useState<boolean>(false);
 
   // Sorting
@@ -860,13 +875,9 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
         return false;
       }
 
-      // Baggage filter
-      if (selectedBaggage.length > 0) {
-        const bagText = (fl.baggage || '').toLowerCase();
-        const hasCabin = bagText.includes('cabin') || bagText.includes('carry-on');
-        const hasChecked = bagText.includes('checked') || bagText.includes('15 kg') || bagText.includes('23 kg');
-        if (selectedBaggage.includes('cabin') && !hasCabin) return false;
-        if (selectedBaggage.includes('checked') && !hasChecked) return false;
+      // Baggage filter (sidebar)
+      if (!matchesSidebarBaggageFilters(fl.baggage, selectedBaggage)) {
+        return false;
       }
 
       // Departure times
@@ -884,6 +895,9 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
       return true;
     });
 
+    // Apply visual Baggage-only / Full fare toggle
+    list = list.filter((fl) => matchesFareToggleMode(fl.baggage, fareToggleMode));
+
     // Sorting
     return list.sort((a, b) => {
       if (sortBy === 'cheapest') return a.priceInr - b.priceInr;
@@ -897,7 +911,39 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
       }
       return a.priceInr - b.priceInr;
     });
-  }, [liveFlights, appliedDirectOnly, selectedStops, selectedAirlines, greenerOnly, selectedBaggage, selectedDepTimes, sortBy]);
+  }, [liveFlights, appliedDirectOnly, selectedStops, selectedAirlines, greenerOnly, selectedBaggage, fareToggleMode, selectedDepTimes, sortBy]);
+
+  // Counts for Baggage-only / Full fare visual toggle (before fareToggleMode is applied)
+  const fareModeCounts = useMemo(() => {
+    const activeFlightPool = liveFlights && liveFlights.length > 0 ? liveFlights : SKY_FLIGHT_CATALOG;
+    const sidebarAirlines = ['British Airways', 'Virgin Atlantic', 'Delta Air Lines', 'Norse Atlantic', 'Emirates', 'Lufthansa', 'IndiGo', 'Air India', 'Vistara', 'Akasa Air', 'SpiceJet'];
+    const baseList = activeFlightPool.filter((fl) => {
+      if (appliedDirectOnly && fl.stops !== 'Direct') return false;
+      if (selectedStops.length > 0) {
+        const isDir = fl.stops === 'Direct';
+        const isOne = fl.stops.includes('1 stop');
+        const isTwo = fl.stopsCount >= 2;
+        if (!(selectedStops.includes('direct') && isDir) && !(selectedStops.includes('1-stop') && isOne) && !(selectedStops.includes('2-stops') && isTwo)) {
+          return false;
+        }
+      }
+      if (selectedAirlines.length === 0) return false;
+      if (sidebarAirlines.includes(fl.airline) && !selectedAirlines.includes(fl.airline)) return false;
+      if (greenerOnly && !fl.co2Eco) return false;
+      if (!matchesSidebarBaggageFilters(fl.baggage, selectedBaggage)) return false;
+      if (selectedDepTimes.length > 0) {
+        const hour = parseInt(fl.depTime.split(':')[0], 10);
+        const isMorning = hour >= 6 && hour < 12;
+        const isAfternoon = hour >= 12 && hour < 18;
+        const isEvening = hour >= 18 || hour < 6;
+        if (!(selectedDepTimes.includes('morning') && isMorning) && !(selectedDepTimes.includes('afternoon') && isAfternoon) && !(selectedDepTimes.includes('evening') && isEvening)) {
+          return false;
+        }
+      }
+      return true;
+    });
+    return countFlightsByFareMode(baseList);
+  }, [liveFlights, appliedDirectOnly, selectedStops, selectedAirlines, greenerOnly, selectedBaggage, selectedDepTimes]);
 
   // Handlers
   const handleResetFilters = () => {
@@ -906,6 +952,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
     setSelectedStops(['direct', '1-stop']);
     setSelectedDepTimes([]);
     setSelectedBaggage([]);
+    setFareToggleMode('all');
     setSelectedAirlines([
       'British Airways',
       'Virgin Atlantic',
@@ -1614,6 +1661,9 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                               setSelectedBaggage(selectedBaggage.filter((x) => x !== bag.id));
                             } else {
                               setSelectedBaggage([...selectedBaggage, bag.id]);
+                              if (bag.id === 'checked' && fareToggleMode === 'baggage-only') {
+                                setFareToggleMode('all');
+                              }
                             }
                           }}
                           className="w-4 h-4 rounded text-blue-600 accent-blue-600 cursor-pointer"
@@ -1653,7 +1703,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
               RIGHT COLUMN: RESULTS, TABS & FLIGHT CARDS
           =============================================================== */}
           <div className="lg:col-span-9 space-y-4">
-            {/* Results Header: Count & Custom Sort Dropdown */}
+            {/* Results Header: Count, Fare/Baggage Visual Toggle & Sort Dropdown */}
             <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
               <div>
                 Showing <strong className="text-slate-900">{filteredFlights.length} flights</strong> from{' '}
@@ -1661,12 +1711,71 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                 <span className="font-semibold">{appliedToCity.city}</span>
               </div>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setOpenSortDropdown(!openSortDropdown)}
-                  className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-xl px-3.5 py-2 shadow-2xs text-xs transition-all cursor-pointer"
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Visual Toggle: All fares / Baggage-only / Full fare */}
+                <div
+                  role="group"
+                  aria-label="Filter flights by baggage fare type"
+                  data-testid="fare-baggage-toggle"
+                  className="inline-flex items-center rounded-xl bg-white border border-slate-200/90 p-1 shadow-2xs"
                 >
+                  <button
+                    type="button"
+                    aria-pressed={fareToggleMode === 'all'}
+                    onClick={() => setFareToggleMode('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      fareToggleMode === 'all'
+                        ? 'bg-[#05203c] text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    All fares ({fareModeCounts.all})
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={fareToggleMode === 'baggage-only'}
+                    title="Cabin or underseat baggage only (excludes default checked baggage)"
+                    onClick={() => {
+                      const nextMode = fareToggleMode === 'baggage-only' ? 'all' : 'baggage-only';
+                      setFareToggleMode(nextMode);
+                      if (nextMode === 'baggage-only') {
+                        setSelectedBaggage((prev) => prev.filter((item) => item !== 'checked'));
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      fareToggleMode === 'baggage-only'
+                        ? 'bg-[#05203c] text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                    <span>Baggage-only ({fareModeCounts.baggageOnly})</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={fareToggleMode === 'full-fare'}
+                    title="Full fare options that include checked baggage by default"
+                    onClick={() => {
+                      const nextMode = fareToggleMode === 'full-fare' ? 'all' : 'full-fare';
+                      setFareToggleMode(nextMode);
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      fareToggleMode === 'full-fare'
+                        ? 'bg-[#05203c] text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Luggage className="w-3.5 h-3.5 shrink-0" />
+                    <span>Full fare ({fareModeCounts.fullFare})</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setOpenSortDropdown(!openSortDropdown)}
+                    className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-xl px-3.5 py-2 shadow-2xs text-xs transition-all cursor-pointer"
+                  >
                   <span className="text-slate-500 font-medium">Sort by</span>
                   <span className="font-bold text-slate-900">
                     {sortBy === 'cheapest'
@@ -1720,6 +1829,7 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                     </div>
                   </>
                 )}
+                </div>
               </div>
             </div>
 
@@ -1855,20 +1965,35 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                   const outboundStopLabel = getReadableStopLabel(flight);
                   const isReturnStoppage = returnFlight ? returnFlight.stopsCount > 0 || returnFlight.stops !== 'Direct' : false;
                   const returnStopLabel = returnFlight ? getReadableStopLabel(returnFlight) : '';
+                  const baggageInfo = classifyFlightBaggage(flight.baggage);
 
                   return (
                     <div
                       key={flight.id}
+                      data-testid={`flight-result-card-${flight.id}`}
                       className="bg-white rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-7 sm:py-6 shadow-xs hover:shadow-md transition-shadow relative"
                     >
                       {/* Main Flight Layout: Left Flight Tracks + Right Price CTA */}
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 md:gap-7">
                         {/* Left Side: Airline Heading + Legs Container */}
                         <div className="flex-1 min-w-0">
-                          <div className="mb-3">
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                             <div className="text-sm font-bold text-slate-800 tracking-tight">
                               {airlineHeading}
                             </div>
+                            <span
+                              data-testid={`flight-baggage-badge-${flight.id}`}
+                              className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
+                                baggageInfo.hasCheckedBag ? 'text-emerald-700' : 'text-slate-500'
+                              }`}
+                            >
+                              {baggageInfo.hasCheckedBag ? (
+                                <Luggage className="w-3.5 h-3.5 shrink-0" />
+                              ) : (
+                                <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                              )}
+                              <span>{baggageInfo.badgeLabel}</span>
+                            </span>
                           </div>
 
                           <div className="space-y-4">
@@ -1916,6 +2041,11 @@ export const SkyscannerFlightSearchResults: React.FC<SkyscannerFlightSearchResul
                                 >
                                   {outboundStopLabel}
                                 </span>
+                                {flight.selfTransfer && (
+                                  <span className="text-[10px] font-semibold text-slate-600 mt-1 leading-none">
+                                    Self-transfer
+                                  </span>
+                                )}
                               </div>
 
                               {/* Arrival */}

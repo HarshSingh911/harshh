@@ -1044,7 +1044,7 @@ export const InternationalCitySelectorPage: React.FC<InternationalCitySelectorPa
                     >
                       <div className="min-w-0 space-y-0.5">
                         <div className="font-display text-[15px] font-bold text-slate-900 truncate">
-                          {item.city.city}, {item.city.country}
+                          {item.city.city}
                         </div>
                         <div className="text-xs text-slate-600 truncate">
                           {fromLine}

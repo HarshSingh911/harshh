@@ -314,6 +314,13 @@ export default function App() {
     setShowAuthModal(true);
   };
 
+  const [supportFocusFaq, setSupportFocusFaq] = useState<{ faqId: string; nonce: number } | null>(null);
+
+  const handleOpenSupportFaq = (faqId: string) => {
+    setSupportFocusFaq({ faqId, nonce: Date.now() });
+    navigateTo('support');
+  };
+
   const navigateTo = (page: AppPageView) => {
     if (page === 'trips' && !userName && !auth.currentUser) {
       pendingRedirectRef.current = 'trips';
@@ -811,6 +818,12 @@ export default function App() {
               navigateTo('home');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onGoFlights={() => {
+              setActiveCategory('flights');
+              navigateTo('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenSupportFaq={handleOpenSupportFaq}
             onGoCountry={(countryName) => {
               setActiveCategory('hotels');
               navigateTo('search-results');
@@ -994,6 +1007,7 @@ export default function App() {
             onOpenOffers={() => setShowOffersModal(true)}
             onOpenAuth={() => setShowAuthModal(true)}
             onNotify={handleNotify}
+            focusFaqRequest={supportFocusFaq}
           />
         )}
 

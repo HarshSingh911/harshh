@@ -199,6 +199,7 @@ const getAviationstackKey = (): string => {
 interface NormalizedAviationFlight {
   id: string;
   airline: string;
+  operatedBy?: string;
   flightNo: string;
   badgeCode: string;
   badgeBg: string;
@@ -218,6 +219,7 @@ interface NormalizedAviationFlight {
   stops: string;
   stopsCount: number;
   stopAirport?: string;
+  selfTransfer?: boolean;
   priceInr: number;
   rating: number;
   tags: string[];
@@ -326,6 +328,13 @@ const AIRLINE_METADATA: Record<string, { badgeCode: string; badgeBg: string; rat
     baggage: '7 kg Cabin + 25 kg Checked',
     amenities: { wifi: true, meal: true, seatPitch: '32 in', power: true, entertainment: true },
   },
+  'Norse Atlantic': {
+    badgeCode: 'N0',
+    badgeBg: 'bg-sky-600',
+    rating: 4.5,
+    baggage: '7 kg Underseat Carry-on',
+    amenities: { wifi: false, meal: false, seatPitch: '31 in', power: true, entertainment: true },
+  },
 };
 
 // Generates route-specific base fare based on airport codes
@@ -361,21 +370,22 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
 
   const carriers = isInternational
     ? [
+        { name: 'Norse Atlantic', code: 'N0', flight: '701', aircraft: 'Boeing 787-9 Dreamliner', depT: '11:20', arrT: '16:35', dur: formatDuration(baseDurMins), durMins: baseDurMins, direct: routeEstimate.isDirect, mult: 0.74, baggage: '7 kg Underseat Carry-on' },
         { name: 'Emirates', code: 'EK', flight: '511', aircraft: 'Boeing 777-300ER', depT: '13:10', arrT: '18:25', dur: formatDuration(baseDurMins), durMins: baseDurMins, direct: routeEstimate.isDirect, mult: 0.85 },
         { name: 'Air India', code: 'AI', flight: '161', aircraft: 'Boeing 787-8 Dreamliner', depT: '18:20', arrT: '06:25', dur: formatDuration(baseDurMins + 15), durMins: baseDurMins + 15, direct: routeEstimate.isDirect, mult: 0.92 },
         { name: 'British Airways', code: 'BA', flight: '178', aircraft: 'Boeing 777-300ER', depT: '08:30', arrT: '13:35', dur: formatDuration(baseDurMins + 25), durMins: baseDurMins + 25, direct: true, mult: 1.02 },
         { name: 'Virgin Atlantic', code: 'VS', flight: '45', aircraft: 'Airbus A350-1000', depT: '10:45', arrT: '15:40', dur: formatDuration(baseDurMins + 10), durMins: baseDurMins + 10, direct: true, mult: 1.09 },
-        { name: 'Delta Air Lines', code: 'DL', flight: '108', aircraft: 'Airbus A330-900neo', depT: '06:15', arrT: '14:45', dur: formatDuration(baseDurMins + 135), durMins: baseDurMins + 135, direct: false, mult: 0.9, layover: 'Amsterdam (AMS) · 1h 20m layover' },
+        { name: 'Delta Air Lines', operatedBy: 'KLM Royal Dutch Airlines', code: 'DL', flight: '108', aircraft: 'Airbus A330-900neo', depT: '06:15', arrT: '14:45', dur: formatDuration(baseDurMins + 135), durMins: baseDurMins + 135, direct: false, selfTransfer: true, mult: 0.9, layover: 'Amsterdam (AMS) · 1h 20m layover' },
         { name: 'Lufthansa', code: 'LH', flight: '761', aircraft: 'Boeing 747-8 Intercontinental', depT: '14:20', arrT: '22:55', dur: formatDuration(baseDurMins + 160), durMins: baseDurMins + 160, direct: false, mult: 0.98, layover: 'Frankfurt (FRA) · 1h 45m layover' },
       ]
     : [
         { name: 'IndiGo', code: '6E', flight: '2042', aircraft: 'Airbus A321neo', depT: '06:00', arrT: '08:15', dur: '2h 15m', durMins: 135, direct: true, mult: 0.92 },
         { name: 'Air India', code: 'AI', flight: '805', aircraft: 'Airbus A320neo', depT: '07:30', arrT: '09:45', dur: '2h 15m', durMins: 135, direct: true, mult: 1.08 },
-        { name: 'Vistara', code: 'UK', flight: '975', aircraft: 'Boeing 737-800', depT: '09:15', arrT: '11:30', dur: '2h 15m', durMins: 135, direct: true, mult: 1.15 },
-        { name: 'Akasa Air', code: 'QP', flight: '1120', aircraft: 'Boeing 737 MAX 8', depT: '11:45', arrT: '14:00', dur: '2h 15m', durMins: 135, direct: true, mult: 0.88 },
-        { name: 'Air India', code: 'AI', flight: '814', aircraft: 'Airbus A320neo', depT: '12:35', arrT: '17:15', dur: '4h 40m', durMins: 280, direct: false, mult: 0.89, layover: `${hub1.name} (${hub1.code}) · 1h 15m layover` },
-        { name: 'SpiceJet', code: 'SG', flight: '8169', aircraft: 'Boeing 737-800', depT: '15:20', arrT: '17:40', dur: '2h 20m', durMins: 140, direct: true, mult: 0.85 },
-        { name: 'IndiGo', code: '6E', flight: '6412', aircraft: 'Airbus A321neo', depT: '16:10', arrT: '21:05', dur: '4h 55m', durMins: 295, direct: false, mult: 0.86, layover: `${hub2.name} (${hub2.code}) · 1h 25m layover` },
+        { name: 'Vistara', operatedBy: 'Air India', code: 'UK', flight: '975', aircraft: 'Boeing 737-800', depT: '09:15', arrT: '11:30', dur: '2h 15m', durMins: 135, direct: true, mult: 1.15 },
+        { name: 'Akasa Air', code: 'QP', flight: '1120', aircraft: 'Boeing 737 MAX 8', depT: '11:45', arrT: '14:00', dur: '2h 15m', durMins: 135, direct: true, mult: 0.88, baggage: '7 kg Cabin bag only' },
+        { name: 'Air India', operatedBy: 'Air India Express', code: 'AI', flight: '814', aircraft: 'Airbus A320neo', depT: '12:35', arrT: '17:15', dur: '4h 40m', durMins: 280, direct: false, mult: 0.89, layover: `${hub1.name} (${hub1.code}) · 1h 15m layover` },
+        { name: 'SpiceJet', code: 'SG', flight: '8169', aircraft: 'Boeing 737-800', depT: '15:20', arrT: '17:40', dur: '2h 20m', durMins: 140, direct: true, mult: 0.85, baggage: '7 kg Cabin bag only' },
+        { name: 'IndiGo', code: '6E', flight: '6412', aircraft: 'Airbus A321neo', depT: '16:10', arrT: '21:05', dur: '4h 55m', durMins: 295, direct: false, selfTransfer: true, mult: 0.86, layover: `${hub2.name} (${hub2.code}) · 1h 25m layover` },
         { name: 'IndiGo', code: '6E', flight: '5324', aircraft: 'Airbus A320neo', depT: '18:40', arrT: '21:00', dur: '2h 20m', durMins: 140, direct: true, mult: 0.98 },
         { name: 'Air India', code: 'AI', flight: '665', aircraft: 'Airbus A321neo', depT: '21:15', arrT: '23:30', dur: '2h 15m', durMins: 135, direct: true, mult: 1.04 },
       ];
@@ -396,6 +406,7 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
     return {
       id: `live-sched-${dep.toLowerCase()}-${arr.toLowerCase()}-${c.code.toLowerCase()}-${c.flight}`,
       airline: c.name,
+      operatedBy: (c as any).operatedBy,
       flightNo: `${c.code}-${c.flight}`,
       badgeCode: meta.badgeCode,
       badgeBg: meta.badgeBg,
@@ -415,10 +426,11 @@ function generateVerifiedRouteSchedule(depIata: string, arrIata: string, flightD
       stops: c.direct ? 'Direct' : `1 stop (${(c as any).layover?.split(' · ')[0] || 'Hub'})`,
       stopsCount: c.direct ? 0 : 1,
       stopAirport: (c as any).layover,
+      selfTransfer: Boolean((c as any).selfTransfer),
       priceInr: price,
       rating: meta.rating,
       tags: idx === 0 ? ['Best Fare', c.direct ? 'Direct Flight' : 'Best Value'] : idx === 1 ? ['Popular choice', 'Fastest'] : ['Top Rated'],
-      baggage: meta.baggage,
+      baggage: (c as any).baggage || meta.baggage,
       co2Reduction: idx % 2 === 0 ? '-14% CO₂' : undefined,
       co2Eco: idx % 2 === 0,
       isPopular: idx === 1,
